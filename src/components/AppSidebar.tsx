@@ -12,9 +12,12 @@ import {
   Settings,
   Plus,
   Search,
-  Eye
+  Eye,
+  LogOut
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 import {
   Sidebar,
@@ -100,6 +103,8 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const [searchQuery, setSearchQuery] = useState("");
   const collapsed = state === "collapsed";
+  const { signOut, user } = useAuth();
+  const { toast } = useToast();
 
   const isActive = (path: string) => {
     if (path === "/" && currentPath === "/") return true;
@@ -111,6 +116,22 @@ export function AppSidebar() {
     item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been successfully signed out.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <Sidebar className={`${collapsed ? "w-16" : "w-72"} transition-all duration-300`}>
@@ -195,8 +216,17 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Settings */}
-        <div className="mt-auto p-4 border-t border-sidebar-border">
+        {/* User Info & Actions */}
+        <div className="mt-auto p-4 border-t border-sidebar-border space-y-3">
+          {/* User Info */}
+          {!collapsed && user && (
+            <div className="px-3 py-2">
+              <p className="text-sm font-medium text-sidebar-foreground">{user.email}</p>
+              <p className="text-xs text-sidebar-foreground/60">Property Manager</p>
+            </div>
+          )}
+          
+          {/* Settings */}
           <SidebarMenuButton asChild>
             <NavLink 
               to="/settings"
@@ -209,6 +239,17 @@ export function AppSidebar() {
               <Settings className="w-5 h-5" />
               {!collapsed && <span>Settings</span>}
             </NavLink>
+          </SidebarMenuButton>
+          
+          {/* Sign Out */}
+          <SidebarMenuButton asChild>
+            <button
+              onClick={handleSignOut}
+              className="flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground w-full"
+            >
+              <LogOut className="w-5 h-5" />
+              {!collapsed && <span>Sign Out</span>}
+            </button>
           </SidebarMenuButton>
         </div>
       </SidebarContent>

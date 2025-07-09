@@ -3,6 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import Tenants from "./pages/Tenants";
@@ -17,28 +20,48 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Auth />;
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+        <Route path="/properties" element={<ProtectedRoute><Properties /></ProtectedRoute>} />
+        <Route path="/tenants" element={<ProtectedRoute><Tenants /></ProtectedRoute>} />
+        <Route path="/house-watching" element={<ProtectedRoute><HouseWatching /></ProtectedRoute>} />
+        <Route path="/property-check/:id" element={<ProtectedRoute><PropertyCheck /></ProtectedRoute>} />
+        <Route path="/client-portal" element={<ProtectedRoute><ClientDashboard /></ProtectedRoute>} />
+        <Route path="/client-portal/properties" element={<ProtectedRoute><ClientProperties /></ProtectedRoute>} />
+        <Route path="/client-portal/reports" element={<ProtectedRoute><ClientReports /></ProtectedRoute>} />
+        <Route path="/client-portal/reports/:reportId" element={<ProtectedRoute><ClientReports /></ProtectedRoute>} />
+        <Route path="/client-portal/requests" element={<ProtectedRoute><ClientRequests /></ProtectedRoute>} />
+        <Route path="/client-portal/messages" element={<ProtectedRoute><ClientMessages /></ProtectedRoute>} />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
+      </Routes>
+    </BrowserRouter>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/properties" element={<Properties />} />
-          <Route path="/tenants" element={<Tenants />} />
-          <Route path="/house-watching" element={<HouseWatching />} />
-          <Route path="/property-check/:id" element={<PropertyCheck />} />
-          <Route path="/client-portal" element={<ClientDashboard />} />
-          <Route path="/client-portal/properties" element={<ClientProperties />} />
-          <Route path="/client-portal/reports" element={<ClientReports />} />
-          <Route path="/client-portal/reports/:reportId" element={<ClientReports />} />
-          <Route path="/client-portal/requests" element={<ClientRequests />} />
-          <Route path="/client-portal/messages" element={<ClientMessages />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <AppContent />
     </TooltipProvider>
   </QueryClientProvider>
 );
