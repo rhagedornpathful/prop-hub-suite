@@ -11,7 +11,8 @@ import {
   BarChart3,
   Settings,
   Plus,
-  Search
+  Search,
+  Eye
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
@@ -48,6 +49,12 @@ const menuItems = [
     url: "/tenants",
     icon: Users,
     description: "Tenant management"
+  },
+  {
+    title: "House Watching",
+    url: "/house-watching",
+    icon: Eye,
+    description: "Property monitoring"
   },
   {
     title: "Leases",
