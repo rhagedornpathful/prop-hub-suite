@@ -119,13 +119,15 @@ export function AppSidebar() {
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
             {!collapsed && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                  <Building className="w-5 h-5 text-white" />
-                </div>
+              <div className="flex items-center gap-3">
+                <img 
+                  src="/lovable-uploads/a1c36a6f-e37d-42f5-9f3c-f434a26e8627.png" 
+                  alt="Latitude Premier Properties" 
+                  className="w-10 h-10 object-contain"
+                />
                 <div>
-                  <h2 className="text-lg font-semibold text-sidebar-foreground">PropManager</h2>
-                  <p className="text-xs text-sidebar-foreground/60">Property Management</p>
+                  <h2 className="text-lg font-semibold text-sidebar-foreground">Latitude Premier</h2>
+                  <p className="text-xs text-sidebar-foreground/60">Properties</p>
                 </div>
               </div>
             )}
