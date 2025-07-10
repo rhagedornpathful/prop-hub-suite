@@ -177,7 +177,7 @@ export function AppSidebar() {
                     <SidebarMenuButton asChild>
                       <NavLink 
                         to={item.url} 
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                           isActive(item.url) 
                             ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" 
                             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -203,7 +203,7 @@ export function AppSidebar() {
             <SidebarMenuButton asChild>
               <NavLink 
                 to="/settings"
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive("/settings") 
                     ? "bg-sidebar-primary text-sidebar-primary-foreground" 
                     : "text-sidebar-foreground hover:bg-sidebar-accent"
