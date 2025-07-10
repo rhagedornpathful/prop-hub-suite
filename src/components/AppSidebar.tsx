@@ -139,20 +139,6 @@ export function AppSidebar() {
             </div>
           </div>
 
-          {/* Search */}
-          {!collapsed && (
-            <div className="p-4 border-b border-sidebar-border">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-sidebar-foreground/40" />
-                <Input
-                  placeholder="Search menu..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-sidebar-accent border-sidebar-border"
-                />
-              </div>
-            </div>
-          )}
 
           {/* Quick Actions */}
           {!collapsed && (
@@ -199,6 +185,21 @@ export function AppSidebar() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+
+          {/* Search */}
+          {!collapsed && (
+            <div className="p-4 border-t border-sidebar-border">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-sidebar-foreground/40" />
+                <Input
+                  placeholder="Search menu..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 bg-sidebar-accent border-sidebar-border"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Settings */}
           <div className="mt-auto p-4 border-t border-sidebar-border">
