@@ -125,12 +125,12 @@ export function AppSidebar() {
                 <div className="flex items-center gap-3">
                   <img 
                     src="/lovable-uploads/a1c36a6f-e37d-42f5-9f3c-f434a26e8627.png" 
-                    alt="Latitude Premier Properties" 
-                    className="w-10 h-10 object-contain"
+                    alt="Lattitude Premier Properties" 
+                    className="w-20 h-20 object-contain"
                   />
                   <div>
-                    <h2 className="text-lg font-semibold text-sidebar-foreground">Latitude Premier</h2>
-                    <p className="text-xs text-sidebar-foreground/60">Properties</p>
+                    <h2 className="text-lg text-sidebar-foreground">Lattitude</h2>
+                    <p className="text-sm text-sidebar-foreground/80">Premier Properties</p>
                   </div>
                 </div>
               )}
