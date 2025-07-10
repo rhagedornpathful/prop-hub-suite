@@ -59,16 +59,16 @@ export function DashboardHeader({
   };
 
   return (
-    <header className="bg-card border-b border-border p-4 shadow-sm animate-fade-in">
+    <header className="bg-card border-b border-border px-4 py-6 sm:px-6 lg:px-8 shadow-sm animate-fade-in">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded">
         Skip to main content
       </a>
       
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Home</h1>
-            <p className="text-sm text-muted-foreground">Welcome back! Here's your property overview</p>
+        <div className="flex items-center gap-6">
+          <div className="no-margin">
+            <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-sm text-muted-foreground mt-1">Welcome back! Here's your property overview</p>
           </div>
         </div>
         
@@ -88,7 +88,7 @@ export function DashboardHeader({
           {/* Filter Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="hover-scale" aria-label="Filter options">
+              <Button variant="outline" size="default" className="transition-all duration-200" aria-label="Filter options">
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
                 {selectedFilters.length > 0 && (
@@ -128,8 +128,8 @@ export function DashboardHeader({
           {/* Notifications */}
           <Button 
             variant="outline" 
-            size="sm" 
-            className="relative hover-scale" 
+            size="default" 
+            className="relative transition-all duration-200" 
             aria-label={`Notifications (${notificationCount} unread)`}
           >
             <Bell className="h-4 w-4" />
