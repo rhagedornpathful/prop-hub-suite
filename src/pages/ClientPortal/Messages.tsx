@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { 
   ArrowLeft,
@@ -21,7 +22,11 @@ import {
   CheckCircle,
   AlertCircle,
   User,
-  Building
+  Building,
+  MoreVertical,
+  Reply,
+  Check,
+  Trash2
 } from "lucide-react";
 
 const ClientMessages = () => {
@@ -224,6 +229,35 @@ const ClientMessages = () => {
     setNewMessage("");
   };
 
+  const handleMessageAction = (action: string, messageId: number) => {
+    switch (action) {
+      case 'respond':
+        // Set focus to message input and add reference to original message
+        const messageElement = document.querySelector('textarea[placeholder="Type your message..."]') as HTMLTextAreaElement;
+        if (messageElement) {
+          messageElement.focus();
+        }
+        toast({
+          title: "Reply Mode",
+          description: "You can now type your response below.",
+        });
+        break;
+      case 'read':
+        toast({
+          title: "Message Marked as Read",
+          description: "The message has been marked as read.",
+        });
+        break;
+      case 'delete':
+        toast({
+          title: "Message Deleted",
+          description: "The message has been deleted successfully.",
+          variant: "destructive"
+        });
+        break;
+    }
+  };
+
   const formatTime = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -371,17 +405,49 @@ const ClientMessages = () => {
                   {selectedConversationData.messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${message.isOwn ? 'justify-end' : 'justify-start'} group`}
                     >
-                      <div className={`max-w-[70%] ${message.isOwn ? 'order-2' : 'order-1'}`}>
+                      <div className={`max-w-[70%] ${message.isOwn ? 'order-2' : 'order-1'} relative`}>
                         <div
-                          className={`p-3 rounded-lg ${
+                          className={`p-3 rounded-lg cursor-pointer hover:opacity-90 transition-opacity ${
                             message.isOwn
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted text-foreground'
                           }`}
                         >
-                          <p className="text-sm">{message.content}</p>
+                          <div className="flex items-start justify-between">
+                            <p className="text-sm flex-1">{message.content}</p>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className={`opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 ml-2 ${
+                                    message.isOwn ? 'text-primary-foreground hover:bg-primary-foreground/20' : 'text-muted-foreground hover:bg-muted-foreground/20'
+                                  }`}
+                                >
+                                  <MoreVertical className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-32">
+                                <DropdownMenuItem onClick={() => handleMessageAction('respond', message.id)}>
+                                  <Reply className="h-3 w-3 mr-2" />
+                                  Respond
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleMessageAction('read', message.id)}>
+                                  <Check className="h-3 w-3 mr-2" />
+                                  Mark Read
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleMessageAction('delete', message.id)}
+                                  className="text-destructive focus:text-destructive"
+                                >
+                                  <Trash2 className="h-3 w-3 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                           {message.attachments && (
                             <div className="mt-2 space-y-1">
                               {message.attachments.map((attachment, index) => (
