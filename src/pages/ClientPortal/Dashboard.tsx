@@ -125,6 +125,41 @@ const ClientDashboard = () => {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
+        {/* Quick Actions */}
+        <Card className="mb-6 shadow-md border-0">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/requests`}>
+                <Button className="bg-gradient-primary hover:bg-primary-dark">
+                  <Settings className="h-4 w-4 mr-2" />
+                  Request Service
+                </Button>
+              </Link>
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/messages`}>
+                <Button variant="outline">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Send Message
+                </Button>
+              </Link>
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/reports`}>
+                <Button variant="outline">
+                  <Camera className="h-4 w-4 mr-2" />
+                  View Photos
+                </Button>
+              </Link>
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/properties`}>
+                <Button variant="outline">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule Visit
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Navigation Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/properties`}>
@@ -240,41 +275,6 @@ const ClientDashboard = () => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick Actions */}
-        <Card className="mt-6 shadow-md border-0">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
-              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/requests`}>
-                <Button className="bg-gradient-primary hover:bg-primary-dark">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Request Service
-                </Button>
-              </Link>
-              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/messages`}>
-                <Button variant="outline">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Send Message
-                </Button>
-              </Link>
-              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/reports`}>
-                <Button variant="outline">
-                  <Camera className="h-4 w-4 mr-2" />
-                  View Photos
-                </Button>
-              </Link>
-              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/properties`}>
-                <Button variant="outline">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Visit
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );
