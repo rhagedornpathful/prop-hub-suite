@@ -15,6 +15,7 @@ import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
+import { useNavigationSwipes } from "@/hooks/useSwipeGestures";
 
 // Lazy load dialogs for better performance
 const AddPropertyDialog = lazy(() => import("@/components/AddPropertyDialog").then(module => ({ default: module.AddPropertyDialog })));
@@ -95,6 +96,13 @@ const Index = () => {
     console.log('Refreshing data...');
   }, []);
 
+  // Swipe navigation for mobile
+  const swipeBinds = useNavigationSwipes(
+    () => console.log('Next section'), // Could navigate to next tab
+    () => console.log('Previous section'), // Could navigate to previous tab
+    isMobile
+  );
+
   // Loading fallback for lazy components
   const DialogSkeleton = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -134,6 +142,7 @@ const Index = () => {
                 onRefresh={handleRefresh}
                 className="h-full"
               >
+                <div {...swipeBinds()}>
                 <div className="p-4 sm:p-6 lg:p-8">
                   <div className="max-w-7xl mx-auto">
                     <AnimatedList className="space-y-4 sm:space-y-6 lg:space-y-8" staggerDelay={0.1}>
@@ -166,6 +175,7 @@ const Index = () => {
                   </AnimatedListItem>
                     </AnimatedList>
                   </div>
+                </div>
                 </div>
               </PullToRefresh>
             </main>

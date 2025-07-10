@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MobileDialog } from "@/components/mobile/MobileDialog";
+import { useMobileDetection } from "@/hooks/useMobileDetection";
 import {
   Select,
   SelectContent,
@@ -48,6 +50,7 @@ interface TenantData {
 }
 
 export function AddTenantDialog({ open, onOpenChange, onTenantAdded }: AddTenantDialogProps) {
+  const { isMobile } = useMobileDetection();
   const [properties, setProperties] = useState<Property[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [tenantData, setTenantData] = useState<TenantData>({
@@ -156,9 +159,12 @@ export function AddTenantDialog({ open, onOpenChange, onTenantAdded }: AddTenant
     }));
   };
 
+  const DialogWrapper = isMobile ? MobileDialog : Dialog;
+  const ContentWrapper = isMobile ? "div" : DialogContent;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogWrapper open={open} onOpenChange={onOpenChange}>
+      <ContentWrapper className={isMobile ? "" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
           <DialogTitle>Add New Tenant</DialogTitle>
           <DialogDescription>
@@ -338,7 +344,7 @@ export function AddTenantDialog({ open, onOpenChange, onTenantAdded }: AddTenant
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ContentWrapper>
+    </DialogWrapper>
   );
 }

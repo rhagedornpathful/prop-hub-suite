@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MobileDialog } from "@/components/mobile/MobileDialog";
+import { useMobileDetection } from "@/hooks/useMobileDetection";
 import {
   Select,
   SelectContent,
@@ -45,6 +47,7 @@ interface MaintenanceData {
 }
 
 export function ScheduleMaintenanceDialog({ open, onOpenChange, onMaintenanceScheduled }: ScheduleMaintenanceDialogProps) {
+  const { isMobile } = useMobileDetection();
   const [properties, setProperties] = useState<Property[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [maintenanceData, setMaintenanceData] = useState<MaintenanceData>({
@@ -145,9 +148,12 @@ export function ScheduleMaintenanceDialog({ open, onOpenChange, onMaintenanceSch
     }));
   };
 
+  const DialogWrapper = isMobile ? MobileDialog : Dialog;
+  const ContentWrapper = isMobile ? "div" : DialogContent;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogWrapper open={open} onOpenChange={onOpenChange}>
+      <ContentWrapper className={isMobile ? "" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
           <DialogTitle>Schedule Maintenance</DialogTitle>
           <DialogDescription>
@@ -300,7 +306,7 @@ export function ScheduleMaintenanceDialog({ open, onOpenChange, onMaintenanceSch
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ContentWrapper>
+    </DialogWrapper>
   );
 }

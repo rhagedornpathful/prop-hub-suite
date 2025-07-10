@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { MobileDialog } from "@/components/mobile/MobileDialog";
+import { useMobileDetection } from "@/hooks/useMobileDetection";
 import {
   Select,
   SelectContent,
@@ -48,6 +50,7 @@ interface PropertyData {
 }
 
 export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPropertyDialogProps) {
+  const { isMobile } = useMobileDetection();
   const [searchAddress, setSearchAddress] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -241,9 +244,12 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
     }));
   };
 
+  const DialogWrapper = isMobile ? MobileDialog : Dialog;
+  const ContentWrapper = isMobile ? "div" : DialogContent;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <DialogWrapper open={open} onOpenChange={onOpenChange}>
+      <ContentWrapper className={isMobile ? "" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
           <DialogTitle>Add New Property</DialogTitle>
           <DialogDescription>
@@ -460,7 +466,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ContentWrapper>
+    </DialogWrapper>
   );
 }
