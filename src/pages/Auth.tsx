@@ -83,7 +83,7 @@ export default function Auth() {
     }
   };
 
-  const handleSSOLogin = async (provider: 'google' | 'azure' | 'facebook') => {
+  const handleSSOLogin = async (provider: 'google' | 'azure') => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -152,18 +152,6 @@ export default function Auth() {
                 <path fill="currentColor" d="M21.8 10.5h-8.3l7.6-7.6c.4-.4.4-1 0-1.4s-1-.4-1.4 0L12.1 9.1 4.5 1.5c-.4-.4-1-.4-1.4 0s-.4 1 0 1.4l7.6 7.6H2.2c-.6 0-1 .4-1 1s.4 1 1 1h8.5l-7.6 7.6c-.4.4-.4 1 0 1.4.2.2.5.3.7.3s.5-.1.7-.3l7.6-7.6 7.6 7.6c.2.2.5.3.7.3s.5-.1.7-.3c.4-.4.4-1 0-1.4l-7.6-7.6h8.3c.6 0 1-.4 1-1s-.4-1-1-1z"/>
               </svg>
               Continue with Microsoft
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={() => handleSSOLogin('facebook')}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-              Continue with Facebook
             </Button>
           </div>
 
