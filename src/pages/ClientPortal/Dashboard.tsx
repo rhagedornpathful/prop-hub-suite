@@ -70,6 +70,36 @@ const ClientDashboard = () => {
     }
   ]);
 
+  const [recentMessages] = useState([
+    {
+      id: 1,
+      from: "Property Manager",
+      subject: "Scheduled Maintenance Update",
+      preview: "Your scheduled maintenance for 456 Oak Street has been completed. All systems are working properly.",
+      date: "2024-01-08",
+      read: false,
+      property: "456 Oak Street"
+    },
+    {
+      id: 2,
+      from: "Sarah at Latitude Premier",
+      subject: "Monthly Report Available",
+      preview: "Your monthly property report is now available for download. Please review the attached documents.",
+      date: "2024-01-07",
+      read: true,
+      property: "123 Pine Avenue"
+    },
+    {
+      id: 3,
+      from: "Maintenance Team",
+      subject: "Service Request Completed",
+      preview: "The sprinkler system adjustment you requested has been completed. Everything is working normally.",
+      date: "2024-01-06",
+      read: false,
+      property: "123 Pine Avenue"
+    }
+  ]);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Active": return "bg-success text-success-foreground";
@@ -241,40 +271,84 @@ const ClientDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
+          {/* Recent Messages */}
           <Card className="shadow-md border-0">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Recent Activity
+                <MessageSquare className="h-5 w-5" />
+                Recent Messages
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3 p-4 border border-border rounded-lg">
+              {recentMessages.map((message) => (
+                <div key={message.id} className="flex items-start gap-3 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
                   <div className="mt-1">
-                    {getActivityIcon(activity.type)}
+                    {message.read ? (
+                      <Mail className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Badge className="w-2 h-2 p-0 bg-primary rounded-full" />
+                    )}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-foreground">{activity.property}</span>
-                      <span className="text-xs text-muted-foreground">{activity.date}</span>
+                      <span className={`font-medium text-foreground ${!message.read ? 'font-semibold' : ''}`}>
+                        {message.from}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{message.date}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{activity.description}</p>
+                    <p className={`text-sm font-medium mb-1 ${!message.read ? 'font-semibold text-foreground' : 'text-muted-foreground'}`}>
+                      {message.subject}
+                    </p>
+                    <p className="text-sm text-muted-foreground truncate">{message.preview}</p>
+                    <p className="text-xs text-muted-foreground mt-2">Property: {message.property}</p>
                   </div>
                 </div>
               ))}
               
               <div className="text-center pt-4">
-                <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/reports`}>
+                <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/messages`}>
                   <Button variant="outline" size="sm">
-                    View All Reports
+                    View All Messages
                   </Button>
                 </Link>
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Recent Activity */}
+        <Card className="mt-6 shadow-md border-0">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Recent Activity
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {recentActivity.map((activity) => (
+              <div key={activity.id} className="flex items-start gap-3 p-4 border border-border rounded-lg">
+                <div className="mt-1">
+                  {getActivityIcon(activity.type)}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-medium text-foreground">{activity.property}</span>
+                    <span className="text-xs text-muted-foreground">{activity.date}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{activity.description}</p>
+                </div>
+              </div>
+            ))}
+            
+            <div className="text-center pt-4">
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/reports`}>
+                <Button variant="outline" size="sm">
+                  View All Reports
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
