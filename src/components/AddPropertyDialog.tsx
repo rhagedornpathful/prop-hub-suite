@@ -221,13 +221,43 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
 
           {/* Property Details Form */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="address">Property Address *</Label>
               <Input
                 id="address"
                 value={propertyData.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="Full property address"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="city">City</Label>
+              <Input
+                id="city"
+                value={propertyData.city || ''}
+                onChange={(e) => handleInputChange('city', e.target.value)}
+                placeholder="City"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="state">State</Label>
+              <Input
+                id="state"
+                value={propertyData.state || ''}
+                onChange={(e) => handleInputChange('state', e.target.value)}
+                placeholder="State"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="zip">ZIP Code</Label>
+              <Input
+                id="zip"
+                value={propertyData.zip_code || ''}
+                onChange={(e) => handleInputChange('zip_code', e.target.value)}
+                placeholder="ZIP Code"
               />
             </div>
 
