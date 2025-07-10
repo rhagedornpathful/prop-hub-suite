@@ -121,7 +121,7 @@ export function AppSidebar() {
 
   return (
     <>
-      <Sidebar variant="inset" collapsible="icon">
+      <Sidebar variant="inset" collapsible="none">
         <SidebarContent>
           {/* Header */}
           <div className="p-2 border-b border-sidebar-border">
