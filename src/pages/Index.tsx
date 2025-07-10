@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardMetrics } from "@/components/DashboardMetrics";
@@ -5,6 +6,9 @@ import { CombinedPropertyOverview } from "@/components/CombinedPropertyOverview"
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AddPropertyDialog } from "@/components/AddPropertyDialog";
+import { AddTenantDialog } from "@/components/AddTenantDialog";
+import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
 import { 
   Bell, 
   Search, 
@@ -21,6 +25,10 @@ import {
 import { Input } from "@/components/ui/input";
 
 const Index = () => {
+  const [addPropertyOpen, setAddPropertyOpen] = useState(false);
+  const [addTenantOpen, setAddTenantOpen] = useState(false);
+  const [scheduleMaintenanceOpen, setScheduleMaintenanceOpen] = useState(false);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-subtle">
@@ -67,15 +75,24 @@ const Index = () => {
             <div className="max-w-7xl mx-auto space-y-8">
               {/* Quick Actions */}
               <div className="flex items-center gap-4 mb-6">
-                <Button className="bg-gradient-primary hover:bg-primary-dark">
+                <Button 
+                  className="bg-gradient-primary hover:bg-primary-dark"
+                  onClick={() => setAddPropertyOpen(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Property
                 </Button>
-                <Button variant="outline">
+                <Button 
+                  variant="outline"
+                  onClick={() => setAddTenantOpen(true)}
+                >
                   <Users className="h-4 w-4 mr-2" />
                   Add Tenant
                 </Button>
-                <Button variant="outline">
+                <Button 
+                  variant="outline"
+                  onClick={() => setScheduleMaintenanceOpen(true)}
+                >
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Maintenance
                 </Button>
@@ -121,6 +138,20 @@ const Index = () => {
           </main>
         </div>
       </div>
+      
+      {/* Dialogs */}
+      <AddPropertyDialog 
+        open={addPropertyOpen} 
+        onOpenChange={setAddPropertyOpen} 
+      />
+      <AddTenantDialog 
+        open={addTenantOpen} 
+        onOpenChange={setAddTenantOpen} 
+      />
+      <ScheduleMaintenanceDialog 
+        open={scheduleMaintenanceOpen} 
+        onOpenChange={setScheduleMaintenanceOpen} 
+      />
     </SidebarProvider>
   );
 };

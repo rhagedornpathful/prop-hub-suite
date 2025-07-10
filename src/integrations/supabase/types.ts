@@ -119,6 +119,65 @@ export type Database = {
         }
         Relationships: []
       }
+      maintenance_requests: {
+        Row: {
+          contractor_contact: string | null
+          contractor_name: string | null
+          created_at: string
+          description: string | null
+          estimated_cost: number | null
+          id: string
+          notes: string | null
+          priority: string
+          property_id: string
+          scheduled_date: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          contractor_contact?: string | null
+          contractor_name?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_cost?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          property_id: string
+          scheduled_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          contractor_contact?: string | null
+          contractor_name?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_cost?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          property_id?: string
+          scheduled_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       properties: {
         Row: {
           address: string
@@ -193,6 +252,71 @@ export type Database = {
           zip_code?: string | null
         }
         Relationships: []
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          email: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          first_name: string
+          id: string
+          last_name: string
+          lease_end_date: string | null
+          lease_start_date: string | null
+          monthly_rent: number | null
+          notes: string | null
+          phone: string | null
+          property_id: string
+          security_deposit: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name: string
+          id?: string
+          last_name: string
+          lease_end_date?: string | null
+          lease_start_date?: string | null
+          monthly_rent?: number | null
+          notes?: string | null
+          phone?: string | null
+          property_id: string
+          security_deposit?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          first_name?: string
+          id?: string
+          last_name?: string
+          lease_end_date?: string | null
+          lease_start_date?: string | null
+          monthly_rent?: number | null
+          notes?: string | null
+          phone?: string | null
+          property_id?: string
+          security_deposit?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenants_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
