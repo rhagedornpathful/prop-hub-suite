@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
 import { 
   Building, 
   Users, 
@@ -41,23 +43,31 @@ const MetricCard = ({ title, value, change, trend, icon: Icon, color }: MetricCa
   };
 
   return (
-    <Card className="hover:shadow-lg transition-all duration-300 border-0 shadow-md">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
-        <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
-          <Icon className="h-4 w-4 text-white" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold text-foreground">{value}</div>
-        <div className="flex items-center gap-1 mt-1">
-          <TrendingUp className={`h-4 w-4 ${trendColors[trend]}`} />
-          <span className={`text-xs ${trendColors[trend]}`}>
-            {change}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+    <motion.div
+      whileHover={{ 
+        scale: 1.02,
+        transition: { duration: 0.2 }
+      }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <Card className="hover:shadow-lg transition-all duration-300 border-0 shadow-md">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+          <div className={`p-2 rounded-lg ${colorClasses[color]}`}>
+            <Icon className="h-4 w-4 text-white" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-foreground">{value}</div>
+          <div className="flex items-center gap-1 mt-1">
+            <TrendingUp className={`h-4 w-4 ${trendColors[trend]}`} />
+            <span className={`text-xs ${trendColors[trend]}`}>
+              {change}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
@@ -169,11 +179,13 @@ export function DashboardMetrics() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.05}>
         {metricsData.map((metric) => (
-          <MetricCard key={metric.title} {...metric} />
+          <AnimatedListItem key={metric.title}>
+            <MetricCard {...metric} />
+          </AnimatedListItem>
         ))}
-      </div>
+      </AnimatedList>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Property Overview */}

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PageTransition } from "@/components/PageTransition";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import Tenants from "./pages/Tenants";
@@ -41,23 +42,23 @@ const App = () => (
           <Route path="/demo/*" element={
             <div className="min-h-screen flex w-full">
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/properties" element={<Properties />} />
-                <Route path="/tenants" element={<Tenants />} />
-                <Route path="/leases" element={<Leases />} />
-                <Route path="/finances" element={<Finances />} />
-                <Route path="/maintenance" element={<Maintenance />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/documents" element={<Documents />} />
-                <Route path="/house-watching" element={<HouseWatching />} />
-                <Route path="/property-check/:id" element={<PropertyCheck />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/client-portal" element={<ClientDashboard />} />
-                <Route path="/client-portal/properties" element={<ClientProperties />} />
-                <Route path="/client-portal/reports" element={<ClientReports />} />
-                <Route path="/client-portal/reports/:reportId" element={<ClientReports />} />
-                <Route path="/client-portal/requests" element={<ClientRequests />} />
-                <Route path="/client-portal/messages" element={<ClientMessages />} />
+                <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+                <Route path="/properties" element={<PageTransition><Properties /></PageTransition>} />
+                <Route path="/tenants" element={<PageTransition><Tenants /></PageTransition>} />
+                <Route path="/leases" element={<PageTransition><Leases /></PageTransition>} />
+                <Route path="/finances" element={<PageTransition><Finances /></PageTransition>} />
+                <Route path="/maintenance" element={<PageTransition><Maintenance /></PageTransition>} />
+                <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
+                <Route path="/documents" element={<PageTransition><Documents /></PageTransition>} />
+                <Route path="/house-watching" element={<PageTransition><HouseWatching /></PageTransition>} />
+                <Route path="/property-check/:id" element={<PageTransition><PropertyCheck /></PageTransition>} />
+                <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+                <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
+                <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
+                <Route path="/client-portal/reports" element={<PageTransition><ClientReports /></PageTransition>} />
+                <Route path="/client-portal/reports/:reportId" element={<PageTransition><ClientReports /></PageTransition>} />
+                <Route path="/client-portal/requests" element={<PageTransition><ClientRequests /></PageTransition>} />
+                <Route path="/client-portal/messages" element={<PageTransition><ClientMessages /></PageTransition>} />
               </Routes>
             </div>
           } />
@@ -70,24 +71,24 @@ const App = () => (
                   <AppSidebar />
                   <main className="flex-1">
                     <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/properties" element={<Properties />} />
-                      <Route path="/tenants" element={<Tenants />} />
-                      <Route path="/leases" element={<Leases />} />
-                      <Route path="/finances" element={<Finances />} />
-                      <Route path="/maintenance" element={<Maintenance />} />
-                      <Route path="/messages" element={<Messages />} />
-                      <Route path="/documents" element={<Documents />} />
-                      <Route path="/house-watching" element={<HouseWatching />} />
-                      <Route path="/property-check/:id" element={<PropertyCheck />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/client-portal" element={<ClientDashboard />} />
-                      <Route path="/client-portal/properties" element={<ClientProperties />} />
-                      <Route path="/client-portal/reports" element={<ClientReports />} />
-                      <Route path="/client-portal/reports/:reportId" element={<ClientReports />} />
-                      <Route path="/client-portal/requests" element={<ClientRequests />} />
-                      <Route path="/client-portal/messages" element={<ClientMessages />} />
-                      <Route path="*" element={<NotFound />} />
+                      <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+                      <Route path="/properties" element={<PageTransition><Properties /></PageTransition>} />
+                      <Route path="/tenants" element={<PageTransition><Tenants /></PageTransition>} />
+                      <Route path="/leases" element={<PageTransition><Leases /></PageTransition>} />
+                      <Route path="/finances" element={<PageTransition><Finances /></PageTransition>} />
+                      <Route path="/maintenance" element={<PageTransition><Maintenance /></PageTransition>} />
+                      <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
+                      <Route path="/documents" element={<PageTransition><Documents /></PageTransition>} />
+                      <Route path="/house-watching" element={<PageTransition><HouseWatching /></PageTransition>} />
+                      <Route path="/property-check/:id" element={<PageTransition><PropertyCheck /></PageTransition>} />
+                      <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+                      <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
+                      <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
+                      <Route path="/client-portal/reports" element={<PageTransition><ClientReports /></PageTransition>} />
+                      <Route path="/client-portal/reports/:reportId" element={<PageTransition><ClientReports /></PageTransition>} />
+                      <Route path="/client-portal/requests" element={<PageTransition><ClientRequests /></PageTransition>} />
+                      <Route path="/client-portal/messages" element={<PageTransition><ClientMessages /></PageTransition>} />
+                      <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
                     </Routes>
                   </main>
                 </div>

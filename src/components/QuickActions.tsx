@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Plus, Users, Calendar } from "lucide-react";
 
@@ -41,44 +42,54 @@ export function QuickActions({
   }, [handleKeyPress]);
 
   return (
-    <div className="animate-fade-in">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
       {/* Quick Actions */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6">
-        <Button 
-          className="bg-gradient-primary hover:bg-primary-dark hover-scale transition-all duration-200"
-          onClick={onAddProperty}
-          aria-label="Add new property (Ctrl+N)"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Property
-          <span className="hidden sm:inline text-xs ml-2 opacity-70">Ctrl+N</span>
-        </Button>
-        <Button 
-          variant="outline"
-          onClick={onAddTenant}
-          className="hover-scale transition-all duration-200"
-          aria-label="Add new tenant (Ctrl+T)"
-        >
-          <Users className="h-4 w-4 mr-2" />
-          Add Tenant
-          <span className="hidden sm:inline text-xs ml-2 opacity-70">Ctrl+T</span>
-        </Button>
-        <Button 
-          variant="outline"
-          onClick={onScheduleMaintenance}
-          className="hover-scale transition-all duration-200"
-          aria-label="Schedule maintenance (Ctrl+M)"
-        >
-          <Calendar className="h-4 w-4 mr-2" />
-          Schedule Maintenance
-          <span className="hidden sm:inline text-xs ml-2 opacity-70">Ctrl+M</span>
-        </Button>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button 
+            className="bg-gradient-primary hover:bg-primary-dark transition-all duration-200"
+            onClick={onAddProperty}
+            aria-label="Add new property (Ctrl+N)"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Property
+            <span className="hidden sm:inline text-xs ml-2 opacity-70">Ctrl+N</span>
+          </Button>
+        </motion.div>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button 
+            variant="outline"
+            onClick={onAddTenant}
+            className="transition-all duration-200"
+            aria-label="Add new tenant (Ctrl+T)"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Add Tenant
+            <span className="hidden sm:inline text-xs ml-2 opacity-70">Ctrl+T</span>
+          </Button>
+        </motion.div>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+          <Button 
+            variant="outline"
+            onClick={onScheduleMaintenance}
+            className="transition-all duration-200"
+            aria-label="Schedule maintenance (Ctrl+M)"
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Schedule Maintenance
+            <span className="hidden sm:inline text-xs ml-2 opacity-70">Ctrl+M</span>
+          </Button>
+        </motion.div>
       </div>
       
       {/* Keyboard shortcuts help text */}
       <div className="text-xs text-muted-foreground mb-4 hidden sm:block">
-        💡 Tip: Use keyboard shortcuts for quick actions
+        💡 Tip: Use keyboard shortcuts for quick actions. Press ? for help.
       </div>
-    </div>
+    </motion.div>
   );
 }

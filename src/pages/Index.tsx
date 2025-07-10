@@ -9,6 +9,10 @@ import { BusinessSummary } from "@/components/BusinessSummary";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { CommandPalette } from "@/components/CommandPalette";
+import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
+import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
 
 // Lazy load dialogs for better performance
 const AddPropertyDialog = lazy(() => import("@/components/AddPropertyDialog").then(module => ({ default: module.AddPropertyDialog })));
@@ -21,6 +25,7 @@ const Index = () => {
   const [scheduleMaintenanceOpen, setScheduleMaintenanceOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   
   const { notificationCount } = useNotifications();
 
@@ -44,6 +49,40 @@ const Index = () => {
     // Here you would implement actual filtering logic
     console.log('Applying filters:', filters);
   }, []);
+
+  // Keyboard shortcuts setup
+  const shortcuts = [
+    {
+      key: 'k',
+      ctrlKey: true,
+      action: () => setCommandPaletteOpen(true),
+      description: 'Open command palette',
+      section: 'Navigation'
+    },
+    {
+      key: 'n',
+      ctrlKey: true,
+      action: handleAddProperty,
+      description: 'Add new property', 
+      section: 'Quick Actions'
+    },
+    {
+      key: 't',
+      ctrlKey: true,
+      action: handleAddTenant,
+      description: 'Add new tenant',
+      section: 'Quick Actions'
+    },
+    {
+      key: 'm',
+      ctrlKey: true,
+      action: handleScheduleMaintenance,
+      description: 'Schedule maintenance',
+      section: 'Quick Actions'
+    }
+  ];
+
+  const { isHelpOpen, closeHelp } = useKeyboardShortcuts(shortcuts);
 
   // Loading fallback for lazy components
   const DialogSkeleton = () => (
@@ -80,26 +119,36 @@ const Index = () => {
 
             {/* Main Content */}
             <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
-              <div className="max-w-7xl mx-auto space-y-8">
-                <ErrorBoundary>
-                  <QuickActions 
-                    onAddProperty={handleAddProperty}
-                    onAddTenant={handleAddTenant}
-                    onScheduleMaintenance={handleScheduleMaintenance}
-                  />
-                </ErrorBoundary>
+              <div className="max-w-7xl mx-auto">
+                <AnimatedList className="space-y-8" staggerDelay={0.1}>
+                  <AnimatedListItem>
+                    <ErrorBoundary>
+                      <QuickActions 
+                        onAddProperty={handleAddProperty}
+                        onAddTenant={handleAddTenant}
+                        onScheduleMaintenance={handleScheduleMaintenance}
+                      />
+                    </ErrorBoundary>
+                  </AnimatedListItem>
 
-                <ErrorBoundary>
-                  <DashboardMetrics />
-                </ErrorBoundary>
+                  <AnimatedListItem>
+                    <ErrorBoundary>
+                      <DashboardMetrics />
+                    </ErrorBoundary>
+                  </AnimatedListItem>
 
-                <ErrorBoundary>
-                  <CombinedPropertyOverview />
-                </ErrorBoundary>
+                  <AnimatedListItem>
+                    <ErrorBoundary>
+                      <CombinedPropertyOverview />
+                    </ErrorBoundary>
+                  </AnimatedListItem>
 
-                <ErrorBoundary>
-                  <BusinessSummary />
-                </ErrorBoundary>
+                  <AnimatedListItem>
+                    <ErrorBoundary>
+                      <BusinessSummary />
+                    </ErrorBoundary>
+                  </AnimatedListItem>
+                </AnimatedList>
               </div>
             </main>
           </div>
@@ -132,6 +181,20 @@ const Index = () => {
             />
           </Suspense>
         )}
+        
+        {/* Global Features */}
+        <CommandPalette
+          isOpen={commandPaletteOpen}
+          onOpenChange={setCommandPaletteOpen}
+          onAddProperty={handleAddProperty}
+          onAddTenant={handleAddTenant}
+          onScheduleMaintenance={handleScheduleMaintenance}
+        />
+        
+        <KeyboardShortcutsHelp
+          isOpen={isHelpOpen}
+          onOpenChange={closeHelp}
+        />
       </SidebarProvider>
     </ErrorBoundary>
   );
