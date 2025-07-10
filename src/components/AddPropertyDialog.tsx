@@ -77,6 +77,41 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
 
     setIsSearching(true);
     try {
+      // Check if we're in demo mode
+      const isDemoMode = window.location.pathname.startsWith('/demo');
+      
+      if (isDemoMode) {
+        // In demo mode, simulate property search with mock data
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate search delay
+        
+        const mockPropertyData = {
+          address: searchAddress,
+          city: "Demo City",
+          state: "CA", 
+          zip_code: "90210",
+          property_type: "single_family",
+          bedrooms: 3,
+          bathrooms: 2,
+          square_feet: 1800,
+          year_built: 2010,
+          estimated_value: 650000,
+          monthly_rent: 3200,
+          description: "Beautiful demo property with modern amenities"
+        };
+        
+        setPropertyData({
+          ...propertyData,
+          ...mockPropertyData,
+        });
+        
+        toast({
+          title: "Success",
+          description: "Demo property information loaded!",
+        });
+        return;
+      }
+
+      // Regular mode - try to use the edge function
       const { data, error } = await supabase.functions.invoke('scrape-property', {
         body: { address: searchAddress }
       });
@@ -107,7 +142,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
     } catch (error) {
       console.error('Error searching property:', error);
       toast({
-        title: "Search failed",
+        title: "Search failed", 
         description: "Could not search property. You can enter details manually.",
         variant: "destructive",
       });
@@ -132,6 +167,25 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
 
     setIsSaving(true);
     try {
+      // Check if we're in demo mode
+      const isDemoMode = window.location.pathname.startsWith('/demo');
+      
+      if (isDemoMode) {
+        // In demo mode, just simulate a successful save
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+        
+        toast({
+          title: "Success",
+          description: "Property added successfully! (Demo Mode)",
+        });
+        
+        onPropertyAdded?.();
+        onOpenChange(false);
+        resetForm();
+        return;
+      }
+
+      // Regular authenticated mode
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
 
