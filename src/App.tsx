@@ -16,6 +16,7 @@ import Messages from "./pages/Messages";
 import HouseWatching from "./pages/HouseWatching";
 import PropertyCheck from "./pages/PropertyCheck";
 import Documents from "./pages/Documents";
+import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientPortal/Dashboard";
 import ClientProperties from "./pages/ClientPortal/Properties";
 import ClientReports from "./pages/ClientPortal/Reports";
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/documents" element={<Documents />} />
                 <Route path="/house-watching" element={<HouseWatching />} />
                 <Route path="/property-check/:id" element={<PropertyCheck />} />
+                <Route path="/settings" element={<Settings />} />
                 <Route path="/client-portal" element={<ClientDashboard />} />
                 <Route path="/client-portal/properties" element={<ClientProperties />} />
                 <Route path="/client-portal/reports" element={<ClientReports />} />
@@ -78,6 +80,7 @@ const App = () => (
                       <Route path="/documents" element={<Documents />} />
                       <Route path="/house-watching" element={<HouseWatching />} />
                       <Route path="/property-check/:id" element={<PropertyCheck />} />
+                      <Route path="/settings" element={<Settings />} />
                       <Route path="/client-portal" element={<ClientDashboard />} />
                       <Route path="/client-portal/properties" element={<ClientProperties />} />
                       <Route path="/client-portal/reports" element={<ClientReports />} />
