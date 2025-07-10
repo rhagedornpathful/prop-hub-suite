@@ -124,14 +124,14 @@ export function AppSidebar() {
       <Sidebar variant="inset" collapsible="icon">
         <SidebarContent>
           {/* Header */}
-          <div className="p-4 border-b border-sidebar-border">
+          <div className="p-2 border-b border-sidebar-border">
             <div className="flex items-center justify-between">
               {!collapsed && (
                 <div className="flex items-center justify-center w-full">
                   <img 
                     src="/lovable-uploads/a1c36a6f-e37d-42f5-9f3c-f434a26e8627.png" 
                     alt="Lattitude Premier Properties" 
-                    className="w-32 h-32 object-contain"
+                    className="w-40 h-40 object-contain"
                   />
                 </div>
               )}
