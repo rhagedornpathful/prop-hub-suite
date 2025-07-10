@@ -1,8 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { 
   Building, 
   MapPin, 
@@ -14,62 +12,22 @@ import {
   Clock,
   Plus
 } from "lucide-react";
+import { usePropertiesLimited } from "@/hooks/queries/useProperties";
+import { useHouseWatchingLimited } from "@/hooks/queries/useHouseWatching";
+import { useRealtime } from "@/hooks/useRealtime";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Property {
-  id: string;
-  address: string;
-  property_type: string;
-  bedrooms: number;
-  bathrooms: number;
-  monthly_rent: number;
-  status: string;
-}
-
-interface HouseWatchingProperty {
-  id: string;
-  property_address: string;
-  owner_name: string;
-  check_frequency: string;
-  status: string;
-  next_check_date: string;
-  monthly_fee: number;
-}
+type Property = Tables<'properties'>;
+type HouseWatchingProperty = Tables<'house_watching'>;
 
 export function CombinedPropertyOverview() {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [houseWatchingProperties, setHouseWatchingProperties] = useState<HouseWatchingProperty[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      // Fetch regular properties
-      const { data: propertiesData, error: propertiesError } = await supabase
-        .from('properties')
-        .select('*')
-        .limit(6);
-
-      if (propertiesError) throw propertiesError;
-
-      // Fetch house watching properties
-      const { data: houseWatchingData, error: houseWatchingError } = await supabase
-        .from('house_watching')
-        .select('*')
-        .limit(6);
-
-      if (houseWatchingError) throw houseWatchingError;
-
-      setProperties(propertiesData || []);
-      setHouseWatchingProperties(houseWatchingData || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { data: properties = [], isLoading: propertiesLoading } = usePropertiesLimited(6);
+  const { data: houseWatchingProperties = [], isLoading: houseWatchingLoading } = useHouseWatchingLimited(6);
+  
+  // Enable real-time updates
+  useRealtime();
+  
+  const isLoading = propertiesLoading || houseWatchingLoading;
 
   const PropertyCard = ({ property }: { property: Property }) => (
     <Card className="group hover:shadow-lg transition-all duration-300 border-0 shadow-md">

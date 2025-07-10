@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/integrations/supabase/client";
 import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
+import { usePropertyMetrics } from "@/hooks/queries/useProperties";
+import { useHouseWatchingMetrics } from "@/hooks/queries/useHouseWatching";
+import { useRealtime } from "@/hooks/useRealtime";
 import { 
   Building, 
   Users, 
@@ -72,72 +73,22 @@ const MetricCard = ({ title, value, change, trend, icon: Icon, color }: MetricCa
 };
 
 export function DashboardMetrics() {
-  const [metrics, setMetrics] = useState({
-    totalProperties: 0,
-    houseWatchingProperties: 0,
-    monthlyRevenue: 0,
-    totalCustomers: 0,
-    overdueChecks: 0,
-    occupiedUnits: 0,
-    totalUnits: 0
-  });
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchMetrics();
-  }, []);
-
-  const fetchMetrics = async () => {
-    try {
-      // Fetch property management data
-      const { data: properties, error: propError } = await supabase
-        .from('properties')
-        .select('monthly_rent, bedrooms, status');
-
-      if (propError) throw propError;
-
-      // Fetch house watching data
-      const { data: houseWatching, error: hwError } = await supabase
-        .from('house_watching')
-        .select('monthly_fee, next_check_date, status');
-
-      if (hwError) throw hwError;
-
-      // Calculate metrics
-      const totalProperties = properties?.length || 0;
-      const houseWatchingProperties = houseWatching?.length || 0;
-      
-      const propertyRevenue = properties?.reduce((sum, prop) => sum + (prop.monthly_rent || 0), 0) || 0;
-      const houseWatchingRevenue = houseWatching?.reduce((sum, hw) => sum + (hw.monthly_fee || 0), 0) || 0;
-      const monthlyRevenue = propertyRevenue + houseWatchingRevenue;
-
-      // Count unique customers (for now, just count total properties)
-      const totalCustomers = totalProperties + houseWatchingProperties;
-
-      // Count overdue house checks
-      const today = new Date();
-      const overdueChecks = houseWatching?.filter(hw => 
-        hw.next_check_date && new Date(hw.next_check_date) < today
-      ).length || 0;
-
-      // Calculate occupancy
-      const totalUnits = properties?.length || 0;
-      const occupiedUnits = properties?.filter(prop => prop.status === 'active').length || 0;
-
-      setMetrics({
-        totalProperties,
-        houseWatchingProperties,
-        monthlyRevenue,
-        totalCustomers,
-        overdueChecks,
-        occupiedUnits,
-        totalUnits
-      });
-    } catch (error) {
-      console.error('Error fetching metrics:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const { data: propertyMetrics, isLoading: propertyLoading } = usePropertyMetrics();
+  const { data: houseWatchingMetrics, isLoading: houseWatchingLoading } = useHouseWatchingMetrics();
+  
+  // Enable real-time updates
+  useRealtime();
+  
+  const isLoading = propertyLoading || houseWatchingLoading;
+  
+  const metrics = {
+    totalProperties: propertyMetrics?.totalProperties || 0,
+    houseWatchingProperties: houseWatchingMetrics?.totalClients || 0,
+    monthlyRevenue: (propertyMetrics?.totalRent || 0) + (houseWatchingMetrics?.totalRevenue || 0),
+    totalCustomers: (propertyMetrics?.totalProperties || 0) + (houseWatchingMetrics?.totalClients || 0),
+    overdueChecks: houseWatchingMetrics?.overdueCounts || 0,
+    occupiedUnits: propertyMetrics?.occupiedUnits || 0,
+    totalUnits: propertyMetrics?.totalProperties || 0,
   };
 
   const metricsData = [
