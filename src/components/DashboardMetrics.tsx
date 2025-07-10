@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Building, 
   Users, 
@@ -9,7 +11,9 @@ import {
   AlertCircle,
   CheckCircle,
   Calendar,
-  Wrench
+  Wrench,
+  Shield,
+  Eye
 } from "lucide-react";
 
 interface MetricCardProps {
@@ -58,160 +62,199 @@ const MetricCard = ({ title, value, change, trend, icon: Icon, color }: MetricCa
 };
 
 export function DashboardMetrics() {
-  const metrics = [
+  const [metrics, setMetrics] = useState({
+    totalProperties: 0,
+    houseWatchingProperties: 0,
+    monthlyRevenue: 0,
+    totalCustomers: 0,
+    overdueChecks: 0,
+    occupiedUnits: 0,
+    totalUnits: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchMetrics();
+  }, []);
+
+  const fetchMetrics = async () => {
+    try {
+      // Fetch property management data
+      const { data: properties, error: propError } = await supabase
+        .from('properties')
+        .select('monthly_rent, bedrooms, status');
+
+      if (propError) throw propError;
+
+      // Fetch house watching data
+      const { data: houseWatching, error: hwError } = await supabase
+        .from('house_watching')
+        .select('monthly_fee, next_check_date, status');
+
+      if (hwError) throw hwError;
+
+      // Calculate metrics
+      const totalProperties = properties?.length || 0;
+      const houseWatchingProperties = houseWatching?.length || 0;
+      
+      const propertyRevenue = properties?.reduce((sum, prop) => sum + (prop.monthly_rent || 0), 0) || 0;
+      const houseWatchingRevenue = houseWatching?.reduce((sum, hw) => sum + (hw.monthly_fee || 0), 0) || 0;
+      const monthlyRevenue = propertyRevenue + houseWatchingRevenue;
+
+      // Count unique customers (for now, just count total properties)
+      const totalCustomers = totalProperties + houseWatchingProperties;
+
+      // Count overdue house checks
+      const today = new Date();
+      const overdueChecks = houseWatching?.filter(hw => 
+        hw.next_check_date && new Date(hw.next_check_date) < today
+      ).length || 0;
+
+      // Calculate occupancy
+      const totalUnits = properties?.length || 0;
+      const occupiedUnits = properties?.filter(prop => prop.status === 'active').length || 0;
+
+      setMetrics({
+        totalProperties,
+        houseWatchingProperties,
+        monthlyRevenue,
+        totalCustomers,
+        overdueChecks,
+        occupiedUnits,
+        totalUnits
+      });
+    } catch (error) {
+      console.error('Error fetching metrics:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const metricsData = [
     {
-      title: "Total Properties",
-      value: "24",
-      change: "+2 this month",
-      trend: "up" as const,
-      icon: Building,
+      title: "Total Customers",
+      value: isLoading ? "..." : metrics.totalCustomers.toString(),
+      change: "All service types",
+      trend: "neutral" as const,
+      icon: Users,
       color: "primary" as const
     },
     {
-      title: "Active Tenants",
-      value: "18",
-      change: "+1 this week",
+      title: "Rental Properties",
+      value: isLoading ? "..." : metrics.totalProperties.toString(),
+      change: "Property management",
       trend: "up" as const,
-      icon: Users,
+      icon: Building,
       color: "secondary" as const
     },
     {
+      title: "House Watching",
+      value: isLoading ? "..." : metrics.houseWatchingProperties.toString(),
+      change: "Monitoring services",
+      trend: "up" as const,
+      icon: Shield,
+      color: "accent" as const
+    },
+    {
       title: "Monthly Revenue",
-      value: "$32,400",
-      change: "+8.2% from last month",
+      value: isLoading ? "..." : `$${metrics.monthlyRevenue.toLocaleString()}`,
+      change: "Combined services",
       trend: "up" as const,
       icon: DollarSign,
       color: "success" as const
-    },
-    {
-      title: "Occupancy Rate",
-      value: "94%",
-      change: "+2% from last month",
-      trend: "up" as const,
-      icon: TrendingUp,
-      color: "accent" as const
     }
   ];
+
+  const occupancyRate = metrics.totalUnits > 0 ? (metrics.occupiedUnits / metrics.totalUnits) * 100 : 0;
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {metrics.map((metric) => (
+        {metricsData.map((metric) => (
           <MetricCard key={metric.title} {...metric} />
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Occupancy Overview */}
+        {/* Property Overview */}
         <Card className="shadow-md border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Building className="h-5 w-5 text-primary" />
-              Property Occupancy
+              Property Portfolio Overview
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Occupied Units</span>
-                <span className="font-medium">18/24</span>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-primary/10 rounded-lg">
+                <Building className="h-6 w-6 mx-auto mb-2 text-primary" />
+                <div className="text-lg font-bold">{metrics.totalProperties}</div>
+                <div className="text-xs text-muted-foreground">Rental Properties</div>
               </div>
-              <Progress value={75} className="h-2" />
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-success" />
-                <span className="text-sm">Available for rent</span>
+              <div className="text-center p-3 bg-accent/10 rounded-lg">
+                <Shield className="h-6 w-6 mx-auto mb-2 text-accent" />
+                <div className="text-lg font-bold">{metrics.houseWatchingProperties}</div>
+                <div className="text-xs text-muted-foreground">House Watching</div>
               </div>
-              <Badge variant="outline" className="text-success border-success">
-                6 units
-              </Badge>
             </div>
+            {metrics.totalUnits > 0 && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Occupancy Rate</span>
+                  <span className="font-medium">{occupancyRate.toFixed(0)}%</span>
+                </div>
+                <Progress value={occupancyRate} className="h-2" />
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {/* Service Alerts */}
         <Card className="shadow-md border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Recent Activity
+              <AlertCircle className="h-5 w-5 text-warning" />
+              Service Alerts
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-success rounded-full"></div>
-                <div className="flex-1 text-sm">
-                  <span className="font-medium">Payment received</span>
-                  <span className="text-muted-foreground"> - Unit 302</span>
+              {metrics.overdueChecks > 0 && (
+                <div className="flex items-center gap-3 p-3 bg-warning/10 rounded-lg">
+                  <Eye className="h-4 w-4 text-warning" />
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">Overdue house checks</div>
+                    <div className="text-xs text-muted-foreground">{metrics.overdueChecks} properties need checking</div>
+                  </div>
+                  <Badge variant="outline" className="text-warning border-warning">
+                    Action needed
+                  </Badge>
                 </div>
-                <span className="text-xs text-muted-foreground">2h ago</span>
+              )}
+              <div className="flex items-center gap-3 p-3 bg-success/10 rounded-lg">
+                <CheckCircle className="h-4 w-4 text-success" />
+                <div className="flex-1">
+                  <div className="font-medium text-sm">Services running smoothly</div>
+                  <div className="text-xs text-muted-foreground">All systems operational</div>
+                </div>
+                <Badge variant="outline" className="text-success border-success">
+                  Good
+                </Badge>
               </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-warning rounded-full"></div>
-                <div className="flex-1 text-sm">
-                  <span className="font-medium">Maintenance request</span>
-                  <span className="text-muted-foreground"> - Unit 105</span>
+              <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+                <Calendar className="h-4 w-4 text-primary" />
+                <div className="flex-1">
+                  <div className="font-medium text-sm">Upcoming schedules</div>
+                  <div className="text-xs text-muted-foreground">Check calendar for details</div>
                 </div>
-                <span className="text-xs text-muted-foreground">5h ago</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-primary rounded-full"></div>
-                <div className="flex-1 text-sm">
-                  <span className="font-medium">Lease renewal</span>
-                  <span className="text-muted-foreground"> - Unit 204</span>
-                </div>
-                <span className="text-xs text-muted-foreground">1d ago</span>
+                <Badge variant="outline" className="text-primary border-primary">
+                  Reminder
+                </Badge>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Alerts & Notifications */}
-      <Card className="shadow-md border-0">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="h-5 w-5 text-warning" />
-            Alerts & Notifications
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-warning/10 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-warning" />
-              <div className="flex-1">
-                <div className="font-medium text-sm">Rent overdue</div>
-                <div className="text-xs text-muted-foreground">Unit 108 - 5 days overdue</div>
-              </div>
-              <Badge variant="outline" className="text-warning border-warning">
-                Action needed
-              </Badge>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
-              <Calendar className="h-4 w-4 text-primary" />
-              <div className="flex-1">
-                <div className="font-medium text-sm">Lease expiring soon</div>
-                <div className="text-xs text-muted-foreground">Unit 306 - Expires in 30 days</div>
-              </div>
-              <Badge variant="outline" className="text-primary border-primary">
-                Reminder
-              </Badge>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-secondary/10 rounded-lg">
-              <Wrench className="h-4 w-4 text-secondary" />
-              <div className="flex-1">
-                <div className="font-medium text-sm">Maintenance scheduled</div>
-                <div className="text-xs text-muted-foreground">HVAC inspection - Building A</div>
-              </div>
-              <Badge variant="outline" className="text-secondary border-secondary">
-                Scheduled
-              </Badge>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
