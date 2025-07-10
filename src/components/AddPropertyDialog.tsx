@@ -43,6 +43,7 @@ interface PropertyData {
   monthly_rent?: number;
   description?: string;
   amenities?: string[];
+  gate_code?: string;
 }
 
 export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPropertyDialogProps) {
@@ -344,6 +345,16 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
                 value={propertyData.monthly_rent || ''}
                 onChange={(e) => handleInputChange('monthly_rent', parseInt(e.target.value) || 0)}
                 placeholder="Monthly rent amount"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="gate-code">Gate Code</Label>
+              <Input
+                id="gate-code"
+                value={propertyData.gate_code || ''}
+                onChange={(e) => handleInputChange('gate_code', e.target.value)}
+                placeholder="Access code for gated community"
               />
             </div>
           </div>

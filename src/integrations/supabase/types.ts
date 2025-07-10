@@ -66,6 +66,7 @@ export type Database = {
           created_at: string
           description: string | null
           estimated_value: number | null
+          gate_code: string | null
           id: string
           images: string[] | null
           lot_size: string | null
@@ -89,6 +90,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           estimated_value?: number | null
+          gate_code?: string | null
           id?: string
           images?: string[] | null
           lot_size?: string | null
@@ -112,6 +114,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           estimated_value?: number | null
+          gate_code?: string | null
           id?: string
           images?: string[] | null
           lot_size?: string | null
