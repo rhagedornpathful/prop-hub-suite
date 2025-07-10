@@ -51,9 +51,25 @@ export function BusinessSummary() {
       setLoading(true);
       setError(null);
       
-      const { data: userData } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('Auth error:', userError);
+        // If not authenticated, show zero values instead of error
+        setData({
+          newHouseWatchingClients: 0,
+          newRentalProperties: 0,
+          combinedRevenue: 0
+        });
+        return;
+      }
+
       if (!userData.user) {
-        setError("User not authenticated");
+        // If no user, show zero values instead of error
+        setData({
+          newHouseWatchingClients: 0,
+          newRentalProperties: 0,
+          combinedRevenue: 0
+        });
         return;
       }
 
@@ -69,7 +85,10 @@ export function BusinessSummary() {
         .eq('user_id', userData.user.id)
         .gte('created_at', currentMonth.toISOString());
 
-      if (propertiesError) throw propertiesError;
+      if (propertiesError) {
+        console.error('Properties error:', propertiesError);
+        // Don't throw error, just log it and continue with empty data
+      }
 
       // Fetch new house watching clients this month
       const { data: newHouseWatching, error: houseWatchingError } = await supabase
@@ -78,9 +97,12 @@ export function BusinessSummary() {
         .eq('user_id', userData.user.id)
         .gte('created_at', currentMonth.toISOString());
 
-      if (houseWatchingError) throw houseWatchingError;
+      if (houseWatchingError) {
+        console.error('House watching error:', houseWatchingError);
+        // Don't throw error, just log it and continue with empty data
+      }
 
-      // Calculate combined revenue
+      // Calculate combined revenue (handle null data gracefully)
       const propertyRevenue = newProperties?.reduce((sum, prop) => sum + (prop.monthly_rent || 0), 0) || 0;
       const houseWatchingRevenue = newHouseWatching?.reduce((sum, hw) => sum + (hw.monthly_fee || 0), 0) || 0;
 
@@ -91,7 +113,12 @@ export function BusinessSummary() {
       });
     } catch (error) {
       console.error('Error fetching business summary:', error);
-      setError("Failed to load business summary");
+      // Show zero values instead of error state
+      setData({
+        newHouseWatchingClients: 0,
+        newRentalProperties: 0,
+        combinedRevenue: 0
+      });
     } finally {
       setLoading(false);
     }
