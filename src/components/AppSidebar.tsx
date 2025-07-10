@@ -95,6 +95,12 @@ const menuItems = [
     icon: BarChart3,
     description: "Analytics & insights"
   },
+  {
+    title: "Client Portal",
+    url: "/client-portal",
+    icon: Users,
+    description: "Client dashboard"
+  },
 ];
 
 export function AppSidebar() {
