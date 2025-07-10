@@ -12,9 +12,11 @@ import {
   Settings,
   Plus,
   Search,
-  Eye
+  Eye,
+  X
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useMobileDetection } from "@/hooks/useMobileDetection";
 
 import {
   Sidebar,
@@ -96,12 +98,13 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
   const collapsed = state === "collapsed";
+  const { isMobile } = useMobileDetection();
 
   // Check if we're in demo mode
   const isDemoMode = currentPath.startsWith('/demo');
@@ -121,7 +124,11 @@ export function AppSidebar() {
 
   return (
     <>
-      <Sidebar variant="inset" collapsible="none">
+      <Sidebar 
+        variant="inset" 
+        collapsible={isMobile ? "offcanvas" : "icon"}
+        className={isMobile ? "fixed inset-y-0 left-0 z-50 w-full" : ""}
+      >
         <SidebarContent>
           {/* Header */}
           <div className="p-2 border-b border-sidebar-border">
@@ -131,11 +138,23 @@ export function AppSidebar() {
                   <img 
                     src="/lovable-uploads/a1c36a6f-e37d-42f5-9f3c-f434a26e8627.png" 
                     alt="Lattitude Premier Properties" 
-                    className="w-40 h-40 object-contain"
+                    className={`${isMobile ? "w-32 h-32" : "w-40 h-40"} object-contain`}
                   />
                 </div>
               )}
-              <SidebarTrigger />
+              <div className="flex items-center gap-2">
+                <SidebarTrigger />
+                {isMobile && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setOpen(false)}
+                    className="p-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 

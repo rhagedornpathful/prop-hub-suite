@@ -13,6 +13,8 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { CommandPalette } from "@/components/CommandPalette";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
+import { PullToRefresh } from "@/components/mobile/PullToRefresh";
+import { useMobileDetection } from "@/hooks/useMobileDetection";
 
 // Lazy load dialogs for better performance
 const AddPropertyDialog = lazy(() => import("@/components/AddPropertyDialog").then(module => ({ default: module.AddPropertyDialog })));
@@ -28,6 +30,7 @@ const Index = () => {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   
   const { notificationCount } = useNotifications();
+  const { isMobile } = useMobileDetection();
 
   // Memoized dialog handlers for performance
   const handleAddProperty = useCallback(() => setAddPropertyOpen(true), []);
@@ -84,6 +87,14 @@ const Index = () => {
 
   const { isHelpOpen, closeHelp } = useKeyboardShortcuts(shortcuts);
 
+  // Pull to refresh handler
+  const handleRefresh = useCallback(async () => {
+    // Simulate refresh delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Here you would typically refetch data
+    console.log('Refreshing data...');
+  }, []);
+
   // Loading fallback for lazy components
   const DialogSkeleton = () => (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -118,9 +129,14 @@ const Index = () => {
             />
 
             {/* Main Content */}
-            <main id="main-content" className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
-              <div className="max-w-7xl mx-auto">
-                <AnimatedList className="space-y-8" staggerDelay={0.1}>
+            <main id="main-content" className="flex-1 overflow-auto">
+              <PullToRefresh 
+                onRefresh={handleRefresh}
+                className="h-full"
+              >
+                <div className="p-4 sm:p-6 lg:p-8">
+                  <div className="max-w-7xl mx-auto">
+                    <AnimatedList className="space-y-4 sm:space-y-6 lg:space-y-8" staggerDelay={0.1}>
                   <AnimatedListItem>
                     <ErrorBoundary>
                       <QuickActions 
@@ -148,8 +164,10 @@ const Index = () => {
                       <BusinessSummary />
                     </ErrorBoundary>
                   </AnimatedListItem>
-                </AnimatedList>
-              </div>
+                    </AnimatedList>
+                  </div>
+                </div>
+              </PullToRefresh>
             </main>
           </div>
         </div>
