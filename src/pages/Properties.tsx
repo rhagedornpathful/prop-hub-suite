@@ -86,66 +86,15 @@ const Properties = () => {
           <main className="flex-1 p-6 overflow-auto">
             <div className="max-w-7xl mx-auto space-y-8">
               {/* Quick Actions */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Button className="bg-gradient-primary hover:bg-primary-dark">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Property
-                  </Button>
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    Import Properties
-                  </Button>
-                </div>
-                
-                <Tabs defaultValue="grid" className="w-auto">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="grid">
-                      <Grid className="h-4 w-4 mr-2" />
-                      Grid
-                    </TabsTrigger>
-                    <TabsTrigger value="list">
-                      <List className="h-4 w-4 mr-2" />
-                      List
-                    </TabsTrigger>
-                    <TabsTrigger value="map">
-                      <Map className="h-4 w-4 mr-2" />
-                      Map
-                    </TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="grid" className="mt-6">
-                    <PropertyGrid />
-                  </TabsContent>
-                  
-                  <TabsContent value="list" className="mt-6">
-                    <Card className="shadow-md border-0">
-                      <CardHeader>
-                        <CardTitle>Property List View</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-center py-8">
-                          <List className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground">List view coming soon...</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="map" className="mt-6">
-                    <Card className="shadow-md border-0">
-                      <CardHeader>
-                        <CardTitle>Property Map View</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-center py-8">
-                          <Map className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                          <p className="text-muted-foreground">Map view coming soon...</p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
+              <div className="flex items-center gap-4">
+                <Button className="bg-gradient-primary hover:bg-primary-dark">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Property
+                </Button>
+                <Button variant="outline">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Import Properties
+                </Button>
               </div>
 
               {/* Property Summary Stats */}
@@ -206,6 +155,56 @@ const Properties = () => {
                   </CardContent>
                 </Card>
               </div>
+
+              {/* View Tabs */}
+              <Tabs defaultValue="grid" className="w-auto">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="grid">
+                    <Grid className="h-4 w-4 mr-2" />
+                    Grid
+                  </TabsTrigger>
+                  <TabsTrigger value="list">
+                    <List className="h-4 w-4 mr-2" />
+                    List
+                  </TabsTrigger>
+                  <TabsTrigger value="map">
+                    <Map className="h-4 w-4 mr-2" />
+                    Map
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="grid" className="mt-6">
+                  <PropertyGrid />
+                </TabsContent>
+                
+                <TabsContent value="list" className="mt-6">
+                  <Card className="shadow-md border-0">
+                    <CardHeader>
+                      <CardTitle>Property List View</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-8">
+                        <List className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">List view coming soon...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="map" className="mt-6">
+                  <Card className="shadow-md border-0">
+                    <CardHeader>
+                      <CardTitle>Property Map View</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-8">
+                        <Map className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">Map view coming soon...</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </div>
           </main>
         </div>
