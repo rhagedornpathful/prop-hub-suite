@@ -103,9 +103,14 @@ export function AppSidebar() {
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
   const collapsed = state === "collapsed";
 
+  // Check if we're in demo mode
+  const isDemoMode = currentPath.startsWith('/demo');
+  const basePath = isDemoMode ? '/demo' : '';
+
   const isActive = (path: string) => {
-    if (path === "/" && currentPath === "/") return true;
-    if (path !== "/" && currentPath.startsWith(path)) return true;
+    const fullPath = basePath + path;
+    if (path === "/" && currentPath === fullPath) return true;
+    if (path !== "/" && currentPath.startsWith(fullPath)) return true;
     return false;
   };
 
@@ -176,7 +181,7 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink 
-                        to={item.url} 
+                        to={basePath + item.url} 
                         className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                           isActive(item.url) 
                             ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" 
@@ -202,7 +207,7 @@ export function AppSidebar() {
           <div className="mt-auto p-4 border-t border-sidebar-border">
             <SidebarMenuButton asChild>
               <NavLink 
-                to="/settings"
+                to={basePath + "/settings"}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive("/settings") 
                     ? "bg-sidebar-primary text-sidebar-primary-foreground" 
