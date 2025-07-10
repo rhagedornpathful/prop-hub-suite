@@ -409,20 +409,20 @@ const ClientMessages = () => {
                     >
                       <div className={`max-w-[70%] ${message.isOwn ? 'order-2' : 'order-1'} relative`}>
                         <div
-                          className={`p-3 rounded-lg cursor-pointer hover:opacity-90 transition-opacity ${
+                          className={`p-3 rounded-lg transition-all hover:shadow-md ${
                             message.isOwn
                               ? 'bg-primary text-primary-foreground'
                               : 'bg-muted text-foreground'
                           }`}
                         >
                           <div className="flex items-start justify-between">
-                            <p className="text-sm flex-1">{message.content}</p>
+                            <p className="text-sm flex-1 pr-2">{message.content}</p>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className={`opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0 ml-2 ${
+                                  className={`opacity-60 hover:opacity-100 transition-opacity h-6 w-6 p-0 flex-shrink-0 ${
                                     message.isOwn ? 'text-primary-foreground hover:bg-primary-foreground/20' : 'text-muted-foreground hover:bg-muted-foreground/20'
                                   }`}
                                 >
