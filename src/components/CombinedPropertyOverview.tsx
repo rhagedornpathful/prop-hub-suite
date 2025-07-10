@@ -212,38 +212,6 @@ export function CombinedPropertyOverview() {
 
   return (
     <div className="space-y-8">
-      {/* Property Management Section */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Property Management</h2>
-            <p className="text-muted-foreground">Your rental properties and tenant management</p>
-          </div>
-          <Button className="bg-gradient-primary hover:bg-primary-dark">
-            <Building className="h-4 w-4 mr-2" />
-            Add Property
-          </Button>
-        </div>
-        
-        {properties.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
-        ) : (
-          <Card className="p-12 text-center">
-            <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h3 className="text-lg font-medium mb-2">No Properties Yet</h3>
-            <p className="text-muted-foreground mb-4">Start by adding your first rental property</p>
-            <Button className="bg-gradient-primary hover:bg-primary-dark">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Your First Property
-            </Button>
-          </Card>
-        )}
-      </div>
-
       {/* House Watching Section */}
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -271,6 +239,38 @@ export function CombinedPropertyOverview() {
             <Button variant="outline" className="border-primary text-primary hover:bg-primary hover:text-white">
               <Plus className="h-4 w-4 mr-2" />
               Add House Watch Service
+            </Button>
+          </Card>
+        )}
+      </div>
+
+      {/* Property Management Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Property Management</h2>
+            <p className="text-muted-foreground">Your rental properties and tenant management</p>
+          </div>
+          <Button className="bg-gradient-primary hover:bg-primary-dark">
+            <Building className="h-4 w-4 mr-2" />
+            Add Property
+          </Button>
+        </div>
+        
+        {properties.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {properties.map((property) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        ) : (
+          <Card className="p-12 text-center">
+            <Building className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+            <h3 className="text-lg font-medium mb-2">No Properties Yet</h3>
+            <p className="text-muted-foreground mb-4">Start by adding your first rental property</p>
+            <Button className="bg-gradient-primary hover:bg-primary-dark">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Your First Property
             </Button>
           </Card>
         )}
