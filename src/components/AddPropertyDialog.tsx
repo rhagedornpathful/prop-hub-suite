@@ -34,6 +34,7 @@ interface PropertyData {
   state?: string;
   zip_code?: string;
   property_type?: string;
+  service_type?: string;
   bedrooms?: number;
   bathrooms?: number;
   square_feet?: number;
@@ -53,6 +54,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
   const [propertyData, setPropertyData] = useState<PropertyData>({
     address: "",
     property_type: "",
+    service_type: "property_management",
     bedrooms: 0,
     bathrooms: 0,
     square_feet: 0,
@@ -167,6 +169,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
     setPropertyData({
       address: "",
       property_type: "",
+      service_type: "property_management",
       bedrooms: 0,
       bathrooms: 0,
       square_feet: 0,
@@ -230,6 +233,23 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
                 onChange={(e) => handleInputChange('address', e.target.value)}
                 placeholder="Full property address"
               />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="service-type">Service Type *</Label>
+              <Select 
+                value={propertyData.service_type} 
+                onValueChange={(value) => handleInputChange('service_type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select service type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="property_management">Property Management</SelectItem>
+                  <SelectItem value="house_watching">House Watching</SelectItem>
+                  <SelectItem value="both">Both Services</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

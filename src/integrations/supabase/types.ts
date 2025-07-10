@@ -239,6 +239,7 @@ export type Database = {
           lot_size: string | null
           monthly_rent: number | null
           property_type: string | null
+          service_type: string | null
           square_feet: number | null
           state: string | null
           status: string | null
@@ -263,6 +264,7 @@ export type Database = {
           lot_size?: string | null
           monthly_rent?: number | null
           property_type?: string | null
+          service_type?: string | null
           square_feet?: number | null
           state?: string | null
           status?: string | null
@@ -287,6 +289,7 @@ export type Database = {
           lot_size?: string | null
           monthly_rent?: number | null
           property_type?: string | null
+          service_type?: string | null
           square_feet?: number | null
           state?: string | null
           status?: string | null
