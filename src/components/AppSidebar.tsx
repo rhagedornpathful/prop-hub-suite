@@ -190,10 +190,7 @@ export function AppSidebar() {
                       >
                         <item.icon className="w-5 h-5 flex-shrink-0" />
                         {!collapsed && (
-                          <div className="flex-1">
-                            <div className="font-medium">{item.title}</div>
-                            <div className="text-xs opacity-70">{item.description}</div>
-                          </div>
+                          <span className="font-medium">{item.title}</span>
                         )}
                       </NavLink>
                     </SidebarMenuButton>
