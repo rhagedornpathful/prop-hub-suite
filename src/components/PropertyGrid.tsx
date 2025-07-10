@@ -9,7 +9,10 @@ import {
   MoreHorizontal,
   Edit,
   Eye,
-  Trash2
+  Trash2,
+  Calendar,
+  Clock,
+  Shield
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -18,7 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface Property {
+interface PropertyManagementProperty {
   id: string;
   name: string;
   address: string;
@@ -28,7 +31,23 @@ interface Property {
   monthlyRent: number;
   status: "occupied" | "vacant" | "maintenance";
   image: string;
+  serviceType: "property_management";
 }
+
+interface HouseWatchingProperty {
+  id: string;
+  name: string;
+  address: string;
+  checkFrequency: "weekly" | "bi-weekly" | "monthly";
+  monthlyFee: number;
+  status: "active" | "inactive" | "pending";
+  lastCheckDate: string;
+  nextCheckDate: string;
+  image: string;
+  serviceType: "house_watching";
+}
+
+type Property = PropertyManagementProperty | HouseWatchingProperty;
 
 const mockProperties: Property[] = [
   {
@@ -40,7 +59,8 @@ const mockProperties: Property[] = [
     occupiedUnits: 22,
     monthlyRent: 1200,
     status: "occupied",
-    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop"
+    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
+    serviceType: "property_management"
   },
   {
     id: "2", 
@@ -51,7 +71,8 @@ const mockProperties: Property[] = [
     occupiedUnits: 10,
     monthlyRent: 1800,
     status: "occupied",
-    image: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=400&h=300&fit=crop"
+    image: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=400&h=300&fit=crop",
+    serviceType: "property_management"
   },
   {
     id: "3",
@@ -62,32 +83,23 @@ const mockProperties: Property[] = [
     occupiedUnits: 6,
     monthlyRent: 2200,
     status: "occupied",
-    image: "https://images.unsplash.com/photo-1558618666-fccd4c84cd3d?w=400&h=300&fit=crop"
+    image: "https://images.unsplash.com/photo-1558618666-fccd4c84cd3d?w=400&h=300&fit=crop",
+    serviceType: "property_management"
   },
   {
     id: "4",
-    name: "City Plaza Lofts",
-    address: "321 City Plaza, Downtown",
-    type: "Loft",
-    units: 16,
-    occupiedUnits: 14,
-    monthlyRent: 2500,
-    status: "occupied",
-    image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=300&fit=crop"
+    name: "Riverside Estate",
+    address: "654 River Walk, Waterfront",
+    checkFrequency: "weekly",
+    monthlyFee: 180,
+    status: "active",
+    lastCheckDate: "2024-01-08",
+    nextCheckDate: "2024-01-15",
+    image: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=400&h=300&fit=crop",
+    serviceType: "house_watching"
   },
   {
     id: "5",
-    name: "Riverside Studios",
-    address: "654 River Walk, Waterfront",
-    type: "Studio",
-    units: 20,
-    occupiedUnits: 15,
-    monthlyRent: 900,
-    status: "vacant",
-    image: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=400&h=300&fit=crop"
-  },
-  {
-    id: "6",
     name: "Highland Estates",
     address: "987 Highland Dr, Suburbs",
     type: "Single Family",
@@ -95,24 +107,59 @@ const mockProperties: Property[] = [
     occupiedUnits: 0,
     monthlyRent: 3200,
     status: "maintenance",
-    image: "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=400&h=300&fit=crop"
+    image: "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=400&h=300&fit=crop",
+    serviceType: "property_management"
+  },
+  {
+    id: "6",
+    name: "Lakeside Cabin",
+    address: "321 Lake Shore Dr, Mountain View",
+    checkFrequency: "bi-weekly",
+    monthlyFee: 240,
+    status: "active",
+    lastCheckDate: "2024-01-05",
+    nextCheckDate: "2024-01-19",
+    image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=300&fit=crop",
+    serviceType: "house_watching"
   }
 ];
 
 const PropertyCard = ({ property }: { property: Property }) => {
-  const occupancyRate = (property.occupiedUnits / property.units) * 100;
+  const isPropertyManagement = property.serviceType === "property_management";
+  const isHouseWatching = property.serviceType === "house_watching";
   
-  const statusColors = {
+  // Property Management specific calculations
+  const occupancyRate = isPropertyManagement 
+    ? (property.occupiedUnits / property.units) * 100 
+    : 0;
+  
+  // Status colors for different service types
+  const propertyManagementStatusColors = {
     occupied: "bg-success text-success-foreground",
     vacant: "bg-warning text-warning-foreground",  
     maintenance: "bg-destructive text-destructive-foreground"
   };
+  
+  const houseWatchingStatusColors = {
+    active: "bg-success text-success-foreground",
+    inactive: "bg-muted text-muted-foreground",
+    pending: "bg-warning text-warning-foreground"
+  };
 
-  const statusText = {
+  const propertyManagementStatusText = {
     occupied: "Occupied",
     vacant: "Vacant", 
     maintenance: "Maintenance"
   };
+  
+  const houseWatchingStatusText = {
+    active: "Active",
+    inactive: "Inactive",
+    pending: "Pending"
+  };
+
+  const statusColors = isPropertyManagement ? propertyManagementStatusColors : houseWatchingStatusColors;
+  const statusText = isPropertyManagement ? propertyManagementStatusText : houseWatchingStatusText;
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden">
@@ -123,13 +170,24 @@ const PropertyCard = ({ property }: { property: Property }) => {
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute top-3 right-3">
-          <Badge className={statusColors[property.status]}>
-            {statusText[property.status]}
+          <Badge className={statusColors[property.status as keyof typeof statusColors]}>
+            {statusText[property.status as keyof typeof statusText]}
           </Badge>
         </div>
         <div className="absolute top-3 left-3">
           <Badge variant="outline" className="bg-white/90 text-foreground border-white/50">
-            {property.type}
+            {isPropertyManagement ? property.type : 
+             isHouseWatching ? `${property.checkFrequency} checks` : "House Watching"}
+          </Badge>
+        </div>
+        <div className="absolute bottom-3 left-3">
+          <Badge className="bg-primary text-primary-foreground">
+            {isPropertyManagement ? (
+              <Building className="h-3 w-3 mr-1" />
+            ) : (
+              <Shield className="h-3 w-3 mr-1" />
+            )}
+            {isPropertyManagement ? "Property Mgmt" : "House Watching"}
           </Badge>
         </div>
       </div>
@@ -171,48 +229,97 @@ const PropertyCard = ({ property }: { property: Property }) => {
       
       <CardContent className="pt-0">
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-2">
-              <Building className="h-4 w-4 text-primary" />
-              <div>
-                <div className="text-sm font-medium">{property.units} Units</div>
-                <div className="text-xs text-muted-foreground">
-                  {property.occupiedUnits} occupied
+          {isPropertyManagement && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4 text-primary" />
+                  <div>
+                    <div className="text-sm font-medium">{property.units} Units</div>
+                    <div className="text-xs text-muted-foreground">
+                      {property.occupiedUnits} occupied
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-success" />
+                  <div>
+                    <div className="text-sm font-medium">${property.monthlyRent}</div>
+                    <div className="text-xs text-muted-foreground">per month</div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <DollarSign className="h-4 w-4 text-success" />
-              <div>
-                <div className="text-sm font-medium">${property.monthlyRent}</div>
-                <div className="text-xs text-muted-foreground">per month</div>
+              
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Occupancy</span>
+                  <span className="font-medium">{occupancyRate.toFixed(0)}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div 
+                    className="bg-gradient-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${occupancyRate}%` }}
+                  />
+                </div>
               </div>
-            </div>
-          </div>
+              
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Users className="h-4 w-4 mr-2" />
+                  Tenants
+                </Button>
+              </div>
+            </>
+          )}
           
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Occupancy</span>
-              <span className="font-medium">{occupancyRate.toFixed(0)}%</span>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2">
-              <div 
-                className="bg-gradient-primary h-2 rounded-full transition-all duration-300"
-                style={{ width: `${occupancyRate}%` }}
-              />
-            </div>
-          </div>
-          
-          <div className="flex gap-2 pt-2">
-            <Button variant="outline" size="sm" className="flex-1">
-              <Eye className="h-4 w-4 mr-2" />
-              View
-            </Button>
-            <Button variant="outline" size="sm" className="flex-1">
-              <Users className="h-4 w-4 mr-2" />
-              Tenants
-            </Button>
-          </div>
+          {isHouseWatching && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary" />
+                  <div>
+                    <div className="text-sm font-medium capitalize">{property.checkFrequency}</div>
+                    <div className="text-xs text-muted-foreground">check frequency</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-success" />
+                  <div>
+                    <div className="text-sm font-medium">${property.monthlyFee}</div>
+                    <div className="text-xs text-muted-foreground">per month</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Last Check:</span>
+                    <div className="font-medium">{property.lastCheckDate}</div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Next Check:</span>
+                    <div className="font-medium">{property.nextCheckDate}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Schedule
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Reports
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>
