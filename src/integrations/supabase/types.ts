@@ -56,6 +56,78 @@ export type Database = {
         }
         Relationships: []
       }
+      properties: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          created_at: string
+          description: string | null
+          estimated_value: number | null
+          id: string
+          images: string[] | null
+          lot_size: string | null
+          monthly_rent: number | null
+          property_type: string | null
+          square_feet: number | null
+          state: string | null
+          status: string | null
+          street_address: string | null
+          updated_at: string
+          user_id: string
+          year_built: number | null
+          zip_code: string | null
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_value?: number | null
+          id?: string
+          images?: string[] | null
+          lot_size?: string | null
+          monthly_rent?: number | null
+          property_type?: string | null
+          square_feet?: number | null
+          state?: string | null
+          status?: string | null
+          street_address?: string | null
+          updated_at?: string
+          user_id: string
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_value?: number | null
+          id?: string
+          images?: string[] | null
+          lot_size?: string | null
+          monthly_rent?: number | null
+          property_type?: string | null
+          square_feet?: number | null
+          state?: string | null
+          status?: string | null
+          street_address?: string | null
+          updated_at?: string
+          user_id?: string
+          year_built?: number | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
