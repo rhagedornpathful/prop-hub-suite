@@ -60,7 +60,7 @@ export function DashboardHeader({
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground">Home</h1>
             <p className="text-sm text-muted-foreground">Welcome back! Here's your property overview</p>
           </div>
         </div>

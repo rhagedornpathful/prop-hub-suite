@@ -34,7 +34,7 @@ import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 
 const menuItems = [
   {
-    title: "Dashboard",
+    title: "Home",
     url: "/",
     icon: Home,
     description: "Overview & metrics"
