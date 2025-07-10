@@ -62,12 +62,17 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <SidebarProvider>
+      <SidebarProvider defaultOpen={true} style={
+        {
+          "--sidebar-width": "18rem",
+          "--sidebar-width-icon": "3rem",
+        } as React.CSSProperties
+      }>
         <div className="min-h-screen flex w-full bg-gradient-subtle">
           <AppSidebar />
           
-          <div className="flex-1 flex flex-col">
-            <DashboardHeader 
+          <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+            <DashboardHeader
               onSearch={handleSearch}
               onFilterChange={handleFilterChange}
               notificationCount={notificationCount}

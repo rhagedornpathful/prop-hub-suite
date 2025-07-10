@@ -116,8 +116,8 @@ export function AppSidebar() {
 
   return (
     <>
-      <Sidebar className={`${collapsed ? "w-16" : "w-72"} transition-all duration-300`}>
-        <SidebarContent className="bg-sidebar border-r border-sidebar-border">
+      <Sidebar variant="inset" collapsible="icon">
+        <SidebarContent>
           {/* Header */}
           <div className="p-4 border-b border-sidebar-border">
             <div className="flex items-center justify-between">
