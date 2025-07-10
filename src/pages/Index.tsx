@@ -1,7 +1,7 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardMetrics } from "@/components/DashboardMetrics";
-import { PropertyGrid } from "@/components/PropertyGrid";
+import { CombinedPropertyOverview } from "@/components/CombinedPropertyOverview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -83,8 +83,8 @@ const Index = () => {
               {/* Metrics Dashboard */}
               <DashboardMetrics />
 
-              {/* Property Grid */}
-              <PropertyGrid />
+              {/* Combined Property Overview */}
+              <CombinedPropertyOverview />
 
               {/* Quick Stats */}
               <Card className="shadow-md border-0">

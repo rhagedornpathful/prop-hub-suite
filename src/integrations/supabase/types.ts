@@ -56,6 +56,69 @@ export type Database = {
         }
         Relationships: []
       }
+      house_watching: {
+        Row: {
+          check_frequency: string | null
+          created_at: string
+          emergency_contact: string | null
+          end_date: string | null
+          id: string
+          key_location: string | null
+          last_check_date: string | null
+          monthly_fee: number | null
+          next_check_date: string | null
+          notes: string | null
+          owner_contact: string | null
+          owner_name: string | null
+          property_address: string
+          special_instructions: string | null
+          start_date: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          check_frequency?: string | null
+          created_at?: string
+          emergency_contact?: string | null
+          end_date?: string | null
+          id?: string
+          key_location?: string | null
+          last_check_date?: string | null
+          monthly_fee?: number | null
+          next_check_date?: string | null
+          notes?: string | null
+          owner_contact?: string | null
+          owner_name?: string | null
+          property_address: string
+          special_instructions?: string | null
+          start_date: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          check_frequency?: string | null
+          created_at?: string
+          emergency_contact?: string | null
+          end_date?: string | null
+          id?: string
+          key_location?: string | null
+          last_check_date?: string | null
+          monthly_fee?: number | null
+          next_check_date?: string | null
+          notes?: string | null
+          owner_contact?: string | null
+          owner_name?: string | null
+          property_address?: string
+          special_instructions?: string | null
+          start_date?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       properties: {
         Row: {
           address: string
