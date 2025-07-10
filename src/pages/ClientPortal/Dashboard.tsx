@@ -126,8 +126,8 @@ const ClientDashboard = () => {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto p-6">
         {/* Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Link to="/client-portal/properties">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/properties`}>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-md">
               <CardContent className="p-6 text-center">
                 <Home className="h-12 w-12 mx-auto mb-3 text-primary" />
@@ -137,7 +137,7 @@ const ClientDashboard = () => {
             </Card>
           </Link>
 
-          <Link to="/client-portal/reports">
+          <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/reports`}>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-md">
               <CardContent className="p-6 text-center">
                 <FileText className="h-12 w-12 mx-auto mb-3 text-primary" />
@@ -147,7 +147,7 @@ const ClientDashboard = () => {
             </Card>
           </Link>
 
-          <Link to="/client-portal/requests">
+          <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/requests`}>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-md">
               <CardContent className="p-6 text-center">
                 <Settings className="h-12 w-12 mx-auto mb-3 text-primary" />
@@ -157,7 +157,7 @@ const ClientDashboard = () => {
             </Card>
           </Link>
 
-          <Link to="/client-portal/messages">
+          <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/messages`}>
             <Card className="hover:shadow-lg transition-shadow cursor-pointer border-0 shadow-md">
               <CardContent className="p-6 text-center">
                 <MessageSquare className="h-12 w-12 mx-auto mb-3 text-primary" />
@@ -168,7 +168,7 @@ const ClientDashboard = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Properties Overview */}
           <Card className="shadow-md border-0">
             <CardHeader>
@@ -231,7 +231,7 @@ const ClientDashboard = () => {
               ))}
               
               <div className="text-center pt-4">
-                <Link to="/client-portal/reports">
+                <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/reports`}>
                   <Button variant="outline" size="sm">
                     View All Reports
                   </Button>
@@ -247,26 +247,26 @@ const ClientDashboard = () => {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/client-portal/requests">
+            <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/requests`}>
                 <Button className="bg-gradient-primary hover:bg-primary-dark">
                   <Settings className="h-4 w-4 mr-2" />
                   Request Service
                 </Button>
               </Link>
-              <Link to="/client-portal/messages">
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/messages`}>
                 <Button variant="outline">
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Send Message
                 </Button>
               </Link>
-              <Link to="/client-portal/reports">
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/reports`}>
                 <Button variant="outline">
                   <Camera className="h-4 w-4 mr-2" />
                   View Photos
                 </Button>
               </Link>
-              <Link to="/client-portal/properties">
+              <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/properties`}>
                 <Button variant="outline">
                   <Calendar className="h-4 w-4 mr-2" />
                   Schedule Visit

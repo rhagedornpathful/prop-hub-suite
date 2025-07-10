@@ -124,7 +124,7 @@ const ClientProperties = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/client-portal')}
+              onClick={() => navigate(`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal`)}
               className="p-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -134,7 +134,7 @@ const ClientProperties = () => {
               <p className="text-sm text-muted-foreground">Manage your property portfolio</p>
             </div>
           </div>
-          <Link to="/client-portal/requests">
+          <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/requests`}>
             <Button className="bg-gradient-primary hover:bg-primary-dark">
               <Settings className="h-4 w-4 mr-2" />
               Request Service
@@ -277,7 +277,7 @@ const ClientProperties = () => {
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Link to="/client-portal/messages">
+                          <Link to={`${window.location.pathname.includes('/demo') ? '/demo' : ''}/client-portal/messages`}>
                             <Button size="sm" variant="outline">
                               <Mail className="h-4 w-4 mr-2" />
                               Message
