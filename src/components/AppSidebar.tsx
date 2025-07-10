@@ -122,16 +122,12 @@ export function AppSidebar() {
           <div className="p-4 border-b border-sidebar-border">
             <div className="flex items-center justify-between">
               {!collapsed && (
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-full">
                   <img 
                     src="/lovable-uploads/a1c36a6f-e37d-42f5-9f3c-f434a26e8627.png" 
                     alt="Lattitude Premier Properties" 
-                    className="w-20 h-20 object-contain"
+                    className="w-32 h-32 object-contain"
                   />
-                  <div>
-                    <h2 className="text-lg text-sidebar-foreground">Lattitude</h2>
-                    <p className="text-sm text-sidebar-foreground/80">Premier Properties</p>
-                  </div>
                 </div>
               )}
               <SidebarTrigger />
