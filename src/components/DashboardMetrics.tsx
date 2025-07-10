@@ -140,20 +140,20 @@ export function DashboardMetrics() {
       color: "primary" as const
     },
     {
-      title: "Rental Properties",
-      value: isLoading ? "..." : metrics.totalProperties.toString(),
-      change: "Property management",
-      trend: "up" as const,
-      icon: Building,
-      color: "secondary" as const
-    },
-    {
       title: "House Watching",
       value: isLoading ? "..." : metrics.houseWatchingProperties.toString(),
       change: "Monitoring services",
       trend: "up" as const,
       icon: Shield,
       color: "accent" as const
+    },
+    {
+      title: "Rental Properties",
+      value: isLoading ? "..." : metrics.totalProperties.toString(),
+      change: "Property management",
+      trend: "up" as const,
+      icon: Building,
+      color: "secondary" as const
     },
     {
       title: "Monthly Revenue",

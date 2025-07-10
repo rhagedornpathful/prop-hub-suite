@@ -97,17 +97,17 @@ const Index = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="text-center p-4 bg-gradient-primary/10 rounded-lg">
-                      <Building className="h-8 w-8 text-primary mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-foreground">2</div>
-                      <div className="text-sm text-muted-foreground">New Rental Properties</div>
-                    </div>
                     <div className="text-center p-4 bg-gradient-accent/10 rounded-lg">
                       <div className="h-8 w-8 mx-auto mb-2 flex items-center justify-center">
                         <Shield className="h-6 w-6 text-accent" />
                       </div>
                       <div className="text-2xl font-bold text-foreground">3</div>
                       <div className="text-sm text-muted-foreground">New House Watching Clients</div>
+                    </div>
+                    <div className="text-center p-4 bg-gradient-primary/10 rounded-lg">
+                      <Building className="h-8 w-8 text-primary mx-auto mb-2" />
+                      <div className="text-2xl font-bold text-foreground">2</div>
+                      <div className="text-sm text-muted-foreground">New Rental Properties</div>
                     </div>
                     <div className="text-center p-4 bg-gradient-success/10 rounded-lg">
                       <DollarSign className="h-8 w-8 text-success mx-auto mb-2" />
