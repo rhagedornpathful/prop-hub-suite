@@ -253,6 +253,16 @@ export default function Auth() {
             </Button>
           </form>
 
+          {/* Demo Access Button */}
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            onClick={() => navigate('/demo')}
+          >
+            🚀 View Demo (Skip Login)
+          </Button>
+
           <div className="text-center">
             <button
               type="button"
