@@ -20,6 +20,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
+import { useState } from "react";
 
 interface PropertyManagementProperty {
   id: string;
@@ -124,7 +126,7 @@ const mockProperties: Property[] = [
   }
 ];
 
-const PropertyCard = ({ property }: { property: Property }) => {
+const PropertyCard = ({ property, onClick }: { property: Property; onClick: () => void }) => {
   const isPropertyManagement = property.serviceType === "property_management";
   const isHouseWatching = property.serviceType === "house_watching";
   
@@ -162,7 +164,10 @@ const PropertyCard = ({ property }: { property: Property }) => {
   const statusText = isPropertyManagement ? propertyManagementStatusText : houseWatchingStatusText;
 
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden">
+    <Card 
+      className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer"
+      onClick={onClick}
+    >
       <div className="relative">
         <img 
           src={property.image} 
@@ -205,20 +210,25 @@ const PropertyCard = ({ property }: { property: Property }) => {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Property
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={(e) => e.stopPropagation()}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Property
               </DropdownMenuItem>
@@ -327,6 +337,14 @@ const PropertyCard = ({ property }: { property: Property }) => {
 };
 
 export function PropertyGrid() {
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handlePropertyClick = (property: Property) => {
+    setSelectedProperty(property);
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -342,9 +360,19 @@ export function PropertyGrid() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {mockProperties.map((property) => (
-          <PropertyCard key={property.id} property={property} />
+          <PropertyCard 
+            key={property.id} 
+            property={property}
+            onClick={() => handlePropertyClick(property)}
+          />
         ))}
       </div>
+
+      <PropertyDetailsDialog
+        property={selectedProperty}
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+      />
     </div>
   );
 }
