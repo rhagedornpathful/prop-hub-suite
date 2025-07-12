@@ -20,6 +20,7 @@ import HouseWatching from "./pages/HouseWatching";
 import PropertyCheck from "./pages/PropertyCheck";
 import Documents from "./pages/Documents";
 import UserManagement from "./pages/UserManagement";
+import DevTools from "./pages/DevTools";
 import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientPortal/Dashboard";
 import ClientProperties from "./pages/ClientPortal/Properties";
@@ -70,6 +71,9 @@ const AppContent = () => {
                   <Route path="/client-portal/reports/:reportId" element={<PageTransition><ClientReports /></PageTransition>} />
                   <Route path="/client-portal/requests" element={<PageTransition><ClientRequests /></PageTransition>} />
                   <Route path="/client-portal/messages" element={<PageTransition><ClientMessages /></PageTransition>} />
+                  {process.env.NODE_ENV === 'development' && (
+                    <Route path="/dev-tools" element={<PageTransition><DevTools /></PageTransition>} />
+                  )}
                 </Routes>
               </div>
             } />
@@ -180,6 +184,9 @@ const AppContent = () => {
                         <Route path="/client-portal/reports/:reportId" element={<PageTransition><ClientReports /></PageTransition>} />
                         <Route path="/client-portal/requests" element={<PageTransition><ClientRequests /></PageTransition>} />
                         <Route path="/client-portal/messages" element={<PageTransition><ClientMessages /></PageTransition>} />
+                        {process.env.NODE_ENV === 'development' && (
+                          <Route path="/dev-tools" element={<PageTransition><DevTools /></PageTransition>} />
+                        )}
                         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
                       </Routes>
                     </main>

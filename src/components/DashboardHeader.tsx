@@ -23,6 +23,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useAuth } from "@/hooks/useAuth";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { TouchOptimized } from "@/components/mobile/TouchOptimized";
+import { RoleSwitcher } from "@/components/dev/RoleSwitcher";
 
 interface DashboardHeaderProps {
   onSearch?: (query: string) => void;
@@ -180,6 +181,12 @@ export function DashboardHeader({
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
+                {process.env.NODE_ENV === 'development' && (
+                  <DropdownMenuItem onClick={() => window.location.href = '/dev-tools'}>
+                    <Menu className="mr-2 h-4 w-4" />
+                    Dev Tools
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut} className="text-destructive">
                   <LogOut className="mr-2 h-4 w-4" />
@@ -265,6 +272,9 @@ export function DashboardHeader({
             </DropdownMenuContent>
           </DropdownMenu>
           
+          {/* Development Role Switcher - Desktop */}
+          {process.env.NODE_ENV === 'development' && <RoleSwitcher />}
+          
           {/* Notifications */}
           <Button 
             variant="outline" 
@@ -312,6 +322,12 @@ export function DashboardHeader({
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
+              {process.env.NODE_ENV === 'development' && (
+                <DropdownMenuItem onClick={() => window.location.href = '/dev-tools'}>
+                  <Menu className="mr-2 h-4 w-4" />
+                  Dev Tools
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
