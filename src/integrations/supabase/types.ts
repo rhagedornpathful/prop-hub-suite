@@ -726,6 +726,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      seed_test_users: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       app_role:
