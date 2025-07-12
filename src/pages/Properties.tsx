@@ -105,14 +105,38 @@ const Properties = () => {
     return "Properties";
   };
 
-  const getPropertyCount = () => properties.length + houseWatchingProperties.length;
-  const getOccupiedCount = () => properties.filter(p => p.status === 'active').length + houseWatchingProperties.filter(p => p.status === 'active').length;
-  const getVacantCount = () => properties.filter(p => p.status === 'vacant').length + houseWatchingProperties.filter(p => p.status === 'inactive').length;
+  const getPropertyCount = () => {
+    const propertyManagementCount = properties.filter(p => p.service_type === 'property_management').length;
+    const houseWatchingFromPropsCount = properties.filter(p => p.service_type === 'house_watching').length;
+    const houseWatchingFromTableCount = houseWatchingProperties.length;
+    return propertyManagementCount + houseWatchingFromPropsCount + houseWatchingFromTableCount;
+  };
+
+  const getOccupiedCount = () => {
+    const activePropertyManagement = properties.filter(p => p.service_type === 'property_management' && p.status === 'active').length;
+    const activeHouseWatchingFromProps = properties.filter(p => p.service_type === 'house_watching' && p.status === 'active').length;
+    const activeHouseWatchingFromTable = houseWatchingProperties.filter(p => p.status === 'active').length;
+    return activePropertyManagement + activeHouseWatchingFromProps + activeHouseWatchingFromTable;
+  };
+
+  const getVacantCount = () => {
+    const vacantPropertyManagement = properties.filter(p => p.service_type === 'property_management' && p.status === 'vacant').length;
+    const inactiveHouseWatchingFromProps = properties.filter(p => p.service_type === 'house_watching' && p.status === 'inactive').length;
+    const inactiveHouseWatchingFromTable = houseWatchingProperties.filter(p => p.status === 'inactive').length;
+    return vacantPropertyManagement + inactiveHouseWatchingFromProps + inactiveHouseWatchingFromTable;
+  };
+
   const getAverageRent = () => {
-    const propertyTotal = properties.reduce((sum, p) => sum + (p.monthly_rent || 0), 0);
-    const houseWatchingTotal = houseWatchingProperties.reduce((sum, p) => sum + (p.monthly_fee || 0), 0);
-    const total = propertyTotal + houseWatchingTotal;
-    const count = properties.length + houseWatchingProperties.length;
+    const propertyManagementTotal = properties
+      .filter(p => p.service_type === 'property_management')
+      .reduce((sum, p) => sum + (p.monthly_rent || 0), 0);
+    const houseWatchingFromPropsTotal = properties
+      .filter(p => p.service_type === 'house_watching')
+      .reduce((sum, p) => sum + (p.monthly_rent || 0), 0);
+    const houseWatchingFromTableTotal = houseWatchingProperties.reduce((sum, p) => sum + (p.monthly_fee || 0), 0);
+    
+    const total = propertyManagementTotal + houseWatchingFromPropsTotal + houseWatchingFromTableTotal;
+    const count = getPropertyCount();
     return count > 0 ? total / count : 0;
   };
 

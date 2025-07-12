@@ -432,12 +432,40 @@ export function OptimizedPropertyGrid({
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Property Management Cards */}
-          {properties.map((property) => (
-            <PropertyManagementCard key={`pm-${property.id}`} property={property} />
-          ))}
+          {/* Property Management Cards - only properties with service_type = 'property_management' */}
+          {properties
+            .filter(property => property.service_type === 'property_management')
+            .map((property) => (
+              <PropertyManagementCard key={`pm-${property.id}`} property={property} />
+            ))}
           
-          {/* House Watching Cards */}
+          {/* House Watching Cards from properties table - properties with service_type = 'house_watching' */}
+          {properties
+            .filter(property => property.service_type === 'house_watching')
+            .map((property) => (
+              <HouseWatchingCard key={`hw-props-${property.id}`} property={{
+                id: property.id,
+                property_address: property.address,
+                owner_name: 'Property Owner', // We'll need to get this from relations
+                check_frequency: 'weekly', // Default - should be stored in properties or related table
+                monthly_fee: property.monthly_rent || 0,
+                status: property.status,
+                last_check_date: null,
+                next_check_date: null,
+                user_id: property.user_id,
+                start_date: '',
+                created_at: property.created_at,
+                updated_at: property.updated_at,
+                end_date: null,
+                notes: null,
+                key_location: null,
+                emergency_contact: null,
+                special_instructions: null,
+                owner_contact: null,
+              }} />
+            ))}
+          
+          {/* House Watching Cards from house_watching table */}
           {houseWatchingProperties.map((property) => (
             <HouseWatchingCard key={`hw-${property.id}`} property={property} />
           ))}
