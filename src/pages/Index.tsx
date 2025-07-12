@@ -1,6 +1,4 @@
 import { useState, useCallback, lazy, Suspense } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -188,87 +186,76 @@ const Index = () => {
 
   return (
     <ErrorBoundary>
-      <SidebarProvider defaultOpen={true} style={
-        {
-          "--sidebar-width": "18rem",
-          "--sidebar-width-icon": "3rem",
-        } as React.CSSProperties
-      }>
-        <div className="min-h-screen flex w-full bg-gradient-subtle">
-          <AppSidebar />
-          
-          <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-            <DashboardHeader
-              onSearch={handleSearch}
-              onFilterChange={handleFilterChange}
-              notificationCount={notificationCount}
-            />
+      <div className="flex-1 flex flex-col min-w-0">
+        <DashboardHeader
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          notificationCount={notificationCount}
+        />
 
-            {/* Main Content */}
-            <main id="main-content" className="flex-1 overflow-auto">
-              <PullToRefresh 
-                onRefresh={handleRefresh}
-                className="h-full"
-              >
-                <div {...swipeBinds()}>
-                  <div className="p-4 sm:p-6 lg:p-8">
-                    <div className="max-w-7xl mx-auto space-y-6">
-                      {/* Only show MakeAdminButton if user has no role */}
-                      {!userRole && <MakeAdminButton />}
-                      
-                      <ErrorBoundary>
-                        {renderDashboardContent()}
-                      </ErrorBoundary>
-                    </div>
-                  </div>
+        {/* Main Content */}
+        <main id="main-content" className="flex-1 overflow-auto">
+          <PullToRefresh 
+            onRefresh={handleRefresh}
+            className="h-full"
+          >
+            <div {...swipeBinds()}>
+              <div className="p-4 sm:p-6 lg:p-8">
+                <div className="max-w-7xl mx-auto space-y-6">
+                  {/* Only show MakeAdminButton if user has no role */}
+                  {!userRole && <MakeAdminButton />}
+                  
+                  <ErrorBoundary>
+                    {renderDashboardContent()}
+                  </ErrorBoundary>
                 </div>
-              </PullToRefresh>
-            </main>
-          </div>
-        </div>
-        
-        {/* Lazy-loaded Dialogs */}
-        {addPropertyOpen && (
-          <Suspense fallback={<DialogSkeleton />}>
-            <AddPropertyDialog 
-              open={addPropertyOpen} 
-              onOpenChange={handleClosePropertyDialog} 
-            />
-          </Suspense>
-        )}
-        
-        {addTenantOpen && (
-          <Suspense fallback={<DialogSkeleton />}>
-            <AddTenantDialog 
-              open={addTenantOpen} 
-              onOpenChange={handleCloseTenantDialog} 
-            />
-          </Suspense>
-        )}
-        
-        {scheduleMaintenanceOpen && (
-          <Suspense fallback={<DialogSkeleton />}>
-            <ScheduleMaintenanceDialog 
-              open={scheduleMaintenanceOpen} 
-              onOpenChange={handleCloseMaintenanceDialog} 
-            />
-          </Suspense>
-        )}
-        
-        {/* Global Features */}
-        <CommandPalette
-          isOpen={commandPaletteOpen}
-          onOpenChange={setCommandPaletteOpen}
-          onAddProperty={handleAddProperty}
-          onAddTenant={handleAddTenant}
-          onScheduleMaintenance={handleScheduleMaintenance}
-        />
-        
-        <KeyboardShortcutsHelp
-          isOpen={isHelpOpen}
-          onOpenChange={closeHelp}
-        />
-      </SidebarProvider>
+              </div>
+            </div>
+          </PullToRefresh>
+        </main>
+      </div>
+      
+      {/* Lazy-loaded Dialogs */}
+      {addPropertyOpen && (
+        <Suspense fallback={<DialogSkeleton />}>
+          <AddPropertyDialog 
+            open={addPropertyOpen} 
+            onOpenChange={handleClosePropertyDialog} 
+          />
+        </Suspense>
+      )}
+      
+      {addTenantOpen && (
+        <Suspense fallback={<DialogSkeleton />}>
+          <AddTenantDialog 
+            open={addTenantOpen} 
+            onOpenChange={handleCloseTenantDialog} 
+          />
+        </Suspense>
+      )}
+      
+      {scheduleMaintenanceOpen && (
+        <Suspense fallback={<DialogSkeleton />}>
+          <ScheduleMaintenanceDialog 
+            open={scheduleMaintenanceOpen} 
+            onOpenChange={handleCloseMaintenanceDialog} 
+          />
+        </Suspense>
+      )}
+      
+      {/* Global Features */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        onAddProperty={handleAddProperty}
+        onAddTenant={handleAddTenant}
+        onScheduleMaintenance={handleScheduleMaintenance}
+      />
+      
+      <KeyboardShortcutsHelp
+        isOpen={isHelpOpen}
+        onOpenChange={closeHelp}
+      />
     </ErrorBoundary>
   );
 };

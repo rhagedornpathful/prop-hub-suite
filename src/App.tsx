@@ -110,7 +110,7 @@ const AppContent = () => {
                 >
                   <div className="min-h-screen flex w-full">
                     <AppSidebar />
-                    <main className={`flex-1 ${isMobile ? 'w-full' : ''}`}>
+                    <main className="flex-1 flex flex-col min-w-0">{/* Remove redundant classes */}
                       <Routes>
                         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
                         <Route path="/properties" element={
