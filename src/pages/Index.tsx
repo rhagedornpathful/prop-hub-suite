@@ -122,22 +122,39 @@ const Index = () => {
 
   // Render role-specific dashboard content
   const renderDashboardContent = () => {
+    console.log('🎯 Rendering dashboard for role:', userRole, 'loading:', authLoading);
+    
     if (authLoading) {
+      console.log('🎯 Still loading auth, showing skeleton');
       return (
-        <div className="p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto space-y-6">
-            <Skeleton className="h-8 w-64" />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <Skeleton key={i} className="h-32" />
-              ))}
-            </div>
-            <Skeleton className="h-64" />
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-64" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-32" />
+            ))}
           </div>
+          <Skeleton className="h-64" />
         </div>
       );
     }
 
+    // If no role, show message
+    if (!userRole) {
+      console.log('🎯 No role found, showing setup message');
+      return (
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold mb-4">Welcome!</h2>
+          <p className="text-muted-foreground mb-6">
+            Please complete your account setup to access your dashboard.
+          </p>
+          <MakeAdminButton />
+        </div>
+      );
+    }
+
+    console.log('🎯 Rendering dashboard for role:', userRole);
+    
     switch (userRole) {
       case 'admin':
         return <AdminDashboard />;
@@ -149,8 +166,23 @@ const Index = () => {
         return <HouseWatcherDashboard />;
       case 'property_manager':
         return <AdminDashboard />; // Property managers see admin view
+      case 'client':
+        return <TenantDashboard />; // Clients see tenant view
+      case 'contractor':
+        return <TenantDashboard />; // Contractors see tenant view
+      case 'leasing_agent':
+        return <AdminDashboard />; // Leasing agents see admin view
       default:
-        return <TenantDashboard />; // Default to tenant view
+        console.log('🎯 Unknown role, showing default dashboard');
+        return (
+          <div className="text-center py-12">
+            <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+            <p className="text-muted-foreground mb-6">
+              Role: {userRole || 'None'} - Contact your administrator for proper role assignment.
+            </p>
+            <MakeAdminButton />
+          </div>
+        );
     }
   };
 
@@ -181,8 +213,8 @@ const Index = () => {
                 <div {...swipeBinds()}>
                   <div className="p-4 sm:p-6 lg:p-8">
                     <div className="max-w-7xl mx-auto space-y-6">
-                      {/* Bootstrap Admin Button - Only shows when user has no role */}
-                      <MakeAdminButton />
+                      {/* Only show MakeAdminButton if user has no role */}
+                      {!userRole && <MakeAdminButton />}
                       
                       <ErrorBoundary>
                         {renderDashboardContent()}

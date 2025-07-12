@@ -1,56 +1,88 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useSetupCheck } from '@/hooks/useSetupCheck';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { user, loading, userRole } = useAuth();
-  const { needsSetup, checking } = useSetupCheck();
-  const navigate = useNavigate();
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="space-y-4 w-full max-w-md text-center">
+      <Loader2 className="h-8 w-8 animate-spin mx-auto" />
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-full" />
+        <Skeleton className="h-4 w-3/4 mx-auto" />
+      </div>
+      <p className="text-sm text-muted-foreground">Loading your dashboard...</p>
+    </div>
+  </div>
+);
 
-  console.log('🔒 ProtectedRoute - user:', !!user, 'loading:', loading, 'userRole:', userRole, 'needsSetup:', needsSetup, 'checking:', checking);
+export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+  const { user, userRole, loading: authLoading } = useAuth();
+  const { needsSetup, checking: setupChecking } = useSetupCheck();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  console.log('🔒 ProtectedRoute - user:', !!user, 'userRole:', userRole, 'authLoading:', authLoading, 'setupChecking:', setupChecking, 'pathname:', location.pathname);
 
   useEffect(() => {
-    console.log('🔒 ProtectedRoute effect - user:', !!user, 'loading:', loading);
-    if (!loading && !user) {
-      console.log('🔒 Redirecting to auth - no user');
-      navigate('/auth');
+    // Don't redirect if we're still loading
+    if (authLoading || setupChecking) return;
+    
+    // Always allow access to setup page
+    if (location.pathname === '/setup') return;
+    
+    // If no user, redirect to auth
+    if (!user) {
+      console.log('🔒 No user, redirecting to auth');
+      navigate('/auth', { replace: true });
+      return;
     }
-  }, [user, loading, navigate]);
+    
+    // If user exists but no role and not on setup page, redirect to setup
+    if (user && !userRole && location.pathname !== '/setup') {
+      console.log('🔒 User has no role, redirecting to setup');
+      navigate('/setup', { replace: true });
+      return;
+    }
+    
+  }, [user, userRole, authLoading, setupChecking, location.pathname, navigate]);
 
-  if (loading || checking) {
-    console.log('🔒 ProtectedRoute - showing loading skeleton');
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="space-y-4 w-full max-w-md">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-8 w-3/4" />
-          <div className="text-center text-sm text-muted-foreground mt-4">
-            {loading ? 'Loading authentication...' : 'Checking setup...'}
-          </div>
-        </div>
-      </div>
-    );
+  // Always allow setup page
+  if (location.pathname === '/setup') {
+    console.log('🔒 Allowing setup page access');
+    return <>{children}</>;
   }
 
+  // Show loading while checking auth or setup status
+  if (authLoading || setupChecking) {
+    console.log('🔒 Showing loading spinner');
+    return <LoadingSpinner />;
+  }
+
+  // If no user after loading is complete, don't render (will redirect)
   if (!user) {
-    console.log('🔒 ProtectedRoute - no user, returning null');
+    console.log('🔒 No user after loading, returning null');
     return null;
   }
 
-  // If setup is needed, the useSetupCheck hook will redirect to /setup
-  // So we just need to render null here to prevent showing protected content
+  // If setup is needed (no admin exists), don't render (will redirect)
   if (needsSetup) {
-    console.log('🔒 ProtectedRoute - setup needed, returning null');
+    console.log('🔒 Setup needed, returning null');
     return null;
   }
 
-  console.log('🔒 ProtectedRoute - rendering children');
+  // If user has no role, don't render (will redirect to setup)
+  if (!userRole) {
+    console.log('🔒 No user role, returning null');
+    return null;
+  }
+
+  console.log('🔒 Rendering protected content for role:', userRole);
   return <>{children}</>;
 };

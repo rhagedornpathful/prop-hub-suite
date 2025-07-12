@@ -50,10 +50,10 @@ const AppContent = () => {
           <Sonner />
           <BrowserRouter>
           <Routes>
-            {/* Public Auth Route */}
+            {/* Public Auth Route - Always accessible */}
             <Route path="/auth" element={<Auth />} />
             
-            {/* Setup Route - for first admin setup */}
+            {/* Setup Route - Always accessible for first admin setup */}
             <Route path="/setup" element={<Setup />} />
             
             {/* Demo Routes - Temporarily accessible without auth */}
