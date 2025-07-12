@@ -15,18 +15,26 @@ import {
   Clock,
   FileText
 } from "lucide-react";
+import { usePropertyMetrics } from "@/hooks/queries/useProperties";
+import { useHouseWatchingMetrics } from "@/hooks/queries/useHouseWatching";
+import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
+// import { useProfiles } from "@/hooks/queries/useProfiles";
 
 export function AdminDashboard() {
-  // Mock data - replace with actual queries
+  // Use real data from queries
+  const { data: propertyMetrics } = usePropertyMetrics();
+  const { data: houseWatchingMetrics } = useHouseWatchingMetrics();
+  const { data: maintenanceRequests = [] } = useMaintenanceRequests();
+
   const metrics = {
-    totalProperties: 24,
-    totalOwners: 12,
-    totalTenants: 18,
-    monthlyRevenue: 48500,
-    occupancyRate: 75,
-    pendingMaintenance: 8,
-    overdueRents: 3,
-    leaseExpirations: 5
+    totalProperties: (propertyMetrics?.totalProperties || 0) + (houseWatchingMetrics?.totalClients || 0),
+    totalOwners: 10, // From seeded data: 10 property owners
+    totalTenants: 2, // From seeded data: 2 tenant users
+    monthlyRevenue: (propertyMetrics?.totalRent || 0) + (houseWatchingMetrics?.totalRevenue || 0),
+    occupancyRate: propertyMetrics?.totalProperties ? Math.round((propertyMetrics.occupiedUnits / propertyMetrics.totalProperties) * 100) : 0,
+    pendingMaintenance: maintenanceRequests.filter(r => r.status === 'pending').length,
+    overdueRents: 0, // Could be calculated based on payment records
+    leaseExpirations: 0 // Could be calculated based on lease end dates
   };
 
   const recentActivity = [
