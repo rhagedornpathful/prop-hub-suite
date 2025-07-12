@@ -14,7 +14,11 @@ interface ViewAsContextType {
 const ViewAsContext = createContext<ViewAsContextType | undefined>(undefined);
 
 export function ViewAsProvider({ children }: { children: React.ReactNode }) {
-  const [viewAsRole, setViewAsRoleState] = useState<ViewAsRole>(null);
+  const [viewAsRole, setViewAsRoleState] = useState<ViewAsRole>(() => {
+    // Load from sessionStorage on init
+    const saved = sessionStorage.getItem('viewAsRole');
+    return saved && saved !== 'null' ? saved as ViewAsRole : null;
+  });
   const { userRole } = useAuth(); // Use useAuth directly instead of useUserRole
   
   const isViewingAs = viewAsRole !== null;
@@ -28,6 +32,13 @@ export function ViewAsProvider({ children }: { children: React.ReactNode }) {
     
     setViewAsRoleState(role);
     
+    // Persist to sessionStorage
+    if (role) {
+      sessionStorage.setItem('viewAsRole', role);
+    } else {
+      sessionStorage.removeItem('viewAsRole');
+    }
+    
     // Log the activity for audit purposes
     if (role) {
       console.log(`[AUDIT] Admin user viewing as: ${role} at ${new Date().toISOString()}`);
@@ -40,6 +51,7 @@ export function ViewAsProvider({ children }: { children: React.ReactNode }) {
   const exitViewAs = () => {
     console.log(`[AUDIT] Admin user exited View As mode at ${new Date().toISOString()}`);
     setViewAsRoleState(null);
+    sessionStorage.removeItem('viewAsRole');
   };
 
   // Reset view as mode if user loses admin privileges
