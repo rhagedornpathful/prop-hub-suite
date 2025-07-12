@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -581,41 +579,291 @@ ${error.code === '23503' ? 'This usually means test users need to be created in 
 
   if (!isAdmin && !isEmergencyMode) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gradient-subtle">
-          <AppSidebar />
-          <div className="flex-1 flex items-center justify-center">
-            <Card className="max-w-md">
-              <CardContent className="pt-6">
-                <div className="text-center space-y-4">
-                  <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">
-                    {loading ? 'Checking Access...' : 'Access Denied'}
-                  </h3>
-                  
-                  {loading ? (
-                    <div className="space-y-4">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                      <p className="text-muted-foreground text-sm">
-                        Verifying your permissions...
+      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
+        <Card className="max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium text-foreground mb-2">
+                {loading ? 'Checking Access...' : 'Access Denied'}
+              </h3>
+              
+              {loading ? (
+                <div className="space-y-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+                  <p className="text-muted-foreground text-sm">
+                    Verifying your permissions...
+                  </p>
+                  {loadingTimeout && (
+                    <div className="space-y-2">
+                      <p className="text-destructive text-sm">
+                        Loading is taking longer than expected
                       </p>
-                      {loadingTimeout && (
-                        <div className="space-y-2">
-                          <p className="text-destructive text-sm">
-                            Loading is taking longer than expected
-                          </p>
-                          <Button onClick={retryLoading} size="sm" variant="outline">
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Retry
-                          </Button>
-                        </div>
-                      )}
+                      <Button onClick={retryLoading} size="sm" variant="outline">
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Retry
+                      </Button>
                     </div>
-                  ) : error ? (
-                    <div className="space-y-4">
-                      <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                        <p className="text-destructive text-sm">{error}</p>
-                      </div>
+                  )}
+                </div>
+              ) : error ? (
+                <div className="space-y-4">
+                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <p className="text-destructive text-sm">{error}</p>
+                  </div>
+                  <div className="flex gap-2 justify-center">
+                    <Button onClick={retryLoading} size="sm" variant="outline">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Retry
+                    </Button>
+                    <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Force Load
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-muted-foreground">
+                    You don't have permission to access this page. Only administrators can manage users.
+                  </p>
+                  <Button onClick={retryLoading} size="sm" variant="outline">
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Check Again
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-gradient-subtle">
+      {/* Header */}
+      <header className="bg-card border-b border-border p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                User Management
+                {isEmergencyMode && (
+                  <Badge variant="destructive" className="text-xs">
+                    🚨 EMERGENCY
+                  </Badge>
+                )}
+              </h1>
+              <p className="text-sm text-muted-foreground">Manage user accounts and roles</p>
+            </div>
+            <Badge variant="secondary" className="ml-4">
+              {users.length} Users
+            </Badge>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            {/* Emergency Controls */}
+            {(error || loadingTimeout) && (
+              <div className="flex gap-2">
+                <Button onClick={retryLoading} size="sm" variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Retry
+                </Button>
+                <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Force Load
+                </Button>
+              </div>
+            )}
+            
+            <Button variant="outline" size="sm" className="relative">
+              <Bell className="h-4 w-4" />
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
+                3
+              </Badge>
+            </Button>
+            <Button variant="outline" size="sm">
+              <User className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Error/Status Banner */}
+        {error && (
+          <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-destructive" />
+              <p className="text-destructive text-sm">{error}</p>
+            </div>
+          </div>
+        )}
+        
+        {isEmergencyMode && (
+          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/50 dark:border-amber-800">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <p className="text-amber-800 dark:text-amber-200 text-sm">
+                🚨 Emergency admin mode active - Authentication bypassed
+              </p>
+            </div>
+          </div>
+        )}
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6 overflow-auto">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Test Data Seeding Section */}
+          {isAdmin && (
+            <Card className="border-dashed border-2 border-muted">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Database className="h-5 w-5 text-primary" />
+                  Development Test Data
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Seed the database with test users and sample data for development and testing purposes.
+                    </p>
+                    
+                    {testUsersExist && (
+                      <Alert className="mb-4">
+                        <CheckCircle className="h-4 w-4" />
+                        <AlertDescription>
+                          Test users already exist in the system. You can re-run seeding to update test data.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    <Alert>
+                      <Info className="h-4 w-4" />
+                      <AlertDescription>
+                        <strong>Test Account Credentials:</strong>
+                        <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-mono">
+                          <div>admin@test.com / testpass123</div>
+                          <div>owner@test.com / testpass123</div>
+                          <div>tenant@test.com / testpass123</div>
+                          <div>watcher@test.com / testpass123</div>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                    
+                    {/* Manual Setup Instructions */}
+                    {error && error.includes('auth users') && (
+                      <Alert className="mt-4 border-amber-200 bg-amber-50 dark:bg-amber-950/50">
+                        <Info className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800 dark:text-amber-200">
+                          <strong>Manual Setup Required:</strong>
+                          <ol className="mt-2 ml-4 list-decimal text-xs space-y-1">
+                            <li>Go to Supabase Dashboard → Authentication → Users</li>
+                            <li>Click "Add User" for each test account</li>
+                            <li>Create users with the emails shown above</li>
+                            <li>Set password to "testpass123" for each</li>
+                            <li>Then run "Seed Test Data" again</li>
+                          </ol>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
+                  
+                  <div className="shrink-0 space-y-2">
+                    <Button 
+                      onClick={seedTestUsers}
+                      disabled={seeding}
+                      variant={testUsersExist ? "outline" : "default"}
+                      className="w-full"
+                    >
+                      {seeding ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Seeding...
+                        </>
+                      ) : (
+                        <>
+                          <Database className="h-4 w-4 mr-2" />
+                          {testUsersExist ? 'Re-seed Test Data' : 'Seed Test Data'}
+                        </>
+                      )}
+                    </Button>
+                    
+                    {error && error.includes('auth users') && (
+                      <Button 
+                        onClick={createRoleOnlyData}
+                        disabled={seeding}
+                        variant="secondary"
+                        size="sm"
+                        className="w-full"
+                      >
+                        {seeding ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Creating...
+                          </>
+                        ) : (
+                          <>
+                            <UserCog className="h-4 w-4 mr-2" />
+                            Create Role-Only Data
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Filters */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search users by name or email..." 
+                className="pl-10"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-48 bg-background border-border z-50">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border-border shadow-lg z-50">
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="property_owner">Property Owner</SelectItem>
+                <SelectItem value="tenant">Tenant</SelectItem>
+                <SelectItem value="house_watcher">House Watcher</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4 mr-2" />
+              More Filters
+            </Button>
+          </div>
+
+          {/* Users Table */}
+          <Card className="shadow-md border-0">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                User Accounts
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">
+                    {loadingTimeout ? 'Loading timeout - taking longer than expected...' : 'Loading users...'}
+                  </p>
+                  {loadingTimeout && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-destructive text-sm">This is taking longer than usual</p>
                       <div className="flex gap-2 justify-center">
                         <Button onClick={retryLoading} size="sm" variant="outline">
                           <RefreshCw className="h-4 w-4 mr-2" />
@@ -627,381 +875,120 @@ ${error.code === '23503' ? 'This usually means test users need to be created in 
                         </Button>
                       </div>
                     </div>
-                  ) : (
-                    <div className="space-y-4">
-                      <p className="text-muted-foreground">
-                        You don't have permission to access this page. Only administrators can manage users.
-                      </p>
+                  )}
+                </div>
+              ) : error ? (
+                <div className="text-center py-8 space-y-4">
+                  <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
+                  <div>
+                    <h3 className="text-lg font-medium text-foreground mb-2">Loading Failed</h3>
+                    <p className="text-muted-foreground text-sm mb-4">{error}</p>
+                    <div className="flex gap-2 justify-center">
                       <Button onClick={retryLoading} size="sm" variant="outline">
                         <RefreshCw className="h-4 w-4 mr-2" />
-                        Check Again
+                        Retry Loading
+                      </Button>
+                      <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        Force Load with Mock Data
                       </Button>
                     </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </SidebarProvider>
-    );
-  }
-
-  return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-subtle">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="bg-card border-b border-border p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                    User Management
-                    {isEmergencyMode && (
-                      <Badge variant="destructive" className="text-xs">
-                        🚨 EMERGENCY
-                      </Badge>
-                    )}
-                  </h1>
-                  <p className="text-sm text-muted-foreground">Manage user accounts and roles</p>
-                </div>
-                <Badge variant="secondary" className="ml-4">
-                  {users.length} Users
-                </Badge>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                {/* Emergency Controls */}
-                {(error || loadingTimeout) && (
-                  <div className="flex gap-2">
-                    <Button onClick={retryLoading} size="sm" variant="outline">
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                      Retry
-                    </Button>
-                    <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Force Load
-                    </Button>
                   </div>
-                )}
-                
-                <Button variant="outline" size="sm" className="relative">
-                  <Bell className="h-4 w-4" />
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
-                    3
-                  </Badge>
-                </Button>
-                <Button variant="outline" size="sm">
-                  <User className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            {/* Error/Status Banner */}
-            {error && (
-              <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-destructive" />
-                  <p className="text-destructive text-sm">{error}</p>
                 </div>
-              </div>
-            )}
-            
-            {isEmergencyMode && (
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/50 dark:border-amber-800">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <p className="text-amber-800 dark:text-amber-200 text-sm">
-                    🚨 Emergency admin mode active - Authentication bypassed
-                  </p>
-                </div>
-              </div>
-            )}
-          </header>
-
-          {/* Main Content */}
-          <main className="flex-1 p-6 overflow-auto">
-            <div className="max-w-7xl mx-auto space-y-6">
-              {/* Test Data Seeding Section */}
-              {isAdmin && (
-                <Card className="border-dashed border-2 border-muted">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <Database className="h-5 w-5 text-primary" />
-                      Development Test Data
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <p className="text-sm text-muted-foreground mb-3">
-                          Seed the database with test users and sample data for development and testing purposes.
-                        </p>
-                        
-                        {testUsersExist && (
-                          <Alert className="mb-4">
-                            <CheckCircle className="h-4 w-4" />
-                            <AlertDescription>
-                              Test users already exist in the system. You can re-run seeding to update test data.
-                            </AlertDescription>
-                          </Alert>
-                        )}
-
-                        <Alert>
-                          <Info className="h-4 w-4" />
-                          <AlertDescription>
-                            <strong>Test Account Credentials:</strong>
-                            <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-mono">
-                              <div>admin@test.com / testpass123</div>
-                              <div>owner@test.com / testpass123</div>
-                              <div>tenant@test.com / testpass123</div>
-                              <div>watcher@test.com / testpass123</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>User</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Current Role</TableHead>
+                      <TableHead>Change Role</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((userProfile) => (
+                      <TableRow key={userProfile.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
+                              <User className="h-4 w-4 text-white" />
                             </div>
-                          </AlertDescription>
-                        </Alert>
-                        
-                        {/* Manual Setup Instructions */}
-                        {error && error.includes('auth users') && (
-                          <Alert className="mt-4 border-amber-200 bg-amber-50 dark:bg-amber-950/50">
-                            <Info className="h-4 w-4 text-amber-600" />
-                            <AlertDescription className="text-amber-800 dark:text-amber-200">
-                              <strong>Manual Setup Required:</strong>
-                              <ol className="mt-2 ml-4 list-decimal text-xs space-y-1">
-                                <li>Go to Supabase Dashboard → Authentication → Users</li>
-                                <li>Click "Add User" for each test account</li>
-                                <li>Create users with the emails shown above</li>
-                                <li>Set password to "testpass123" for each</li>
-                                <li>Then run "Seed Test Data" again</li>
-                              </ol>
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                      </div>
-                      
-                      <div className="shrink-0 space-y-2">
-                        <Button 
-                          onClick={seedTestUsers}
-                          disabled={seeding}
-                          variant={testUsersExist ? "outline" : "default"}
-                          className="w-full"
-                        >
-                          {seeding ? (
-                            <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Seeding...
-                            </>
-                          ) : (
-                            <>
-                              <Database className="h-4 w-4 mr-2" />
-                              {testUsersExist ? 'Re-seed Test Data' : 'Seed Test Data'}
-                            </>
-                          )}
-                        </Button>
-                        
-                        {error && error.includes('auth users') && (
-                          <Button 
-                            onClick={createRoleOnlyData}
-                            disabled={seeding}
-                            variant="secondary"
-                            size="sm"
-                            className="w-full"
+                            <div>
+                              <div className="font-medium">
+                                {userProfile.first_name && userProfile.last_name
+                                  ? `${userProfile.first_name} ${userProfile.last_name}`
+                                  : 'No Name Set'
+                                }
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                ID: {userProfile.id.slice(0, 8)}...
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            {userProfile.email}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getRoleBadgeColor(userProfile.role)}>
+                            {formatRoleName(userProfile.role)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Select
+                            value={userProfile.role || ''}
+                            onValueChange={(newRole) => updateUserRole(userProfile.id, newRole)}
+                            disabled={userProfile.id === user?.id} // Prevent self-role change
                           >
-                            {seeding ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Creating...
-                              </>
-                            ) : (
-                              <>
-                                <UserCog className="h-4 w-4 mr-2" />
-                                Create Role-Only Data
-                              </>
-                            )}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                            <SelectTrigger className="w-40 bg-background border-border z-40">
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background border-border shadow-lg z-40">
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="property_owner">Property Owner</SelectItem>
+                              <SelectItem value="tenant">Tenant</SelectItem>
+                              <SelectItem value="house_watcher">House Watcher</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {userProfile.id === user?.id && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Cannot change own role
+                            </p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(userProfile.user_created_at)}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
 
-              {/* Filters */}
-              <div className="flex items-center gap-4">
-                <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search users by name or email..." 
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+              {!loading && filteredUsers.length === 0 && (
+                <div className="text-center py-8">
+                  <UserCog className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">No users found</h3>
+                  <p className="text-muted-foreground">
+                    {searchTerm || roleFilter !== "all" 
+                      ? "Try adjusting your search terms or filters." 
+                      : "No users are currently registered in the system."
+                    }
+                  </p>
                 </div>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-48 bg-background border-border z-50">
-                    <SelectValue placeholder="Filter by role" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border-border shadow-lg z-50">
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="property_owner">Property Owner</SelectItem>
-                    <SelectItem value="tenant">Tenant</SelectItem>
-                    <SelectItem value="house_watcher">House Watcher</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  More Filters
-                </Button>
-              </div>
-
-              {/* Users Table */}
-              <Card className="shadow-md border-0">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-primary" />
-                    User Accounts
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                      <p className="text-muted-foreground">
-                        {loadingTimeout ? 'Loading timeout - taking longer than expected...' : 'Loading users...'}
-                      </p>
-                      {loadingTimeout && (
-                        <div className="mt-4 space-y-2">
-                          <p className="text-destructive text-sm">This is taking longer than usual</p>
-                          <div className="flex gap-2 justify-center">
-                            <Button onClick={retryLoading} size="sm" variant="outline">
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                              Retry
-                            </Button>
-                            <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
-                              <AlertTriangle className="h-4 w-4 mr-2" />
-                              Force Load
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : error ? (
-                    <div className="text-center py-8 space-y-4">
-                      <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
-                      <div>
-                        <h3 className="text-lg font-medium text-foreground mb-2">Loading Failed</h3>
-                        <p className="text-muted-foreground text-sm mb-4">{error}</p>
-                        <div className="flex gap-2 justify-center">
-                          <Button onClick={retryLoading} size="sm" variant="outline">
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Retry Loading
-                          </Button>
-                          <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
-                            <AlertTriangle className="h-4 w-4 mr-2" />
-                            Force Load with Mock Data
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>User</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Current Role</TableHead>
-                          <TableHead>Change Role</TableHead>
-                          <TableHead>Created</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredUsers.map((userProfile) => (
-                          <TableRow key={userProfile.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-                                  <User className="h-4 w-4 text-white" />
-                                </div>
-                                <div>
-                                  <div className="font-medium">
-                                    {userProfile.first_name && userProfile.last_name
-                                      ? `${userProfile.first_name} ${userProfile.last_name}`
-                                      : 'No Name Set'
-                                    }
-                                  </div>
-                                  <div className="text-sm text-muted-foreground">
-                                    ID: {userProfile.id.slice(0, 8)}...
-                                  </div>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Mail className="h-4 w-4 text-muted-foreground" />
-                                {userProfile.email}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={getRoleBadgeColor(userProfile.role)}>
-                                {formatRoleName(userProfile.role)}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                value={userProfile.role || ''}
-                                onValueChange={(newRole) => updateUserRole(userProfile.id, newRole)}
-                                disabled={userProfile.id === user?.id} // Prevent self-role change
-                              >
-                                <SelectTrigger className="w-40 bg-background border-border z-40">
-                                  <SelectValue placeholder="Select role" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-background border-border shadow-lg z-40">
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                  <SelectItem value="property_owner">Property Owner</SelectItem>
-                                  <SelectItem value="tenant">Tenant</SelectItem>
-                                  <SelectItem value="house_watcher">House Watcher</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              {userProfile.id === user?.id && (
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Cannot change own role
-                                </p>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Calendar className="h-4 w-4" />
-                                {formatDate(userProfile.user_created_at)}
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-
-                  {!loading && filteredUsers.length === 0 && (
-                    <div className="text-center py-8">
-                      <UserCog className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <h3 className="text-lg font-medium text-foreground mb-2">No users found</h3>
-                      <p className="text-muted-foreground">
-                        {searchTerm || roleFilter !== "all" 
-                          ? "Try adjusting your search terms or filters." 
-                          : "No users are currently registered in the system."
-                        }
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          </main>
+              )}
+            </CardContent>
+          </Card>
         </div>
-      </div>
-    </SidebarProvider>
+      </main>
+    </div>
   );
 };
 
