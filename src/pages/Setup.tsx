@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import { Crown, Loader2, CheckCircle, Building, User, Shield } from 'lucide-react';
+import { Crown, Loader2, CheckCircle, Building, User, Shield, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -17,9 +17,10 @@ const Setup = () => {
   const [claiming, setClaiming] = useState(false);
   const [adminExists, setAdminExists] = useState(false);
   const [createPropertyOwner, setCreatePropertyOwner] = useState(false);
-  const [propertyOwnerData, setPropertyOwnerData] = useState({
+  const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    email: '',
     phone: '',
     companyName: '',
     address: '',
@@ -27,55 +28,55 @@ const Setup = () => {
     state: '',
     zipCode: ''
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   
   const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    checkAdminExists();
-  }, []);
-
-  useEffect(() => {
-    // Pre-fill user data if available
-    if (user?.user_metadata) {
-      setPropertyOwnerData(prev => ({
-        ...prev,
-        firstName: user.user_metadata.first_name || '',
-        lastName: user.user_metadata.last_name || ''
-      }));
+    if (!user) {
+      // Redirect to auth if not logged in
+      navigate('/auth', { replace: true });
+      return;
     }
     
-    // Check profile data
-    fetchUserProfile();
+    checkAdminExists();
+  }, [user, navigate]);
+
+  useEffect(() => {
+    // Pre-fill user data from auth
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || '',
+        firstName: user.user_metadata?.first_name || '',
+        lastName: user.user_metadata?.last_name || ''
+      }));
+    }
   }, [user]);
 
-  const fetchUserProfile = async () => {
-    if (!user) return;
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
     
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (error) throw error;
-      
-      if (data) {
-        setPropertyOwnerData(prev => ({
-          ...prev,
-          firstName: data.first_name || prev.firstName,
-          lastName: data.last_name || prev.lastName,
-          phone: data.phone || '',
-          companyName: data.company_name || '',
-          address: data.address || '',
-          city: data.city || '',
-          state: data.state || '',
-          zipCode: data.zip_code || ''
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
+    if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
+    if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
+    if (!formData.email.trim()) newErrors.email = 'Email is required';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    
+    // Basic email validation
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
@@ -96,6 +97,10 @@ const Setup = () => {
       
       // If admin exists, redirect to dashboard
       if (hasAdmin) {
+        toast({
+          title: "Setup Complete",
+          description: "System administrator already exists. Redirecting to dashboard...",
+        });
         navigate('/', { replace: true });
         return;
       }
@@ -113,42 +118,70 @@ const Setup = () => {
   };
 
   const claimAdminRole = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "User not logged in. Please log in and try again.",
+        variant: "destructive"
+      });
+      navigate('/auth');
+      return;
+    }
+
+    // Validate form
+    if (!validateForm()) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields correctly.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setClaiming(true);
     
     try {
-      // First, make user admin
-      const { data: adminData, error: adminError } = await supabase.rpc('make_me_admin');
+      // First, verify current user
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      if (adminError) throw adminError;
-      
-      const result = adminData as { success: boolean; message: string };
-      
-      if (!result.success) {
-        throw new Error(result.message);
+      if (!currentUser) {
+        throw new Error('User not authenticated');
       }
 
-      // Update profile with any provided information
-      if (propertyOwnerData.firstName || propertyOwnerData.lastName || propertyOwnerData.phone) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .upsert({
-            user_id: user.id,
-            first_name: propertyOwnerData.firstName || null,
-            last_name: propertyOwnerData.lastName || null,
-            phone: propertyOwnerData.phone || null,
-            company_name: propertyOwnerData.companyName || null,
-            address: propertyOwnerData.address || null,
-            city: propertyOwnerData.city || null,
-            state: propertyOwnerData.state || null,
-            zip_code: propertyOwnerData.zipCode || null
-          });
-        
-        if (profileError) {
-          console.error('Profile update error:', profileError);
-          // Don't fail the whole process if profile update fails
+      // Insert admin role directly into user_roles table
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: currentUser.id,
+          role: 'admin',
+          assigned_by: currentUser.id
+        });
+
+      if (roleError) {
+        if (roleError.code === '23505') { // Unique constraint violation
+          throw new Error('You already have a role assigned. Please contact support.');
         }
+        throw roleError;
+      }
+
+      // Update user profile with form data
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: currentUser.id,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone: formData.phone,
+          company_name: formData.companyName || null,
+          address: formData.address || null,
+          city: formData.city || null,
+          state: formData.state || null,
+          zip_code: formData.zipCode || null,
+        });
+      
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        // Don't fail the whole process if profile update fails
       }
 
       // If user wants to be a property owner too, create that record
@@ -156,39 +189,50 @@ const Setup = () => {
         const { error: ownerError } = await supabase
           .from('property_owners')
           .insert({
-            user_id: user.id,
-            first_name: propertyOwnerData.firstName,
-            last_name: propertyOwnerData.lastName,
-            email: user.email || '',
-            phone: propertyOwnerData.phone,
-            company_name: propertyOwnerData.companyName || null,
-            address: propertyOwnerData.address || null,
-            city: propertyOwnerData.city || null,
-            state: propertyOwnerData.state || null,
-            zip_code: propertyOwnerData.zipCode || null,
+            user_id: currentUser.id,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            email: formData.email,
+            phone: formData.phone,
+            company_name: formData.companyName || null,
+            address: formData.address || null,
+            city: formData.city || null,
+            state: formData.state || null,
+            zip_code: formData.zipCode || null,
             is_self: true
           });
         
         if (ownerError) {
           console.error('Property owner creation error:', ownerError);
-          // Don't fail if this fails
+          // Don't fail if this fails, just warn
+          toast({
+            title: "Warning",
+            description: "Admin role created but property owner profile failed. You can add this later.",
+            variant: "default"
+          });
         }
       }
       
       toast({
         title: "Setup Complete!",
-        description: "You are now the system administrator. Welcome!",
+        description: "You are now the system administrator. Redirecting to dashboard...",
       });
       
-      // Redirect to dashboard
+      // Redirect to dashboard after 2 seconds
       setTimeout(() => {
         navigate('/', { replace: true });
         window.location.reload(); // Refresh to update role state
-      }, 1500);
+      }, 2000);
       
     } catch (error) {
       console.error('Setup error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Setup failed';
+      let errorMessage = 'An unknown error occurred';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = String(error.message);
+      }
       
       toast({
         title: "Setup Failed",
@@ -215,19 +259,8 @@ const Setup = () => {
     );
   }
 
-  if (adminExists) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
-        <Card className="w-full max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <CheckCircle className="h-8 w-8 mx-auto text-green-600 mb-4" />
-              <p className="text-muted-foreground">System already configured. Redirecting...</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (!user) {
+    return null; // Will redirect to auth
   }
 
   return (
@@ -245,7 +278,7 @@ const Setup = () => {
         
         <CardContent className="space-y-6">
           <Alert>
-            <Shield className="h-4 w-4" />
+            <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               <strong>No administrator found!</strong> As the first user, you can claim the admin role 
               to manage the system. This is a one-time setup process.
@@ -255,33 +288,110 @@ const Setup = () => {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input
                   id="firstName"
-                  value={propertyOwnerData.firstName}
-                  onChange={(e) => setPropertyOwnerData(prev => ({ ...prev, firstName: e.target.value }))}
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange('firstName', e.target.value)}
                   placeholder="Enter your first name"
+                  className={errors.firstName ? 'border-red-500' : ''}
                 />
+                {errors.firstName && (
+                  <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+                )}
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <Input
                   id="lastName"
-                  value={propertyOwnerData.lastName}
-                  onChange={(e) => setPropertyOwnerData(prev => ({ ...prev, lastName: e.target.value }))}
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange('lastName', e.target.value)}
                   placeholder="Enter your last name"
+                  className={errors.lastName ? 'border-red-500' : ''}
                 />
+                {errors.lastName && (
+                  <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+                )}
               </div>
             </div>
 
             <div>
-              <Label htmlFor="phone">Phone Number</Label>
+              <Label htmlFor="email">Email *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                placeholder="Enter your email"
+                className={errors.email ? 'border-red-500' : ''}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="phone">Phone Number *</Label>
               <Input
                 id="phone"
-                value={propertyOwnerData.phone}
-                onChange={(e) => setPropertyOwnerData(prev => ({ ...prev, phone: e.target.value }))}
+                value={formData.phone}
+                onChange={(e) => handleInputChange('phone', e.target.value)}
                 placeholder="Enter your phone number"
+                className={errors.phone ? 'border-red-500' : ''}
               />
+              {errors.phone && (
+                <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="companyName">Company/Organization Name</Label>
+              <Input
+                id="companyName"
+                value={formData.companyName}
+                onChange={(e) => handleInputChange('companyName', e.target.value)}
+                placeholder="Enter company name (optional)"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="address">Address</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                placeholder="Enter your address (optional)"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  placeholder="City"
+                />
+              </div>
+              <div>
+                <Label htmlFor="state">State</Label>
+                <Input
+                  id="state"
+                  value={formData.state}
+                  onChange={(e) => handleInputChange('state', e.target.value)}
+                  placeholder="State"
+                />
+              </div>
+              <div>
+                <Label htmlFor="zipCode">ZIP Code</Label>
+                <Input
+                  id="zipCode"
+                  value={formData.zipCode}
+                  onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                  placeholder="ZIP"
+                />
+              </div>
             </div>
           </div>
 
@@ -307,55 +417,13 @@ const Setup = () => {
 
             {createPropertyOwner && (
               <div className="space-y-4 pl-6 border-l-2 border-muted">
-                <div>
-                  <Label htmlFor="companyName">Company Name (Optional)</Label>
-                  <Input
-                    id="companyName"
-                    value={propertyOwnerData.companyName}
-                    onChange={(e) => setPropertyOwnerData(prev => ({ ...prev, companyName: e.target.value }))}
-                    placeholder="Enter company name if applicable"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="address">Address</Label>
-                  <Input
-                    id="address"
-                    value={propertyOwnerData.address}
-                    onChange={(e) => setPropertyOwnerData(prev => ({ ...prev, address: e.target.value }))}
-                    placeholder="Enter your address"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="city">City</Label>
-                    <Input
-                      id="city"
-                      value={propertyOwnerData.city}
-                      onChange={(e) => setPropertyOwnerData(prev => ({ ...prev, city: e.target.value }))}
-                      placeholder="City"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State</Label>
-                    <Input
-                      id="state"
-                      value={propertyOwnerData.state}
-                      onChange={(e) => setPropertyOwnerData(prev => ({ ...prev, state: e.target.value }))}
-                      placeholder="State"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="zipCode">ZIP Code</Label>
-                    <Input
-                      id="zipCode"
-                      value={propertyOwnerData.zipCode}
-                      onChange={(e) => setPropertyOwnerData(prev => ({ ...prev, zipCode: e.target.value }))}
-                      placeholder="ZIP"
-                    />
-                  </div>
-                </div>
+                <Alert>
+                  <Building className="h-4 w-4" />
+                  <AlertDescription className="text-sm">
+                    A property owner profile will be created using the information above. 
+                    You can manage your properties and also have full admin access.
+                  </AlertDescription>
+                </Alert>
               </div>
             )}
           </div>
@@ -365,6 +433,7 @@ const Setup = () => {
             <AlertDescription>
               <strong>Confirmation:</strong> I understand that claiming admin role will give me 
               full system access and responsibility for managing users, properties, and all system settings.
+              Fields marked with * are required.
             </AlertDescription>
           </Alert>
 
