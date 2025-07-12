@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Bug, Send, AlertTriangle } from "lucide-react";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -18,23 +19,61 @@ export default function Auth() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [timeoutReached, setTimeoutReached] = useState(false);
+  const [magicLinkLoading, setMagicLinkLoading] = useState(false);
+  const [showDebugMode, setShowDebugMode] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<string[]>([]);
   const navigate = useNavigate();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const buttonTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Add debug info helper
+  const addDebugInfo = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setDebugInfo(prev => [...prev.slice(-9), `[${timestamp}] ${message}`]);
+    console.log(`🐛 Debug: ${message}`);
+  };
+
+  // Check Supabase connection and environment
+  useEffect(() => {
+    const checkSupabaseConnection = async () => {
+      addDebugInfo("Checking Supabase connection...");
+      try {
+        // Test basic connection
+        const { data, error } = await supabase.auth.getSession();
+        addDebugInfo(`Supabase connection: ${error ? 'FAILED' : 'OK'}`);
+        addDebugInfo(`Environment: ${window.location.origin}`);
+        addDebugInfo(`Supabase URL: https://nhjsxtwuweegqcexakoz.supabase.co`);
+        
+        if (error) {
+          addDebugInfo(`Connection error: ${error.message}`);
+        }
+      } catch (err: any) {
+        addDebugInfo(`Connection exception: ${err.message}`);
+      }
+    };
+    
+    checkSupabaseConnection();
+  }, []);
+
   // Check if user is already logged in
   useEffect(() => {
     console.log('🔍 Auth page: Checking if user is already logged in...');
+    addDebugInfo("Checking existing session...");
+    
     const checkUser = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         console.log('🔍 Auth page: Session check result:', { session: !!session, error });
+        addDebugInfo(`Existing session: ${session ? 'Found' : 'None'}`);
+        
         if (session) {
           console.log('✅ Auth page: User already logged in, redirecting to dashboard');
+          addDebugInfo("User already logged in - redirecting");
           navigate("/");
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Auth page: Error checking session:', error);
+        addDebugInfo(`Session check error: ${error.message}`);
       }
     };
     checkUser();
@@ -122,6 +161,7 @@ export default function Auth() {
       isSignUp, 
       email: email.substring(0, 5) + '***'
     });
+    addDebugInfo(`Starting ${isSignUp ? 'sign up' : 'sign in'} for ${email.substring(0, 5)}***`);
 
     // Clear any existing timeouts
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -131,6 +171,7 @@ export default function Auth() {
     const timeoutPromise = new Promise((_, reject) => {
       timeoutRef.current = setTimeout(() => {
         console.error('⏰ Auth: Request timed out after 30 seconds');
+        addDebugInfo("❌ Request timed out after 30 seconds");
         reject(new Error('Login request timed out after 30 seconds. Please try again.'));
       }, 30000);
     });
@@ -138,18 +179,22 @@ export default function Auth() {
     // Set up 10-second timeout for button text change
     buttonTimeoutRef.current = setTimeout(() => {
       console.log('⏰ Auth: Changing button text after 10 seconds');
+      addDebugInfo("⏰ Request taking longer than expected...");
       setTimeoutReached(true);
     }, 10000);
 
     try {
       if (isSignUp) {
         console.log('📝 Auth: Processing sign up...');
+        addDebugInfo("Processing sign up...");
+        
         if (password !== confirmPassword) {
           throw new Error('Passwords do not match');
         }
 
         const redirectUrl = `${window.location.origin}/`;
         console.log('📝 Auth: Sign up redirect URL:', redirectUrl);
+        addDebugInfo(`Sign up redirect URL: ${redirectUrl}`);
         
         const authPromise = supabase.auth.signUp({
           email,
@@ -159,20 +204,25 @@ export default function Auth() {
           }
         });
 
+        addDebugInfo("Calling Supabase signUp...");
         const { error } = await Promise.race([authPromise, timeoutPromise]) as any;
 
         if (error) {
           console.error('❌ Auth: Sign up error:', error);
+          addDebugInfo(`❌ Sign up error: ${error.message}`);
           throw error;
         }
 
         console.log('✅ Auth: Sign up successful');
+        addDebugInfo("✅ Sign up successful");
         toast({
           title: "Success",
           description: "Please check your email to confirm your account",
         });
       } else {
         console.log('🔑 Auth: Processing sign in...');
+        addDebugInfo("Processing sign in...");
+        addDebugInfo("Calling Supabase signInWithPassword...");
         
         const authPromise = supabase.auth.signInWithPassword({
           email,
@@ -183,21 +233,32 @@ export default function Auth() {
 
         if (error) {
           console.error('❌ Auth: Sign in error:', error);
+          addDebugInfo(`❌ Sign in error: ${error.message}`);
+          addDebugInfo(`Error code: ${error.code || 'unknown'}`);
           throw error;
         }
 
         console.log('✅ Auth: Sign in successful', { userId: data?.user?.id });
+        addDebugInfo(`✅ Sign in successful - User ID: ${data?.user?.id?.substring(0, 8)}...`);
 
         if (data.user) {
           console.log('🚀 Auth: Redirecting to dashboard...');
-          navigate("/");
+          addDebugInfo("Redirecting to dashboard...");
+          
+          // Force a full page reload to ensure clean state
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 500);
         } else {
           console.warn('⚠️ Auth: No user data returned from sign in');
+          addDebugInfo("⚠️ No user data returned");
           throw new Error('No user data returned from sign in');
         }
       }
     } catch (error: any) {
       console.error('❌ Auth: Authentication failed:', error);
+      addDebugInfo(`❌ Authentication failed: ${error.message}`);
+      
       toast({
         title: "Authentication Error",
         description: error.message || "An error occurred during authentication. Please try again.",
@@ -210,12 +271,15 @@ export default function Auth() {
       
       setLoading(false);
       setTimeoutReached(false);
+      addDebugInfo("Authentication process completed");
       console.log('🏁 Auth: Authentication process completed');
     }
   };
 
   const handleSSOLogin = async (provider: 'google' | 'azure') => {
     console.log(`🔗 Auth: Starting ${provider} SSO login...`);
+    addDebugInfo(`Starting ${provider} SSO login...`);
+    
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -226,16 +290,67 @@ export default function Auth() {
 
       if (error) {
         console.error(`❌ Auth: ${provider} SSO error:`, error);
+        addDebugInfo(`❌ ${provider} SSO error: ${error.message}`);
         throw error;
       }
       console.log(`✅ Auth: ${provider} SSO initiated successfully`);
+      addDebugInfo(`✅ ${provider} SSO initiated successfully`);
     } catch (error: any) {
       console.error(`❌ Auth: ${provider} SSO failed:`, error);
+      addDebugInfo(`❌ ${provider} SSO failed: ${error.message}`);
       toast({
         title: "SSO Error",
         description: error.message || `Failed to sign in with ${provider}`,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleMagicLink = async () => {
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setMagicLinkLoading(true);
+    addDebugInfo(`Sending magic link to ${email.substring(0, 5)}***`);
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+
+      if (error) {
+        console.error('❌ Auth: Magic link error:', error);
+        addDebugInfo(`❌ Magic link error: ${error.message}`);
+        throw error;
+      }
+
+      console.log('✅ Auth: Magic link sent successfully');
+      addDebugInfo("✅ Magic link sent successfully");
+      
+      toast({
+        title: "Magic Link Sent",
+        description: "Check your email for a login link",
+      });
+    } catch (error: any) {
+      console.error('❌ Auth: Magic link failed:', error);
+      addDebugInfo(`❌ Magic link failed: ${error.message}`);
+      
+      toast({
+        title: "Magic Link Error",
+        description: error.message || "Failed to send magic link",
+        variant: "destructive",
+      });
+    } finally {
+      setMagicLinkLoading(false);
     }
   };
 
@@ -262,6 +377,50 @@ export default function Auth() {
         </CardHeader>
 
         <CardContent className="space-y-6">
+          {/* Debug Mode Toggle */}
+          <div className="flex justify-between items-center">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowDebugMode(!showDebugMode)}
+              className="text-xs"
+            >
+              <Bug className="w-3 h-3 mr-1" />
+              {showDebugMode ? 'Hide' : 'Show'} Debug Info
+            </Button>
+            {debugInfo.length > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {debugInfo.length} logs
+              </Badge>
+            )}
+          </div>
+
+          {/* Debug Info Panel */}
+          {showDebugMode && (
+            <Card className="border border-muted">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Bug className="w-4 h-4" />
+                  Debug Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-1 max-h-40 overflow-y-auto">
+                  {debugInfo.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No debug info yet</p>
+                  ) : (
+                    debugInfo.map((info, index) => (
+                      <div key={index} className="text-xs font-mono bg-muted p-1 rounded">
+                        {info}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* SSO Providers */}
           <div className="space-y-3">
             <Button
@@ -379,6 +538,38 @@ export default function Auth() {
                 : (isSignUp ? "Create Account" : "Sign In")
               }
             </Button>
+
+            {/* Magic Link Option */}
+            {!isSignUp && (
+              <div className="relative">
+                <Separator />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-card px-2 text-muted-foreground text-xs">or</span>
+                </div>
+              </div>
+            )}
+
+            {!isSignUp && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handleMagicLink}
+                disabled={magicLinkLoading || !email}
+              >
+                {magicLinkLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary mr-2"></div>
+                    Sending Magic Link...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Send Magic Link
+                  </>
+                )}
+              </Button>
+            )}
           </form>
 
           {/* Demo Access Button */}
@@ -400,6 +591,28 @@ export default function Auth() {
               {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
             </button>
           </div>
+
+          {/* Troubleshooting Tips */}
+          {timeoutReached && (
+            <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950/50">
+              <CardContent className="pt-4">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-orange-600 mt-0.5" />
+                  <div className="space-y-2 text-xs">
+                    <p className="font-medium text-orange-800 dark:text-orange-200">
+                      Login taking too long? Try these steps:
+                    </p>
+                    <ul className="space-y-1 text-orange-700 dark:text-orange-300">
+                      <li>• Check your internet connection</li>
+                      <li>• Use Magic Link as an alternative</li>
+                      <li>• Clear browser cache and cookies</li>
+                      <li>• Contact support if the issue persists</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Emergency Admin Access Instructions */}
           <div className="text-center text-xs text-muted-foreground">
