@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useUpdateProperty } from "@/hooks/queries/useProperties";
 import {
   Dialog,
   DialogContent,
@@ -70,18 +71,20 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
   const [isLoadingOwners, setIsLoadingOwners] = useState(false);
   const [propertyData, setPropertyData] = useState<PropertyData>(() => {
     if (mode === "edit" && editProperty) {
+      // Use the original database data if available, otherwise use the transformed data
+      const dbData = (editProperty as any)._dbData || editProperty;
       return {
-        address: editProperty.address || "",
-        property_type: editProperty.type || "",
-        service_type: editProperty.serviceType === "property_management" ? "property_management" : "house_watching",
-        bedrooms: 0,
-        bathrooms: 0,
-        square_feet: 0,
-        year_built: 0,
-        estimated_value: 0,
-        monthly_rent: editProperty.monthlyRent || editProperty.monthlyFee || 0,
-        description: "",
-        owner_id: editProperty.owner_id || "",
+        address: dbData.address || "",
+        property_type: dbData.property_type || editProperty.type || "",
+        service_type: dbData.service_type || editProperty.serviceType || "property_management",
+        bedrooms: dbData.bedrooms || 0,
+        bathrooms: dbData.bathrooms || 0,
+        square_feet: dbData.square_feet || 0,
+        year_built: dbData.year_built || 0,
+        estimated_value: dbData.estimated_value || 0,
+        monthly_rent: dbData.monthly_rent || editProperty.monthlyRent || editProperty.monthlyFee || 0,
+        description: dbData.description || "",
+        owner_id: dbData.owner_id || "",
       };
     }
     return {
@@ -99,6 +102,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
     };
   });
   const { toast } = useToast();
+  const updateProperty = useUpdateProperty();
 
   // Load property owners when dialog opens
   useEffect(() => {
@@ -257,7 +261,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         
         toast({
           title: "Success",
-          description: "Property added successfully! (Demo Mode)",
+          description: `Property ${mode === "edit" ? "updated" : "added"} successfully! (Demo Mode)`,
         });
         
         onPropertyAdded?.();
@@ -270,28 +274,46 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
 
-      const { error } = await supabase
-        .from('properties')
-        .insert({
-          ...propertyData,
-          user_id: userData.user.id,
+      if (mode === "edit" && editProperty) {
+        // Update existing property
+        const dbData = (editProperty as any)._dbData || editProperty;
+        const propertyId = dbData.id || editProperty.id;
+        
+        updateProperty.mutate({
+          id: propertyId,
+          updates: propertyData
+        }, {
+          onSuccess: () => {
+            onPropertyAdded?.();
+            onOpenChange(false);
+            resetForm();
+          }
+        });
+      } else {
+        // Create new property
+        const { error } = await supabase
+          .from('properties')
+          .insert({
+            ...propertyData,
+            user_id: userData.user.id,
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Property added successfully!",
         });
 
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Property added successfully!",
-      });
-
-      onPropertyAdded?.();
-      onOpenChange(false);
-      resetForm();
+        onPropertyAdded?.();
+        onOpenChange(false);
+        resetForm();
+      }
     } catch (error) {
       console.error('Error saving property:', error);
       toast({
         title: "Error",
-        description: "Failed to save property",
+        description: `Failed to ${mode === "edit" ? "update" : "save"} property`,
         variant: "destructive",
       });
     } finally {

@@ -47,7 +47,7 @@ const Properties = () => {
   } = useUserRole();
 
   // Get real property data
-  const { data: properties = [], isLoading } = useProperties();
+  const { data: properties = [], isLoading, refetch } = useProperties();
 
   // For tenants, redirect to their property detail page
   useEffect(() => {
@@ -247,7 +247,7 @@ const Properties = () => {
                 </TabsList>
                 
                 <TabsContent value="grid" className="mt-6">
-                  <PropertyGrid properties={properties} isLoading={isLoading} />
+                  <PropertyGrid properties={properties} isLoading={isLoading} onRefresh={refetch} />
                 </TabsContent>
                 
                 <TabsContent value="list" className="mt-6">

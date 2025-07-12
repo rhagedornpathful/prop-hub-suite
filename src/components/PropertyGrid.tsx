@@ -400,9 +400,10 @@ const PropertyCard = ({ property, onClick, onEdit, onDelete }: {
 interface PropertyGridProps {
   properties?: any[];
   isLoading?: boolean;
+  onRefresh?: () => void;
 }
 
-export function PropertyGrid({ properties, isLoading }: PropertyGridProps) {
+export function PropertyGrid({ properties, isLoading, onRefresh }: PropertyGridProps) {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -411,7 +412,7 @@ export function PropertyGrid({ properties, isLoading }: PropertyGridProps) {
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
   const { toast } = useToast();
 
-  // Transform database properties to match our interface
+  // Transform database properties to match our interface but keep original data
   const transformedProperties = properties ? properties.map(prop => ({
     id: prop.id,
     name: prop.address, // Use address as name for now
@@ -432,7 +433,9 @@ export function PropertyGrid({ properties, isLoading }: PropertyGridProps) {
       name: 'Property Owner',
       email: 'owner@test.com',
       phone: '555-0123'
-    }
+    },
+    // Keep original database data for editing
+    _dbData: prop
   })) : [];
 
   // Use transformed properties or fall back to mock data
@@ -477,6 +480,8 @@ export function PropertyGrid({ properties, isLoading }: PropertyGridProps) {
       title: "Property Updated",
       description: "Property details have been successfully updated.",
     });
+    // Trigger a refetch of properties
+    onRefresh?.();
   };
 
   if (isLoading) {
