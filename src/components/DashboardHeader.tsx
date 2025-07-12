@@ -23,7 +23,6 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { TouchOptimized } from "@/components/mobile/TouchOptimized";
-import { RoleSwitcher } from "@/components/dev/RoleSwitcher";
 import { ViewAsDropdown } from "@/components/ViewAsDropdown";
 import { useUserRole } from "@/hooks/useUserRole";
 
@@ -286,9 +285,6 @@ export function DashboardHeader({
           
           {/* View As Dropdown for Admin Users */}
           {actualUserRole === 'admin' && <ViewAsDropdown />}
-          
-          {/* Development Role Switcher - Desktop */}
-          {process.env.NODE_ENV === 'development' && <RoleSwitcher />}
           
           {/* Notifications */}
           <Button 
