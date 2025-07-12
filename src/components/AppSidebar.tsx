@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Home, 
   Building, 
   Users, 
   UserCheck,
+  UserCog,
   FileText, 
   DollarSign, 
   Wrench, 
@@ -34,6 +35,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 const menuItems = [
   {
@@ -103,6 +106,13 @@ const menuItems = [
     description: "Analytics & insights"
   },
   {
+    title: "User Management",
+    url: "/user-management",
+    icon: UserCog,
+    description: "Manage users & roles",
+    adminOnly: true
+  },
+  {
     title: "Client Portal",
     url: "/client-portal",
     icon: Users,
@@ -116,8 +126,29 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const collapsed = state === "collapsed";
   const { isMobile } = useMobileDetection();
+  const { user } = useAuth();
+
+  // Check admin status
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .rpc('has_role', { _user_id: user.id, _role: 'admin' as any });
+        
+        if (error) throw error;
+        setIsAdmin(data);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   // Check if we're in demo mode
   const isDemoMode = currentPath.startsWith('/demo');
@@ -130,10 +161,15 @@ export function AppSidebar() {
     return false;
   };
 
-  const filteredItems = menuItems.filter(item =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredItems = menuItems.filter(item => {
+    // Filter out admin-only items if user is not admin
+    if (item.adminOnly && !isAdmin) return false;
+    
+    return (
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   return (
     <>

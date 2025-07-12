@@ -1,6 +1,6 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -18,6 +18,7 @@ import Messages from "./pages/Messages";
 import HouseWatching from "./pages/HouseWatching";
 import PropertyCheck from "./pages/PropertyCheck";
 import Documents from "./pages/Documents";
+import UserManagement from "./pages/UserManagement";
 import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientPortal/Dashboard";
 import ClientProperties from "./pages/ClientPortal/Properties";
@@ -59,6 +60,7 @@ const AppContent = () => {
                   <Route path="/house-watching" element={<PageTransition><HouseWatching /></PageTransition>} />
                   <Route path="/property-check/:id" element={<PageTransition><PropertyCheck /></PageTransition>} />
                   <Route path="/property-owners" element={<PageTransition><PropertyOwners /></PageTransition>} />
+                  <Route path="/user-management" element={<PageTransition><UserManagement /></PageTransition>} />
                   <Route path="/property-owners/:ownerId" element={<PageTransition><PropertyOwnerDetail /></PageTransition>} />
                   <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
                   <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
@@ -96,6 +98,7 @@ const AppContent = () => {
                         <Route path="/house-watching" element={<PageTransition><HouseWatching /></PageTransition>} />
                         <Route path="/property-check/:id" element={<PageTransition><PropertyCheck /></PageTransition>} />
                         <Route path="/property-owners" element={<PageTransition><PropertyOwners /></PageTransition>} />
+                        <Route path="/user-management" element={<PageTransition><UserManagement /></PageTransition>} />
                         <Route path="/property-owners/:ownerId" element={<PageTransition><PropertyOwnerDetail /></PageTransition>} />
                         <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
                         <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
