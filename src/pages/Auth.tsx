@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
+import { SupabaseConnectionTest } from "@/components/SupabaseConnectionTest";
 import { Eye, EyeOff, Mail, Lock, Bug, Send, AlertTriangle, TestTube } from "lucide-react";
 
 export default function Auth() {
