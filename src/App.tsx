@@ -10,6 +10,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageTransition } from "@/components/PageTransition";
 import { DevAdminProvider } from "@/contexts/DevAdminContext";
 import { DevAdminToggle } from "@/components/dev/DevAdminToggle";
+import { DebugPanel } from "@/components/dev/DebugPanel";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
@@ -203,8 +204,9 @@ const AppContent = () => {
             } />
           </Routes>
           
-          {/* Development Admin Toggle */}
+          {/* Development Tools */}
           <DevAdminToggle />
+          <DebugPanel />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
