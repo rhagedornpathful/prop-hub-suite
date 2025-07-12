@@ -367,7 +367,94 @@ export function SeedDatabase() {
         }
       }
 
-      console.log('Created comprehensive test properties and data');
+      // Create tenant records for some PM properties
+      const { data: pmPropsData } = await supabase
+        .from('properties')
+        .select('id, address, user_id')
+        .eq('service_type', 'property_management')
+        .limit(4);
+
+      const { data: tenantUsers } = await supabase
+        .from('user_profiles')
+        .select('id, first_name, last_name, email')
+        .ilike('email', 'tenant%@test.com');
+
+      if (pmPropsData && tenantUsers) {
+        for (let i = 0; i < Math.min(pmPropsData.length, tenantUsers.length); i++) {
+          const property = pmPropsData[i];
+          const tenant = tenantUsers[i];
+          
+          await supabase.from('tenants').insert({
+            user_id: property.user_id,
+            user_account_id: tenant.id,
+            property_id: property.id,
+            first_name: tenant.first_name || 'Test',
+            last_name: tenant.last_name || 'Tenant',
+            email: tenant.email,
+            phone: '555-0300',
+            lease_start_date: new Date().toISOString().split('T')[0],
+            lease_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            monthly_rent: Math.floor(Math.random() * 1000) + 1500,
+            security_deposit: Math.floor(Math.random() * 1000) + 1500,
+            notes: 'TEST - Tenant record for property management'
+          });
+        }
+      }
+
+      // Create maintenance requests for properties
+      const { data: allPropsForMaintenance } = await supabase
+        .from('properties')
+        .select('id, address, user_id')
+        .limit(6);
+
+      if (allPropsForMaintenance) {
+        const maintenanceTypes = [
+          { title: 'Leaky Faucet Repair', description: 'Kitchen sink faucet is dripping', priority: 'high' },
+          { title: 'HVAC Filter Replacement', description: 'Annual filter replacement due', priority: 'medium' },
+          { title: 'Exterior Paint Touch-up', description: 'Front door needs paint refresh', priority: 'low' },
+          { title: 'Garage Door Service', description: 'Door making unusual noises', priority: 'medium' },
+          { title: 'Gutter Cleaning', description: 'Seasonal gutter maintenance', priority: 'low' },
+          { title: 'Smoke Detector Battery', description: 'Replace batteries in all units', priority: 'high' }
+        ];
+
+        for (let i = 0; i < allPropsForMaintenance.length; i++) {
+          const property = allPropsForMaintenance[i];
+          const maintenance = maintenanceTypes[i];
+          
+          await supabase.from('maintenance_requests').insert({
+            user_id: property.user_id,
+            property_id: property.id,
+            title: maintenance.title,
+            description: maintenance.description,
+            priority: maintenance.priority,
+            status: i % 3 === 0 ? 'completed' : i % 3 === 1 ? 'in_progress' : 'pending',
+            estimated_cost: Math.floor(Math.random() * 500) + 100,
+            contractor_name: i % 2 === 0 ? 'TEST - ABC Repair Services' : 'TEST - Quick Fix Solutions',
+            contractor_contact: '555-0400',
+            notes: 'TEST - Sample maintenance request for testing'
+          });
+        }
+      }
+
+      // Create house watcher assignments
+      const { data: houseWatchers } = await supabase
+        .from('house_watchers')
+        .select('id, user_id');
+
+      if (houseWatchers && hwPropsData) {
+        for (let i = 0; i < Math.min(houseWatchers.length, hwPropsData.length); i++) {
+          const watcher = houseWatchers[i];
+          const property = hwPropsData[i];
+          
+          await supabase.from('house_watcher_properties').insert({
+            house_watcher_id: watcher.id,
+            property_id: property.id,
+            notes: 'TEST - House watcher assignment for monitoring'
+          });
+        }
+      }
+
+      console.log('Created comprehensive test data: properties, tenants, maintenance requests, and assignments');
     } catch (error) {
       console.error('Error creating sample properties:', error);
     }
