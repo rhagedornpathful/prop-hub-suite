@@ -71,12 +71,51 @@ export const useAuth = () => {
     }
 
     console.log('🔍 useAuth: Normal auth mode - proceeding with Supabase auth');
+    let isSubscriptionActive = true;
 
-    // Get initial session
+    // Listen for auth changes FIRST to avoid missing events
+    console.log('🎧 useAuth: Setting up auth state change listener...');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('🔄 useAuth: Auth state changed:', event);
+        
+        // Skip if subscription is no longer active
+        if (!isSubscriptionActive) return;
+        
+        // Check emergency mode on each auth change
+        if (checkEmergencyMode()) {
+          console.log('🚨 useAuth: Emergency mode detected during auth change - ignoring');
+          return;
+        }
+
+        // Update state synchronously first
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Defer role fetching to avoid blocking
+        if (session?.user && event === 'SIGNED_IN') {
+          console.log('👤 useAuth: User signed in, fetching role...');
+          setTimeout(() => {
+            if (isSubscriptionActive) {
+              fetchUserRole(session.user.id);
+            }
+          }, 0);
+        } else if (!session) {
+          console.log('❌ useAuth: No user session');
+          setUserRole(null);
+        }
+        
+        setLoading(false);
+      }
+    );
+
+    // Get initial session AFTER setting up listener
     const getInitialSession = async () => {
       try {
         console.log('🔍 useAuth: Getting initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!isSubscriptionActive) return;
         
         if (error) {
           console.error('❌ useAuth: Error getting session:', error);
@@ -85,12 +124,20 @@ export const useAuth = () => {
         }
 
         console.log('📝 useAuth: Initial session:', session ? 'exists' : 'null');
-        setSession(session);
-        setUser(session?.user ?? null);
         
-        if (session?.user) {
-          console.log('👤 useAuth: User found, fetching role...');
-          await fetchUserRole(session.user.id);
+        // Only update if no session is already set (avoid duplicates)
+        if (!session || session.access_token !== user?.id) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          
+          if (session?.user) {
+            console.log('👤 useAuth: Initial user found, fetching role...');
+            setTimeout(() => {
+              if (isSubscriptionActive) {
+                fetchUserRole(session.user.id);
+              }
+            }, 0);
+          }
         }
         
         setLoading(false);
@@ -102,35 +149,9 @@ export const useAuth = () => {
 
     getInitialSession();
 
-    // Listen for auth changes
-    console.log('🎧 useAuth: Setting up auth state change listener...');
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔄 useAuth: Auth state changed:', event);
-        
-        // Check emergency mode on each auth change
-        if (checkEmergencyMode()) {
-          console.log('🚨 useAuth: Emergency mode detected during auth change - ignoring');
-          return;
-        }
-
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          console.log('👤 useAuth: User in auth change, fetching role...');
-          await fetchUserRole(session.user.id);
-        } else {
-          console.log('❌ useAuth: No user in auth change');
-          setUserRole(null);
-        }
-        
-        setLoading(false);
-      }
-    );
-
     return () => {
       console.log('🧹 useAuth: Cleaning up auth subscription');
+      isSubscriptionActive = false;
       subscription.unsubscribe();
     };
   }, []);

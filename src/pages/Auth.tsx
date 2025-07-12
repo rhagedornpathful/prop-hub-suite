@@ -224,77 +224,80 @@ export default function Auth() {
       } else {
         console.log('🔑 Auth: Processing sign in...');
         addDebugInfo("Processing sign in...");
+        
+        // Clear any existing sessions first to avoid conflicts
+        try {
+          addDebugInfo("Clearing any existing sessions...");
+          await supabase.auth.signOut();
+          // Wait a moment for cleanup
+          await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (cleanupError) {
+          console.log('Session cleanup error (this is normal):', cleanupError);
+        }
+        
         addDebugInfo("Calling Supabase signInWithPassword...");
         
-        // Create separate timeout for the Supabase call
-        const supabaseTimeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => {
-            addDebugInfo("❌ Supabase call timed out after 15 seconds");
-            reject(new Error('Supabase login timeout after 15 seconds'));
-          }, 15000);
-        });
+        // Create a more robust timeout mechanism
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          controller.abort();
+          addDebugInfo("❌ Supabase call aborted after 20 seconds");
+        }, 20000);
 
-        const authPromise = supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        let authResult;
         try {
           addDebugInfo("Waiting for Supabase response...");
-          authResult = await Promise.race([authPromise, supabaseTimeoutPromise]);
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          clearTimeout(timeoutId);
           addDebugInfo("✅ Supabase response received");
+
+          if (error) {
+            console.error('❌ Auth: Sign in error:', error);
+            addDebugInfo(`❌ Sign in error: ${error.message}`);
+            addDebugInfo(`Error code: ${error.code || 'unknown'}`);
+            throw error;
+          }
+
+          console.log('✅ Auth: Sign in successful', { userId: data?.user?.id });
+          addDebugInfo(`✅ Sign in successful - User ID: ${data?.user?.id?.substring(0, 8)}...`);
+
+          if (data.user) {
+            console.log('🚀 Auth: Redirecting to dashboard...');
+            addDebugInfo("User data received, preparing redirect...");
+            
+            // Clear emergency mode flags to ensure clean state
+            sessionStorage.removeItem('emergencyAdmin');
+            sessionStorage.removeItem('emergencyAdminUser');
+            delete (window as any).__EMERGENCY_ADMIN_MODE__;
+            addDebugInfo("Cleared emergency mode flags");
+            
+            // Clear any view-as state to prevent conflicts
+            sessionStorage.removeItem('viewAsRole');
+            addDebugInfo("Cleared view-as state");
+            
+            // Wait for auth state to settle, then redirect
+            addDebugInfo("Waiting for auth state to settle...");
+            setTimeout(() => {
+              addDebugInfo("Redirecting to dashboard...");
+              window.location.href = '/';
+            }, 1000);
+            
+          } else {
+            console.warn('⚠️ Auth: No user data returned from sign in');
+            addDebugInfo("⚠️ No user data returned");
+            throw new Error('No user data returned from sign in');
+          }
         } catch (error: any) {
+          clearTimeout(timeoutId);
+          if (error.name === 'AbortError') {
+            addDebugInfo(`❌ Login timed out after 20 seconds`);
+            throw new Error('Login timed out after 20 seconds. Please try again.');
+          }
           addDebugInfo(`❌ Supabase call failed: ${error.message}`);
           throw error;
-        }
-
-        const { data, error } = authResult as any;
-
-        if (error) {
-          console.error('❌ Auth: Sign in error:', error);
-          addDebugInfo(`❌ Sign in error: ${error.message}`);
-          addDebugInfo(`Error code: ${error.code || 'unknown'}`);
-          throw error;
-        }
-
-        console.log('✅ Auth: Sign in successful', { userId: data?.user?.id });
-        addDebugInfo(`✅ Sign in successful - User ID: ${data?.user?.id?.substring(0, 8)}...`);
-
-        if (data.user) {
-          console.log('🚀 Auth: Redirecting to dashboard...');
-          addDebugInfo("User data received, preparing redirect...");
-          
-          // Clear emergency mode flags to ensure clean state
-          sessionStorage.removeItem('emergencyAdmin');
-          sessionStorage.removeItem('emergencyAdminUser');
-          delete (window as any).__EMERGENCY_ADMIN_MODE__;
-          addDebugInfo("Cleared emergency mode flags");
-          
-          // Clear any view-as state to prevent conflicts
-          sessionStorage.removeItem('viewAsRole');
-          addDebugInfo("Cleared view-as state");
-          
-          // Multiple fallback redirect strategies
-          addDebugInfo("Attempting redirect using navigate...");
-          try {
-            navigate("/", { replace: true });
-            
-            // If navigate doesn't work within 2 seconds, force page reload
-            setTimeout(() => {
-              addDebugInfo("Navigate didn't work, forcing page reload...");
-              window.location.href = '/';
-            }, 2000);
-            
-          } catch (navError: any) {
-            addDebugInfo(`Navigate failed: ${navError.message}, using window.location`);
-            window.location.href = '/';
-          }
-          
-        } else {
-          console.warn('⚠️ Auth: No user data returned from sign in');
-          addDebugInfo("⚠️ No user data returned");
-          throw new Error('No user data returned from sign in');
         }
       }
     } catch (error: any) {
