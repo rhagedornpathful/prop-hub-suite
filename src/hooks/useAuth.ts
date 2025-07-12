@@ -167,28 +167,23 @@ export const useAuth = () => {
     console.log('🔍 Fetching role for user:', userId);
     
     try {
-      // Use single query which is more reliable for this case
+      // Use direct user ID query to bypass auth.uid() timing issues
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
 
       console.log('📋 Role query result:', { data, error, userId });
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          console.log('⚠️ No roles found for user (PGRST116)');
-          setUserRole(null);
-          return;
-        }
         console.error('❌ Error fetching user role:', error);
         setUserRole(null);
         return;
       }
 
       if (!data) {
-        console.log('⚠️ No role data returned');
+        console.log('⚠️ No role data returned for user');
         setUserRole(null);
         return;
       }
