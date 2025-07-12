@@ -149,7 +149,9 @@ const UserManagement = () => {
       setLoading(true);
       setError(null);
       
-      console.log('📊 UserManagement: Querying user_profiles table...');
+      console.log('📊 UserManagement: Querying user_profiles table with deduplication...');
+      
+      // Updated query to get only one row per user with their most recent role
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
@@ -160,12 +162,29 @@ const UserManagement = () => {
         throw error;
       }
       
-      console.log('✅ UserManagement: Fetched users:', data?.length || 0, 'users');
-      setUsers(data || []);
+      console.log('📊 UserManagement: Raw data fetched:', data?.length || 0, 'entries');
+      
+      // Deduplicate users client-side, keeping the most recent role for each user
+      const deduplicatedUsers = data ? data.reduce((acc: UserProfile[], user) => {
+        const existingUser = acc.find(u => u.id === user.id);
+        if (!existingUser) {
+          acc.push(user);
+        } else {
+          // Keep the user with the most recent role_created_at
+          if (user.role_created_at && (!existingUser.role_created_at || user.role_created_at > existingUser.role_created_at)) {
+            const index = acc.findIndex(u => u.id === user.id);
+            acc[index] = user;
+          }
+        }
+        return acc;
+      }, []) : [];
+      
+      console.log('✅ UserManagement: Deduplicated users:', deduplicatedUsers.length, 'unique users');
+      setUsers(deduplicatedUsers);
       
       // Check if test users exist after fetching users
       const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
-      const hasTestUsers = (data || []).some(user => testEmails.includes(user.email));
+      const hasTestUsers = deduplicatedUsers.some(user => testEmails.includes(user.email));
       setTestUsersExist(hasTestUsers);
       
       console.log('✅ UserManagement: Test users exist:', hasTestUsers);
@@ -566,7 +585,163 @@ ${error.code === '23503' ? 'This usually means test users need to be created in 
 
   const formatRoleName = (role: string | null) => {
     if (!role) return 'No Role';
-    return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    switch (role) {
+      case 'owner_investor':
+        return 'Property Owner';
+      case 'property_owner':
+        return 'Property Owner';
+      case 'house_watcher':
+        return 'House Watcher';
+      case 'property_manager':
+        return 'Property Manager';
+      case 'admin':
+        return 'Admin';
+      case 'tenant':
+        return 'Tenant';
+      default:
+        return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    }
+  };
+
+  // Clean up duplicate roles function
+  const cleanupDuplicateRoles = async () => {
+    console.log('🧹 UserManagement: Starting cleanup of duplicate roles...');
+    try {
+      setSeeding(true);
+      setError(null);
+      
+      toast({
+        title: "Cleaning Duplicates",
+        description: "Removing duplicate role entries...",
+        variant: "default"
+      });
+      
+      // Define correct roles for test users
+      const correctRoles = {
+        'admin@test.com': 'admin',
+        'owner@test.com': 'owner_investor', 
+        'tenant@test.com': 'tenant',
+        'watcher@test.com': 'house_watcher'
+      };
+      
+      // Get all user_roles entries
+      const { data: allRoles, error: fetchError } = await supabase
+        .from('user_roles')
+        .select('*');
+      
+      if (fetchError) {
+        console.error('❌ UserManagement: Error fetching roles for cleanup:', fetchError);
+        throw fetchError;
+      }
+      
+      console.log('📊 UserManagement: Found', allRoles?.length || 0, 'total role entries');
+      
+      // Get user emails to map IDs
+      const { data: userProfiles, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id, email');
+      
+      if (profileError) {
+        console.error('❌ UserManagement: Error fetching user profiles:', profileError);
+        throw profileError;
+      }
+      
+      // Create email to user ID mapping
+      const emailToId = userProfiles?.reduce((acc, profile) => {
+        if (profile.email) {
+          acc[profile.email] = profile.id;
+        }
+        return acc;
+      }, {} as Record<string, string>) || {};
+      
+      let deletedCount = 0;
+      let updatedCount = 0;
+      
+      // For each test user, clean up their roles
+      for (const [email, correctRole] of Object.entries(correctRoles)) {
+        const userId = emailToId[email];
+        if (!userId) {
+          console.log(`⚠️ UserManagement: User ${email} not found, skipping cleanup`);
+          continue;
+        }
+        
+        // Get all roles for this user
+        const userRoles = allRoles?.filter(role => role.user_id === userId) || [];
+        console.log(`🔍 UserManagement: User ${email} has ${userRoles.length} role entries:`, userRoles.map(r => r.role));
+        
+        if (userRoles.length > 1) {
+          // Delete all roles for this user
+          const { error: deleteError } = await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', userId);
+          
+          if (deleteError) {
+            console.error(`❌ UserManagement: Error deleting roles for ${email}:`, deleteError);
+            continue;
+          }
+          
+          deletedCount += userRoles.length;
+          
+          // Insert the correct role
+          const { error: insertError } = await supabase
+            .from('user_roles')
+            .insert({
+              user_id: userId,
+              role: correctRole as any,
+              assigned_by: userId,
+              assigned_at: new Date().toISOString()
+            });
+          
+          if (insertError) {
+            console.error(`❌ UserManagement: Error inserting correct role for ${email}:`, insertError);
+            continue;
+          }
+          
+          updatedCount++;
+          console.log(`✅ UserManagement: Fixed ${email} role to ${correctRole}`);
+        } else if (userRoles.length === 1 && userRoles[0].role !== correctRole) {
+          // Update the existing role if it's wrong
+          const { error: updateError } = await supabase
+            .from('user_roles')
+            .update({ 
+              role: correctRole as any,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', userId);
+          
+          if (updateError) {
+            console.error(`❌ UserManagement: Error updating role for ${email}:`, updateError);
+            continue;
+          }
+          
+          updatedCount++;
+          console.log(`✅ UserManagement: Updated ${email} role from ${userRoles[0].role} to ${correctRole}`);
+        }
+      }
+      
+      console.log(`✅ UserManagement: Cleanup complete - deleted ${deletedCount} entries, updated/created ${updatedCount} correct roles`);
+      
+      toast({
+        title: "✅ Cleanup Complete!",
+        description: `Removed duplicates and fixed ${updatedCount} user roles`,
+        variant: "default"
+      });
+      
+      // Refresh users list
+      await fetchUsers();
+      
+    } catch (error: any) {
+      console.error('❌ UserManagement: Error during cleanup:', error);
+      setError('Cleanup failed: ' + error.message);
+      toast({
+        title: "Cleanup Failed",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setSeeding(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -789,6 +964,29 @@ ${error.code === '23503' ? 'This usually means test users need to be created in 
                         </>
                       )}
                     </Button>
+                    
+                    {/* Clean Up Duplicates Button */}
+                    {testUsersExist && (
+                      <Button 
+                        onClick={cleanupDuplicateRoles}
+                        disabled={seeding}
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        {seeding ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Cleaning...
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="h-4 w-4 mr-2" />
+                            Clean Up Duplicates
+                          </>
+                        )}
+                      </Button>
+                    )}
                     
                     {error && error.includes('auth users') && (
                       <Button 
