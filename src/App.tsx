@@ -8,6 +8,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { RoleBasedAccess, ROLE_COMBINATIONS } from "@/components/RoleBasedAccess";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageTransition } from "@/components/PageTransition";
+import { DevAdminProvider } from "@/contexts/DevAdminContext";
+import { DevAdminToggle } from "@/components/dev/DevAdminToggle";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
@@ -39,11 +41,12 @@ const AppContent = () => {
   const { isMobile } = useMobileDetection();
   
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+    <DevAdminProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             {/* Public Auth Route */}
             <Route path="/auth" element={<Auth />} />
@@ -199,9 +202,13 @@ const AppContent = () => {
               </ProtectedRoute>
             } />
           </Routes>
+          
+          {/* Development Admin Toggle */}
+          <DevAdminToggle />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+  </DevAdminProvider>
   );
 };
 

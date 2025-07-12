@@ -1,4 +1,5 @@
 import { useAuth } from '@/hooks/useAuth';
+import { useDevAdmin } from '@/contexts/DevAdminContext';
 
 export type UserRole = 'admin' | 'property_manager' | 'property_owner' | 'tenant' | 'house_watcher';
 
@@ -19,13 +20,17 @@ export interface RolePermissions {
 
 export const useUserRole = () => {
   const { userRole, user, loading } = useAuth();
+  const { isDevAdminActive, isDevelopment } = useDevAdmin();
 
-  // Helper functions to check specific roles
-  const isAdmin = () => userRole === 'admin';
-  const isPropertyManager = () => userRole === 'property_manager';
-  const isPropertyOwner = () => userRole === 'property_owner';
-  const isTenant = () => userRole === 'tenant';
-  const isHouseWatcher = () => userRole === 'house_watcher';
+  // Override role to admin if dev admin mode is active
+  const effectiveRole = (isDevelopment && isDevAdminActive) ? 'admin' : userRole;
+
+  // Helper functions to check specific roles (now use effective role)
+  const isAdmin = () => effectiveRole === 'admin';
+  const isPropertyManager = () => effectiveRole === 'property_manager';
+  const isPropertyOwner = () => effectiveRole === 'property_owner';
+  const isTenant = () => effectiveRole === 'tenant';
+  const isHouseWatcher = () => effectiveRole === 'house_watcher';
 
   // Check if user has administrative privileges
   const hasAdminAccess = () => isAdmin() || isPropertyManager();
@@ -33,9 +38,9 @@ export const useUserRole = () => {
   // Check if user can manage properties
   const canManageProperties = () => hasAdminAccess() || isPropertyOwner();
 
-  // Get role-based permissions
+  // Get role-based permissions (now use effective role)
   const getPermissions = (): RolePermissions => {
-    switch (userRole) {
+    switch (effectiveRole) {
       case 'admin':
         return {
           canManageAllProperties: true,
@@ -129,22 +134,32 @@ export const useUserRole = () => {
     }
   };
 
-  // Get user-friendly role display name
+  // Get user-friendly role display name (now use effective role)
   const getRoleDisplayName = (): string => {
-    switch (userRole) {
-      case 'admin':
-        return 'Administrator';
-      case 'property_manager':
-        return 'Property Manager';
-      case 'property_owner':
-        return 'Property Owner';
-      case 'tenant':
-        return 'Tenant';
-      case 'house_watcher':
-        return 'House Watcher';
-      default:
-        return 'User';
+    // Show dev admin indicator if active
+    const baseRole = (() => {
+      switch (effectiveRole) {
+        case 'admin':
+          return 'Administrator';
+        case 'property_manager':
+          return 'Property Manager';
+        case 'property_owner':
+          return 'Property Owner';
+        case 'tenant':
+          return 'Tenant';
+        case 'house_watcher':
+          return 'House Watcher';
+        default:
+          return 'User';
+      }
+    })();
+    
+    // Add dev admin indicator if active
+    if (isDevelopment && isDevAdminActive && userRole !== 'admin') {
+      return `${baseRole} (Dev Admin)`;
     }
+    
+    return baseRole;
   };
 
   // Check if user can perform a specific action on a resource
@@ -172,7 +187,7 @@ export const useUserRole = () => {
   };
 
   return {
-    userRole: userRole as UserRole,
+    userRole: effectiveRole as UserRole, // Return effective role
     user,
     loading,
     isAdmin,
