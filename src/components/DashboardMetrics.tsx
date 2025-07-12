@@ -217,6 +217,50 @@ export function DashboardMetrics() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Owner Breakdown */}
+        <Card className="shadow-md border-0">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-secondary" />
+              Properties by Owner
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                <div>
+                  <div className="font-medium text-sm">Smith Properties LLC</div>
+                  <div className="text-xs text-muted-foreground">8 properties</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-semibold">35%</div>
+                  <Progress value={35} className="h-1 w-16" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-secondary/10 rounded-lg">
+                <div>
+                  <div className="font-medium text-sm">Davis Real Estate Holdings</div>
+                  <div className="text-xs text-muted-foreground">12 properties</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-semibold">50%</div>
+                  <Progress value={50} className="h-1 w-16" />
+                </div>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-accent/10 rounded-lg">
+                <div>
+                  <div className="font-medium text-sm">Sarah Johnson</div>
+                  <div className="text-xs text-muted-foreground">3 properties</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-semibold">15%</div>
+                  <Progress value={15} className="h-1 w-16" />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

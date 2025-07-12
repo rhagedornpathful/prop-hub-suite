@@ -16,7 +16,8 @@ import {
   Phone,
   Mail,
   Edit,
-  Trash2
+  Trash2,
+  UserCheck
 } from "lucide-react";
 
 interface PropertyManagementProperty {
@@ -30,6 +31,13 @@ interface PropertyManagementProperty {
   status: "occupied" | "vacant" | "maintenance";
   image: string;
   serviceType: "property_management";
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    company_name?: string;
+  };
 }
 
 interface HouseWatchingProperty {
@@ -43,6 +51,13 @@ interface HouseWatchingProperty {
   nextCheckDate: string;
   image: string;
   serviceType: "house_watching";
+  owner?: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    company_name?: string;
+  };
 }
 
 type Property = PropertyManagementProperty | HouseWatchingProperty;
@@ -260,6 +275,49 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
                       <span>owner@example.com</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Owner Details Card */}
+          {property.owner && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold">Property Owner</h3>
+              <div className="p-4 bg-muted rounded-lg border">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
+                      <UserCheck className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <h4 className="font-semibold text-lg">
+                          {property.owner.company_name || property.owner.name}
+                        </h4>
+                        {property.owner.company_name && (
+                          <p className="text-sm text-muted-foreground">{property.owner.name}</p>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          <span>{property.owner.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground" />
+                          <span>{property.owner.phone}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.location.href = `/demo/property-owners/${property.owner.id}`}
+                  >
+                    View Details
+                  </Button>
                 </div>
               </div>
             </div>

@@ -50,6 +50,9 @@ interface PropertyManagementProperty {
   owner?: {
     id: string;
     name: string;
+    email: string;
+    phone: string;
+    company_name?: string;
   };
 }
 
@@ -67,6 +70,9 @@ interface HouseWatchingProperty {
   owner?: {
     id: string;
     name: string;
+    email: string;
+    phone: string;
+    company_name?: string;
   };
 }
 
@@ -84,7 +90,7 @@ const mockProperties: Property[] = [
     status: "occupied",
     image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
     serviceType: "property_management",
-    owner: { id: "1", name: "Smith Properties LLC" }
+    owner: { id: "1", name: "Smith Properties LLC", email: "john@smithproperties.com", phone: "(555) 123-4567", company_name: "Smith Properties LLC" }
   },
   {
     id: "2", 
@@ -97,7 +103,7 @@ const mockProperties: Property[] = [
     status: "occupied",
     image: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=400&h=300&fit=crop",
     serviceType: "property_management",
-    owner: { id: "2", name: "Sarah Johnson" }
+    owner: { id: "2", name: "Sarah Johnson", email: "sarah.johnson@email.com", phone: "(555) 234-5678" }
   },
   {
     id: "3",
@@ -110,7 +116,7 @@ const mockProperties: Property[] = [
     status: "occupied",
     image: "https://images.unsplash.com/photo-1558618666-fccd4c84cd3d?w=400&h=300&fit=crop",
     serviceType: "property_management",
-    owner: { id: "3", name: "Davis Real Estate Holdings" }
+    owner: { id: "3", name: "Davis Real Estate Holdings", email: "m.davis@davisrealestate.com", phone: "(555) 345-6789", company_name: "Davis Real Estate Holdings" }
   },
   {
     id: "4",
@@ -123,7 +129,7 @@ const mockProperties: Property[] = [
     nextCheckDate: "2024-01-15",
     image: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=400&h=300&fit=crop",
     serviceType: "house_watching",
-    owner: { id: "2", name: "Sarah Johnson" }
+    owner: { id: "2", name: "Sarah Johnson", email: "sarah.johnson@email.com", phone: "(555) 234-5678" }
   },
   {
     id: "5",
@@ -136,7 +142,7 @@ const mockProperties: Property[] = [
     status: "maintenance",
     image: "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=400&h=300&fit=crop",
     serviceType: "property_management",
-    owner: { id: "1", name: "Smith Properties LLC" }
+    owner: { id: "1", name: "Smith Properties LLC", email: "john@smithproperties.com", phone: "(555) 123-4567", company_name: "Smith Properties LLC" }
   },
   {
     id: "6",
@@ -149,7 +155,7 @@ const mockProperties: Property[] = [
     nextCheckDate: "2024-01-19",
     image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=300&fit=crop",
     serviceType: "house_watching",
-    owner: { id: "3", name: "Davis Real Estate Holdings" }
+    owner: { id: "3", name: "Davis Real Estate Holdings", email: "m.davis@davisrealestate.com", phone: "(555) 345-6789", company_name: "Davis Real Estate Holdings" }
   }
 ];
 

@@ -52,10 +52,10 @@ const Properties = () => {
                     placeholder="Search properties..." 
                     className="pl-10 w-64"
                   />
-                </div>
+                 </div>
                 <Select>
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Filter" />
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Filter by Type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
@@ -63,6 +63,17 @@ const Properties = () => {
                     <SelectItem value="house">Houses</SelectItem>
                     <SelectItem value="condo">Condos</SelectItem>
                     <SelectItem value="townhouse">Townhouses</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Filter by Owner" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Owners</SelectItem>
+                    <SelectItem value="1">Smith Properties LLC</SelectItem>
+                    <SelectItem value="2">Sarah Johnson</SelectItem>
+                    <SelectItem value="3">Davis Real Estate Holdings</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button variant="outline" size="sm">

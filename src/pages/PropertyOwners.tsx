@@ -132,6 +132,15 @@ const PropertyOwners = () => {
   };
 
   const handleDeleteOwner = (owner: PropertyOwner) => {
+    // Check if owner has properties
+    if (owner.property_count && owner.property_count > 0) {
+      toast({
+        title: "Cannot Delete Owner",
+        description: `${getDisplayName(owner)} has ${owner.property_count} properties assigned. Please reassign or remove properties first.`,
+        variant: "destructive"
+      });
+      return;
+    }
     setOwnerToDelete(owner);
     setIsDeleteDialogOpen(true);
   };
@@ -140,7 +149,7 @@ const PropertyOwners = () => {
     if (ownerToDelete) {
       toast({
         title: "Property Owner Deleted",
-        description: `${ownerToDelete.first_name} ${ownerToDelete.last_name} has been removed.`,
+        description: `${getDisplayName(ownerToDelete)} has been removed.`,
       });
       setIsDeleteDialogOpen(false);
       setOwnerToDelete(null);
