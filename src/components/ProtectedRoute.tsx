@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useSetupCheck } from '@/hooks/useSetupCheck';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ProtectedRouteProps {
@@ -9,6 +10,7 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
+  const { needsSetup, checking } = useSetupCheck();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,7 +19,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     }
   }, [user, loading, navigate]);
 
-  if (loading) {
+  if (loading || checking) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="space-y-4 w-full max-w-md">
@@ -30,6 +32,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
+    return null;
+  }
+
+  // If setup is needed, the useSetupCheck hook will redirect to /setup
+  // So we just need to render null here to prevent showing protected content
+  if (needsSetup) {
     return null;
   }
 

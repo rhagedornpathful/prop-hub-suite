@@ -28,6 +28,7 @@ import ClientReports from "./pages/ClientPortal/Reports";
 import ClientRequests from "./pages/ClientPortal/Requests";
 import ClientMessages from "./pages/ClientPortal/Messages";
 import Auth from "./pages/Auth";
+import Setup from "./pages/Setup";
 import PropertyOwners from "./pages/PropertyOwners";
 import PropertyOwnerDetail from "./pages/PropertyOwnerDetail";
 import NotFound from "./pages/NotFound";
@@ -46,6 +47,9 @@ const AppContent = () => {
           <Routes>
             {/* Public Auth Route */}
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Setup Route - for first admin setup */}
+            <Route path="/setup" element={<Setup />} />
             
             {/* Demo Routes - Temporarily accessible without auth */}
             <Route path="/demo/*" element={
