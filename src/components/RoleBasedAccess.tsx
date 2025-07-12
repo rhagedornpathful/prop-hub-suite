@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
-import { Shield, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface RoleBasedAccessProps {
   children: React.ReactNode;
@@ -16,51 +15,16 @@ export const RoleBasedAccess = ({
   allowedRoles, 
   fallbackPath = '/' 
 }: RoleBasedAccessProps) => {
-  const { user, loading } = useAuth();
+  const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
-  const [userRole, setUserRole] = useState<string | null>(null);
-  const [roleLoading, setRoleLoading] = useState(true);
-  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
-    const checkUserRole = async () => {
-      if (!user) {
-        setRoleLoading(false);
-        return;
-      }
+    if (!loading && userRole && !allowedRoles.includes(userRole) && !allowedRoles.includes('*')) {
+      navigate(fallbackPath);
+    }
+  }, [userRole, allowedRoles, fallbackPath, navigate, loading]);
 
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-        
-        const role = data?.role;
-        setUserRole(role);
-        
-        // Check if user has access
-        const access = allowedRoles.includes(role) || allowedRoles.includes('*');
-        setHasAccess(access);
-        
-        // Redirect if no access
-        if (!access) {
-          navigate(fallbackPath);
-        }
-      } catch (error) {
-        console.error('Error checking user role:', error);
-        navigate(fallbackPath);
-      } finally {
-        setRoleLoading(false);
-      }
-    };
-
-    checkUserRole();
-  }, [user, allowedRoles, fallbackPath, navigate]);
-
-  if (loading || roleLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -72,7 +36,7 @@ export const RoleBasedAccess = ({
     return null; // Will be handled by ProtectedRoute
   }
 
-  if (!hasAccess) {
+  if (!userRole || (!allowedRoles.includes(userRole) && !allowedRoles.includes('*'))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
         <Card className="max-w-md">

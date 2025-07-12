@@ -1,21 +1,21 @@
 import { useState, useCallback, lazy, Suspense } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { DashboardMetrics } from "@/components/DashboardMetrics";
-import { CombinedPropertyOverview } from "@/components/CombinedPropertyOverview";
 import { DashboardHeader } from "@/components/DashboardHeader";
-import { QuickActions } from "@/components/QuickActions";
-import { BusinessSummary } from "@/components/BusinessSummary";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { CommandPalette } from "@/components/CommandPalette";
 import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
-import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { useNavigationSwipes } from "@/hooks/useSwipeGestures";
+import { useAuth } from "@/hooks/useAuth";
+import { AdminDashboard } from "@/pages/dashboards/AdminDashboard";
+import { PropertyOwnerDashboard } from "@/pages/dashboards/PropertyOwnerDashboard";
+import { TenantDashboard } from "@/pages/dashboards/TenantDashboard";
+import { HouseWatcherDashboard } from "@/pages/dashboards/HouseWatcherDashboard";
 
 // Lazy load dialogs for better performance
 const AddPropertyDialog = lazy(() => import("@/components/AddPropertyDialog").then(module => ({ default: module.AddPropertyDialog })));
@@ -32,6 +32,7 @@ const Index = () => {
   
   const { notificationCount } = useNotifications();
   const { isMobile } = useMobileDetection();
+  const { userRole, loading: authLoading } = useAuth();
 
   // Memoized dialog handlers for performance
   const handleAddProperty = useCallback(() => setAddPropertyOpen(true), []);
@@ -118,6 +119,40 @@ const Index = () => {
     </div>
   );
 
+  // Render role-specific dashboard content
+  const renderDashboardContent = () => {
+    if (authLoading) {
+      return (
+        <div className="p-4 sm:p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto space-y-6">
+            <Skeleton className="h-8 w-64" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <Skeleton key={i} className="h-32" />
+              ))}
+            </div>
+            <Skeleton className="h-64" />
+          </div>
+        </div>
+      );
+    }
+
+    switch (userRole) {
+      case 'admin':
+        return <AdminDashboard />;
+      case 'property_owner':
+        return <PropertyOwnerDashboard />;
+      case 'tenant':
+        return <TenantDashboard />;
+      case 'house_watcher':
+        return <HouseWatcherDashboard />;
+      case 'property_manager':
+        return <AdminDashboard />; // Property managers see admin view
+      default:
+        return <TenantDashboard />; // Default to tenant view
+    }
+  };
+
   return (
     <ErrorBoundary>
       <SidebarProvider defaultOpen={true} style={
@@ -143,39 +178,13 @@ const Index = () => {
                 className="h-full"
               >
                 <div {...swipeBinds()}>
-                <div className="p-4 sm:p-6 lg:p-8">
-                  <div className="max-w-7xl mx-auto">
-                    <AnimatedList className="space-y-4 sm:space-y-6 lg:space-y-8" staggerDelay={0.1}>
-                  <AnimatedListItem>
-                    <ErrorBoundary>
-                      <QuickActions 
-                        onAddProperty={handleAddProperty}
-                        onAddTenant={handleAddTenant}
-                        onScheduleMaintenance={handleScheduleMaintenance}
-                      />
-                    </ErrorBoundary>
-                  </AnimatedListItem>
-
-                  <AnimatedListItem>
-                    <ErrorBoundary>
-                      <DashboardMetrics />
-                    </ErrorBoundary>
-                  </AnimatedListItem>
-
-                  <AnimatedListItem>
-                    <ErrorBoundary>
-                      <CombinedPropertyOverview />
-                    </ErrorBoundary>
-                  </AnimatedListItem>
-
-                  <AnimatedListItem>
-                    <ErrorBoundary>
-                      <BusinessSummary />
-                    </ErrorBoundary>
-                  </AnimatedListItem>
-                    </AnimatedList>
+                  <div className="p-4 sm:p-6 lg:p-8">
+                    <div className="max-w-7xl mx-auto">
+                      <ErrorBoundary>
+                        {renderDashboardContent()}
+                      </ErrorBoundary>
+                    </div>
                   </div>
-                </div>
                 </div>
               </PullToRefresh>
             </main>
