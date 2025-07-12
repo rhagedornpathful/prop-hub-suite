@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { PropertyGrid } from "@/components/PropertyGrid";
+import { OptimizedPropertyGrid } from "@/components/OptimizedPropertyGrid";
 import { PropertyList } from "@/components/PropertyList";
 import { PropertyMap } from "@/components/PropertyMap";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
@@ -35,6 +35,7 @@ import {
 import { useUserRole } from "@/hooks/useUserRole";
 import { RoleBasedWrapper } from "@/components/RoleBasedWrapper";
 import { useProperties } from "@/hooks/queries/useProperties";
+import { useHouseWatching } from "@/hooks/queries/useHouseWatching";
 import { useToast } from "@/hooks/use-toast";
 
 const Properties = () => {
@@ -51,7 +52,10 @@ const Properties = () => {
   } = useUserRole();
 
   // Get real property data
-  const { data: properties = [], isLoading, refetch } = useProperties();
+  const { data: properties = [], isLoading: propertiesLoading, refetch: refetchProperties } = useProperties();
+  const { data: houseWatchingProperties = [], isLoading: houseWatchingLoading, refetch: refetchHouseWatching } = useHouseWatching();
+  
+  const isLoading = propertiesLoading || houseWatchingLoading;
   const { toast } = useToast();
 
   // Dialog state management
@@ -60,10 +64,11 @@ const Properties = () => {
   // Handle dialog actions
   const handlePropertyAdded = () => {
     toast({
-      title: "Property Added",
-      description: "Your new property has been added to the portfolio.",
+      title: "Success",
+      description: "Property added successfully",
     });
-    refetch(); // Refresh the properties list
+    refetchProperties();
+    refetchHouseWatching();
   };
 
   const handleImportProperties = () => {
@@ -75,24 +80,20 @@ const Properties = () => {
 
   // Handle property actions for list view
   const handleViewProperty = (property: any) => {
-    // Same as clicking a property card
     console.log("View property:", property);
   };
 
   const handleEditProperty = (property: any) => {
-    // Same as edit from grid
     console.log("Edit property:", property);
   };
 
   const handleDeleteProperty = (property: any) => {
-    // Same as delete from grid
     console.log("Delete property:", property);
   };
 
   // For tenants, redirect to their property detail page
   useEffect(() => {
     if (isTenant()) {
-      // In a real app, you'd fetch the tenant's property ID and redirect there
       navigate('/tenant-property', { replace: true });
     }
   }, [userRole, navigate, isTenant]);
@@ -104,23 +105,15 @@ const Properties = () => {
     return "Properties";
   };
 
-  const getPropertyCount = () => {
-    return properties.length;
-  };
-
-  const getOccupiedCount = () => {
-    return properties.filter(p => p.status === 'active').length;
-  };
-
-  const getVacantCount = () => {
-    return properties.filter(p => p.status !== 'active').length;
-  };
-
+  const getPropertyCount = () => properties.length + houseWatchingProperties.length;
+  const getOccupiedCount = () => properties.filter(p => p.status === 'active').length + houseWatchingProperties.filter(p => p.status === 'active').length;
+  const getVacantCount = () => properties.filter(p => p.status === 'vacant').length + houseWatchingProperties.filter(p => p.status === 'inactive').length;
   const getAverageRent = () => {
-    const propertiesWithRent = properties.filter(p => p.monthly_rent);
-    if (propertiesWithRent.length === 0) return 0;
-    const totalRent = propertiesWithRent.reduce((sum, p) => sum + (p.monthly_rent || 0), 0);
-    return Math.round(totalRent / propertiesWithRent.length);
+    const propertyTotal = properties.reduce((sum, p) => sum + (p.monthly_rent || 0), 0);
+    const houseWatchingTotal = houseWatchingProperties.reduce((sum, p) => sum + (p.monthly_fee || 0), 0);
+    const total = propertyTotal + houseWatchingTotal;
+    const count = properties.length + houseWatchingProperties.length;
+    return count > 0 ? total / count : 0;
   };
 
   // Don't render for tenants as they get redirected
@@ -150,21 +143,8 @@ const Properties = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="apartment">Apartments</SelectItem>
-                  <SelectItem value="house">Houses</SelectItem>
-                  <SelectItem value="condo">Condos</SelectItem>
-                  <SelectItem value="townhouse">Townhouses</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filter by Owner" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Owners</SelectItem>
-                  <SelectItem value="1">Smith Properties LLC</SelectItem>
-                  <SelectItem value="2">Sarah Johnson</SelectItem>
-                  <SelectItem value="3">Davis Real Estate Holdings</SelectItem>
+                  <SelectItem value="property_management">Property Management</SelectItem>
+                  <SelectItem value="house_watching">House Watching</SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="outline" size="sm">
@@ -230,7 +210,7 @@ const Properties = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Occupied</p>
+                        <p className="text-sm font-medium text-muted-foreground">Active</p>
                         <p className="text-2xl font-bold text-foreground">
                           {isLoading ? "..." : getOccupiedCount()}
                         </p>
@@ -246,7 +226,7 @@ const Properties = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Vacant</p>
+                        <p className="text-sm font-medium text-muted-foreground">Inactive</p>
                         <p className="text-2xl font-bold text-foreground">
                           {isLoading ? "..." : getVacantCount()}
                         </p>
@@ -262,9 +242,9 @@ const Properties = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground">Avg. Rent</p>
+                        <p className="text-sm font-medium text-muted-foreground">Avg. Monthly</p>
                         <p className="text-2xl font-bold text-foreground">
-                          {isLoading ? "..." : `$${getAverageRent().toLocaleString()}`}
+                          {isLoading ? "..." : `$${Math.round(getAverageRent()).toLocaleString()}`}
                         </p>
                       </div>
                       <div className="h-8 w-8 bg-gradient-accent rounded-lg flex items-center justify-center">
@@ -293,12 +273,26 @@ const Properties = () => {
                 </TabsList>
                 
                 <TabsContent value="grid" className="mt-6">
-                  <PropertyGrid properties={properties} isLoading={isLoading} onRefresh={refetch} />
+                  <OptimizedPropertyGrid 
+                    properties={properties} 
+                    houseWatchingProperties={houseWatchingProperties}
+                    isLoading={isLoading}
+                    onRefresh={() => {
+                      refetchProperties();
+                      refetchHouseWatching();
+                    }}
+                  />
                 </TabsContent>
                 
                 <TabsContent value="list" className="mt-6">
                   <PropertyList 
-                    properties={properties} 
+                    properties={[...properties, ...houseWatchingProperties.map(hw => ({
+                      ...hw,
+                      address: hw.property_address,
+                      property_type: 'House Watching',
+                      monthly_rent: hw.monthly_fee,
+                      service_type: 'house_watching'
+                    }))]} 
                     isLoading={isLoading}
                     onView={handleViewProperty}
                     onEdit={handleEditProperty}
