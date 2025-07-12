@@ -14,7 +14,12 @@ import {
   Calendar,
   Filter,
   Bell,
-  User
+  User,
+  Database,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Info
 } from "lucide-react";
 import {
   Select,
@@ -31,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -51,6 +57,8 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
+  const [testUsersExist, setTestUsersExist] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -60,6 +68,7 @@ const UserManagement = () => {
   useEffect(() => {
     checkAdminStatus();
     fetchUsers();
+    checkTestUsersExist();
   }, []);
 
   useEffect(() => {
@@ -90,6 +99,11 @@ const UserManagement = () => {
 
       if (error) throw error;
       setUsers(data || []);
+      
+      // Check if test users exist after fetching users
+      const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
+      const hasTestUsers = (data || []).some(user => testEmails.includes(user.email));
+      setTestUsersExist(hasTestUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
@@ -99,6 +113,49 @@ const UserManagement = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkTestUsersExist = async () => {
+    try {
+      const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('email')
+        .in('email', testEmails);
+
+      if (error) throw error;
+      setTestUsersExist((data || []).length > 0);
+    } catch (error) {
+      console.error('Error checking test users:', error);
+    }
+  };
+
+  const seedTestUsers = async () => {
+    try {
+      setSeeding(true);
+      
+      const { data, error } = await supabase.rpc('seed_test_users');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Success",
+        description: data || "Test users and data seeded successfully!",
+      });
+      
+      // Refresh users list
+      await fetchUsers();
+      
+    } catch (error) {
+      console.error('Error seeding test users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to seed test data. Please check the logs.",
+        variant: "destructive"
+      });
+    } finally {
+      setSeeding(false);
     }
   };
 
@@ -236,6 +293,68 @@ const UserManagement = () => {
           {/* Main Content */}
           <main className="flex-1 p-6 overflow-auto">
             <div className="max-w-7xl mx-auto space-y-6">
+              {/* Test Data Seeding Section */}
+              {isAdmin && (
+                <Card className="border-dashed border-2 border-muted">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Database className="h-5 w-5 text-primary" />
+                      Development Test Data
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <p className="text-sm text-muted-foreground mb-3">
+                          Seed the database with test users and sample data for development and testing purposes.
+                        </p>
+                        
+                        {testUsersExist && (
+                          <Alert className="mb-4">
+                            <CheckCircle className="h-4 w-4" />
+                            <AlertDescription>
+                              Test users already exist in the system. You can re-run seeding to update test data.
+                            </AlertDescription>
+                          </Alert>
+                        )}
+
+                        <Alert>
+                          <Info className="h-4 w-4" />
+                          <AlertDescription>
+                            <strong>Test Account Credentials:</strong>
+                            <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-mono">
+                              <div>admin@test.com / testpass123</div>
+                              <div>owner@test.com / testpass123</div>
+                              <div>tenant@test.com / testpass123</div>
+                              <div>watcher@test.com / testpass123</div>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                      
+                      <Button 
+                        onClick={seedTestUsers}
+                        disabled={seeding}
+                        variant={testUsersExist ? "outline" : "default"}
+                        className="shrink-0"
+                      >
+                        {seeding ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            Seeding...
+                          </>
+                        ) : (
+                          <>
+                            <Database className="h-4 w-4 mr-2" />
+                            {testUsersExist ? 'Re-seed Test Data' : 'Seed Test Data'}
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Filters */}
               <div className="flex items-center gap-4">
                 <div className="relative flex-1 max-w-md">
