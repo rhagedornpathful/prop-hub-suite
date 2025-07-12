@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
-import { Eye, EyeOff, Mail, Lock, Bug, Send, AlertTriangle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Bug, Send, AlertTriangle, TestTube } from "lucide-react";
 
 export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -394,6 +394,99 @@ export default function Auth() {
     }
   };
 
+  const testSupabaseConnection = async () => {
+    console.log('🔍 Testing Supabase connection...');
+    addDebugInfo("Starting Supabase connection test...");
+    
+    try {
+      // Test 1: Check if client exists
+      console.log('✅ Test 1: Supabase client exists:', !!supabase);
+      addDebugInfo(`Test 1: Supabase client exists: ${!!supabase}`);
+      
+      if (!supabase) {
+        throw new Error('Supabase client is not initialized');
+      }
+
+      // Test 2: Check network connectivity
+      addDebugInfo("Test 2: Checking network connectivity...");
+      try {
+        const response = await fetch('https://nhjsxtwuweegqcexakoz.supabase.co/rest/v1/', {
+          method: 'HEAD',
+          headers: {
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5oanN4dHd1d2VlZ3FjZXhha296Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIwOTUwMjUsImV4cCI6MjA2NzY3MTAyNX0.GJ46q5JwybtA3HdYu9BWrobTTi62fevlz_LQ7NG4amk'
+          }
+        });
+        console.log('✅ Test 2: Network connectivity:', response.ok);
+        addDebugInfo(`Test 2: Network response: ${response.status} ${response.statusText}`);
+      } catch (netError: any) {
+        console.error('❌ Test 2: Network error:', netError);
+        addDebugInfo(`Test 2: Network error: ${netError.message}`);
+      }
+
+      // Test 3: Try a simple anonymous query with timeout
+      addDebugInfo("Test 3: Testing database query...");
+      const queryPromise = supabase
+        .from('user_roles')
+        .select('count')
+        .limit(1);
+
+      const queryTimeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Query timeout after 10 seconds')), 10000);
+      });
+
+      try {
+        const { data, error } = await Promise.race([queryPromise, queryTimeout]) as any;
+        console.log('✅ Test 3: Query test result:', { data, error });
+        addDebugInfo(`Test 3: Query ${error ? 'failed' : 'succeeded'}: ${error?.message || 'OK'}`);
+      } catch (queryError: any) {
+        console.error('❌ Test 3: Query error:', queryError);
+        addDebugInfo(`Test 3: Query error: ${queryError.message}`);
+      }
+
+      // Test 4: Check auth endpoint specifically
+      addDebugInfo("Test 4: Testing auth endpoint...");
+      const sessionPromise = supabase.auth.getSession();
+      const sessionTimeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Session check timeout after 10 seconds')), 10000);
+      });
+
+      try {
+        const { data: { session }, error } = await Promise.race([sessionPromise, sessionTimeout]) as any;
+        console.log('✅ Test 4: Session check result:', { session: !!session, error });
+        addDebugInfo(`Test 4: Session check ${error ? 'failed' : 'succeeded'}: ${error?.message || 'OK'}`);
+      } catch (sessionError: any) {
+        console.error('❌ Test 4: Session check error:', sessionError);
+        addDebugInfo(`Test 4: Session check error: ${sessionError.message}`);
+      }
+
+      // Test 5: Check environment variables
+      addDebugInfo("Test 5: Environment check...");
+      console.log('✅ Test 5: Environment details:', {
+        origin: window.location.origin,
+        supabaseUrl: 'https://nhjsxtwuweegqcexakoz.supabase.co',
+        userAgent: navigator.userAgent.substring(0, 50) + '...'
+      });
+      addDebugInfo(`Test 5: Origin: ${window.location.origin}`);
+      addDebugInfo(`Test 5: Browser: ${navigator.userAgent.split(' ')[0]}`);
+
+      console.log('🎉 Connection test completed - check debug panel for results');
+      toast({
+        title: "Connection Test Complete",
+        description: "Check the debug panel and console for detailed results",
+      });
+
+    } catch (error: any) {
+      console.error('💥 Connection test failed:', error);
+      addDebugInfo(`❌ Connection test failed: ${error.message}`);
+      
+      toast({
+        title: "Connection Test Failed",
+        description: error.message || "Unknown error occurred",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
       <Card className="w-full max-w-md">
@@ -417,21 +510,33 @@ export default function Auth() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Debug Mode Toggle */}
-          <div className="flex justify-between items-center">
+          {/* Debug Mode Toggle and Connection Test */}
+          <div className="flex justify-between items-center gap-2">
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => setShowDebugMode(!showDebugMode)}
-              className="text-xs"
+              className="text-xs flex-1"
             >
               <Bug className="w-3 h-3 mr-1" />
               {showDebugMode ? 'Hide' : 'Show'} Debug Info
             </Button>
+            
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={testSupabaseConnection}
+              className="text-xs flex-1"
+            >
+              <TestTube className="w-3 h-3 mr-1" />
+              Test Connection
+            </Button>
+            
             {debugInfo.length > 0 && (
               <Badge variant="secondary" className="text-xs">
-                {debugInfo.length} logs
+                {debugInfo.length}
               </Badge>
             )}
           </div>
