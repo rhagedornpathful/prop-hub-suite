@@ -144,11 +144,6 @@ export default function AdminEmergency() {
       <DevAdminProvider>
         <ViewAsProvider>
           <div className="min-h-screen bg-background font-sans antialiased">
-            {/* Emergency Warning Banner */}
-            <div className="bg-red-500 text-white p-2 text-center text-sm font-medium">
-              🚨 EMERGENCY ADMIN ACCESS - Authentication Bypassed - Use Caution
-            </div>
-            
             <ViewAsBanner />
             
             <SidebarProvider 
