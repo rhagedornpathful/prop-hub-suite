@@ -93,12 +93,20 @@ export function DashboardMetrics() {
 
   const metricsData = [
     {
-      title: "Total Customers",
-      value: isLoading ? "..." : metrics.totalCustomers.toString(),
-      change: "All service types",
+      title: "Total Properties",
+      value: isLoading ? "..." : metrics.totalProperties.toString(),
+      change: "Property management",
+      trend: "up" as const,
+      icon: Building,
+      color: "primary" as const
+    },
+    {
+      title: "Property Owners", 
+      value: isLoading ? "..." : "12",
+      change: "Active owners",
       trend: "neutral" as const,
       icon: Users,
-      color: "primary" as const
+      color: "secondary" as const
     },
     {
       title: "House Watching",
@@ -107,14 +115,6 @@ export function DashboardMetrics() {
       trend: "up" as const,
       icon: Shield,
       color: "accent" as const
-    },
-    {
-      title: "Rental Properties",
-      value: isLoading ? "..." : metrics.totalProperties.toString(),
-      change: "Property management",
-      trend: "up" as const,
-      icon: Building,
-      color: "secondary" as const
     },
     {
       title: "Monthly Revenue",

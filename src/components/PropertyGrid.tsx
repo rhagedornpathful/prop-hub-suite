@@ -240,9 +240,17 @@ const PropertyCard = ({ property, onClick, onEdit, onDelete }: {
               <span className="text-sm">{property.address}</span>
             </div>
             {property.owner && (
-              <div className="flex items-center gap-1 mt-1 text-muted-foreground">
+              <div className="flex items-center gap-1 mt-1 text-muted-foreground hover:text-primary transition-colors">
                 <UserCheck className="h-3 w-3" />
-                <span className="text-xs">{property.owner.name}</span>
+                <span 
+                  className="text-xs cursor-pointer underline decoration-dotted hover:decoration-solid"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.location.href = `/property-owners/${property.owner.id}`;
+                  }}
+                >
+                  {property.owner.name}
+                </span>
               </div>
             )}
           </div>

@@ -3,6 +3,7 @@ import {
   Home, 
   Building, 
   Users, 
+  UserCheck,
   FileText, 
   DollarSign, 
   Wrench, 
@@ -36,7 +37,7 @@ import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 
 const menuItems = [
   {
-    title: "Home",
+    title: "Dashboard",
     url: "/",
     icon: Home,
     description: "Overview & metrics"
@@ -46,6 +47,12 @@ const menuItems = [
     url: "/properties",
     icon: Building,
     description: "Manage properties"
+  },
+  {
+    title: "Property Owners",
+    url: "/property-owners",
+    icon: UserCheck,
+    description: "Manage property owners"
   },
   {
     title: "Tenants",
