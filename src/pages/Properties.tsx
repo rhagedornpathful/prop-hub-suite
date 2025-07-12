@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropertyGrid } from "@/components/PropertyGrid";
+import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ import {
 import { useUserRole } from "@/hooks/useUserRole";
 import { RoleBasedWrapper } from "@/components/RoleBasedWrapper";
 import { useProperties } from "@/hooks/queries/useProperties";
+import { useToast } from "@/hooks/use-toast";
 
 const Properties = () => {
   const navigate = useNavigate();
@@ -48,6 +50,26 @@ const Properties = () => {
 
   // Get real property data
   const { data: properties = [], isLoading, refetch } = useProperties();
+  const { toast } = useToast();
+
+  // Dialog state management
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  // Handle dialog actions
+  const handlePropertyAdded = () => {
+    toast({
+      title: "Property Added",
+      description: "Your new property has been added to the portfolio.",
+    });
+    refetch(); // Refresh the properties list
+  };
+
+  const handleImportProperties = () => {
+    toast({
+      title: "Import Feature",
+      description: "Property import functionality coming soon!",
+    });
+  };
 
   // For tenants, redirect to their property detail page
   useEffect(() => {
@@ -152,11 +174,17 @@ const Properties = () => {
             <div className="max-w-7xl mx-auto space-y-8">
               {/* Quick Actions */}
               <div className="flex items-center gap-4">
-                <Button className="bg-gradient-primary hover:bg-primary-dark">
+                <Button 
+                  className="bg-gradient-primary hover:bg-primary-dark"
+                  onClick={() => setIsAddDialogOpen(true)}
+                >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Property
                 </Button>
-                <Button variant="outline">
+                <Button 
+                  variant="outline"
+                  onClick={handleImportProperties}
+                >
                   <Filter className="h-4 w-4 mr-2" />
                   Import Properties
                 </Button>
@@ -281,6 +309,14 @@ const Properties = () => {
             </div>
           </main>
       </div>
+
+      {/* Add Property Dialog */}
+      <AddPropertyDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onPropertyAdded={handlePropertyAdded}
+        mode="add"
+      />
     </div>
   );
 };
