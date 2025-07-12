@@ -715,6 +715,10 @@ export type Database = {
       }
     }
     Functions: {
+      force_make_me_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]

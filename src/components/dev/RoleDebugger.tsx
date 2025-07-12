@@ -103,9 +103,46 @@ export const RoleDebugger = () => {
         console.log('❌ User-specific error:', userError);
       }
       
-    } catch (err) {
+    } catch (err: any) {
       console.error('💥 RLS Check error:', err);
       alert('RLS Check failed: ' + err.message);
+    }
+  };
+
+  const forceMakeAdmin = async () => {
+    console.log('🚀 Calling force_make_me_admin database function...');
+    
+    try {
+      const { data, error } = await supabase.rpc('force_make_me_admin');
+      
+      console.log('📊 Force admin result:', data);
+      console.log('❌ Force admin error:', error);
+      
+      if (error) {
+        console.error('❌ RPC Error:', error);
+        alert('Database function error:\n' + error.message);
+        return;
+      }
+      
+      // Type assertion for the response
+      const result = data as { success?: boolean; error?: string; message?: string } | null;
+      
+      if (result?.success) {
+        console.log('✅ Successfully forced admin role');
+        alert('Admin role set successfully! Page will refresh...');
+        
+        // Wait a moment then refresh
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      } else {
+        console.error('❌ Function returned error:', result?.error);
+        alert('Function error:\n' + (result?.error || 'Unknown error'));
+      }
+      
+    } catch (err: any) {
+      console.error('💥 Exception calling force_make_me_admin:', err);
+      alert('Unexpected error:\n' + err.message);
     }
   };
 
@@ -151,7 +188,7 @@ export const RoleDebugger = () => {
           window.location.reload();
         }, 1000);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('💥 Unexpected error:', err);
       alert('Unexpected error:\n' + err.message);
     }
@@ -192,16 +229,25 @@ export const RoleDebugger = () => {
               >
                 RLS
               </Button>
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={forceMakeAdmin}
+                className="p-1 h-6 text-xs px-2"
+                title="Force admin via database function"
+              >
+                <Shield className="w-3 h-3 mr-1" />
+                DB
+              </Button>
               {user && (
                 <Button
                   size="sm"
-                  variant="destructive"
+                  variant="outline"
                   onClick={forceClaimAdmin}
                   className="p-1 h-6 text-xs px-2"
-                  title="Force claim admin role"
+                  title="Force claim admin role via client"
                 >
-                  <Shield className="w-3 h-3 mr-1" />
-                  Admin
+                  Client
                 </Button>
               )}
             </div>
@@ -276,16 +322,25 @@ export const RoleDebugger = () => {
                 
                 <Button
                   size="sm"
+                  variant="destructive"
+                  onClick={forceMakeAdmin}
+                  className="w-full text-xs"
+                >
+                  <Shield className="w-3 h-3 mr-1" />
+                  Force Admin (Database Function)
+                </Button>
+                
+                <Button
+                  size="sm"
                   variant="outline"
                   onClick={forceClaimAdmin}
                   className="w-full text-xs"
                   disabled={!user}
                 >
-                  <Shield className="w-3 h-3 mr-1" />
-                  Force Claim Admin Role
+                  Force Admin (Client Insert)
                 </Button>
                 <p className="text-xs text-muted-foreground text-center">
-                  Debug tools for role management
+                  Multiple debug approaches for role issues
                 </p>
               </div>
             </>
