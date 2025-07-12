@@ -31,6 +31,17 @@ const EmergencyAdminContext = ({ children }: { children: React.ReactNode }) => {
     console.log('🚨 EMERGENCY ADMIN ACCESS ACTIVATED');
     console.log('⚠️ WARNING: This bypasses all authentication and security checks');
     
+    // Set emergency admin flag in sessionStorage
+    sessionStorage.setItem('emergencyAdmin', 'true');
+    sessionStorage.setItem('emergencyAdminUser', JSON.stringify({
+      id: '1c376b70-c535-4ee4-8275-5d017704b3db',
+      email: 'rmh1122@hotmail.com',
+      role: 'admin'
+    }));
+    
+    // Set global emergency flag
+    (window as any).__EMERGENCY_ADMIN_MODE__ = true;
+    
     // Show warning toast
     toast({
       title: "🚨 Emergency Admin Access",
@@ -166,14 +177,23 @@ export default function AdminEmergency() {
                       </p>
                       <div className="flex gap-2">
                         <Button
-                          onClick={() => window.location.href = '/auth'}
+                          onClick={() => {
+                            // Clear emergency mode and redirect
+                            sessionStorage.removeItem('emergencyAdmin');
+                            sessionStorage.removeItem('emergencyAdminUser');
+                            delete (window as any).__EMERGENCY_ADMIN_MODE__;
+                            window.location.href = '/auth';
+                          }}
                           className="bg-amber-600 hover:bg-amber-700 text-white"
                           size="sm"
                         >
                           Return to Normal Login
                         </Button>
                         <Button
-                          onClick={() => window.location.href = '/'}
+                          onClick={() => {
+                            // Navigate but keep emergency mode
+                            window.location.href = '/';
+                          }}
                           variant="outline"
                           size="sm"
                         >

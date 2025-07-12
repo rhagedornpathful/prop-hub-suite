@@ -11,6 +11,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { DevAdminProvider } from "@/contexts/DevAdminContext";
 import { ViewAsProvider } from "@/contexts/ViewAsContext";
 import { ViewAsBanner } from "@/components/ViewAsBanner";
+import { EmergencyAdminBanner } from "@/components/EmergencyAdminBanner";
 import { DevAdminToggle } from "@/components/dev/DevAdminToggle";
 import { DebugPanel } from "@/components/dev/DebugPanel";
 import { RoleDebugger } from "@/components/dev/RoleDebugger";
@@ -52,6 +53,7 @@ const AppContent = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <EmergencyAdminBanner />
             <ViewAsBanner />
             <BrowserRouter>
           <Routes>

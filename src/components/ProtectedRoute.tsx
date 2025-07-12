@@ -30,6 +30,15 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   console.log('🔒 ProtectedRoute - user:', !!user, 'userRole:', userRole, 'authLoading:', authLoading, 'setupChecking:', setupChecking, 'pathname:', location.pathname);
 
+  // Check for emergency admin mode first
+  const isEmergencyMode = sessionStorage.getItem('emergencyAdmin') === 'true' || 
+                         (window as any).__EMERGENCY_ADMIN_MODE__;
+
+  if (isEmergencyMode) {
+    console.log('🚨 ProtectedRoute - Emergency mode detected, allowing access');
+    return <>{children}</>;
+  }
+
   useEffect(() => {
     // Don't redirect if we're still loading
     if (authLoading || setupChecking) return;

@@ -9,31 +9,119 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<Database['public']['Enums']['app_role'] | null>(null);
 
+  // Check for emergency admin mode first
+  const checkEmergencyMode = () => {
+    const isEmergencyMode = sessionStorage.getItem('emergencyAdmin') === 'true' || 
+                           (window as any).__EMERGENCY_ADMIN_MODE__;
+    
+    if (isEmergencyMode) {
+      console.log('🚨 useAuth: Emergency admin mode detected - bypassing normal auth');
+      
+      try {
+        const emergencyUserData = sessionStorage.getItem('emergencyAdminUser');
+        const emergencyUser = emergencyUserData ? JSON.parse(emergencyUserData) : {
+          id: '1c376b70-c535-4ee4-8275-5d017704b3db',
+          email: 'rmh1122@hotmail.com',
+          role: 'admin'
+        };
+
+        // Create a mock User object that matches Supabase structure
+        const mockUser: User = {
+          id: emergencyUser.id,
+          email: emergencyUser.email,
+          app_metadata: { provider: 'emergency', providers: ['emergency'] },
+          user_metadata: { email: emergencyUser.email, emergency_access: true },
+          aud: 'authenticated',
+          role: 'authenticated',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_anonymous: false
+        };
+
+        // Create a mock Session object
+        const mockSession: Session = {
+          access_token: 'emergency_access_token',
+          refresh_token: 'emergency_refresh_token',
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000,
+          token_type: 'bearer',
+          user: mockUser
+        };
+
+        setUser(mockUser);
+        setSession(mockSession);
+        setUserRole('admin');
+        setLoading(false);
+        
+        return true; // Emergency mode active
+      } catch (error) {
+        console.error('❌ useAuth: Error setting up emergency mode:', error);
+      }
+    }
+    return false; // Normal mode
+  };
+
   useEffect(() => {
+    console.log('🔄 useAuth: Starting authentication check...');
+    
+    // Check emergency mode first
+    if (checkEmergencyMode()) {
+      console.log('🚨 useAuth: Emergency mode activated - skipping normal auth');
+      return;
+    }
+
+    console.log('🔍 useAuth: Normal auth mode - proceeding with Supabase auth');
+
     // Get initial session
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchUserRole(session.user.id);
+      try {
+        console.log('🔍 useAuth: Getting initial session...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ useAuth: Error getting session:', error);
+          setLoading(false);
+          return;
+        }
+
+        console.log('📝 useAuth: Initial session:', session ? 'exists' : 'null');
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          console.log('👤 useAuth: User found, fetching role...');
+          await fetchUserRole(session.user.id);
+        }
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('💥 useAuth: Exception in getInitialSession:', error);
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     getInitialSession();
 
     // Listen for auth changes
+    console.log('🎧 useAuth: Setting up auth state change listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 useAuth: Auth state changed:', event);
+        
+        // Check emergency mode on each auth change
+        if (checkEmergencyMode()) {
+          console.log('🚨 useAuth: Emergency mode detected during auth change - ignoring');
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('👤 useAuth: User in auth change, fetching role...');
           await fetchUserRole(session.user.id);
         } else {
+          console.log('❌ useAuth: No user in auth change');
           setUserRole(null);
         }
         
@@ -41,10 +129,20 @@ export const useAuth = () => {
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log('🧹 useAuth: Cleaning up auth subscription');
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserRole = async (userId: string) => {
+    // Skip role fetching in emergency mode
+    if (sessionStorage.getItem('emergencyAdmin') === 'true' || (window as any).__EMERGENCY_ADMIN_MODE__) {
+      console.log('🚨 useAuth: Emergency mode - setting admin role directly');
+      setUserRole('admin');
+      return;
+    }
+
     console.log('🔍 Fetching role for user:', userId);
     
     try {
@@ -92,11 +190,21 @@ export const useAuth = () => {
     }
   };
 
+  const signOut = async () => {
+    // Clear emergency mode flags
+    sessionStorage.removeItem('emergencyAdmin');
+    sessionStorage.removeItem('emergencyAdminUser');
+    delete (window as any).__EMERGENCY_ADMIN_MODE__;
+    
+    console.log('🚪 useAuth: Signing out...');
+    return supabase.auth.signOut();
+  };
+
   return {
     user,
     session,
     loading,
     userRole,
-    signOut: () => supabase.auth.signOut()
+    signOut
   };
 };
