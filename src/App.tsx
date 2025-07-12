@@ -33,6 +33,7 @@ import ClientProperties from "./pages/ClientPortal/Properties";
 import ClientReports from "./pages/ClientPortal/Reports";
 import ClientRequests from "./pages/ClientPortal/Requests";
 import ClientMessages from "./pages/ClientPortal/Messages";
+import AdminEmergency from "./pages/AdminEmergency";
 import Auth from "./pages/Auth";
 import Setup from "./pages/Setup";
 import PropertyOwners from "./pages/PropertyOwners";
@@ -56,6 +57,9 @@ const AppContent = () => {
           <Routes>
             {/* Public Auth Route - Always accessible */}
             <Route path="/auth" element={<Auth />} />
+            
+            {/* Emergency Admin Route - Bypasses all authentication */}
+            <Route path="/admin-emergency" element={<AdminEmergency />} />
             
             {/* Setup Route - Always accessible for first admin setup */}
             <Route path="/setup" element={<Setup />} />
