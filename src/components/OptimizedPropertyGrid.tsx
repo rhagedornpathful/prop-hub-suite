@@ -454,6 +454,12 @@ export function OptimizedPropertyGrid({
   }
 
   const totalProperties = properties.length + houseWatchingProperties.length;
+  
+  // Debug logging
+  console.log("All properties:", properties);
+  console.log("House watching properties:", houseWatchingProperties);
+  console.log("Properties with property_management service_type:", properties.filter(p => p.service_type === 'property_management'));
+  console.log("Properties with house_watching service_type:", properties.filter(p => p.service_type === 'house_watching'));
 
   return (
     <div className="space-y-6">
@@ -461,7 +467,7 @@ export function OptimizedPropertyGrid({
         <div>
           <h2 className="text-2xl font-bold text-foreground">All Properties</h2>
           <p className="text-muted-foreground">
-            Showing {totalProperties} properties ({properties.length} management, {houseWatchingProperties.length} house watching)
+            Showing {totalProperties} properties ({properties.filter(p => p.service_type === 'property_management').length} management, {properties.filter(p => p.service_type === 'house_watching').length + houseWatchingProperties.length} house watching)
           </p>
         </div>
         <Button 
