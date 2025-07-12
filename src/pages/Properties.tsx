@@ -91,76 +91,61 @@ const Properties = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-subtle">
       <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="bg-card border-b border-border p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <Building className="h-6 w-6 text-primary" />
-                  <div>
-                    <h1 className="text-2xl font-bold text-foreground">{getRoleSpecificTitle()}</h1>
-                    <p className="text-sm text-muted-foreground">
-                      {hasAdminAccess() && "Manage all properties in the system"}
-                      {isPropertyOwner() && "Manage your property portfolio"}
-                      {isHouseWatcher() && "Properties you're monitoring"}
-                    </p>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="ml-4">
-                  {getPropertyCount()} Properties
-                </Badge>
-                <Badge variant="outline">
-                  {getRoleDisplayName()}
-                </Badge>
+        {/* Header */}
+        <header className="bg-card border-b border-border p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <h1 className="text-2xl font-bold text-foreground">{getRoleSpecificTitle()}</h1>
+            
+            <div className="flex items-center gap-4 flex-1 max-w-4xl">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search properties..." 
+                  className="pl-10 w-full"
+                />
               </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search properties..." 
-                    className="pl-10 w-64"
-                  />
-                 </div>
-                <Select>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Filter by Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="apartment">Apartments</SelectItem>
-                    <SelectItem value="house">Houses</SelectItem>
-                    <SelectItem value="condo">Condos</SelectItem>
-                    <SelectItem value="townhouse">Townhouses</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Filter by Owner" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Owners</SelectItem>
-                    <SelectItem value="1">Smith Properties LLC</SelectItem>
-                    <SelectItem value="2">Sarah Johnson</SelectItem>
-                    <SelectItem value="3">Davis Real Estate Holdings</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button variant="outline" size="sm">
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  Advanced
-                </Button>
-                <Button variant="outline" size="sm" className="relative">
-                  <Bell className="h-4 w-4" />
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
-                    3
-                  </Badge>
-                </Button>
-                <Button variant="outline" size="sm">
-                  <User className="h-4 w-4" />
-                </Button>
-              </div>
+              <Select>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Filter by Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="apartment">Apartments</SelectItem>
+                  <SelectItem value="house">Houses</SelectItem>
+                  <SelectItem value="condo">Condos</SelectItem>
+                  <SelectItem value="townhouse">Townhouses</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Filter by Owner" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Owners</SelectItem>
+                  <SelectItem value="1">Smith Properties LLC</SelectItem>
+                  <SelectItem value="2">Sarah Johnson</SelectItem>
+                  <SelectItem value="3">Davis Real Estate Holdings</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm">
+                <SlidersHorizontal className="h-4 w-4 mr-2" />
+                Advanced
+              </Button>
             </div>
-          </header>
+
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="relative">
+                <Bell className="h-4 w-4" />
+                <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
+                  3
+                </Badge>
+              </Button>
+              <Button variant="outline" size="sm">
+                <User className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </header>
 
           {/* Main Content */}
           <main className="flex-1 p-6 overflow-auto">
