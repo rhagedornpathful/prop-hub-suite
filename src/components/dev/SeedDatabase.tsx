@@ -151,69 +151,115 @@ export function SeedDatabase() {
     try {
       const results: string[] = [];
       
-      // Instead of creating auth users (which can fail due to email confirmation), 
-      // let's create users directly in the database using the existing function
-      try {
-        // Call the Supabase function to seed test users
-        const { data, error } = await supabase.rpc('seed_test_users');
-        
+      // Create test data directly in the database without relying on auth.signUp
+      // This bypasses email confirmation and rate limiting issues
+      
+      // Step 1: Get current user (admin) to create test data under
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('Must be logged in to seed data');
+      }
+      
+      // Step 2: Create property owners directly
+      const owners = [
+        { firstName: 'John', lastName: 'Anderson', email: 'john.anderson@test.com' },
+        { firstName: 'Sarah', lastName: 'Martinez', email: 'sarah.martinez@test.com' },
+        { firstName: 'Michael', lastName: 'Thompson', email: 'michael.thompson@test.com' },
+        { firstName: 'Emily', lastName: 'Davis', email: 'emily.davis@test.com' },
+        { firstName: 'Robert', lastName: 'Wilson', email: 'robert.wilson@test.com' }
+      ];
+      
+      const createdOwners = [];
+      for (const owner of owners) {
+        const { data, error } = await supabase
+          .from('property_owners')
+          .insert({
+            user_id: user.id,
+            first_name: owner.firstName,
+            last_name: owner.lastName,
+            email: owner.email,
+            phone: '555-0123',
+            is_self: false
+          })
+          .select()
+          .single();
+          
         if (error) {
-          throw error;
-        }
-        
-        results.push('✓ Database seeded successfully using seed_test_users function');
-        results.push(`✓ Result: ${data}`);
-        
-      } catch (error) {
-        console.error('Database seeding error:', error);
-        results.push('✗ Database seeding failed - trying manual approach');
-        
-        // Fallback: Create a few essential users manually for testing
-        const essentialUsers = [
-          { email: 'admin@test.com', role: 'admin', firstName: 'Admin', lastName: 'User' },
-          { email: 'owner@test.com', role: 'property_owner', firstName: 'Test', lastName: 'Owner' },
-          { email: 'tenant@test.com', role: 'tenant', firstName: 'Test', lastName: 'Tenant' }
-        ];
-        
-        for (const user of essentialUsers) {
-          try {
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-              email: user.email,
-              password: 'test123',
-              options: {
-                emailRedirectTo: `${window.location.origin}/`,
-                data: {
-                  first_name: user.firstName,
-                  last_name: user.lastName
-                }
-              }
-            });
-
-            if (authError && !authError.message.includes('already registered')) {
-              throw authError;
-            }
-
-            results.push(`✓ ${user.role}: Created or exists (${user.email})`);
-          } catch (error) {
-            console.error(`Error creating ${user.role}:`, error);
-            results.push(`✗ ${user.role}: Failed (${user.email})`);
-          }
+          console.error('Owner creation error:', error);
+          results.push(`✗ Failed to create owner: ${owner.firstName} ${owner.lastName}`);
+        } else {
+          createdOwners.push(data);
+          results.push(`✓ Created property owner: ${owner.firstName} ${owner.lastName}`);
         }
       }
+      
+      // Step 3: Create properties for each owner
+      const propertyTemplates = [
+        { address: '123 Oak Street', city: 'Los Angeles', state: 'CA', zip: '90210', type: 'single_family', rent: 2500 },
+        { address: '456 Pine Avenue', city: 'San Diego', state: 'CA', zip: '92101', type: 'condo', rent: 2200 },
+        { address: '789 Maple Drive', city: 'San Francisco', state: 'CA', zip: '94105', type: 'townhouse', rent: 3500 },
+        { address: '321 Elm Street', city: 'Sacramento', state: 'CA', zip: '95814', type: 'apartment', rent: 1800 },
+        { address: '654 Cedar Lane', city: 'Fresno', state: 'CA', zip: '93650', type: 'single_family', rent: 1950 },
+        { address: '987 Birch Court', city: 'San Jose', state: 'CA', zip: '95110', type: 'condo', rent: 2800 },
+        { address: '147 Willow Way', city: 'Oakland', state: 'CA', zip: '94612', type: 'duplex', rent: 2300 },
+        { address: '258 Spruce Street', city: 'Long Beach', state: 'CA', zip: '90802', type: 'townhouse', rent: 2650 },
+        { address: '369 Vacation Vista', city: 'Malibu', state: 'CA', zip: '90265', type: 'vacation_home', rent: null },
+        { address: '741 Summer Place', city: 'Carmel', state: 'CA', zip: '93921', type: 'vacation_home', rent: null },
+        { address: '852 Holiday Heights', city: 'Lake Tahoe', state: 'CA', zip: '96150', type: 'cabin', rent: null },
+        { address: '963 Retreat Road', city: 'Big Sur', state: 'CA', zip: '93920', type: 'single_family', rent: null }
+      ];
+      
+      let propertyCount = 0;
+      for (let i = 0; i < Math.min(propertyTemplates.length, createdOwners.length * 3); i++) {
+        const template = propertyTemplates[i];
+        const owner = createdOwners[i % createdOwners.length];
+        
+        const { data, error } = await supabase
+          .from('properties')
+          .insert({
+            user_id: user.id,
+            owner_id: owner.id,
+            address: template.address,
+            city: template.city,
+            state: template.state,
+            zip_code: template.zip,
+            property_type: template.type,
+            service_type: template.rent ? 'property_management' : 'house_watching',
+            monthly_rent: template.rent,
+            bedrooms: Math.floor(Math.random() * 4) + 2,
+            bathrooms: Math.floor(Math.random() * 3) + 1,
+            square_feet: Math.floor(Math.random() * 1500) + 1000,
+            status: 'active',
+            description: `TEST PROPERTY - ${template.type} in ${template.city}`
+          })
+          .select()
+          .single();
+          
+        if (error) {
+          console.error('Property creation error:', error);
+          results.push(`✗ Failed to create property: ${template.address}`);
+        } else {
+          propertyCount++;
+          results.push(`✓ Created property: ${template.address}`);
+        }
+      }
+      
+      results.push(`✓ Created ${propertyCount} properties total`);
       
       setSeedResults(results);
       setHasSeeded(true);
       
       toast({
         title: "Database Seeded",
-        description: "Test data has been created successfully!",
+        description: `Successfully created ${propertyCount} test properties!`,
       });
       
     } catch (error) {
       console.error('Seeding error:', error);
+      setSeedResults([`✗ Seeding failed: ${error.message}`]);
       toast({
         title: "Seeding Failed",
-        description: "There was an error creating test data. Check console for details.",
+        description: error.message || "There was an error creating test data.",
         variant: "destructive",
       });
     } finally {
