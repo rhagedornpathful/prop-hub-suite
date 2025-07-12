@@ -73,6 +73,42 @@ export const RoleDebugger = () => {
     }
   };
 
+  const checkRLS = async () => {
+    console.log('🔍 Checking RLS policies for user_roles table...');
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*');
+      
+      console.log('📊 RLS Check - Data:', data);
+      console.log('❌ RLS Check - Error:', error);
+      
+      const message = `RLS Check Results:
+- Found ${data?.length || 0} roles
+- Error: ${error?.message || 'None'}
+- User authenticated: ${!!user}
+- User ID: ${user?.id?.slice(0, 8)}...`;
+      
+      alert(message);
+      
+      // Also check specifically for current user
+      if (user) {
+        const { data: userRoles, error: userError } = await supabase
+          .from('user_roles')
+          .select('*')
+          .eq('user_id', user.id);
+        
+        console.log('👤 User-specific roles:', userRoles);
+        console.log('❌ User-specific error:', userError);
+      }
+      
+    } catch (err) {
+      console.error('💥 RLS Check error:', err);
+      alert('RLS Check failed: ' + err.message);
+    }
+  };
+
   const forceClaimAdmin = async () => {
     if (!user) {
       alert('No user found!');
@@ -143,8 +179,18 @@ export const RoleDebugger = () => {
                 onClick={fetchDebugInfo}
                 disabled={debugLoading}
                 className="p-1 h-6 w-6"
+                title="Refresh debug info"
               >
                 <RefreshCw className={`w-3 h-3 ${debugLoading ? 'animate-spin' : ''}`} />
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={checkRLS}
+                className="p-1 h-6 text-xs px-2"
+                title="Check RLS policies"
+              >
+                RLS
               </Button>
               {user && (
                 <Button
@@ -218,7 +264,16 @@ export const RoleDebugger = () => {
                 }
               </div>
 
-              <div className="pt-2 border-t">
+              <div className="pt-2 border-t space-y-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={checkRLS}
+                  className="w-full text-xs"
+                >
+                  Check RLS Policies
+                </Button>
+                
                 <Button
                   size="sm"
                   variant="outline"
@@ -229,8 +284,8 @@ export const RoleDebugger = () => {
                   <Shield className="w-3 h-3 mr-1" />
                   Force Claim Admin Role
                 </Button>
-                <p className="text-xs text-muted-foreground mt-1 text-center">
-                  Directly insert/update user_roles table
+                <p className="text-xs text-muted-foreground text-center">
+                  Debug tools for role management
                 </p>
               </div>
             </>
