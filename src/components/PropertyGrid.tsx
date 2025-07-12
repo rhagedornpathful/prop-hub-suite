@@ -78,6 +78,7 @@ interface HouseWatchingProperty {
 
 type Property = PropertyManagementProperty | HouseWatchingProperty;
 
+
 const mockProperties: Property[] = [
   {
     id: "1",

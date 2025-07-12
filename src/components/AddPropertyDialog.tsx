@@ -111,6 +111,44 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
     }
   }, [open]);
 
+  // Reset form data when editProperty or mode changes
+  useEffect(() => {
+    console.log("Edit dialog - editProperty:", editProperty, "mode:", mode);
+    if (mode === "edit" && editProperty) {
+      const dbData = (editProperty as any)._dbData || editProperty;
+      console.log("Edit dialog - dbData:", dbData);
+      setPropertyData({
+        address: dbData.address || "",
+        property_type: dbData.property_type || editProperty.type || "",
+        service_type: dbData.service_type || editProperty.serviceType || "property_management",
+        bedrooms: dbData.bedrooms || 0,
+        bathrooms: dbData.bathrooms || 0,
+        square_feet: dbData.square_feet || 0,
+        year_built: dbData.year_built || 0,
+        estimated_value: dbData.estimated_value || 0,
+        monthly_rent: dbData.monthly_rent || editProperty.monthlyRent || editProperty.monthlyFee || 0,
+        description: dbData.description || "",
+        owner_id: dbData.owner_id || "",
+      });
+      setSearchAddress(dbData.address || "");
+    } else if (mode === "add") {
+      setPropertyData({
+        address: "",
+        property_type: "",
+        service_type: "property_management",
+        bedrooms: 0,
+        bathrooms: 0,
+        square_feet: 0,
+        year_built: 0,
+        estimated_value: 0,
+        monthly_rent: 0,
+        description: "",
+        owner_id: "",
+      });
+      setSearchAddress("");
+    }
+  }, [editProperty, mode]);
+
   const loadPropertyOwners = async () => {
     // Check if we're in demo mode
     const isDemoMode = window.location.pathname.startsWith('/demo');
