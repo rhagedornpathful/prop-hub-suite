@@ -70,6 +70,24 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
     }
   };
 
+  const handleViewProperty = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "View Property",
+      description: `Opening details for ${property.address}`,
+    });
+    // TODO: Open property details dialog or navigate to property page
+  };
+
+  const handleManageTenants = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "Manage Tenants",
+      description: `Opening tenant management for ${property.address}`,
+    });
+    // TODO: Navigate to tenants page or open tenant management modal
+  };
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
       <div className="relative">
@@ -189,11 +207,21 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
           )}
           
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" size="sm" className="flex-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleViewProperty}
+            >
               <Eye className="h-4 w-4 mr-2" />
               View
             </Button>
-            <Button variant="outline" size="sm" className="flex-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleManageTenants}
+            >
               <Users className="h-4 w-4 mr-2" />
               Tenants
             </Button>
@@ -228,6 +256,24 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
   const nextCheckDate = property.next_check_date ? new Date(property.next_check_date) : null;
   const lastCheckDate = property.last_check_date ? new Date(property.last_check_date) : null;
   const isOverdue = nextCheckDate && nextCheckDate < new Date();
+
+  const handleScheduleCheck = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "Schedule Check",
+      description: `Opening schedule dialog for ${property.property_address}`,
+    });
+    // TODO: Open schedule dialog/modal
+  };
+
+  const handleViewReports = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toast({
+      title: "View Reports",
+      description: `Opening reports for ${property.property_address}`,
+    });
+    // TODO: Navigate to reports page or open reports modal
+  };
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
@@ -337,11 +383,21 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
           </div>
           
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" size="sm" className="flex-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleScheduleCheck}
+            >
               <Calendar className="h-4 w-4 mr-2" />
               Schedule
             </Button>
-            <Button variant="outline" size="sm" className="flex-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleViewReports}
+            >
               <Eye className="h-4 w-4 mr-2" />
               Reports
             </Button>
