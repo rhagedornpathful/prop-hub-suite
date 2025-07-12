@@ -280,11 +280,38 @@ const UserManagement = () => {
     console.log('🌱 UserManagement: Starting seed test users...');
     try {
       setSeeding(true);
+      setError(null);
       
+      console.log('🌱 UserManagement: Calling seed_test_users RPC...');
       const { data, error } = await supabase.rpc('seed_test_users');
       
       if (error) {
-        console.error('❌ UserManagement: Seed error:', error);
+        console.error('❌ UserManagement: Seed error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        // Show detailed error information
+        const errorMessage = `
+Database Error: ${error.message}
+
+Code: ${error.code}
+${error.details ? `Details: ${error.details}` : ''}
+${error.hint ? `Hint: ${error.hint}` : ''}
+
+This usually means the test users don't exist in Supabase Auth. 
+You need to create them manually first.`;
+        
+        setError(errorMessage);
+        
+        toast({
+          title: "Seeding Failed - Detailed Error",
+          description: `${error.message}. ${error.code === '23503' ? 'Test users must be created in Supabase Auth first.' : 'Check console for details.'}`,
+          variant: "destructive"
+        });
+        
         throw error;
       }
       
@@ -297,11 +324,97 @@ const UserManagement = () => {
       // Refresh users list
       await fetchUsers();
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ UserManagement: Error seeding test users:', error);
+      
+      // More detailed error handling
+      const isAuthError = error?.code === '23503' && error?.message?.includes('user_id');
+      const isForeignKeyError = error?.message?.includes('foreign key constraint');
+      
+      let userFriendlyMessage = "Failed to seed test data.";
+      
+      if (isAuthError || isForeignKeyError) {
+        userFriendlyMessage = `Cannot create test data because the auth users don't exist. 
+        
+You need to:
+1. Go to Supabase Auth dashboard 
+2. Create users with emails: admin@test.com, owner@test.com, tenant@test.com, watcher@test.com
+3. Then run this seed function again.
+
+Or use the "Create Role-Only Data" button below for emergency testing.`;
+      }
+      
+      setError(userFriendlyMessage);
+      
+      toast({
+        title: "Seeding Failed",
+        description: isAuthError ? "Auth users must be created first" : "Failed to seed test data. Check error details above.",
+        variant: "destructive"
+      });
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  // Create role-only data for emergency testing
+  const createRoleOnlyData = async () => {
+    console.log('🔧 UserManagement: Creating role-only test data...');
+    try {
+      setSeeding(true);
+      setError(null);
+      
+      // Create mock user profiles directly (for emergency testing)
+      const mockProfiles = [
+        {
+          id: 'mock-admin-1',
+          email: 'admin@test.com',
+          first_name: 'Test',
+          last_name: 'Admin',
+          user_created_at: new Date().toISOString()
+        },
+        {
+          id: 'mock-owner-1', 
+          email: 'owner@test.com',
+          first_name: 'Property',
+          last_name: 'Owner',
+          user_created_at: new Date().toISOString()
+        },
+        {
+          id: 'mock-tenant-1',
+          email: 'tenant@test.com', 
+          first_name: 'Test',
+          last_name: 'Tenant',
+          user_created_at: new Date().toISOString()
+        },
+        {
+          id: 'mock-watcher-1',
+          email: 'watcher@test.com',
+          first_name: 'House',
+          last_name: 'Watcher', 
+          user_created_at: new Date().toISOString()
+        }
+      ];
+
+      // Add these as mock users to the state for emergency testing
+      const mockUsersWithRoles = mockProfiles.map((profile, index) => ({
+        ...profile,
+        role: ['admin', 'property_owner', 'tenant', 'house_watcher'][index],
+        role_created_at: new Date().toISOString()
+      }));
+
+      setUsers(prevUsers => [...prevUsers, ...mockUsersWithRoles]);
+      
+      toast({
+        title: "Mock Test Data Created",
+        description: "Created role-only test data for emergency testing (not persisted to database)",
+        variant: "default"
+      });
+      
+    } catch (error: any) {
+      console.error('❌ UserManagement: Error creating role-only data:', error);
       toast({
         title: "Error",
-        description: "Failed to seed test data. Please check the logs.",
+        description: "Failed to create role-only test data",
         variant: "destructive"
       });
     } finally {
@@ -567,26 +680,67 @@ const UserManagement = () => {
                             </div>
                           </AlertDescription>
                         </Alert>
+                        
+                        {/* Manual Setup Instructions */}
+                        {error && error.includes('auth users') && (
+                          <Alert className="mt-4 border-amber-200 bg-amber-50 dark:bg-amber-950/50">
+                            <Info className="h-4 w-4 text-amber-600" />
+                            <AlertDescription className="text-amber-800 dark:text-amber-200">
+                              <strong>Manual Setup Required:</strong>
+                              <ol className="mt-2 ml-4 list-decimal text-xs space-y-1">
+                                <li>Go to Supabase Dashboard → Authentication → Users</li>
+                                <li>Click "Add User" for each test account</li>
+                                <li>Create users with the emails shown above</li>
+                                <li>Set password to "testpass123" for each</li>
+                                <li>Then run "Seed Test Data" again</li>
+                              </ol>
+                            </AlertDescription>
+                          </Alert>
+                        )}
                       </div>
                       
-                      <Button 
-                        onClick={seedTestUsers}
-                        disabled={seeding}
-                        variant={testUsersExist ? "outline" : "default"}
-                        className="shrink-0"
-                      >
-                        {seeding ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Seeding...
-                          </>
-                        ) : (
-                          <>
-                            <Database className="h-4 w-4 mr-2" />
-                            {testUsersExist ? 'Re-seed Test Data' : 'Seed Test Data'}
-                          </>
+                      <div className="shrink-0 space-y-2">
+                        <Button 
+                          onClick={seedTestUsers}
+                          disabled={seeding}
+                          variant={testUsersExist ? "outline" : "default"}
+                          className="w-full"
+                        >
+                          {seeding ? (
+                            <>
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                              Seeding...
+                            </>
+                          ) : (
+                            <>
+                              <Database className="h-4 w-4 mr-2" />
+                              {testUsersExist ? 'Re-seed Test Data' : 'Seed Test Data'}
+                            </>
+                          )}
+                        </Button>
+                        
+                        {error && error.includes('auth users') && (
+                          <Button 
+                            onClick={createRoleOnlyData}
+                            disabled={seeding}
+                            variant="secondary"
+                            size="sm"
+                            className="w-full"
+                          >
+                            {seeding ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Creating...
+                              </>
+                            ) : (
+                              <>
+                                <UserCog className="h-4 w-4 mr-2" />
+                                Create Role-Only Data
+                              </>
+                            )}
+                          </Button>
                         )}
-                      </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
