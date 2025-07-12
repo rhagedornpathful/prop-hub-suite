@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   MapPin,
   Building2,
   Edit,
+  Eye,
   Trash2,
   MoreHorizontal,
   UserPlus
@@ -110,6 +112,7 @@ const mockOwners: PropertyOwner[] = [
 ];
 
 const PropertyOwners = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -165,6 +168,10 @@ const PropertyOwners = () => {
       description: "The property owner has been successfully added.",
     });
     setSelectedOwner(null);
+  };
+
+  const handleViewOwner = (owner: PropertyOwner) => {
+    navigate(`/demo/property-owners/${owner.id}`);
   };
 
   const getDisplayName = (owner: PropertyOwner) => {
@@ -241,7 +248,11 @@ const PropertyOwners = () => {
               {/* Property Owners Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredOwners.map((owner) => (
-                  <Card key={owner.id} className="shadow-md border-0 hover:shadow-lg transition-shadow group">
+                  <Card 
+                    key={owner.id} 
+                    className="shadow-md border-0 hover:shadow-lg transition-shadow group cursor-pointer"
+                    onClick={() => handleViewOwner(owner)}
+                  >
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -280,13 +291,26 @@ const PropertyOwners = () => {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleEditOwner(owner)}>
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewOwner(owner);
+                              }}>
+                                <Eye className="h-4 w-4 mr-2" />
+                                View Details
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditOwner(owner);
+                              }}>
                                 <Edit className="h-4 w-4 mr-2" />
                                 Edit Owner
                               </DropdownMenuItem>
                               <DropdownMenuItem 
                                 className="text-destructive" 
-                                onClick={() => handleDeleteOwner(owner)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteOwner(owner);
+                                }}
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete Owner

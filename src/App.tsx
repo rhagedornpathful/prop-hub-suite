@@ -25,6 +25,8 @@ import ClientReports from "./pages/ClientPortal/Reports";
 import ClientRequests from "./pages/ClientPortal/Requests";
 import ClientMessages from "./pages/ClientPortal/Messages";
 import Auth from "./pages/Auth";
+import PropertyOwners from "./pages/PropertyOwners";
+import PropertyOwnerDetail from "./pages/PropertyOwnerDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,6 +58,8 @@ const AppContent = () => {
                   <Route path="/documents" element={<PageTransition><Documents /></PageTransition>} />
                   <Route path="/house-watching" element={<PageTransition><HouseWatching /></PageTransition>} />
                   <Route path="/property-check/:id" element={<PageTransition><PropertyCheck /></PageTransition>} />
+                  <Route path="/property-owners" element={<PageTransition><PropertyOwners /></PageTransition>} />
+                  <Route path="/property-owners/:ownerId" element={<PageTransition><PropertyOwnerDetail /></PageTransition>} />
                   <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
                   <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
                   <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
@@ -91,6 +95,8 @@ const AppContent = () => {
                         <Route path="/documents" element={<PageTransition><Documents /></PageTransition>} />
                         <Route path="/house-watching" element={<PageTransition><HouseWatching /></PageTransition>} />
                         <Route path="/property-check/:id" element={<PageTransition><PropertyCheck /></PageTransition>} />
+                        <Route path="/property-owners" element={<PageTransition><PropertyOwners /></PageTransition>} />
+                        <Route path="/property-owners/:ownerId" element={<PageTransition><PropertyOwnerDetail /></PageTransition>} />
                         <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
                         <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
                         <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
