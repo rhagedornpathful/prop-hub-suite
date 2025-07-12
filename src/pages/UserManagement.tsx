@@ -76,11 +76,13 @@ const UserManagement = () => {
     console.log('👤 UserManagement: Current user:', user ? 'exists' : 'null');
     console.log('🌐 UserManagement: Current URL:', window.location.href);
     
-    // Check if we're in emergency admin mode
-    const isEmergency = window.location.pathname.includes('/admin-emergency') || 
+    // Check if we're in emergency admin mode - check sessionStorage FIRST
+    const isEmergencyAdmin = sessionStorage.getItem('emergencyAdmin') === 'true';
+    const isEmergency = isEmergencyAdmin || 
+                       window.location.pathname.includes('/admin-emergency') || 
                        window.location.href.includes('/admin-emergency') ||
                        document.body.className.includes('emergency') ||
-                       (window as any).__EMERGENCY_AUTH_OVERRIDE;
+                       (window as any).__EMERGENCY_ADMIN_MODE__ === true;
     
     if (isEmergency) {
       console.log('🚨 UserManagement: Emergency mode detected - bypassing auth checks');
