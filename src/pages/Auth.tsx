@@ -224,12 +224,30 @@ export default function Auth() {
         addDebugInfo("Processing sign in...");
         addDebugInfo("Calling Supabase signInWithPassword...");
         
+        // Create separate timeout for the Supabase call
+        const supabaseTimeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            addDebugInfo("❌ Supabase call timed out after 15 seconds");
+            reject(new Error('Supabase login timeout after 15 seconds'));
+          }, 15000);
+        });
+
         const authPromise = supabase.auth.signInWithPassword({
           email,
           password,
         });
 
-        const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
+        let authResult;
+        try {
+          addDebugInfo("Waiting for Supabase response...");
+          authResult = await Promise.race([authPromise, supabaseTimeoutPromise]);
+          addDebugInfo("✅ Supabase response received");
+        } catch (error: any) {
+          addDebugInfo(`❌ Supabase call failed: ${error.message}`);
+          throw error;
+        }
+
+        const { data, error } = authResult as any;
 
         if (error) {
           console.error('❌ Auth: Sign in error:', error);
@@ -243,12 +261,34 @@ export default function Auth() {
 
         if (data.user) {
           console.log('🚀 Auth: Redirecting to dashboard...');
-          addDebugInfo("Redirecting to dashboard...");
+          addDebugInfo("User data received, preparing redirect...");
           
-          // Force a full page reload to ensure clean state
-          setTimeout(() => {
+          // Clear emergency mode flags to ensure clean state
+          sessionStorage.removeItem('emergencyAdmin');
+          sessionStorage.removeItem('emergencyAdminUser');
+          delete (window as any).__EMERGENCY_ADMIN_MODE__;
+          addDebugInfo("Cleared emergency mode flags");
+          
+          // Clear any view-as state to prevent conflicts
+          sessionStorage.removeItem('viewAsRole');
+          addDebugInfo("Cleared view-as state");
+          
+          // Multiple fallback redirect strategies
+          addDebugInfo("Attempting redirect using navigate...");
+          try {
+            navigate("/", { replace: true });
+            
+            // If navigate doesn't work within 2 seconds, force page reload
+            setTimeout(() => {
+              addDebugInfo("Navigate didn't work, forcing page reload...");
+              window.location.href = '/';
+            }, 2000);
+            
+          } catch (navError: any) {
+            addDebugInfo(`Navigate failed: ${navError.message}, using window.location`);
             window.location.href = '/';
-          }, 500);
+          }
+          
         } else {
           console.warn('⚠️ Auth: No user data returned from sign in');
           addDebugInfo("⚠️ No user data returned");
