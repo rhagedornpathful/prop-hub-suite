@@ -21,7 +21,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
+import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PropertyManagementProperty {
   id: string;
@@ -126,7 +138,12 @@ const mockProperties: Property[] = [
   }
 ];
 
-const PropertyCard = ({ property, onClick }: { property: Property; onClick: () => void }) => {
+const PropertyCard = ({ property, onClick, onEdit, onDelete }: { 
+  property: Property; 
+  onClick: () => void;
+  onEdit: (property: Property) => void;
+  onDelete: (property: Property) => void;
+}) => {
   const isPropertyManagement = property.serviceType === "property_management";
   const isHouseWatching = property.serviceType === "house_watching";
   
@@ -220,15 +237,24 @@ const PropertyCard = ({ property, onClick }: { property: Property; onClick: () =
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                onClick();
+              }}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                onEdit(property);
+              }}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Property
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem className="text-destructive" onClick={(e) => {
+                e.stopPropagation();
+                onDelete(property);
+              }}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Property
               </DropdownMenuItem>
@@ -339,10 +365,51 @@ const PropertyCard = ({ property, onClick }: { property: Property; onClick: () =
 export function PropertyGrid() {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
+  const { toast } = useToast();
 
   const handlePropertyClick = (property: Property) => {
     setSelectedProperty(property);
     setIsDialogOpen(true);
+  };
+
+  const handleEditProperty = (property: Property) => {
+    setSelectedProperty(property);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteProperty = (property: Property) => {
+    setPropertyToDelete(property);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (propertyToDelete) {
+      // In a real app, you would delete from the database here
+      toast({
+        title: "Property Deleted",
+        description: `${propertyToDelete.name} has been removed from your portfolio.`,
+      });
+      setIsDeleteDialogOpen(false);
+      setPropertyToDelete(null);
+    }
+  };
+
+  const handlePropertyAdded = () => {
+    toast({
+      title: "Property Added",
+      description: "Your new property has been added to the portfolio.",
+    });
+  };
+
+  const handlePropertyUpdated = () => {
+    toast({
+      title: "Property Updated",
+      description: "Property details have been successfully updated.",
+    });
   };
 
   return (
@@ -352,7 +419,10 @@ export function PropertyGrid() {
           <h2 className="text-2xl font-bold text-foreground">Properties</h2>
           <p className="text-muted-foreground">Manage your property portfolio</p>
         </div>
-        <Button className="bg-gradient-primary hover:bg-primary-dark">
+        <Button 
+          className="bg-gradient-primary hover:bg-primary-dark"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
           <Building className="h-4 w-4 mr-2" />
           Add Property
         </Button>
@@ -364,6 +434,8 @@ export function PropertyGrid() {
             key={property.id} 
             property={property}
             onClick={() => handlePropertyClick(property)}
+            onEdit={handleEditProperty}
+            onDelete={handleDeleteProperty}
           />
         ))}
       </div>
@@ -372,7 +444,40 @@ export function PropertyGrid() {
         property={selectedProperty}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
+        onEdit={handleEditProperty}
+        onDelete={handleDeleteProperty}
       />
+
+      <AddPropertyDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onPropertyAdded={handlePropertyAdded}
+      />
+
+      <AddPropertyDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onPropertyAdded={handlePropertyUpdated}
+        editProperty={selectedProperty}
+        mode="edit"
+      />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{propertyToDelete?.name}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

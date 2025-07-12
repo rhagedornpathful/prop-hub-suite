@@ -51,9 +51,11 @@ interface PropertyDetailsDialogProps {
   property: Property | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onEdit?: (property: Property) => void;
+  onDelete?: (property: Property) => void;
 }
 
-export function PropertyDetailsDialog({ property, open, onOpenChange }: PropertyDetailsDialogProps) {
+export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, onDelete }: PropertyDetailsDialogProps) {
   if (!property) return null;
 
   const isPropertyManagement = property.serviceType === "property_management";
@@ -267,7 +269,7 @@ export function PropertyDetailsDialog({ property, open, onOpenChange }: Property
           
           {/* Action Buttons */}
           <div className="flex gap-3 justify-end">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => onEdit?.(property)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Property
             </Button>
@@ -283,7 +285,11 @@ export function PropertyDetailsDialog({ property, open, onOpenChange }: Property
                 Schedule Check
               </Button>
             )}
-            <Button variant="outline" className="text-destructive hover:bg-destructive hover:text-destructive-foreground">
+            <Button 
+              variant="outline" 
+              className="text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              onClick={() => onDelete?.(property)}
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete
             </Button>

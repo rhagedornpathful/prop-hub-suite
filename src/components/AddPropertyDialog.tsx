@@ -27,6 +27,8 @@ interface AddPropertyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onPropertyAdded?: () => void;
+  editProperty?: any;
+  mode?: "add" | "edit";
 }
 
 interface PropertyData {
@@ -49,22 +51,38 @@ interface PropertyData {
   gate_code?: string;
 }
 
-export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPropertyDialogProps) {
+export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editProperty, mode = "add" }: AddPropertyDialogProps) {
   const { isMobile } = useMobileDetection();
   const [searchAddress, setSearchAddress] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [propertyData, setPropertyData] = useState<PropertyData>({
-    address: "",
-    property_type: "",
-    service_type: "property_management",
-    bedrooms: 0,
-    bathrooms: 0,
-    square_feet: 0,
-    year_built: 0,
-    estimated_value: 0,
-    monthly_rent: 0,
-    description: "",
+  const [propertyData, setPropertyData] = useState<PropertyData>(() => {
+    if (mode === "edit" && editProperty) {
+      return {
+        address: editProperty.address || "",
+        property_type: editProperty.type || "",
+        service_type: editProperty.serviceType === "property_management" ? "property_management" : "house_watching",
+        bedrooms: 0,
+        bathrooms: 0,
+        square_feet: 0,
+        year_built: 0,
+        estimated_value: 0,
+        monthly_rent: editProperty.monthlyRent || editProperty.monthlyFee || 0,
+        description: "",
+      };
+    }
+    return {
+      address: "",
+      property_type: "",
+      service_type: "property_management",
+      bedrooms: 0,
+      bathrooms: 0,
+      square_feet: 0,
+      year_built: 0,
+      estimated_value: 0,
+      monthly_rent: 0,
+      description: "",
+    };
   });
   const { toast } = useToast();
 
@@ -251,9 +269,12 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
     <DialogWrapper open={open} onOpenChange={onOpenChange}>
       <ContentWrapper className={isMobile ? "" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
-          <DialogTitle>Add New Property</DialogTitle>
+          <DialogTitle>{mode === "edit" ? "Edit Property" : "Add New Property"}</DialogTitle>
           <DialogDescription>
-            Search for property information from Zillow or enter details manually.
+            {mode === "edit" 
+              ? "Update property information below." 
+              : "Search for property information from Zillow or enter details manually."
+            }
           </DialogDescription>
         </DialogHeader>
 
@@ -458,10 +479,10 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded }: AddPr
               {isSaving ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
+                  {mode === "edit" ? "Updating..." : "Saving..."}
                 </>
               ) : (
-                'Add Property'
+                mode === "edit" ? "Update Property" : "Add Property"
               )}
             </Button>
           </div>
