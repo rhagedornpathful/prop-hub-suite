@@ -1,7 +1,7 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useDevAdmin } from '@/contexts/DevAdminContext';
 
-export type UserRole = 'admin' | 'property_manager' | 'property_owner' | 'tenant' | 'house_watcher';
+export type UserRole = 'admin' | 'property_manager' | 'owner_investor' | 'tenant' | 'house_watcher' | 'client' | 'contractor' | 'leasing_agent';
 
 export interface RolePermissions {
   canManageAllProperties: boolean;
@@ -28,7 +28,7 @@ export const useUserRole = () => {
   // Helper functions to check specific roles (now use effective role)
   const isAdmin = () => effectiveRole === 'admin';
   const isPropertyManager = () => effectiveRole === 'property_manager';
-  const isPropertyOwner = () => effectiveRole === 'property_owner';
+  const isPropertyOwner = () => effectiveRole === 'owner_investor';
   const isTenant = () => effectiveRole === 'tenant';
   const isHouseWatcher = () => effectiveRole === 'house_watcher';
 
@@ -71,7 +71,7 @@ export const useUserRole = () => {
           canViewHouseWatchingReports: true,
           canSubmitHouseWatchingReports: false,
         };
-      case 'property_owner':
+      case 'owner_investor':
         return {
           canManageAllProperties: false,
           canManageOwnProperties: true,
@@ -143,7 +143,7 @@ export const useUserRole = () => {
           return 'Administrator';
         case 'property_manager':
           return 'Property Manager';
-        case 'property_owner':
+        case 'owner_investor':
           return 'Property Owner';
         case 'tenant':
           return 'Tenant';

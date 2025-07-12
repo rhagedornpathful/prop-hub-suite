@@ -141,7 +141,7 @@ const Index = () => {
     switch (userRole) {
       case 'admin':
         return <AdminDashboard />;
-      case 'property_owner':
+      case 'owner_investor':
         return <PropertyOwnerDashboard />;
       case 'tenant':
         return <TenantDashboard />;
