@@ -16,6 +16,7 @@ import { AdminDashboard } from "@/pages/dashboards/AdminDashboard";
 import { PropertyOwnerDashboard } from "@/pages/dashboards/PropertyOwnerDashboard";
 import { TenantDashboard } from "@/pages/dashboards/TenantDashboard";
 import { HouseWatcherDashboard } from "@/pages/dashboards/HouseWatcherDashboard";
+import { MakeAdminButton } from "@/components/dev/MakeAdminButton";
 
 // Lazy load dialogs for better performance
 const AddPropertyDialog = lazy(() => import("@/components/AddPropertyDialog").then(module => ({ default: module.AddPropertyDialog })));
@@ -179,7 +180,10 @@ const Index = () => {
               >
                 <div {...swipeBinds()}>
                   <div className="p-4 sm:p-6 lg:p-8">
-                    <div className="max-w-7xl mx-auto">
+                    <div className="max-w-7xl mx-auto space-y-6">
+                      {/* Bootstrap Admin Button - Only shows when user has no role */}
+                      <MakeAdminButton />
+                      
                       <ErrorBoundary>
                         {renderDashboardContent()}
                       </ErrorBoundary>

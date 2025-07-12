@@ -726,6 +726,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      make_me_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       seed_test_users: {
         Args: Record<PropertyKey, never>
         Returns: string
