@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PropertyGrid } from "@/components/PropertyGrid";
+import { PropertyList } from "@/components/PropertyList";
+import { PropertyMap } from "@/components/PropertyMap";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,6 +71,22 @@ const Properties = () => {
       title: "Import Feature",
       description: "Property import functionality coming soon!",
     });
+  };
+
+  // Handle property actions for list view
+  const handleViewProperty = (property: any) => {
+    // Same as clicking a property card
+    console.log("View property:", property);
+  };
+
+  const handleEditProperty = (property: any) => {
+    // Same as edit from grid
+    console.log("Edit property:", property);
+  };
+
+  const handleDeleteProperty = (property: any) => {
+    // Same as delete from grid
+    console.log("Delete property:", property);
   };
 
   // For tenants, redirect to their property detail page
@@ -279,31 +297,17 @@ const Properties = () => {
                 </TabsContent>
                 
                 <TabsContent value="list" className="mt-6">
-                  <Card className="shadow-md border-0">
-                    <CardHeader>
-                      <CardTitle>Property List View</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-center py-8">
-                        <List className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">List view coming soon...</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <PropertyList 
+                    properties={properties} 
+                    isLoading={isLoading}
+                    onView={handleViewProperty}
+                    onEdit={handleEditProperty}
+                    onDelete={handleDeleteProperty}
+                  />
                 </TabsContent>
                 
                 <TabsContent value="map" className="mt-6">
-                  <Card className="shadow-md border-0">
-                    <CardHeader>
-                      <CardTitle>Property Map View</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-center py-8">
-                        <Map className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">Map view coming soon...</p>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <PropertyMap properties={properties} isLoading={isLoading} />
                 </TabsContent>
               </Tabs>
             </div>
