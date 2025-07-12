@@ -151,61 +151,62 @@ export function SeedDatabase() {
     try {
       const results: string[] = [];
       
-      for (const user of testUsers) {
-        try {
-          // Create user account
-          const { data: authData, error: authError } = await supabase.auth.signUp({
-            email: user.email,
-            password: user.password,
-            options: {
-              emailRedirectTo: `${window.location.origin}/`,
-              data: {
-                first_name: user.firstName,
-                last_name: user.lastName
+      // Instead of creating auth users (which can fail due to email confirmation), 
+      // let's create users directly in the database using the existing function
+      try {
+        // Call the Supabase function to seed test users
+        const { data, error } = await supabase.rpc('seed_test_users');
+        
+        if (error) {
+          throw error;
+        }
+        
+        results.push('✓ Database seeded successfully using seed_test_users function');
+        results.push(`✓ Result: ${data}`);
+        
+      } catch (error) {
+        console.error('Database seeding error:', error);
+        results.push('✗ Database seeding failed - trying manual approach');
+        
+        // Fallback: Create a few essential users manually for testing
+        const essentialUsers = [
+          { email: 'admin@test.com', role: 'admin', firstName: 'Admin', lastName: 'User' },
+          { email: 'owner@test.com', role: 'property_owner', firstName: 'Test', lastName: 'Owner' },
+          { email: 'tenant@test.com', role: 'tenant', firstName: 'Test', lastName: 'Tenant' }
+        ];
+        
+        for (const user of essentialUsers) {
+          try {
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+              email: user.email,
+              password: 'test123',
+              options: {
+                emailRedirectTo: `${window.location.origin}/`,
+                data: {
+                  first_name: user.firstName,
+                  last_name: user.lastName
+                }
               }
-            }
-          });
+            });
 
-          if (authError) {
-            if (authError.message.includes('already registered')) {
-              results.push(`✓ ${user.role}: User already exists (${user.email})`);
-              continue;
+            if (authError && !authError.message.includes('already registered')) {
+              throw authError;
             }
-            throw authError;
+
+            results.push(`✓ ${user.role}: Created or exists (${user.email})`);
+          } catch (error) {
+            console.error(`Error creating ${user.role}:`, error);
+            results.push(`✗ ${user.role}: Failed (${user.email})`);
           }
-
-          if (authData.user) {
-            // The trigger will automatically create the profile and assign the role
-            // For testing, we'll set the role manually if needed
-            const { error: roleError } = await supabase
-              .from('user_roles')
-              .upsert({
-                user_id: authData.user.id,
-                role: user.role as any // Cast to match enum
-              });
-
-            if (roleError) {
-              console.error('Role assignment error:', roleError);
-            }
-
-            results.push(`✓ ${user.role}: Created successfully (${user.email})`);
-          }
-        } catch (error) {
-          console.error(`Error creating ${user.role}:`, error);
-          results.push(`✗ ${user.role}: Failed to create (${user.email})`);
         }
       }
-
-      // Create sample data for property owner
-      await createSampleProperties();
-      results.push('✓ Sample properties created');
       
       setSeedResults(results);
       setHasSeeded(true);
       
       toast({
         title: "Database Seeded",
-        description: "Test users and sample data have been created successfully!",
+        description: "Test data has been created successfully!",
       });
       
     } catch (error) {
