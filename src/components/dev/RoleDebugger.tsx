@@ -81,16 +81,9 @@ export const RoleDebugger = () => {
         .from('user_roles')
         .select('*');
       
-      console.log('📊 RLS Check - Data:', data);
-      console.log('❌ RLS Check - Error:', error);
-      
-      const message = `RLS Check Results:
-- Found ${data?.length || 0} roles
-- Error: ${error?.message || 'None'}
-- User authenticated: ${!!user}
-- User ID: ${user?.id?.slice(0, 8)}...`;
-      
-      alert(message);
+      console.log('RLS Check - Data:', data);
+      console.log('RLS Check - Error:', error);
+      alert(`Found ${data?.length || 0} roles. Error: ${error?.message || 'None'}`);
       
       // Also check specifically for current user
       if (user) {
@@ -104,8 +97,8 @@ export const RoleDebugger = () => {
       }
       
     } catch (err: any) {
-      console.error('💥 RLS Check error:', err);
-      alert('RLS Check failed: ' + err.message);
+      console.error('RLS check error:', err);
+      alert('Error checking RLS: ' + err.message);
     }
   };
 
@@ -114,13 +107,10 @@ export const RoleDebugger = () => {
     
     try {
       const { data, error } = await supabase.rpc('force_make_me_admin');
-      
-      console.log('📊 Force admin result:', data);
-      console.log('❌ Force admin error:', error);
+      console.log('Force admin result:', data, error);
       
       if (error) {
-        console.error('❌ RPC Error:', error);
-        alert('Database function error:\n' + error.message);
+        alert('Database function error: ' + error.message);
         return;
       }
       
@@ -128,69 +118,51 @@ export const RoleDebugger = () => {
       const result = data as { success?: boolean; error?: string; message?: string } | null;
       
       if (result?.success) {
-        console.log('✅ Successfully forced admin role');
-        alert('Admin role set successfully! Page will refresh...');
-        
-        // Wait a moment then refresh
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        alert('Admin role set! Refreshing...');
+        setTimeout(() => window.location.reload(), 1000);
       } else {
-        console.error('❌ Function returned error:', result?.error);
-        alert('Function error:\n' + (result?.error || 'Unknown error'));
+        alert('Failed: ' + (result?.error || 'Unknown error'));
       }
-      
     } catch (err: any) {
-      console.error('💥 Exception calling force_make_me_admin:', err);
-      alert('Unexpected error:\n' + err.message);
+      console.error('Force admin error:', err);
+      alert('Error: ' + err.message);
     }
   };
 
   const forceClaimAdmin = async () => {
-    if (!user) {
-      alert('No user found!');
-      return;
-    }
-
-    console.log('🚀 Force claiming admin role for user:', user.id);
+    console.log('🚀 Force claiming admin role via client insert...');
     
     try {
-      // First check if role exists
-      const { data: existingRole } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      console.log('📋 Existing role:', existingRole);
+      if (!user) {
+        alert('No user logged in!');
+        return;
+      }
       
-      // Insert or update role using upsert
+      console.log('👤 Attempting to insert admin role for user:', user.id);
+      
+      // Try to insert directly
       const { data, error } = await supabase
         .from('user_roles')
-        .upsert({ 
+        .insert({ 
           user_id: user.id, 
-          role: 'admin',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          role: 'admin'
         })
         .select()
         .single();
       
       if (error) {
-        console.error('❌ Error claiming admin:', error);
-        alert('Error claiming admin role:\n' + error.message);
+        console.error('Insert error:', error);
+        alert('Insert failed: ' + error.message + '\n\nThis likely means RLS is blocking the insert.');
       } else {
-        console.log('✅ Successfully claimed admin:', data);
-        alert('Admin role claimed successfully! Page will refresh...');
-        
-        // Wait a moment then refresh
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
+        console.log('Insert success:', data);
+        alert('Admin role inserted! Refreshing...');
+        setTimeout(() => window.location.reload(), 1000);
       }
     } catch (err: any) {
-      console.error('💥 Unexpected error:', err);
-      alert('Unexpected error:\n' + err.message);
+      console.error('Client insert error:', err);
+      alert('Error: ' + err.message);
     }
   };
 
