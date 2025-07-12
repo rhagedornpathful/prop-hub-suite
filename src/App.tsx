@@ -53,9 +53,9 @@ const AppContent = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <EmergencyAdminBanner />
-            <ViewAsBanner />
             <BrowserRouter>
+              <EmergencyAdminBanner />
+              <ViewAsBanner />
           <Routes>
             {/* Public Auth Route - Always accessible */}
             <Route path="/auth" element={<Auth />} />
