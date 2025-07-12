@@ -178,6 +178,60 @@ export type Database = {
           },
         ]
       }
+      owner_distributions: {
+        Row: {
+          amount: number
+          created_at: string
+          distribution_date: string
+          id: string
+          notes: string | null
+          owner_id: string
+          payment_method: string | null
+          property_id: string
+          reference_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          distribution_date: string
+          id?: string
+          notes?: string | null
+          owner_id: string
+          payment_method?: string | null
+          property_id: string
+          reference_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          distribution_date?: string
+          id?: string
+          notes?: string | null
+          owner_id?: string
+          payment_method?: string | null
+          property_id?: string
+          reference_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_distributions_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "owner_distributions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
