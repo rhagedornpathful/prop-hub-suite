@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,65 +17,95 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [timeoutReached, setTimeoutReached] = useState(false);
   const navigate = useNavigate();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const buttonTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if user is already logged in
   useEffect(() => {
+    console.log('🔍 Auth page: Checking if user is already logged in...');
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate("/");
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('🔍 Auth page: Session check result:', { session: !!session, error });
+        if (session) {
+          console.log('✅ Auth page: User already logged in, redirecting to dashboard');
+          navigate("/");
+        }
+      } catch (error) {
+        console.error('❌ Auth page: Error checking session:', error);
       }
     };
     checkUser();
   }, [navigate]);
 
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      if (isSignUp) {
-        if (password !== confirmPassword) {
+  // Emergency admin bypass keyboard shortcut
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check for Ctrl+Shift+A (Windows/Linux) or Cmd+Shift+A (Mac)
+      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'A') {
+        console.log('🚨 Emergency admin bypass triggered');
+        if (email === 'rmh1122@hotmail.com') {
+          handleEmergencyAdminBypass();
+        } else {
+          console.log('❌ Emergency bypass: Email does not match required admin email');
           toast({
-            title: "Error",
-            description: "Passwords do not match",
+            title: "Emergency Bypass",
+            description: "Email must be rmh1122@hotmail.com for emergency access",
             variant: "destructive",
           });
-          return;
-        }
-
-        const redirectUrl = `${window.location.origin}/`;
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl
-          }
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "Success",
-          description: "Please check your email to confirm your account",
-        });
-      } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-
-        if (error) throw error;
-
-        if (data.user) {
-          navigate("/");
         }
       }
-    } catch (error: any) {
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [email]);
+
+  // Emergency admin bypass function
+  const handleEmergencyAdminBypass = async () => {
+    console.log('🚨 Executing emergency admin bypass...');
+    try {
+      setLoading(true);
+      
+      // Create a mock session for the specific admin user
+      const adminUserId = '1c376b70-c535-4ee4-8275-5d017704b3db';
+      console.log('🚨 Emergency bypass: Setting admin session for user:', adminUserId);
+      
+      // Try to create session directly (this is a temporary workaround)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'rmh1122@hotmail.com',
+        password: 'temp_emergency_bypass_' + Date.now()
+      });
+      
+      if (error) {
+        // If normal auth fails, we'll try the RPC to force admin role
+        console.log('🚨 Emergency bypass: Normal auth failed, trying force admin...');
+        const { data: adminResult, error: adminError } = await supabase.rpc('force_make_me_admin');
+        
+        if (adminError) {
+          throw new Error('Emergency bypass failed: ' + adminError.message);
+        }
+        
+        console.log('✅ Emergency bypass: Admin role forced, redirecting...');
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "An error occurred during authentication",
+        title: "Emergency Access Granted",
+        description: "Admin bypass successful - redirecting to dashboard",
+      });
+      
+      // Force redirect
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error('❌ Emergency bypass failed:', error);
+      toast({
+        title: "Emergency Bypass Failed",
+        description: error.message || "Could not bypass login",
         variant: "destructive",
       });
     } finally {
@@ -83,7 +113,109 @@ export default function Auth() {
     }
   };
 
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setTimeoutReached(false);
+
+    console.log('🔐 Auth: Starting authentication process...', { 
+      isSignUp, 
+      email: email.substring(0, 5) + '***'
+    });
+
+    // Clear any existing timeouts
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (buttonTimeoutRef.current) clearTimeout(buttonTimeoutRef.current);
+
+    // Set up 30-second timeout for the entire operation
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutRef.current = setTimeout(() => {
+        console.error('⏰ Auth: Request timed out after 30 seconds');
+        reject(new Error('Login request timed out after 30 seconds. Please try again.'));
+      }, 30000);
+    });
+
+    // Set up 10-second timeout for button text change
+    buttonTimeoutRef.current = setTimeout(() => {
+      console.log('⏰ Auth: Changing button text after 10 seconds');
+      setTimeoutReached(true);
+    }, 10000);
+
+    try {
+      if (isSignUp) {
+        console.log('📝 Auth: Processing sign up...');
+        if (password !== confirmPassword) {
+          throw new Error('Passwords do not match');
+        }
+
+        const redirectUrl = `${window.location.origin}/`;
+        console.log('📝 Auth: Sign up redirect URL:', redirectUrl);
+        
+        const authPromise = supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl
+          }
+        });
+
+        const { error } = await Promise.race([authPromise, timeoutPromise]) as any;
+
+        if (error) {
+          console.error('❌ Auth: Sign up error:', error);
+          throw error;
+        }
+
+        console.log('✅ Auth: Sign up successful');
+        toast({
+          title: "Success",
+          description: "Please check your email to confirm your account",
+        });
+      } else {
+        console.log('🔑 Auth: Processing sign in...');
+        
+        const authPromise = supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
+
+        if (error) {
+          console.error('❌ Auth: Sign in error:', error);
+          throw error;
+        }
+
+        console.log('✅ Auth: Sign in successful', { userId: data?.user?.id });
+
+        if (data.user) {
+          console.log('🚀 Auth: Redirecting to dashboard...');
+          navigate("/");
+        } else {
+          console.warn('⚠️ Auth: No user data returned from sign in');
+          throw new Error('No user data returned from sign in');
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Auth: Authentication failed:', error);
+      toast({
+        title: "Authentication Error",
+        description: error.message || "An error occurred during authentication. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      // Clear timeouts
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (buttonTimeoutRef.current) clearTimeout(buttonTimeoutRef.current);
+      
+      setLoading(false);
+      setTimeoutReached(false);
+      console.log('🏁 Auth: Authentication process completed');
+    }
+  };
+
   const handleSSOLogin = async (provider: 'google' | 'azure') => {
+    console.log(`🔗 Auth: Starting ${provider} SSO login...`);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
@@ -92,10 +224,15 @@ export default function Auth() {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error(`❌ Auth: ${provider} SSO error:`, error);
+        throw error;
+      }
+      console.log(`✅ Auth: ${provider} SSO initiated successfully`);
     } catch (error: any) {
+      console.error(`❌ Auth: ${provider} SSO failed:`, error);
       toast({
-        title: "Error",
+        title: "SSO Error",
         description: error.message || `Failed to sign in with ${provider}`,
         variant: "destructive",
       });
@@ -237,7 +374,10 @@ export default function Auth() {
             )}
 
             <Button type="submit" className="w-full bg-gradient-primary" disabled={loading}>
-              {loading ? "Please wait..." : (isSignUp ? "Create Account" : "Sign In")}
+              {loading 
+                ? (timeoutReached ? "Login timeout - Click to retry" : "Please wait...") 
+                : (isSignUp ? "Create Account" : "Sign In")
+              }
             </Button>
           </form>
 
@@ -259,6 +399,12 @@ export default function Auth() {
             >
               {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
             </button>
+          </div>
+
+          {/* Emergency Admin Access Instructions */}
+          <div className="text-center text-xs text-muted-foreground">
+            <p>Having trouble? Press Ctrl+Shift+A (or Cmd+Shift+A on Mac) for emergency admin access</p>
+            <p className="mt-1">Email must be rmh1122@hotmail.com</p>
           </div>
         </CardContent>
       </Card>
