@@ -1,8 +1,21 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { PropertyGrid } from "@/components/PropertyGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   Bell, 
   Search, 
@@ -12,20 +25,55 @@ import {
   Grid,
   List,
   Map,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Building,
+  InfoIcon,
+  Eye
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useUserRole } from "@/hooks/useUserRole";
+import { RoleBasedWrapper } from "@/components/RoleBasedWrapper";
 
 const Properties = () => {
+  const navigate = useNavigate();
+  const { 
+    userRole, 
+    isAdmin, 
+    isPropertyOwner, 
+    isTenant, 
+    isHouseWatcher,
+    hasAdminAccess,
+    permissions,
+    getRoleDisplayName 
+  } = useUserRole();
+
+  // For tenants, redirect to their property detail page
+  useEffect(() => {
+    if (isTenant()) {
+      // In a real app, you'd fetch the tenant's property ID and redirect there
+      navigate('/tenant-property', { replace: true });
+    }
+  }, [userRole, navigate, isTenant]);
+
+  const getRoleSpecificTitle = () => {
+    if (hasAdminAccess()) return "All Properties";
+    if (isPropertyOwner()) return "My Properties";
+    if (isHouseWatcher()) return "Assigned Properties";
+    return "Properties";
+  };
+
+  const getPropertyCount = () => {
+    // This would be fetched from the API based on role
+    if (hasAdminAccess()) return 24;
+    if (isPropertyOwner()) return 5;
+    if (isHouseWatcher()) return 8;
+    return 0;
+  };
+
+  // Don't render for tenants as they get redirected
+  if (isTenant()) {
+    return null;
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-subtle">
@@ -36,12 +84,22 @@ const Properties = () => {
           <header className="bg-card border-b border-border p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Properties</h1>
-                  <p className="text-sm text-muted-foreground">Manage your property portfolio</p>
+                <div className="flex items-center gap-3">
+                  <Building className="h-6 w-6 text-primary" />
+                  <div>
+                    <h1 className="text-2xl font-bold text-foreground">{getRoleSpecificTitle()}</h1>
+                    <p className="text-sm text-muted-foreground">
+                      {hasAdminAccess() && "Manage all properties in the system"}
+                      {isPropertyOwner() && "Manage your property portfolio"}
+                      {isHouseWatcher() && "Properties you're monitoring"}
+                    </p>
+                  </div>
                 </div>
                 <Badge variant="secondary" className="ml-4">
-                  24 Properties
+                  {getPropertyCount()} Properties
+                </Badge>
+                <Badge variant="outline">
+                  {getRoleDisplayName()}
                 </Badge>
               </div>
               
