@@ -33,6 +33,7 @@ import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientPortal/Dashboard";
 import ClientProperties from "./pages/ClientPortal/Properties";
 import ClientReports from "./pages/ClientPortal/Reports";
+import ClientRequests from "./pages/ClientPortal/Requests";
 import ClientMessages from "./pages/ClientPortal/Messages";
 import AdminEmergency from "./pages/AdminEmergency";
 import Auth from "./pages/Auth";
@@ -45,7 +46,6 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { isMobile } = useMobileDetection();
-  
   return (
     <AuthProvider>
       <DevAdminProvider>
