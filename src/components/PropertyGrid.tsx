@@ -397,7 +397,12 @@ const PropertyCard = ({ property, onClick, onEdit, onDelete }: {
   );
 };
 
-export function PropertyGrid() {
+interface PropertyGridProps {
+  properties?: any[];
+  isLoading?: boolean;
+}
+
+export function PropertyGrid({ properties, isLoading }: PropertyGridProps) {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -405,6 +410,33 @@ export function PropertyGrid() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<Property | null>(null);
   const { toast } = useToast();
+
+  // Transform database properties to match our interface
+  const transformedProperties = properties ? properties.map(prop => ({
+    id: prop.id,
+    name: prop.address, // Use address as name for now
+    address: prop.address,
+    type: prop.property_type || 'Unknown',
+    units: 1, // For now, assume 1 unit per property
+    occupiedUnits: prop.status === 'active' ? 1 : 0,
+    monthlyRent: prop.monthly_rent || 0,
+    status: prop.status === 'active' ? 'occupied' : 'vacant',
+    image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop", // Default image
+    serviceType: prop.service_type || 'property_management',
+    checkFrequency: 'weekly',
+    monthlyFee: prop.monthly_rent || 200,
+    lastCheckDate: '2024-01-08',
+    nextCheckDate: '2024-01-15',
+    owner: {
+      id: '1',
+      name: 'Property Owner',
+      email: 'owner@test.com',
+      phone: '555-0123'
+    }
+  })) : [];
+
+  // Use transformed properties or fall back to mock data
+  const displayProperties = transformedProperties.length > 0 ? transformedProperties : mockProperties;
 
   const handlePropertyClick = (property: Property) => {
     setSelectedProperty(property);
@@ -447,12 +479,44 @@ export function PropertyGrid() {
     });
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Properties</h2>
+            <p className="text-muted-foreground">Loading properties...</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i} className="shadow-md border-0">
+              <CardContent className="p-6">
+                <div className="animate-pulse">
+                  <div className="h-48 bg-muted rounded mb-4"></div>
+                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-muted rounded w-1/2 mb-4"></div>
+                  <div className="h-8 bg-muted rounded"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">Properties</h2>
-          <p className="text-muted-foreground">Manage your property portfolio</p>
+          <p className="text-muted-foreground">
+            {displayProperties.length === transformedProperties.length ? 
+              `Showing ${displayProperties.length} real properties` : 
+              "Manage your property portfolio"
+            }
+          </p>
         </div>
         <Button 
           className="bg-gradient-primary hover:bg-primary-dark"
@@ -464,7 +528,7 @@ export function PropertyGrid() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockProperties.map((property) => (
+        {displayProperties.map((property) => (
           <PropertyCard 
             key={property.id} 
             property={property}

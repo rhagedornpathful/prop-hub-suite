@@ -28,10 +28,12 @@ import {
   SlidersHorizontal,
   Building,
   InfoIcon,
-  Eye
+  Eye,
+  DollarSign
 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { RoleBasedWrapper } from "@/components/RoleBasedWrapper";
+import { useProperties } from "@/hooks/queries/useProperties";
 
 const Properties = () => {
   const navigate = useNavigate();
@@ -45,6 +47,9 @@ const Properties = () => {
     permissions,
     getRoleDisplayName 
   } = useUserRole();
+
+  // Get real property data
+  const { data: properties = [], isLoading } = useProperties();
 
   // For tenants, redirect to their property detail page
   useEffect(() => {
@@ -62,11 +67,22 @@ const Properties = () => {
   };
 
   const getPropertyCount = () => {
-    // This would be fetched from the API based on role
-    if (hasAdminAccess()) return 24;
-    if (isPropertyOwner()) return 5;
-    if (isHouseWatcher()) return 8;
-    return 0;
+    return properties.length;
+  };
+
+  const getOccupiedCount = () => {
+    return properties.filter(p => p.status === 'active').length;
+  };
+
+  const getVacantCount = () => {
+    return properties.filter(p => p.status !== 'active').length;
+  };
+
+  const getAverageRent = () => {
+    const propertiesWithRent = properties.filter(p => p.monthly_rent);
+    if (propertiesWithRent.length === 0) return 0;
+    const totalRent = propertiesWithRent.reduce((sum, p) => sum + (p.monthly_rent || 0), 0);
+    return Math.round(totalRent / propertiesWithRent.length);
   };
 
   // Don't render for tenants as they get redirected
@@ -173,7 +189,9 @@ const Properties = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Total Properties</p>
-                        <p className="text-2xl font-bold text-foreground">24</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {isLoading ? "..." : getPropertyCount()}
+                        </p>
                       </div>
                       <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
                         <Grid className="h-4 w-4 text-white" />
@@ -187,7 +205,9 @@ const Properties = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Occupied</p>
-                        <p className="text-2xl font-bold text-foreground">18</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {isLoading ? "..." : getOccupiedCount()}
+                        </p>
                       </div>
                       <div className="h-8 w-8 bg-gradient-success rounded-lg flex items-center justify-center">
                         <User className="h-4 w-4 text-white" />
@@ -201,7 +221,9 @@ const Properties = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Vacant</p>
-                        <p className="text-2xl font-bold text-foreground">6</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {isLoading ? "..." : getVacantCount()}
+                        </p>
                       </div>
                       <div className="h-8 w-8 bg-gradient-secondary rounded-lg flex items-center justify-center">
                         <Search className="h-4 w-4 text-white" />
@@ -215,10 +237,12 @@ const Properties = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-muted-foreground">Avg. Rent</p>
-                        <p className="text-2xl font-bold text-foreground">$1,650</p>
+                        <p className="text-2xl font-bold text-foreground">
+                          {isLoading ? "..." : `$${getAverageRent().toLocaleString()}`}
+                        </p>
                       </div>
                       <div className="h-8 w-8 bg-gradient-accent rounded-lg flex items-center justify-center">
-                        <Plus className="h-4 w-4 text-white" />
+                        <DollarSign className="h-4 w-4 text-white" />
                       </div>
                     </div>
                   </CardContent>
@@ -243,7 +267,7 @@ const Properties = () => {
                 </TabsList>
                 
                 <TabsContent value="grid" className="mt-6">
-                  <PropertyGrid />
+                  <PropertyGrid properties={properties} isLoading={isLoading} />
                 </TabsContent>
                 
                 <TabsContent value="list" className="mt-6">
