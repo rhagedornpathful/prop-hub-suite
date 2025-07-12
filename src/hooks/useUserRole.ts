@@ -1,5 +1,6 @@
 import { useAuth } from '@/hooks/useAuth';
 import { useDevAdmin } from '@/contexts/DevAdminContext';
+import { useViewAs } from '@/contexts/ViewAsContext';
 
 export type UserRole = 'admin' | 'property_manager' | 'owner_investor' | 'tenant' | 'house_watcher' | 'client' | 'contractor' | 'leasing_agent';
 
@@ -21,9 +22,17 @@ export interface RolePermissions {
 export const useUserRole = () => {
   const { userRole, user, loading } = useAuth();
   const { isDevAdminActive, isDevelopment } = useDevAdmin();
+  const { viewAsRole, isViewingAs } = useViewAs();
 
-  // Override role to admin if dev admin mode is active
-  const effectiveRole = (isDevelopment && isDevAdminActive) ? 'admin' : userRole;
+  // Determine the effective role:
+  // 1. If in View As mode, use the view as role
+  // 2. If dev admin mode is active, use admin
+  // 3. Otherwise use the actual user role
+  const effectiveRole = isViewingAs 
+    ? viewAsRole 
+    : (isDevelopment && isDevAdminActive) 
+      ? 'admin' 
+      : userRole;
 
   // Helper functions to check specific roles (now use effective role)
   const isAdmin = () => effectiveRole === 'admin';
@@ -154,6 +163,11 @@ export const useUserRole = () => {
       }
     })();
     
+    // Add view as indicator if active
+    if (isViewingAs) {
+      return `${baseRole} (Viewing As)`;
+    }
+    
     // Add dev admin indicator if active
     if (isDevelopment && isDevAdminActive && userRole !== 'admin') {
       return `${baseRole} (Dev Admin)`;
@@ -201,5 +215,7 @@ export const useUserRole = () => {
     getRoleDisplayName,
     canPerformAction,
     permissions: getPermissions(),
+    isViewingAs, // Add view as state
+    actualUserRole: userRole, // Add actual user role for reference
   };
 };

@@ -9,6 +9,8 @@ import { RoleBasedAccess, ROLE_COMBINATIONS } from "@/components/RoleBasedAccess
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageTransition } from "@/components/PageTransition";
 import { DevAdminProvider } from "@/contexts/DevAdminContext";
+import { ViewAsProvider } from "@/contexts/ViewAsContext";
+import { ViewAsBanner } from "@/components/ViewAsBanner";
 import { DevAdminToggle } from "@/components/dev/DevAdminToggle";
 import { DebugPanel } from "@/components/dev/DebugPanel";
 import { RoleDebugger } from "@/components/dev/RoleDebugger";
@@ -44,11 +46,13 @@ const AppContent = () => {
   
   return (
     <DevAdminProvider>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+      <ViewAsProvider>
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <ViewAsBanner />
+            <BrowserRouter>
           <Routes>
             {/* Public Auth Route - Always accessible */}
             <Route path="/auth" element={<Auth />} />
@@ -212,7 +216,8 @@ const AppContent = () => {
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
-  </DevAdminProvider>
+  </ViewAsProvider>
+</DevAdminProvider>
   );
 };
 

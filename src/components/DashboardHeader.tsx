@@ -18,12 +18,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Bell, Search, User, Filter, ChevronDown, Settings, LogOut, Menu } from "lucide-react";
+import { Bell, Search, User, Filter, ChevronDown, Settings, LogOut, Menu, Eye } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAuth } from "@/hooks/useAuth";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { TouchOptimized } from "@/components/mobile/TouchOptimized";
 import { RoleSwitcher } from "@/components/dev/RoleSwitcher";
+import { ViewAsDropdown } from "@/components/ViewAsDropdown";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface DashboardHeaderProps {
   onSearch?: (query: string) => void;
@@ -38,6 +40,7 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   const { user, signOut } = useAuth();
   const { isMobile, isTablet } = useMobileDetection();
+  const { actualUserRole } = useUserRole();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -173,6 +176,15 @@ export function DashboardHeader({
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {actualUserRole === 'admin' && (
+                  <>
+                    <DropdownMenuItem>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View As Mode
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
                   Profile
@@ -272,6 +284,9 @@ export function DashboardHeader({
             </DropdownMenuContent>
           </DropdownMenu>
           
+          {/* View As Dropdown for Admin Users */}
+          {actualUserRole === 'admin' && <ViewAsDropdown />}
+          
           {/* Development Role Switcher - Desktop */}
           {process.env.NODE_ENV === 'development' && <RoleSwitcher />}
           
@@ -313,22 +328,31 @@ export function DashboardHeader({
                   </p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
-              {process.env.NODE_ENV === 'development' && (
-                <DropdownMenuItem onClick={() => window.location.href = '/dev-tools'}>
-                  <Menu className="mr-2 h-4 w-4" />
-                  Dev Tools
+                <DropdownMenuSeparator />
+                {actualUserRole === 'admin' && (
+                  <>
+                    <DropdownMenuItem>
+                      <Eye className="mr-2 h-4 w-4" />
+                      View As Mode
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                {process.env.NODE_ENV === 'development' && (
+                  <DropdownMenuItem onClick={() => window.location.href = '/dev-tools'}>
+                    <Menu className="mr-2 h-4 w-4" />
+                    Dev Tools
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
