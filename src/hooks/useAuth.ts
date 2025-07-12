@@ -167,29 +167,35 @@ export const useAuth = () => {
     console.log('🔍 Fetching role for user:', userId);
     
     try {
-      // Use array query which is more reliable
+      // Use single query which is more reliable for this case
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .single();
 
       console.log('📋 Role query result:', { data, error, userId });
 
       if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('⚠️ No roles found for user (PGRST116)');
+          setUserRole(null);
+          return;
+        }
         console.error('❌ Error fetching user role:', error);
         setUserRole(null);
         return;
       }
 
-      if (!data || data.length === 0) {
-        console.log('⚠️ No roles found for user');
+      if (!data) {
+        console.log('⚠️ No role data returned');
         setUserRole(null);
         return;
       }
 
-      // Set the first role found (user should only have one role)
-      console.log('✅ User role found:', data[0].role);
-      setUserRole(data[0].role);
+      // Set the role found
+      console.log('✅ User role found:', data.role);
+      setUserRole(data.role);
       
     } catch (error) {
       console.error('💥 Exception in fetchUserRole:', error);
