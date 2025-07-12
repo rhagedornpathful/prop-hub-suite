@@ -760,6 +760,11 @@ export default function Auth() {
             </Card>
           )}
 
+          {/* Comprehensive Supabase Diagnostics */}
+          <div className="mt-6">
+            <SupabaseConnectionTest />
+          </div>
+
           {/* Emergency Admin Access Instructions */}
           <div className="text-center text-xs text-muted-foreground">
             <p>Having trouble? Press Ctrl+Shift+A (or Cmd+Shift+A on Mac) for emergency admin access</p>
