@@ -167,56 +167,29 @@ export const useAuth = () => {
     console.log('🔍 Fetching role for user:', userId);
     
     try {
-      // Use a more direct query that should work with RLS
+      // Use array query which is more reliable
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .limit(1)
-        .single();
+        .eq('user_id', userId);
 
       console.log('📋 Role query result:', { data, error, userId });
 
       if (error) {
-        // If single() fails because no rows, try the array approach
-        if (error.code === 'PGRST116') {
-          console.log('🔄 No single role found, trying array query...');
-          const { data: rolesArray, error: arrayError } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', userId);
-            
-          if (arrayError) {
-            console.error('❌ Error fetching user roles array:', arrayError);
-            setUserRole(null);
-            return;  
-          }
-          
-          if (!rolesArray || rolesArray.length === 0) {
-            console.log('⚠️ No roles found for user');
-            setUserRole(null);
-            return;
-          }
-          
-          // Set the first role found
-          console.log('✅ Found role from array:', rolesArray[0].role);
-          setUserRole(rolesArray[0].role);
-          return;
-        }
-        
         console.error('❌ Error fetching user role:', error);
         setUserRole(null);
         return;
       }
 
-      if (!data) {
-        console.log('⚠️ No role data returned');
+      if (!data || data.length === 0) {
+        console.log('⚠️ No roles found for user');
         setUserRole(null);
         return;
       }
 
-      console.log('✅ User role found:', data.role);
-      setUserRole(data.role);
+      // Set the first role found (user should only have one role)
+      console.log('✅ User role found:', data[0].role);
+      setUserRole(data[0].role);
       
     } catch (error) {
       console.error('💥 Exception in fetchUserRole:', error);
@@ -225,13 +198,21 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-    // Clear emergency mode flags
+    // Clear emergency mode flags FIRST
     sessionStorage.removeItem('emergencyAdmin');
     sessionStorage.removeItem('emergencyAdminUser');
     delete (window as any).__EMERGENCY_ADMIN_MODE__;
     
+    // Clear all auth state
+    setUser(null);
+    setSession(null);
+    setUserRole(null);
+    
     console.log('🚪 useAuth: Signing out...');
-    return supabase.auth.signOut();
+    await supabase.auth.signOut();
+    
+    // Force redirect to auth page
+    window.location.href = '/auth';
   };
 
   return {
