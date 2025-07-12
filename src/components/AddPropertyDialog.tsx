@@ -64,6 +64,7 @@ interface PropertyOwner {
 export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editProperty, mode = "add" }: AddPropertyDialogProps) {
   const { isMobile } = useMobileDetection();
   const [searchAddress, setSearchAddress] = useState("");
+  const [isResearching, setIsResearching] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isQuickAddOwnerOpen, setIsQuickAddOwnerOpen] = useState(false);
@@ -359,6 +360,72 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
     }
   };
 
+  const handleResearchProperty = async () => {
+    const addressToResearch = propertyData.address || searchAddress;
+    
+    if (!addressToResearch.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a property address first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsResearching(true);
+    try {
+      console.log("Researching property:", addressToResearch);
+      
+      const { data, error } = await supabase.functions.invoke('scrape-property', {
+        body: { address: addressToResearch }
+      });
+
+      if (error) {
+        console.error("Error calling scrape-property function:", error);
+        throw error;
+      }
+
+      if (data?.success && data?.data) {
+        const scrapedData = data.data;
+        console.log("Received scraped data:", scrapedData);
+        
+        // Update form with scraped data
+        setPropertyData(prev => ({
+          ...prev,
+          address: scrapedData.address || prev.address,
+          estimated_value: scrapedData.estimated_value || prev.estimated_value,
+          bedrooms: scrapedData.bedrooms || prev.bedrooms,
+          bathrooms: scrapedData.bathrooms || prev.bathrooms,
+          square_feet: scrapedData.square_feet || prev.square_feet,
+          year_built: scrapedData.year_built || prev.year_built,
+          property_type: scrapedData.property_type || prev.property_type,
+          description: scrapedData.description || prev.description,
+        }));
+
+        setSearchAddress(scrapedData.address || addressToResearch);
+
+        toast({
+          title: "Property Research Complete",
+          description: "Property information has been automatically populated from public sources.",
+        });
+      } else {
+        toast({
+          title: "Research Complete",
+          description: data?.error || "Some property details were found. Please review and complete the form.",
+        });
+      }
+    } catch (error) {
+      console.error('Error researching property:', error);
+      toast({
+        title: "Research Error",
+        description: "Could not automatically research property. Please enter details manually.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsResearching(false);
+    }
+  };
+
   const resetForm = () => {
     setSearchAddress("");
     setPropertyData({
@@ -429,6 +496,18 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Search className="w-4 h-4" />
+                )}
+              </Button>
+              <Button 
+                onClick={handleResearchProperty} 
+                disabled={isResearching}
+                variant="outline"
+                className="bg-gradient-primary text-white hover:bg-primary-dark"
+              >
+                {isResearching ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Research"
                 )}
               </Button>
             </div>
