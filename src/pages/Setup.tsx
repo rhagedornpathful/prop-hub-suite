@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { Crown, Loader2, CheckCircle, Building, User, Shield, AlertCircle } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Setup = () => {
   const [loading, setLoading] = useState(true);

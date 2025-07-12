@@ -1,4 +1,4 @@
-import { useAuth } from './useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useProfile, useUserRoles, useUpdateProfile } from './queries/useProfiles';
 
 type AppRole = 'admin' | 'property_manager' | 'house_watcher' | 'client' | 'contractor' | 'tenant' | 'owner_investor' | 'leasing_agent';

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 export type ViewAsRole = 'admin' | 'property_manager' | 'owner_investor' | 'tenant' | 'house_watcher' | null;
 

@@ -11,7 +11,7 @@ import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { useNavigationSwipes } from "@/hooks/useSwipeGestures";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { AdminDashboard } from "@/pages/dashboards/AdminDashboard";
 import { PropertyOwnerDashboard } from "@/pages/dashboards/PropertyOwnerDashboard";
 import { TenantDashboard } from "@/pages/dashboards/TenantDashboard";

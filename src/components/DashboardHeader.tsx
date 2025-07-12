@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/sheet";
 import { Bell, Search, User, Filter, ChevronDown, Settings, LogOut, Menu, Eye } from "lucide-react";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { TouchOptimized } from "@/components/mobile/TouchOptimized";
 import { RoleSwitcher } from "@/components/dev/RoleSwitcher";

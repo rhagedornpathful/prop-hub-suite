@@ -1,9 +1,31 @@
-import { useState, useEffect } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 
+interface AuthContextType {
+  user: User | null;
+  session: Session | null;
+  loading: boolean;
+  userRole: Database['public']['Enums']['app_role'] | null;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
 export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +37,7 @@ export const useAuth = () => {
                            (window as any).__EMERGENCY_ADMIN_MODE__;
     
     if (isEmergencyMode) {
-      console.log('🚨 useAuth: Emergency admin mode detected - bypassing normal auth');
+      console.log('🚨 AuthProvider: Emergency admin mode detected - bypassing normal auth');
       
       try {
         const emergencyUserData = sessionStorage.getItem('emergencyAdminUser');
@@ -55,36 +77,78 @@ export const useAuth = () => {
         
         return true; // Emergency mode active
       } catch (error) {
-        console.error('❌ useAuth: Error setting up emergency mode:', error);
+        console.error('❌ AuthProvider: Error setting up emergency mode:', error);
       }
     }
     return false; // Normal mode
   };
 
-  useEffect(() => {
-    console.log('🔄 useAuth: Starting authentication check...');
-    
-    // Check emergency mode first
-    if (checkEmergencyMode()) {
-      console.log('🚨 useAuth: Emergency mode activated - skipping normal auth');
+  const fetchUserRole = async (userId: string) => {
+    // Skip role fetching in emergency mode
+    if (sessionStorage.getItem('emergencyAdmin') === 'true' || (window as any).__EMERGENCY_ADMIN_MODE__) {
+      console.log('🚨 AuthProvider: Emergency mode - setting admin role directly');
+      setUserRole('admin');
       return;
     }
 
-    console.log('🔍 useAuth: Normal auth mode - proceeding with Supabase auth');
+    console.log('🔍 AuthProvider: Fetching role for user:', userId);
+    
+    try {
+      // Use direct user ID query to bypass auth.uid() timing issues
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      console.log('📋 AuthProvider: Role query result:', { data, error, userId });
+
+      if (error) {
+        console.error('❌ AuthProvider: Error fetching user role:', error);
+        setUserRole(null);
+        return;
+      }
+
+      if (!data) {
+        console.log('⚠️ AuthProvider: No role data returned for user');
+        setUserRole(null);
+        return;
+      }
+
+      // Set the role found
+      console.log('✅ AuthProvider: User role found:', data.role);
+      setUserRole(data.role);
+      
+    } catch (error) {
+      console.error('💥 AuthProvider: Exception in fetchUserRole:', error);
+      setUserRole(null);
+    }
+  };
+
+  useEffect(() => {
+    console.log('🔄 AuthProvider: Starting authentication check...');
+    
+    // Check emergency mode first
+    if (checkEmergencyMode()) {
+      console.log('🚨 AuthProvider: Emergency mode activated - skipping normal auth');
+      return;
+    }
+
+    console.log('🔍 AuthProvider: Normal auth mode - proceeding with Supabase auth');
     let isSubscriptionActive = true;
 
     // Listen for auth changes FIRST to avoid missing events
-    console.log('🎧 useAuth: Setting up auth state change listener...');
+    console.log('🎧 AuthProvider: Setting up auth state change listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔄 useAuth: Auth state changed:', event);
+        console.log('🔄 AuthProvider: Auth state changed:', event);
         
         // Skip if subscription is no longer active
         if (!isSubscriptionActive) return;
         
         // Check emergency mode on each auth change
         if (checkEmergencyMode()) {
-          console.log('🚨 useAuth: Emergency mode detected during auth change - ignoring');
+          console.log('🚨 AuthProvider: Emergency mode detected during auth change - ignoring');
           return;
         }
 
@@ -94,14 +158,14 @@ export const useAuth = () => {
         
         // Defer role fetching to avoid blocking
         if (session?.user && event === 'SIGNED_IN') {
-          console.log('👤 useAuth: User signed in, fetching role...');
+          console.log('👤 AuthProvider: User signed in, fetching role...');
           setTimeout(() => {
             if (isSubscriptionActive) {
               fetchUserRole(session.user.id);
             }
           }, 0);
         } else if (!session) {
-          console.log('❌ useAuth: No user session');
+          console.log('❌ AuthProvider: No user session');
           setUserRole(null);
         }
         
@@ -112,18 +176,18 @@ export const useAuth = () => {
     // Get initial session AFTER setting up listener
     const getInitialSession = async () => {
       try {
-        console.log('🔍 useAuth: Getting initial session...');
+        console.log('🔍 AuthProvider: Getting initial session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!isSubscriptionActive) return;
         
         if (error) {
-          console.error('❌ useAuth: Error getting session:', error);
+          console.error('❌ AuthProvider: Error getting session:', error);
           setLoading(false);
           return;
         }
 
-        console.log('📝 useAuth: Initial session:', session ? 'exists' : 'null');
+        console.log('📝 AuthProvider: Initial session:', session ? 'exists' : 'null');
         
         // Only update if no session is already set (avoid duplicates)
         if (!session || session.access_token !== user?.id) {
@@ -131,7 +195,7 @@ export const useAuth = () => {
           setUser(session?.user ?? null);
           
           if (session?.user) {
-            console.log('👤 useAuth: Initial user found, fetching role...');
+            console.log('👤 AuthProvider: Initial user found, fetching role...');
             setTimeout(() => {
               if (isSubscriptionActive) {
                 fetchUserRole(session.user.id);
@@ -142,7 +206,7 @@ export const useAuth = () => {
         
         setLoading(false);
       } catch (error) {
-        console.error('💥 useAuth: Exception in getInitialSession:', error);
+        console.error('💥 AuthProvider: Exception in getInitialSession:', error);
         setLoading(false);
       }
     };
@@ -150,53 +214,11 @@ export const useAuth = () => {
     getInitialSession();
 
     return () => {
-      console.log('🧹 useAuth: Cleaning up auth subscription');
+      console.log('🧹 AuthProvider: Cleaning up auth subscription');
       isSubscriptionActive = false;
       subscription.unsubscribe();
     };
   }, []);
-
-  const fetchUserRole = async (userId: string) => {
-    // Skip role fetching in emergency mode
-    if (sessionStorage.getItem('emergencyAdmin') === 'true' || (window as any).__EMERGENCY_ADMIN_MODE__) {
-      console.log('🚨 useAuth: Emergency mode - setting admin role directly');
-      setUserRole('admin');
-      return;
-    }
-
-    console.log('🔍 Fetching role for user:', userId);
-    
-    try {
-      // Use direct user ID query to bypass auth.uid() timing issues
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      console.log('📋 Role query result:', { data, error, userId });
-
-      if (error) {
-        console.error('❌ Error fetching user role:', error);
-        setUserRole(null);
-        return;
-      }
-
-      if (!data) {
-        console.log('⚠️ No role data returned for user');
-        setUserRole(null);
-        return;
-      }
-
-      // Set the role found
-      console.log('✅ User role found:', data.role);
-      setUserRole(data.role);
-      
-    } catch (error) {
-      console.error('💥 Exception in fetchUserRole:', error);
-      setUserRole(null);
-    }
-  };
 
   const signOut = async () => {
     // Clear emergency mode flags FIRST
@@ -209,18 +231,24 @@ export const useAuth = () => {
     setSession(null);
     setUserRole(null);
     
-    console.log('🚪 useAuth: Signing out...');
+    console.log('🚪 AuthProvider: Signing out...');
     await supabase.auth.signOut();
     
     // Force redirect to auth page
     window.location.href = '/auth';
   };
 
-  return {
+  const value = {
     user,
     session,
     loading,
     userRole,
     signOut
   };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };

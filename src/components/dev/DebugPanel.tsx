@@ -22,7 +22,7 @@ import {
   Copy,
   CheckCircle
 } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useDevAdmin } from '@/contexts/DevAdminContext';
 import { supabase } from '@/integrations/supabase/client';

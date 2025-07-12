@@ -1,4 +1,4 @@
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useDevAdmin } from '@/contexts/DevAdminContext';
 import { useViewAs } from '@/contexts/ViewAsContext';
 

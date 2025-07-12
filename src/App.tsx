@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { RoleBasedAccess, ROLE_COMBINATIONS } from "@/components/RoleBasedAccess";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageTransition } from "@/components/PageTransition";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { DevAdminProvider } from "@/contexts/DevAdminContext";
 import { ViewAsProvider } from "@/contexts/ViewAsContext";
 import { ViewAsBanner } from "@/components/ViewAsBanner";
@@ -32,7 +33,6 @@ import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientPortal/Dashboard";
 import ClientProperties from "./pages/ClientPortal/Properties";
 import ClientReports from "./pages/ClientPortal/Reports";
-import ClientRequests from "./pages/ClientPortal/Requests";
 import ClientMessages from "./pages/ClientPortal/Messages";
 import AdminEmergency from "./pages/AdminEmergency";
 import Auth from "./pages/Auth";
@@ -47,8 +47,9 @@ const AppContent = () => {
   const { isMobile } = useMobileDetection();
   
   return (
-    <DevAdminProvider>
-      <ViewAsProvider>
+    <AuthProvider>
+      <DevAdminProvider>
+        <ViewAsProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
             <Toaster />
@@ -224,6 +225,7 @@ const AppContent = () => {
     </QueryClientProvider>
   </ViewAsProvider>
 </DevAdminProvider>
+</AuthProvider>
   );
 };
 
