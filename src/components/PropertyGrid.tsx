@@ -12,7 +12,8 @@ import {
   Trash2,
   Calendar,
   Clock,
-  Shield
+  Shield,
+  UserCheck
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -46,6 +47,10 @@ interface PropertyManagementProperty {
   status: "occupied" | "vacant" | "maintenance";
   image: string;
   serviceType: "property_management";
+  owner?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface HouseWatchingProperty {
@@ -59,6 +64,10 @@ interface HouseWatchingProperty {
   nextCheckDate: string;
   image: string;
   serviceType: "house_watching";
+  owner?: {
+    id: string;
+    name: string;
+  };
 }
 
 type Property = PropertyManagementProperty | HouseWatchingProperty;
@@ -74,7 +83,8 @@ const mockProperties: Property[] = [
     monthlyRent: 1200,
     status: "occupied",
     image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop",
-    serviceType: "property_management"
+    serviceType: "property_management",
+    owner: { id: "1", name: "Smith Properties LLC" }
   },
   {
     id: "2", 
@@ -86,7 +96,8 @@ const mockProperties: Property[] = [
     monthlyRent: 1800,
     status: "occupied",
     image: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=400&h=300&fit=crop",
-    serviceType: "property_management"
+    serviceType: "property_management",
+    owner: { id: "2", name: "Sarah Johnson" }
   },
   {
     id: "3",
@@ -98,7 +109,8 @@ const mockProperties: Property[] = [
     monthlyRent: 2200,
     status: "occupied",
     image: "https://images.unsplash.com/photo-1558618666-fccd4c84cd3d?w=400&h=300&fit=crop",
-    serviceType: "property_management"
+    serviceType: "property_management",
+    owner: { id: "3", name: "Davis Real Estate Holdings" }
   },
   {
     id: "4",
@@ -110,7 +122,8 @@ const mockProperties: Property[] = [
     lastCheckDate: "2024-01-08",
     nextCheckDate: "2024-01-15",
     image: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=400&h=300&fit=crop",
-    serviceType: "house_watching"
+    serviceType: "house_watching",
+    owner: { id: "2", name: "Sarah Johnson" }
   },
   {
     id: "5",
@@ -122,7 +135,8 @@ const mockProperties: Property[] = [
     monthlyRent: 3200,
     status: "maintenance",
     image: "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=400&h=300&fit=crop",
-    serviceType: "property_management"
+    serviceType: "property_management",
+    owner: { id: "1", name: "Smith Properties LLC" }
   },
   {
     id: "6",
@@ -134,7 +148,8 @@ const mockProperties: Property[] = [
     lastCheckDate: "2024-01-05",
     nextCheckDate: "2024-01-19",
     image: "https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=300&fit=crop",
-    serviceType: "house_watching"
+    serviceType: "house_watching",
+    owner: { id: "3", name: "Davis Real Estate Holdings" }
   }
 ];
 
@@ -224,6 +239,12 @@ const PropertyCard = ({ property, onClick, onEdit, onDelete }: {
               <MapPin className="h-4 w-4" />
               <span className="text-sm">{property.address}</span>
             </div>
+            {property.owner && (
+              <div className="flex items-center gap-1 mt-1 text-muted-foreground">
+                <UserCheck className="h-3 w-3" />
+                <span className="text-xs">{property.owner.name}</span>
+              </div>
+            )}
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

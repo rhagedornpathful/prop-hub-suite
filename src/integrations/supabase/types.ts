@@ -238,6 +238,7 @@ export type Database = {
           images: string[] | null
           lot_size: string | null
           monthly_rent: number | null
+          owner_id: string | null
           property_type: string | null
           service_type: string | null
           square_feet: number | null
@@ -263,6 +264,7 @@ export type Database = {
           images?: string[] | null
           lot_size?: string | null
           monthly_rent?: number | null
+          owner_id?: string | null
           property_type?: string | null
           service_type?: string | null
           square_feet?: number | null
@@ -288,6 +290,7 @@ export type Database = {
           images?: string[] | null
           lot_size?: string | null
           monthly_rent?: number | null
+          owner_id?: string | null
           property_type?: string | null
           service_type?: string | null
           square_feet?: number | null
@@ -299,7 +302,15 @@ export type Database = {
           year_built?: number | null
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "properties_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_owners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_owners: {
         Row: {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, Search, Plus } from "lucide-react";
+import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
 
 interface AddPropertyDialogProps {
   open: boolean;
@@ -49,6 +50,14 @@ interface PropertyData {
   description?: string;
   amenities?: string[];
   gate_code?: string;
+  owner_id?: string;
+}
+
+interface PropertyOwner {
+  id: string;
+  first_name: string;
+  last_name: string;
+  company_name?: string;
 }
 
 export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editProperty, mode = "add" }: AddPropertyDialogProps) {
@@ -56,6 +65,9 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
   const [searchAddress, setSearchAddress] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isQuickAddOwnerOpen, setIsQuickAddOwnerOpen] = useState(false);
+  const [propertyOwners, setPropertyOwners] = useState<PropertyOwner[]>([]);
+  const [isLoadingOwners, setIsLoadingOwners] = useState(false);
   const [propertyData, setPropertyData] = useState<PropertyData>(() => {
     if (mode === "edit" && editProperty) {
       return {
@@ -69,6 +81,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         estimated_value: 0,
         monthly_rent: editProperty.monthlyRent || editProperty.monthlyFee || 0,
         description: "",
+        owner_id: editProperty.owner_id || "",
       };
     }
     return {
@@ -82,9 +95,56 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       estimated_value: 0,
       monthly_rent: 0,
       description: "",
+      owner_id: "",
     };
   });
   const { toast } = useToast();
+
+  // Load property owners when dialog opens
+  useEffect(() => {
+    if (open) {
+      loadPropertyOwners();
+    }
+  }, [open]);
+
+  const loadPropertyOwners = async () => {
+    // Check if we're in demo mode
+    const isDemoMode = window.location.pathname.startsWith('/demo');
+    
+    if (isDemoMode) {
+      // Mock data for demo mode
+      setPropertyOwners([
+        { id: "1", first_name: "John", last_name: "Smith", company_name: "Smith Properties LLC" },
+        { id: "2", first_name: "Sarah", last_name: "Johnson" },
+        { id: "3", first_name: "Michael", last_name: "Davis", company_name: "Davis Real Estate Holdings" }
+      ]);
+      return;
+    }
+
+    setIsLoadingOwners(true);
+    try {
+      const { data, error } = await supabase
+        .from('property_owners')
+        .select('id, first_name, last_name, company_name')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setPropertyOwners(data || []);
+    } catch (error) {
+      console.error('Error loading property owners:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load property owners",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingOwners(false);
+    }
+  };
+
+  const getOwnerDisplayName = (owner: PropertyOwner) => {
+    return owner.company_name || `${owner.first_name} ${owner.last_name}`;
+  };
 
   const handleSearchProperty = async () => {
     if (!searchAddress.trim()) {
@@ -252,6 +312,16 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       estimated_value: 0,
       monthly_rent: 0,
       description: "",
+      owner_id: "",
+    });
+  };
+
+  const handleQuickAddOwnerComplete = () => {
+    // Reload the owners list
+    loadPropertyOwners();
+    toast({
+      title: "Owner Added",
+      description: "Property owner has been added successfully.",
     });
   };
 
@@ -329,6 +399,38 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
                   <SelectItem value="property_management">Property Management</SelectItem>
                   <SelectItem value="house_watching">House Watching</SelectItem>
                   <SelectItem value="both">Both Services</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="property-owner">Property Owner *</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsQuickAddOwnerOpen(true)}
+                  className="h-6 px-2 text-xs"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Quick Add
+                </Button>
+              </div>
+              <Select 
+                value={propertyData.owner_id} 
+                onValueChange={(value) => handleInputChange('owner_id', value)}
+                disabled={isLoadingOwners}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={isLoadingOwners ? "Loading owners..." : "Select property owner"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {propertyOwners.map((owner) => (
+                    <SelectItem key={owner.id} value={owner.id}>
+                      {getOwnerDisplayName(owner)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -488,6 +590,12 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
           </div>
         </div>
       </ContentWrapper>
+      
+      <AddPropertyOwnerDialog
+        open={isQuickAddOwnerOpen}
+        onOpenChange={setIsQuickAddOwnerOpen}
+        onOwnerAdded={handleQuickAddOwnerComplete}
+      />
     </DialogWrapper>
   );
 }
