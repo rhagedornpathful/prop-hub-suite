@@ -64,6 +64,81 @@ export type Database = {
           },
         ]
       }
+      house_watcher_properties: {
+        Row: {
+          assigned_date: string
+          house_watcher_id: string
+          id: string
+          notes: string | null
+          property_id: string
+        }
+        Insert: {
+          assigned_date?: string
+          house_watcher_id: string
+          id?: string
+          notes?: string | null
+          property_id: string
+        }
+        Update: {
+          assigned_date?: string
+          house_watcher_id?: string
+          id?: string
+          notes?: string | null
+          property_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "house_watcher_properties_house_watcher_id_fkey"
+            columns: ["house_watcher_id"]
+            isOneToOne: false
+            referencedRelation: "house_watchers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "house_watcher_properties_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      house_watchers: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_by: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "house_watchers_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "house_watchers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       house_watching: {
         Row: {
           check_frequency: string | null
@@ -417,6 +492,7 @@ export type Database = {
           state: string | null
           tax_id_number: string | null
           updated_at: string
+          user_account_id: string | null
           user_id: string
           zip_code: string | null
         }
@@ -439,6 +515,7 @@ export type Database = {
           state?: string | null
           tax_id_number?: string | null
           updated_at?: string
+          user_account_id?: string | null
           user_id: string
           zip_code?: string | null
         }
@@ -461,10 +538,18 @@ export type Database = {
           state?: string | null
           tax_id_number?: string | null
           updated_at?: string
+          user_account_id?: string | null
           user_id?: string
           zip_code?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "property_owners_user_account_id_fkey"
+            columns: ["user_account_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "property_owners_user_id_fkey"
             columns: ["user_id"]
@@ -491,6 +576,7 @@ export type Database = {
           property_id: string
           security_deposit: number | null
           updated_at: string
+          user_account_id: string | null
           user_id: string
         }
         Insert: {
@@ -509,6 +595,7 @@ export type Database = {
           property_id: string
           security_deposit?: number | null
           updated_at?: string
+          user_account_id?: string | null
           user_id: string
         }
         Update: {
@@ -527,6 +614,7 @@ export type Database = {
           property_id?: string
           security_deposit?: number | null
           updated_at?: string
+          user_account_id?: string | null
           user_id?: string
         }
         Relationships: [
@@ -535,6 +623,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenants_user_account_id_fkey"
+            columns: ["user_account_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
