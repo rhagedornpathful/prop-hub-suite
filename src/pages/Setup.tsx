@@ -95,13 +95,16 @@ const Setup = () => {
       const hasAdmin = (data || []).length > 0;
       setAdminExists(hasAdmin);
       
-      // If admin exists, redirect to dashboard
+      // If admin exists, redirect to dashboard immediately
       if (hasAdmin) {
         toast({
           title: "Setup Complete",
           description: "System administrator already exists. Redirecting to dashboard...",
         });
-        navigate('/', { replace: true });
+        // Use window.location for immediate redirect
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
         return;
       }
       
