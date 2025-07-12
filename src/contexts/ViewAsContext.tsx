@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useUserRole } from '@/hooks/useUserRole';
+import { useAuth } from '@/hooks/useAuth';
 
 export type ViewAsRole = 'admin' | 'property_manager' | 'owner_investor' | 'tenant' | 'house_watcher' | null;
 
@@ -15,10 +15,10 @@ const ViewAsContext = createContext<ViewAsContextType | undefined>(undefined);
 
 export function ViewAsProvider({ children }: { children: React.ReactNode }) {
   const [viewAsRole, setViewAsRoleState] = useState<ViewAsRole>(null);
-  const { isAdmin } = useUserRole();
+  const { userRole } = useAuth(); // Use useAuth directly instead of useUserRole
   
   const isViewingAs = viewAsRole !== null;
-  const canUseViewAs = isAdmin();
+  const canUseViewAs = userRole === 'admin'; // Check admin status directly
 
   const setViewAsRole = (role: ViewAsRole) => {
     if (!canUseViewAs) {
