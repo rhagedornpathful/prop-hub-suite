@@ -301,6 +301,75 @@ export type Database = {
         }
         Relationships: []
       }
+      property_owners: {
+        Row: {
+          address: string | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_routing_number: string | null
+          city: string | null
+          company_name: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          is_self: boolean
+          last_name: string
+          notes: string | null
+          phone: string
+          preferred_payment_method: string | null
+          state: string | null
+          tax_id_number: string | null
+          updated_at: string
+          user_id: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_routing_number?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          is_self?: boolean
+          last_name: string
+          notes?: string | null
+          phone: string
+          preferred_payment_method?: string | null
+          state?: string | null
+          tax_id_number?: string | null
+          updated_at?: string
+          user_id: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_routing_number?: string | null
+          city?: string | null
+          company_name?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          is_self?: boolean
+          last_name?: string
+          notes?: string | null
+          phone?: string
+          preferred_payment_method?: string | null
+          state?: string | null
+          tax_id_number?: string | null
+          updated_at?: string
+          user_id?: string
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string
