@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { PropertyGrid } from "@/components/PropertyGrid";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,11 +89,8 @@ const Properties = () => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-subtle">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-subtle">
+      <div className="flex-1 flex flex-col">
           {/* Header */}
           <header className="bg-card border-b border-border p-4 shadow-sm">
             <div className="flex items-center justify-between">
@@ -300,9 +295,8 @@ const Properties = () => {
               </Tabs>
             </div>
           </main>
-        </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
