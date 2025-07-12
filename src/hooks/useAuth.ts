@@ -167,43 +167,56 @@ export const useAuth = () => {
     console.log('🔍 Fetching role for user:', userId);
     
     try {
-      // Get all roles for user (can be multiple)
+      // Use a more direct query that should work with RLS
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .limit(1)
+        .single();
 
-      console.log('📋 Raw role data:', data);
-      console.log('❌ Role fetch error:', error);
+      console.log('📋 Role query result:', { data, error, userId });
 
       if (error) {
+        // If single() fails because no rows, try the array approach
+        if (error.code === 'PGRST116') {
+          console.log('🔄 No single role found, trying array query...');
+          const { data: rolesArray, error: arrayError } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', userId);
+            
+          if (arrayError) {
+            console.error('❌ Error fetching user roles array:', arrayError);
+            setUserRole(null);
+            return;  
+          }
+          
+          if (!rolesArray || rolesArray.length === 0) {
+            console.log('⚠️ No roles found for user');
+            setUserRole(null);
+            return;
+          }
+          
+          // Set the first role found
+          console.log('✅ Found role from array:', rolesArray[0].role);
+          setUserRole(rolesArray[0].role);
+          return;
+        }
+        
         console.error('❌ Error fetching user role:', error);
         setUserRole(null);
         return;
       }
 
-      // If no roles found, user needs to set up
-      if (!data || data.length === 0) {
-        console.log('⚠️ No roles found for user');
+      if (!data) {
+        console.log('⚠️ No role data returned');
         setUserRole(null);
         return;
       }
 
-      // If user has multiple roles, prioritize admin, then property_manager, etc.
-      const roleHierarchy: Database['public']['Enums']['app_role'][] = [
-        'admin', 'property_manager', 'owner_investor', 'house_watcher', 'tenant', 'client'
-      ];
-      let selectedRole = data[0].role; // Default to first role
-      
-      for (const hierarchyRole of roleHierarchy) {
-        if (data.some(roleRow => roleRow.role === hierarchyRole)) {
-          selectedRole = hierarchyRole;
-          break;
-        }
-      }
-
-      console.log('✅ Selected role:', selectedRole, 'from', data.length, 'total roles');
-      setUserRole(selectedRole);
+      console.log('✅ User role found:', data.role);
+      setUserRole(data.role);
       
     } catch (error) {
       console.error('💥 Exception in fetchUserRole:', error);
