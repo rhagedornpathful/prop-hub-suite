@@ -222,20 +222,30 @@ export function SeedDatabase() {
 
   const createSampleProperties = async () => {
     try {
+      console.log('Starting property creation...');
+      
       // Get all property management users
-      const { data: pmUsers } = await supabase
+      const { data: pmUsers, error: pmError } = await supabase
         .from('user_profiles')
         .select('id, first_name, last_name, email')
         .ilike('email', 'pmclient%@test.com');
 
       // Get all house watching users
-      const { data: hwUsers } = await supabase
+      const { data: hwUsers, error: hwError } = await supabase
         .from('user_profiles')
         .select('id, first_name, last_name, email')
         .ilike('email', 'hwclient%@test.com');
 
-      if (!pmUsers || !hwUsers) {
-        console.log('Could not find test users for property creation');
+      console.log('PM Users found:', pmUsers?.length || 0, pmUsers);
+      console.log('HW Users found:', hwUsers?.length || 0, hwUsers);
+      
+      if (pmError) console.error('PM Users error:', pmError);
+      if (hwError) console.error('HW Users error:', hwError);
+
+      if (!pmUsers?.length && !hwUsers?.length) {
+        console.log('No test users found for property creation. Emails in DB:');
+        const { data: allUsers } = await supabase.from('user_profiles').select('email').limit(10);
+        console.log(allUsers);
         return;
       }
 
