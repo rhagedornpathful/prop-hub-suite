@@ -5,7 +5,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, RefreshCw, Shield } from 'lucide-react';
+import { AlertCircle, RefreshCw, Shield, X, Bug } from 'lucide-react';
 
 interface RoleDebugInfo {
   allRoles: any[];
@@ -24,11 +24,21 @@ export const RoleDebugger = () => {
     routeInfo: ''
   });
   const [debugLoading, setDebugLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(() => {
+    const saved = localStorage.getItem('debug-panel-open');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
   // Only show in development
   if (process.env.NODE_ENV !== 'development') {
     return null;
   }
+
+  const togglePanel = () => {
+    const newState = !isOpen;
+    setIsOpen(newState);
+    localStorage.setItem('debug-panel-open', JSON.stringify(newState));
+  };
 
   const fetchDebugInfo = async () => {
     if (!user) return;
@@ -173,58 +183,80 @@ export const RoleDebugger = () => {
   }, [user]);
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] max-w-md">
-      <Card className="bg-yellow-50 border-yellow-200">
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm flex items-center gap-1">
-              <AlertCircle className="w-4 h-4" />
-              Debug Info
-            </CardTitle>
-            <div className="flex gap-1">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={fetchDebugInfo}
-                disabled={debugLoading}
-                className="p-1 h-6 w-6"
-                title="Refresh debug info"
-              >
-                <RefreshCw className={`w-3 h-3 ${debugLoading ? 'animate-spin' : ''}`} />
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={checkRLS}
-                className="p-1 h-6 text-xs px-2"
-                title="Check RLS policies"
-              >
-                RLS
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={forceMakeAdmin}
-                className="p-1 h-6 text-xs px-2"
-                title="Force admin via database function"
-              >
-                <Shield className="w-3 h-3 mr-1" />
-                DB
-              </Button>
-              {user && (
+    <div className="fixed top-4 right-4 z-[9999]">
+      {!isOpen && (
+        <Button
+          onClick={togglePanel}
+          size="sm"
+          variant="outline"
+          className="bg-yellow-50 border-yellow-200 hover:bg-yellow-100"
+          title="Open debug panel"
+        >
+          <Bug className="w-4 h-4" />
+        </Button>
+      )}
+      
+      {isOpen && (
+        <Card className="bg-yellow-50 border-yellow-200 max-w-md">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                Debug Info
+              </CardTitle>
+              <div className="flex gap-1">
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={forceClaimAdmin}
-                  className="p-1 h-6 text-xs px-2"
-                  title="Force claim admin role via client"
+                  onClick={fetchDebugInfo}
+                  disabled={debugLoading}
+                  className="p-1 h-6 w-6"
+                  title="Refresh debug info"
                 >
-                  Client
+                  <RefreshCw className={`w-3 h-3 ${debugLoading ? 'animate-spin' : ''}`} />
                 </Button>
-              )}
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={checkRLS}
+                  className="p-1 h-6 text-xs px-2"
+                  title="Check RLS policies"
+                >
+                  RLS
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={forceMakeAdmin}
+                  className="p-1 h-6 text-xs px-2"
+                  title="Force admin via database function"
+                >
+                  <Shield className="w-3 h-3 mr-1" />
+                  DB
+                </Button>
+                {user && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={forceClaimAdmin}
+                    className="p-1 h-6 text-xs px-2"
+                    title="Force claim admin role via client"
+                  >
+                    Client
+                  </Button>
+                )}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={togglePanel}
+                  className="p-1 h-6 w-6"
+                  title="Close debug panel"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardHeader>
+          </CardHeader>
         <CardContent className="space-y-2 text-xs">
           <div>
             <strong>Auth Status:</strong> {loading ? 'Loading...' : user ? 'Authenticated' : 'Not authenticated'}
@@ -318,7 +350,8 @@ export const RoleDebugger = () => {
             </>
           )}
         </CardContent>
-      </Card>
+        </Card>
+      )}
     </div>
   );
 };
