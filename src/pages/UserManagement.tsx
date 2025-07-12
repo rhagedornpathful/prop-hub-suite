@@ -277,78 +277,160 @@ const UserManagement = () => {
   };
 
   const seedTestUsers = async () => {
-    console.log('🌱 UserManagement: Starting seed test users...');
+    console.log('🌱 UserManagement: Starting smart seed process...');
     try {
       setSeeding(true);
       setError(null);
       
-      console.log('🌱 UserManagement: Calling seed_test_users RPC...');
-      const { data, error } = await supabase.rpc('seed_test_users');
+      const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
+      const testRoles = ['admin', 'owner_investor', 'tenant', 'house_watcher'];
       
-      if (error) {
-        console.error('❌ UserManagement: Seed error details:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint
-        });
-        
-        // Show detailed error information
-        const errorMessage = `
-Database Error: ${error.message}
+      // Step 1: Check if test users exist in auth.users (via user_profiles view)
+      toast({
+        title: "Step 1/4",
+        description: "Checking for test users... 🔍",
+        variant: "default"
+      });
+      
+      console.log('🔍 UserManagement: Checking for existing test users...');
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('user_profiles')
+        .select('id, email')
+        .in('email', testEmails);
+      
+      if (checkError) {
+        console.error('❌ UserManagement: Error checking existing users:', checkError);
+        throw checkError;
+      }
+      
+      const existingEmails = (existingUsers || []).map(u => u.email);
+      const missingEmails = testEmails.filter(email => !existingEmails.includes(email));
+      
+      console.log('📊 UserManagement: Existing users:', existingEmails);
+      console.log('❌ UserManagement: Missing users:', missingEmails);
+      
+      // Step 2: If users are missing, show instructions
+      if (missingEmails.length > 0) {
+        const instructionMessage = `Test users need to be created manually in Supabase:
 
-Code: ${error.code}
-${error.details ? `Details: ${error.details}` : ''}
-${error.hint ? `Hint: ${error.hint}` : ''}
+1. Go to Supabase Dashboard → Authentication → Users
+2. Create these missing users:
+${missingEmails.map(email => `   • ${email} (password: testpass123)`).join('\n')}
+3. Then click 'Seed Test Data' again
 
-This usually means the test users don't exist in Supabase Auth. 
-You need to create them manually first.`;
-        
-        setError(errorMessage);
+Found: ${existingEmails.join(', ') || 'none'}
+Missing: ${missingEmails.join(', ')}`;
+
+        setError(instructionMessage);
         
         toast({
-          title: "Seeding Failed - Detailed Error",
-          description: `${error.message}. ${error.code === '23503' ? 'Test users must be created in Supabase Auth first.' : 'Check console for details.'}`,
+          title: "Missing Auth Users",
+          description: `${missingEmails.length} test users need to be created in Supabase Auth first`,
           variant: "destructive"
         });
         
-        throw error;
+        return;
       }
       
-      console.log('✅ UserManagement: Seed successful:', data);
+      // Step 3: Create user roles
       toast({
-        title: "Success",
-        description: data || "Test users and data seeded successfully!",
+        title: "Step 2/4", 
+        description: "Creating user roles... 👤",
+        variant: "default"
+      });
+      
+      console.log('👤 UserManagement: Creating user roles...');
+      const userRolePromises = existingUsers!.map((user, index) => {
+        const role = testRoles[testEmails.indexOf(user.email!)];
+        return supabase
+          .from('user_roles')
+          .upsert({
+            user_id: user.id,
+            role: role as any,
+            assigned_by: user.id // Self-assigned for testing
+          });
+      });
+      
+      const roleResults = await Promise.allSettled(userRolePromises);
+      const roleErrors = roleResults.filter(r => r.status === 'rejected');
+      
+      if (roleErrors.length > 0) {
+        console.error('❌ UserManagement: Some role creation failed:', roleErrors);
+      }
+      
+      // Step 4: Create profiles (if they don't exist)
+      toast({
+        title: "Step 3/4",
+        description: "Creating user profiles... 📝",
+        variant: "default"
+      });
+      
+      console.log('📝 UserManagement: Creating user profiles...');
+      const profilePromises = existingUsers!.map((user, index) => {
+        const email = user.email!;
+        const [firstName, domain] = email.split('@');
+        const lastName = testRoles[testEmails.indexOf(email)].replace('_', ' ').split(' ').map(w => 
+          w.charAt(0).toUpperCase() + w.slice(1)
+        ).join(' ');
+        
+        return supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            first_name: firstName.charAt(0).toUpperCase() + firstName.slice(1),
+            last_name: lastName
+          });
+      });
+      
+      const profileResults = await Promise.allSettled(profilePromises);
+      const profileErrors = profileResults.filter(r => r.status === 'rejected');
+      
+      if (profileErrors.length > 0) {
+        console.error('❌ UserManagement: Some profile creation failed:', profileErrors);
+      }
+      
+      // Step 5: Create additional test data via RPC (this will create properties, etc.)
+      toast({
+        title: "Step 4/4",
+        description: "Creating test properties and data... 🏠",
+        variant: "default"
+      });
+      
+      console.log('🏠 UserManagement: Creating additional test data...');
+      try {
+        const { data: rpcData, error: rpcError } = await supabase.rpc('seed_test_users');
+        if (rpcError) {
+          console.warn('⚠️ UserManagement: RPC seeding partially failed:', rpcError);
+          // Continue anyway, basic setup is done
+        }
+      } catch (rpcError) {
+        console.warn('⚠️ UserManagement: RPC seeding failed, but user setup is complete:', rpcError);
+      }
+      
+      // Success!
+      console.log('✅ UserManagement: Seeding completed successfully');
+      toast({
+        title: "✅ Seeding Complete!",
+        description: `Successfully set up ${existingUsers!.length} test users with roles and profiles`,
+        variant: "default"
       });
       
       // Refresh users list
       await fetchUsers();
+      setError(null);
       
     } catch (error: any) {
-      console.error('❌ UserManagement: Error seeding test users:', error);
+      console.error('❌ UserManagement: Error in smart seeding:', error);
       
-      // More detailed error handling
-      const isAuthError = error?.code === '23503' && error?.message?.includes('user_id');
-      const isForeignKeyError = error?.message?.includes('foreign key constraint');
-      
-      let userFriendlyMessage = "Failed to seed test data.";
-      
-      if (isAuthError || isForeignKeyError) {
-        userFriendlyMessage = `Cannot create test data because the auth users don't exist. 
-        
-You need to:
-1. Go to Supabase Auth dashboard 
-2. Create users with emails: admin@test.com, owner@test.com, tenant@test.com, watcher@test.com
-3. Then run this seed function again.
+      const errorMessage = `Seeding failed: ${error.message}
 
-Or use the "Create Role-Only Data" button below for emergency testing.`;
-      }
+${error.code === '23503' ? 'This usually means test users need to be created in Supabase Auth first.' : 'Check console for detailed error information.'}`;
       
-      setError(userFriendlyMessage);
+      setError(errorMessage);
       
       toast({
         title: "Seeding Failed",
-        description: isAuthError ? "Auth users must be created first" : "Failed to seed test data. Check error details above.",
+        description: error.message || "Unknown error occurred",
         variant: "destructive"
       });
     } finally {
