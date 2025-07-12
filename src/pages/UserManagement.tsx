@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,9 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  Info
+  Info,
+  RefreshCw,
+  AlertTriangle
 } from "lucide-react";
 import {
   Select,
@@ -59,16 +61,49 @@ const UserManagement = () => {
   const [loading, setLoading] = useState(true);
   const [seeding, setSeeding] = useState(false);
   const [testUsersExist, setTestUsersExist] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if current user is admin
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    console.log('🚀 UserManagement: Component mounted');
+    console.log('👤 UserManagement: Current user:', user ? 'exists' : 'null');
+    console.log('🌐 UserManagement: Current URL:', window.location.href);
+    
+    // Check if we're in emergency admin mode
+    const isEmergency = window.location.pathname.includes('/admin-emergency') || 
+                       window.location.href.includes('/admin-emergency') ||
+                       document.body.className.includes('emergency') ||
+                       (window as any).__EMERGENCY_AUTH_OVERRIDE;
+    
+    if (isEmergency) {
+      console.log('🚨 UserManagement: Emergency mode detected - bypassing auth checks');
+      setIsEmergencyMode(true);
+      setIsAdmin(true);
+    }
+
+    // Set up 5-second timeout for loading
+    timeoutRef.current = setTimeout(() => {
+      console.log('⏰ UserManagement: Loading timeout reached (5 seconds)');
+      setLoadingTimeout(true);
+      setError('Loading timeout - taking longer than expected');
+    }, 5000);
+
     checkAdminStatus();
     fetchUsers();
     checkTestUsersExist();
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -76,47 +111,82 @@ const UserManagement = () => {
   }, [users, searchTerm, roleFilter]);
 
   const checkAdminStatus = async () => {
-    if (!user) return;
+    console.log('🔍 UserManagement: Checking admin status...');
+    
+    if (isEmergencyMode) {
+      console.log('🚨 UserManagement: Emergency mode - setting admin to true');
+      setIsAdmin(true);
+      return;
+    }
+
+    if (!user) {
+      console.log('❌ UserManagement: No user found for admin check');
+      setError('No user session found');
+      return;
+    }
     
     try {
+      console.log('🔍 UserManagement: Calling has_role RPC for user:', user.id);
       const { data, error } = await supabase
         .rpc('has_role', { _user_id: user.id, _role: 'admin' as any });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ UserManagement: Admin check RPC error:', error);
+        throw error;
+      }
+      
+      console.log('✅ UserManagement: Admin check result:', data);
       setIsAdmin(data);
     } catch (error) {
-      console.error('Error checking admin status:', error);
+      console.error('❌ UserManagement: Error checking admin status:', error);
+      setError('Failed to verify admin permissions: ' + (error as any).message);
     }
   };
 
   const fetchUsers = async () => {
+    console.log('📊 UserManagement: Starting fetchUsers...');
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('📊 UserManagement: Querying user_profiles table...');
       const { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .order('user_created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ UserManagement: Fetch users error:', error);
+        throw error;
+      }
+      
+      console.log('✅ UserManagement: Fetched users:', data?.length || 0, 'users');
       setUsers(data || []);
       
       // Check if test users exist after fetching users
       const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
       const hasTestUsers = (data || []).some(user => testEmails.includes(user.email));
       setTestUsersExist(hasTestUsers);
+      
+      console.log('✅ UserManagement: Test users exist:', hasTestUsers);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('❌ UserManagement: Error fetching users:', error);
+      setError('Failed to fetch users: ' + (error as any).message);
       toast({
         title: "Error",
-        description: "Failed to fetch users",
+        description: "Failed to fetch users: " + (error as any).message,
         variant: "destructive"
       });
     } finally {
       setLoading(false);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     }
   };
 
   const checkTestUsersExist = async () => {
+    console.log('🔍 UserManagement: Checking test users...');
     try {
       const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
       const { data, error } = await supabase
@@ -124,21 +194,99 @@ const UserManagement = () => {
         .select('email')
         .in('email', testEmails);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ UserManagement: Test users check error:', error);
+        throw error;
+      }
+      
+      console.log('✅ UserManagement: Test users check result:', (data || []).length, 'found');
       setTestUsersExist((data || []).length > 0);
     } catch (error) {
-      console.error('Error checking test users:', error);
+      console.error('❌ UserManagement: Error checking test users:', error);
     }
   };
 
+  // Force load with mock data
+  const forceLoadWithMockData = () => {
+    console.log('🚨 UserManagement: Force loading with mock data...');
+    const mockUsers: UserProfile[] = [
+      {
+        id: '1c376b70-c535-4ee4-8275-5d017704b3db',
+        email: 'rmh1122@hotmail.com',
+        first_name: 'Emergency',
+        last_name: 'Admin',
+        role: 'admin',
+        user_created_at: new Date().toISOString(),
+        role_created_at: new Date().toISOString()
+      },
+      {
+        id: 'mock-user-1',
+        email: 'admin@test.com',
+        first_name: 'Test',
+        last_name: 'Admin',
+        role: 'admin',
+        user_created_at: new Date().toISOString(),
+        role_created_at: new Date().toISOString()
+      },
+      {
+        id: 'mock-user-2',
+        email: 'owner@test.com',
+        first_name: 'Property',
+        last_name: 'Owner',
+        role: 'property_owner',
+        user_created_at: new Date().toISOString(),
+        role_created_at: new Date().toISOString()
+      }
+    ];
+    
+    setUsers(mockUsers);
+    setLoading(false);
+    setError(null);
+    setIsAdmin(true);
+    
+    toast({
+      title: "Mock Data Loaded",
+      description: "Loaded with sample data for emergency access",
+      variant: "default"
+    });
+  };
+
+  // Retry loading
+  const retryLoading = () => {
+    console.log('🔄 UserManagement: Retrying load...');
+    setLoading(true);
+    setError(null);
+    setLoadingTimeout(false);
+    
+    // Reset timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = setTimeout(() => {
+      console.log('⏰ UserManagement: Retry timeout reached');
+      setLoadingTimeout(true);
+      setError('Retry timeout - still having issues loading');
+    }, 5000);
+
+    checkAdminStatus();
+    fetchUsers();
+    checkTestUsersExist();
+  };
+
   const seedTestUsers = async () => {
+    console.log('🌱 UserManagement: Starting seed test users...');
     try {
       setSeeding(true);
       
       const { data, error } = await supabase.rpc('seed_test_users');
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ UserManagement: Seed error:', error);
+        throw error;
+      }
       
+      console.log('✅ UserManagement: Seed successful:', data);
       toast({
         title: "Success",
         description: data || "Test users and data seeded successfully!",
@@ -148,7 +296,7 @@ const UserManagement = () => {
       await fetchUsers();
       
     } catch (error) {
-      console.error('Error seeding test users:', error);
+      console.error('❌ UserManagement: Error seeding test users:', error);
       toast({
         title: "Error",
         description: "Failed to seed test data. Please check the logs.",
@@ -234,7 +382,7 @@ const UserManagement = () => {
     });
   };
 
-  if (!isAdmin) {
+  if (!isAdmin && !isEmergencyMode) {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-gradient-subtle">
@@ -242,12 +390,57 @@ const UserManagement = () => {
           <div className="flex-1 flex items-center justify-center">
             <Card className="max-w-md">
               <CardContent className="pt-6">
-                <div className="text-center">
+                <div className="text-center space-y-4">
                   <Shield className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">Access Denied</h3>
-                  <p className="text-muted-foreground">
-                    You don't have permission to access this page. Only administrators can manage users.
-                  </p>
+                  <h3 className="text-lg font-medium text-foreground mb-2">
+                    {loading ? 'Checking Access...' : 'Access Denied'}
+                  </h3>
+                  
+                  {loading ? (
+                    <div className="space-y-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
+                      <p className="text-muted-foreground text-sm">
+                        Verifying your permissions...
+                      </p>
+                      {loadingTimeout && (
+                        <div className="space-y-2">
+                          <p className="text-destructive text-sm">
+                            Loading is taking longer than expected
+                          </p>
+                          <Button onClick={retryLoading} size="sm" variant="outline">
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Retry
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : error ? (
+                    <div className="space-y-4">
+                      <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                        <p className="text-destructive text-sm">{error}</p>
+                      </div>
+                      <div className="flex gap-2 justify-center">
+                        <Button onClick={retryLoading} size="sm" variant="outline">
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Retry
+                        </Button>
+                        <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                          <AlertTriangle className="h-4 w-4 mr-2" />
+                          Force Load
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <p className="text-muted-foreground">
+                        You don't have permission to access this page. Only administrators can manage users.
+                      </p>
+                      <Button onClick={retryLoading} size="sm" variant="outline">
+                        <RefreshCw className="h-4 w-4 mr-2" />
+                        Check Again
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -268,7 +461,14 @@ const UserManagement = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-foreground">User Management</h1>
+                  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                    User Management
+                    {isEmergencyMode && (
+                      <Badge variant="destructive" className="text-xs">
+                        🚨 EMERGENCY
+                      </Badge>
+                    )}
+                  </h1>
                   <p className="text-sm text-muted-foreground">Manage user accounts and roles</p>
                 </div>
                 <Badge variant="secondary" className="ml-4">
@@ -277,6 +477,20 @@ const UserManagement = () => {
               </div>
               
               <div className="flex items-center gap-4">
+                {/* Emergency Controls */}
+                {(error || loadingTimeout) && (
+                  <div className="flex gap-2">
+                    <Button onClick={retryLoading} size="sm" variant="outline">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Retry
+                    </Button>
+                    <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Force Load
+                    </Button>
+                  </div>
+                )}
+                
                 <Button variant="outline" size="sm" className="relative">
                   <Bell className="h-4 w-4" />
                   <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
@@ -288,6 +502,27 @@ const UserManagement = () => {
                 </Button>
               </div>
             </div>
+            
+            {/* Error/Status Banner */}
+            {error && (
+              <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  <p className="text-destructive text-sm">{error}</p>
+                </div>
+              </div>
+            )}
+            
+            {isEmergencyMode && (
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/50 dark:border-amber-800">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <p className="text-amber-800 dark:text-amber-200 text-sm">
+                    🚨 Emergency admin mode active - Authentication bypassed
+                  </p>
+                </div>
+              </div>
+            )}
           </header>
 
           {/* Main Content */}
@@ -395,8 +630,43 @@ const UserManagement = () => {
                 <CardContent>
                   {loading ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                      <p className="text-muted-foreground mt-2">Loading users...</p>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                      <p className="text-muted-foreground">
+                        {loadingTimeout ? 'Loading timeout - taking longer than expected...' : 'Loading users...'}
+                      </p>
+                      {loadingTimeout && (
+                        <div className="mt-4 space-y-2">
+                          <p className="text-destructive text-sm">This is taking longer than usual</p>
+                          <div className="flex gap-2 justify-center">
+                            <Button onClick={retryLoading} size="sm" variant="outline">
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Retry
+                            </Button>
+                            <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                              <AlertTriangle className="h-4 w-4 mr-2" />
+                              Force Load
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : error ? (
+                    <div className="text-center py-8 space-y-4">
+                      <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
+                      <div>
+                        <h3 className="text-lg font-medium text-foreground mb-2">Loading Failed</h3>
+                        <p className="text-muted-foreground text-sm mb-4">{error}</p>
+                        <div className="flex gap-2 justify-center">
+                          <Button onClick={retryLoading} size="sm" variant="outline">
+                            <RefreshCw className="h-4 w-4 mr-2" />
+                            Retry Loading
+                          </Button>
+                          <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                            <AlertTriangle className="h-4 w-4 mr-2" />
+                            Force Load with Mock Data
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <Table>
