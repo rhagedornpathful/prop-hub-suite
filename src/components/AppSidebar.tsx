@@ -15,6 +15,7 @@ import {
   Plus,
   Search,
   Eye,
+  Shield,
   X
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -38,7 +39,8 @@ import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
-const menuItems = [
+// Define menu items for different user roles
+const adminMenuItems = [
   {
     title: "Dashboard",
     url: "/",
@@ -62,6 +64,12 @@ const menuItems = [
     url: "/tenants",
     icon: Users,
     description: "Tenant management"
+  },
+  {
+    title: "User Management",
+    url: "/user-management",
+    icon: UserCog,
+    description: "Manage users & roles"
   },
   {
     title: "House Watching",
@@ -104,20 +112,112 @@ const menuItems = [
     url: "/reports",
     icon: BarChart3,
     description: "Analytics & insights"
+  }
+];
+
+const propertyOwnerMenuItems = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: Home,
+    description: "Owner dashboard"
   },
   {
-    title: "User Management",
-    url: "/user-management",
-    icon: UserCog,
-    description: "Manage users & roles",
-    adminOnly: true
+    title: "My Properties",
+    url: "/properties",
+    icon: Building,
+    description: "Your properties"
   },
   {
-    title: "Client Portal",
-    url: "/client-portal",
+    title: "My Tenants",
+    url: "/tenants",
     icon: Users,
-    description: "Client dashboard"
+    description: "Your tenants"
   },
+  {
+    title: "Maintenance Requests",
+    url: "/maintenance",
+    icon: Wrench,
+    description: "Property maintenance"
+  },
+  {
+    title: "Financial Reports",
+    url: "/finances",
+    icon: DollarSign,
+    description: "Income & expenses"
+  },
+  {
+    title: "My Profile",
+    url: "/settings",
+    icon: Settings,
+    description: "Account settings"
+  }
+];
+
+const tenantMenuItems = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: Home,
+    description: "Tenant dashboard"
+  },
+  {
+    title: "My Lease",
+    url: "/leases",
+    icon: FileText,
+    description: "Lease agreement"
+  },
+  {
+    title: "Pay Rent",
+    url: "/finances",
+    icon: DollarSign,
+    description: "Payment portal"
+  },
+  {
+    title: "Maintenance Requests",
+    url: "/maintenance",
+    icon: Wrench,
+    description: "Submit requests"
+  },
+  {
+    title: "Documents",
+    url: "/documents",
+    icon: FolderOpen,
+    description: "Lease documents"
+  },
+  {
+    title: "My Profile",
+    url: "/settings",
+    icon: Settings,
+    description: "Account settings"
+  }
+];
+
+const houseWatcherMenuItems = [
+  {
+    title: "Properties",
+    url: "/house-watching",
+    icon: Building,
+    description: "Assigned properties"
+  },
+  {
+    title: "Maintenance Tasks",
+    url: "/maintenance",
+    icon: Wrench,
+    description: "Maintenance work"
+  },
+  {
+    title: "Check-in Reports",
+    url: "/property-check",
+    icon: Eye,
+    description: "Property reports"
+  },
+  {
+    title: "My Profile",
+    url: "/settings",
+    icon: Settings,
+    description: "Account settings"
+  }
 ];
 
 export function AppSidebar() {
@@ -126,29 +226,50 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const collapsed = state === "collapsed";
   const { isMobile } = useMobileDetection();
   const { user } = useAuth();
 
-  // Check admin status
+  // Get user role
   useEffect(() => {
-    const checkAdminStatus = async () => {
+    const getUserRole = async () => {
       if (!user) return;
       
       try {
         const { data, error } = await supabase
-          .rpc('has_role', { _user_id: user.id, _role: 'admin' as any });
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .single();
         
         if (error) throw error;
-        setIsAdmin(data);
+        setUserRole(data?.role || null);
       } catch (error) {
-        console.error('Error checking admin status:', error);
+        console.error('Error fetching user role:', error);
       }
     };
 
-    checkAdminStatus();
+    getUserRole();
   }, [user]);
+
+  // Get menu items based on user role
+  const getMenuItems = () => {
+    switch (userRole) {
+      case 'admin':
+        return adminMenuItems;
+      case 'property_owner':
+        return propertyOwnerMenuItems;
+      case 'tenant':
+        return tenantMenuItems;
+      case 'house_watcher':
+        return houseWatcherMenuItems;
+      default:
+        return adminMenuItems; // Default fallback
+    }
+  };
+
+  const menuItems = getMenuItems();
 
   // Check if we're in demo mode
   const isDemoMode = currentPath.startsWith('/demo');
@@ -161,15 +282,10 @@ export function AppSidebar() {
     return false;
   };
 
-  const filteredItems = menuItems.filter(item => {
-    // Filter out admin-only items if user is not admin
-    if (item.adminOnly && !isAdmin) return false;
-    
-    return (
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  const filteredItems = menuItems.filter(item =>
+    item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    item.description.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <>
@@ -265,6 +381,16 @@ export function AppSidebar() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 bg-sidebar-accent border-sidebar-border"
                 />
+              </div>
+            </div>
+          )}
+
+          {/* Role Indicator */}
+          {!collapsed && userRole && (
+            <div className="p-4 border-t border-sidebar-border">
+              <div className="flex items-center gap-2 text-xs text-sidebar-foreground/60">
+                <Shield className="w-3 h-3" />
+                <span>Role: {userRole.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
               </div>
             </div>
           )}

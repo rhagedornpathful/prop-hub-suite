@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { RoleBasedAccess, ROLE_COMBINATIONS } from "@/components/RoleBasedAccess";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PageTransition } from "@/components/PageTransition";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
@@ -88,18 +89,90 @@ const AppContent = () => {
                     <main className={`flex-1 ${isMobile ? 'w-full' : ''}`}>
                       <Routes>
                         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
-                        <Route path="/properties" element={<PageTransition><Properties /></PageTransition>} />
-                        <Route path="/tenants" element={<PageTransition><Tenants /></PageTransition>} />
-                        <Route path="/leases" element={<PageTransition><Leases /></PageTransition>} />
-                        <Route path="/finances" element={<PageTransition><Finances /></PageTransition>} />
-                        <Route path="/maintenance" element={<PageTransition><Maintenance /></PageTransition>} />
-                        <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
-                        <Route path="/documents" element={<PageTransition><Documents /></PageTransition>} />
-                        <Route path="/house-watching" element={<PageTransition><HouseWatching /></PageTransition>} />
-                        <Route path="/property-check/:id" element={<PageTransition><PropertyCheck /></PageTransition>} />
-                        <Route path="/property-owners" element={<PageTransition><PropertyOwners /></PageTransition>} />
-                        <Route path="/user-management" element={<PageTransition><UserManagement /></PageTransition>} />
-                        <Route path="/property-owners/:ownerId" element={<PageTransition><PropertyOwnerDetail /></PageTransition>} />
+                        <Route path="/properties" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.PROPERTY_MANAGEMENT}>
+                              <Properties />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/property-owners" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <PropertyOwners />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/tenants" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.PROPERTY_MANAGEMENT}>
+                              <Tenants />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/user-management" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <UserManagement />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/leases" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
+                              <Leases />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/finances" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
+                              <Finances />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/maintenance" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
+                              <Maintenance />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/house-watching" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
+                              <HouseWatching />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/documents" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
+                              <Documents />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/messages" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
+                              <Messages />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/property-check/:id" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
+                              <PropertyCheck />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/property-owners/:ownerId" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <PropertyOwnerDetail />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
                         <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
                         <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
                         <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
