@@ -53,14 +53,24 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       return;
     }
     
-    // If user exists but no role and not on setup page, redirect to setup
+    
+    // If user exists but no role and not on setup page, check if setup is actually needed
     if (user && !userRole && location.pathname !== '/setup') {
-      console.log('🔒 User has no role, redirecting to setup');
-      navigate('/setup', { replace: true });
-      return;
+      // If setup is not needed (admin exists), redirect to home instead of setup
+      if (needsSetup === false) {
+        console.log('🔒 Admin exists but role not loaded yet, redirecting to home');
+        navigate('/', { replace: true });
+        return;
+      }
+      // Only redirect to setup if setup is actually needed
+      if (needsSetup === true) {
+        console.log('🔒 User has no role, redirecting to setup');
+        navigate('/setup', { replace: true });
+        return;
+      }
     }
     
-  }, [user, userRole, authLoading, setupChecking, location.pathname, navigate]);
+  }, [user, userRole, authLoading, setupChecking, location.pathname, navigate, needsSetup]);
 
   // Always allow setup page
   if (location.pathname === '/setup') {
