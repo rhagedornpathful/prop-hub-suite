@@ -40,6 +40,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import AddUserDialog from "@/components/AddUserDialog";
 
 interface UserProfile {
   id: string;
@@ -1042,6 +1043,7 @@ ${error.code === '23503' ? 'This usually means test users need to be created in 
               <Filter className="h-4 w-4 mr-2" />
               More Filters
             </Button>
+            <AddUserDialog onUserAdded={fetchUsers} />
           </div>
 
           {/* Users Table */}
