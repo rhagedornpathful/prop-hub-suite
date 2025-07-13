@@ -307,7 +307,10 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                <CardTitle className="text-lg">Profile Information</CardTitle>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  Profile Information
+                  {editing && <span className="text-sm bg-primary text-primary-foreground px-2 py-1 rounded text-xs">Editing</span>}
+                </CardTitle>
                 <div className="flex gap-2">
                   {editing ? (
                     <>
