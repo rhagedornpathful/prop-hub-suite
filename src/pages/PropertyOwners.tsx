@@ -233,111 +233,166 @@ const PropertyOwners = () => {
 
         {/* Property Owners Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOwners.map((owner) => (
-            <Card 
-              key={owner.id} 
-              className="shadow-md border-0 hover:shadow-lg transition-shadow group cursor-pointer"
-              onClick={() => handleViewOwner(owner)}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                      {owner.company_name ? (
-                        <Building2 className="h-5 w-5 text-white" />
-                      ) : (
-                        <User className="h-5 w-5 text-white" />
-                      )}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">
-                        {getDisplayName(owner)}
-                      </h3>
-                      {owner.company_name && (
-                        <p className="text-sm text-muted-foreground">
-                          {owner.first_name} {owner.last_name}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {owner.is_self && (
-                      <Badge variant="secondary" className="text-xs">
-                        Me
-                      </Badge>
-                    )}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                {filteredOwners.map((owner) => (
+                  <Card 
+                    key={owner.id} 
+                    className="shadow-md border-0 hover:shadow-lg transition-shadow group cursor-pointer overflow-hidden"
+                    onClick={() => handleViewOwner(owner)}
+                  >
+                    <CardHeader className="pb-4">
+                      <div className="flex items-start gap-4">
+                        {/* Profile Photo Section */}
+                        <div className="relative">
+                          <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center text-white text-xl font-semibold overflow-hidden">
+                            {/* TODO: Replace with actual profile photo upload */}
+                            {owner.company_name ? (
+                              <Building2 className="h-8 w-8" />
+                            ) : (
+                              <span>
+                                {owner.first_name.charAt(0)}{owner.last_name.charAt(0)}
+                              </span>
+                            )}
+                          </div>
+                          {/* Photo upload indicator - for future implementation */}
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-muted border-2 border-background rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <User className="h-3 w-3 text-muted-foreground" />
+                          </div>
+                        </div>
+
+                        {/* Main Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-bold text-lg text-foreground leading-tight">
+                                {owner.first_name} {owner.last_name}
+                              </h3>
+                              {owner.company_name && (
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {owner.company_name}
+                                </p>
+                              )}
+                              {owner.is_self && (
+                                <Badge variant="secondary" className="text-xs mt-2">
+                                  Me
+                                </Badge>
+                              )}
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleViewOwner(owner);
+                                }}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditOwner(owner);
+                                }}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit Owner
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-destructive" 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteOwner(owner);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete Owner
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      {/* Contact Information */}
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-muted-foreground truncate">{owner.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="text-muted-foreground">{owner.phone}</span>
+                        </div>
+                        {owner.address && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-muted-foreground truncate">
+                              {owner.city}, {owner.state}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Property Count & Payment Info - Prominent Display */}
+                      <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-5 w-5 text-primary" />
+                            <span className="font-semibold text-foreground">
+                              {owner.property_count || 0} {(owner.property_count || 0) === 1 ? 'Property' : 'Properties'}
+                            </span>
+                          </div>
+                          {(owner.property_count || 0) > 0 && (
+                            <Badge variant="outline" className="bg-background">
+                              Active
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">Payment Method:</span>
+                          <span className="font-medium text-foreground capitalize">
+                            {owner.preferred_payment_method.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Quick Action Buttons */}
+                      <div className="flex gap-2 pt-2">
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm" 
-                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          handleViewOwner(owner);
-                        }}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditOwner(owner);
-                        }}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit Owner
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive" 
+                          className="flex-1"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDeleteOwner(owner);
+                            handleViewOwner(owner);
                           }}
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Owner
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{owner.email}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">{owner.phone}</span>
-                </div>
-                {owner.address && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">
-                      {owner.city}, {owner.state}
-                    </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between pt-2">
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Properties: </span>
-                    <span className="font-semibold text-foreground">{owner.property_count || 0}</span>
-                  </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Payment: </span>
-                    <span className="font-semibold text-foreground capitalize">
-                      {owner.preferred_payment_method.replace('_', ' ')}
-                    </span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                          <Eye className="h-4 w-4 mr-2" />
+                          View
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditOwner(owner);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
         </div>
 
         {filteredOwners.length === 0 && (
