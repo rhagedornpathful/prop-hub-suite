@@ -157,8 +157,8 @@ export function RoleSwitcher() {
         description: `Successfully switched to ${account.label} (${account.email})`,
       });
 
-      // Redirect to appropriate dashboard
-      window.location.href = account.redirectPath;
+      // Force full page reload to main dashboard to refresh auth state
+      window.location.href = '/';
       
     } catch (error) {
       console.error('Role switch error:', error);
