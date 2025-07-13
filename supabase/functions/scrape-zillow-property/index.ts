@@ -89,6 +89,9 @@ function extractPropertyData(scrapedData: any) {
     square_feet: null,
     price: null,
     address: null,
+    city: null,
+    state: null,
+    zip_code: null,
     property_type: null,
     year_built: null,
     lot_size: null,
@@ -101,6 +104,34 @@ function extractPropertyData(scrapedData: any) {
                          html.match(/<h1[^>]*>([^<]*(?:St|Ave|Rd|Dr|Ln|Blvd|Way|Ct|Pl)[^<]*)<\/h1>/i)
     if (addressMatch) {
       propertyData.address = addressMatch[1].trim()
+    }
+
+    // Extract city, state, zip from various patterns
+    // Look for patterns like "City, State ZIP" or "City, ST 12345"
+    const locationMatch = content.match(/([A-Za-z\s]+),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)/i) ||
+                         html.match(/([A-Za-z\s]+),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)/i)
+    
+    if (locationMatch) {
+      propertyData.city = locationMatch[1].trim()
+      propertyData.state = locationMatch[2].trim()
+      propertyData.zip_code = locationMatch[3].trim()
+    } else {
+      // Try alternative patterns for city/state/zip
+      const cityMatch = content.match(/(?:City|Location):\s*([A-Za-z\s]+)/i)
+      if (cityMatch) {
+        propertyData.city = cityMatch[1].trim()
+      }
+      
+      const stateMatch = content.match(/(?:State|ST):\s*([A-Z]{2})/i)
+      if (stateMatch) {
+        propertyData.state = stateMatch[1].trim()
+      }
+      
+      const zipMatch = content.match(/(?:ZIP|Zip Code):\s*(\d{5}(?:-\d{4})?)/i) ||
+                      content.match(/\b(\d{5}(?:-\d{4})?)\b/)
+      if (zipMatch) {
+        propertyData.zip_code = zipMatch[1].trim()
+      }
     }
 
     // Extract bedrooms
