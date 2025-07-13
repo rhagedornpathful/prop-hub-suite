@@ -29,6 +29,7 @@ interface PropertyOwner {
   first_name: string;
   last_name: string;
   company_name?: string;
+  spouse_partner_name?: string;
   email: string;
   phone: string;
   address?: string;
@@ -69,6 +70,7 @@ export function AddPropertyOwnerDialog({
       first_name: "",
       last_name: "",
       company_name: "",
+      spouse_partner_name: "",
       email: "",
       phone: "",
       address: "",
@@ -95,6 +97,7 @@ export function AddPropertyOwnerDialog({
         first_name: "",
         last_name: "",
         company_name: "",
+        spouse_partner_name: "",
         email: "",
         phone: "",
         address: "",
@@ -152,6 +155,7 @@ export function AddPropertyOwnerDialog({
             first_name: ownerData.first_name,
             last_name: ownerData.last_name,
             company_name: ownerData.company_name || null,
+            spouse_partner_name: ownerData.spouse_partner_name || null,
             email: ownerData.email,
             phone: ownerData.phone,
             address: ownerData.address || null,
@@ -176,6 +180,7 @@ export function AddPropertyOwnerDialog({
             ...ownerData,
             user_id: userData.user.id,
             company_name: ownerData.company_name || null,
+            spouse_partner_name: ownerData.spouse_partner_name || null,
             address: ownerData.address || null,
             city: ownerData.city || null,
             state: ownerData.state || null,
@@ -262,6 +267,15 @@ export function AddPropertyOwnerDialog({
                   value={ownerData.company_name || ''}
                   onChange={(e) => handleInputChange('company_name', e.target.value)}
                   placeholder="Company or business name (optional)"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="spouse-partner">Spouse/Partner Name</Label>
+                <Input
+                  id="spouse-partner"
+                  value={ownerData.spouse_partner_name || ''}
+                  onChange={(e) => handleInputChange('spouse_partner_name', e.target.value)}
+                  placeholder="Spouse or partner name (optional)"
                 />
               </div>
             </div>

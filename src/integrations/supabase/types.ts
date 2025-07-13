@@ -489,6 +489,7 @@ export type Database = {
           notes: string | null
           phone: string
           preferred_payment_method: string | null
+          spouse_partner_name: string | null
           state: string | null
           tax_id_number: string | null
           updated_at: string
@@ -512,6 +513,7 @@ export type Database = {
           notes?: string | null
           phone: string
           preferred_payment_method?: string | null
+          spouse_partner_name?: string | null
           state?: string | null
           tax_id_number?: string | null
           updated_at?: string
@@ -535,6 +537,7 @@ export type Database = {
           notes?: string | null
           phone?: string
           preferred_payment_method?: string | null
+          spouse_partner_name?: string | null
           state?: string | null
           tax_id_number?: string | null
           updated_at?: string
