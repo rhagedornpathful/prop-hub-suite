@@ -4,18 +4,151 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Wrench, Clock, CheckCircle, AlertTriangle, Users, Search, Filter, MapPin, Calendar, DollarSign } from "lucide-react";
-import { useState } from "react";
+import { 
+  Plus, 
+  Wrench, 
+  Clock, 
+  CheckCircle, 
+  AlertTriangle, 
+  Users, 
+  Search, 
+  Filter, 
+  MapPin, 
+  Calendar, 
+  DollarSign,
+  Bell,
+  RefreshCw,
+  Download,
+  Settings,
+  Eye,
+  Edit,
+  Play
+} from "lucide-react";
+import { useState, useEffect } from "react";
 import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
+import { useProfiles } from "@/hooks/queries/useProfiles";
 import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
 import MaintenanceCalendar from "@/components/MaintenanceCalendar";
 import MaintenanceDetailsDialog from "@/components/MaintenanceDetailsDialog";
+import MaintenanceAlerts from "@/components/MaintenanceAlerts";
+import MaintenanceDashboard from "@/components/MaintenanceDashboard";
+import MaintenanceFilters from "@/components/MaintenanceFilters";
+import type { MaintenanceRequest } from "@/hooks/queries/useMaintenanceRequests";
 
 const Maintenance = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [filteredRequests, setFilteredRequests] = useState<MaintenanceRequest[]>([]);
+  const [showMobileView, setShowMobileView] = useState(false);
+
   const { data: maintenanceRequests = [], isLoading, refetch } = useMaintenanceRequests();
+  const { data: profiles = [] } = useProfiles();
+
+  // Auto-refresh every 30 seconds for real-time updates
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetch();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [refetch]);
+
+  // Initialize filtered requests
+  useEffect(() => {
+    setFilteredRequests(maintenanceRequests);
+  }, [maintenanceRequests]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setShowMobileView(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  const handleViewRequest = (request: MaintenanceRequest) => {
+    setSelectedRequest(request);
+    setShowDetailsDialog(true);
+  };
+
+  const handleStartWork = (request: MaintenanceRequest) => {
+    // TODO: Implement start work functionality
+    console.log('Starting work on:', request.id);
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "urgent":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "high":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "low":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "in-progress":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "scheduled":
+        return "bg-purple-100 text-purple-800 border-purple-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "cancelled":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "completed":
+        return <CheckCircle className="w-4 h-4" />;
+      case "in-progress":
+        return <Wrench className="w-4 h-4" />;
+      case "scheduled":
+        return <Clock className="w-4 h-4" />;
+      case "pending":
+        return <AlertTriangle className="w-4 h-4" />;
+      default:
+        return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const formatPropertyAddress = (request: MaintenanceRequest) => {
+    if (!request.properties) return "Unknown Property";
+    
+    const { address, city, state, zip_code } = request.properties;
+    let formattedAddress = address;
+    
+    if (city) formattedAddress += `, ${city}`;
+    if (state) formattedAddress += `, ${state}`;
+    if (zip_code) formattedAddress += ` ${zip_code}`;
+    
+    return formattedAddress;
+  };
+
+  // Apply basic filters for backward compatibility
+  const basicFilteredRequests = filteredRequests.filter(order => {
+    const propertyAddress = formatPropertyAddress(order);
+    const matchesSearch = order.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         propertyAddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (order.contractor_name && order.contractor_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const mockContractors = [
     {
@@ -52,403 +185,414 @@ const Maintenance = () => {
     }
   ];
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "urgent":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "high":
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      case "medium":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low":
-        return "bg-green-100 text-green-800 border-green-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "in-progress":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case "scheduled":
-        return "bg-purple-100 text-purple-800 border-purple-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="w-4 h-4" />;
-      case "in-progress":
-        return <Wrench className="w-4 h-4" />;
-      case "scheduled":
-        return <Clock className="w-4 h-4" />;
-      case "pending":
-        return <AlertTriangle className="w-4 h-4" />;
-      default:
-        return <Clock className="w-4 h-4" />;
-    }
-  };
-
-  const formatPropertyAddress = (request: any) => {
-    if (!request.properties) return "Unknown Property";
-    
-    const { address, city, state, zip_code } = request.properties;
-    let formattedAddress = address;
-    
-    if (city) formattedAddress += `, ${city}`;
-    if (state) formattedAddress += `, ${state}`;
-    if (zip_code) formattedAddress += ` ${zip_code}`;
-    
-    return formattedAddress;
-  };
-
-  const filteredWorkOrders = maintenanceRequests.filter(order => {
-    const propertyAddress = formatPropertyAddress(order);
-    const matchesSearch = order.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         propertyAddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (order.contractor_name && order.contractor_name.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesStatus = statusFilter === "all" || order.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
-
-  // Calculate stats from real data
-  const activeCount = maintenanceRequests.filter(r => r.status === 'in-progress' || r.status === 'scheduled').length;
-  const pendingCount = maintenanceRequests.filter(r => r.status === 'pending').length;
-  const completedThisMonth = maintenanceRequests.filter(r => {
-    const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const createdAt = new Date(r.created_at);
-    return r.status === 'completed' && createdAt >= monthStart;
-  }).length;
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+            <p className="text-muted-foreground mt-4">Loading maintenance management system...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 p-6 overflow-auto">
+    <div className="flex-1 p-6 overflow-auto bg-gradient-to-br from-slate-50 to-slate-100/50">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Maintenance Management</h1>
-            <p className="text-muted-foreground mt-1">Track work orders, contractors, and maintenance schedules</p>
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <Wrench className="w-8 h-8 text-primary" />
+              Maintenance Management
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Real-time work order tracking, scheduling, and analytics
+            </p>
           </div>
-          <Button 
-            className="bg-gradient-primary hover:bg-primary-dark"
-            onClick={() => setShowScheduleDialog(true)}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Work Order
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => refetch()}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Export
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </Button>
+            <Button 
+              className="bg-gradient-primary hover:bg-primary-dark flex items-center gap-2"
+              onClick={() => setShowScheduleDialog(true)}
+            >
+              <Plus className="w-4 h-4" />
+              New Work Order
+            </Button>
+          </div>
         </div>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Active Work Orders</CardTitle>
-                  <Wrench className="h-4 w-4 text-blue-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-blue-600">{activeCount}</div>
-                  <p className="text-xs text-muted-foreground">In progress & scheduled</p>
-                </CardContent>
-              </Card>
+        {/* Critical Alerts Section */}
+        <MaintenanceAlerts 
+          requests={maintenanceRequests} 
+          onViewRequest={handleViewRequest}
+        />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pending Requests</CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-yellow-600">{pendingCount}</div>
-                  <p className="text-xs text-muted-foreground">Waiting assignment</p>
-                </CardContent>
-              </Card>
+        {/* Analytics Dashboard */}
+        <MaintenanceDashboard requests={maintenanceRequests} />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Completed This Month</CardTitle>
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">{completedThisMonth}</div>
-                  <p className="text-xs text-muted-foreground">Current month</p>
-                </CardContent>
-              </Card>
+        {/* Advanced Filters */}
+        <MaintenanceFilters 
+          requests={maintenanceRequests}
+          onFilterChange={setFilteredRequests}
+          profiles={profiles}
+        />
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Average Response Time</CardTitle>
-                  <Clock className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-primary">2.3</div>
-                  <p className="text-xs text-muted-foreground">Days to completion</p>
-                </CardContent>
-              </Card>
-            </div>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="work-orders" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white/50 backdrop-blur-sm">
+            <TabsTrigger value="work-orders" className="flex items-center gap-2">
+              <Wrench className="w-4 h-4" />
+              <span className="hidden sm:inline">Work Orders</span>
+            </TabsTrigger>
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              <span className="hidden sm:inline">Calendar</span>
+            </TabsTrigger>
+            <TabsTrigger value="contractors" className="flex items-center gap-2">
+              <Users className="w-4 h-4" />
+              <span className="hidden sm:inline">Contractors</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+          </TabsList>
 
-            {/* Tabs for different maintenance views */}
-            <Tabs defaultValue="work-orders" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="work-orders">Work Orders</TabsTrigger>
-                <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                <TabsTrigger value="contractors">Contractors</TabsTrigger>
-                <TabsTrigger value="schedule">Preventive Maintenance</TabsTrigger>
-              </TabsList>
-
-              {/* Work Orders */}
-              <TabsContent value="work-orders">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle>Work Orders</CardTitle>
-                        <CardDescription>Manage maintenance requests and work orders</CardDescription>
-                      </div>
-                      <div className="flex gap-2">
-                        <div className="relative">
-                          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            placeholder="Search work orders..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-8 w-64"
-                          />
-                        </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger className="w-40">
-                            <Filter className="w-4 h-4 mr-2" />
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Status</SelectItem>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="scheduled">Scheduled</SelectItem>
-                            <SelectItem value="in-progress">In Progress</SelectItem>
-                            <SelectItem value="completed">Completed</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+          {/* Work Orders Tab */}
+          <TabsContent value="work-orders">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Wrench className="w-5 h-5 text-primary" />
+                      Work Orders
+                      <Badge variant="secondary" className="ml-2">
+                        {basicFilteredRequests.length} of {maintenanceRequests.length}
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription>Manage and track all maintenance requests</CardDescription>
+                  </div>
+                  <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Quick search..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8 w-64"
+                      />
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {isLoading ? (
-                        <div className="text-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                          <p className="text-muted-foreground mt-2">Loading maintenance requests...</p>
-                        </div>
-                      ) : filteredWorkOrders.length === 0 ? (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">No maintenance requests found.</p>
-                          <Button className="mt-4" onClick={() => setShowScheduleDialog(true)}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Create First Request
-                          </Button>
-                        </div>
-                      ) : (
-                        filteredWorkOrders.map((order) => (
-                          <div key={order.id} className="border border-border rounded-lg p-6 hover:bg-accent/50 transition-colors">
-                            <div className="flex justify-between items-start">
-                              <div className="space-y-4 flex-1">
-                                {/* Property Header - Most Prominent */}
-                                <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                                  <MapPin className="h-5 w-5 text-primary" />
-                                  <div>
-                                    <h4 className="font-semibold text-lg text-primary">{formatPropertyAddress(order)}</h4>
-                                    <p className="text-sm text-muted-foreground">Property Location</p>
-                                  </div>
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger className="w-40">
+                        <Filter className="w-4 h-4 mr-2" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Status</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="scheduled">Scheduled</SelectItem>
+                        <SelectItem value="in-progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {basicFilteredRequests.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Wrench className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
+                      <p className="text-muted-foreground text-lg">No maintenance requests found</p>
+                      <p className="text-muted-foreground/80 mb-6">Create your first work order to get started</p>
+                      <Button 
+                        className="bg-gradient-primary hover:bg-primary-dark" 
+                        onClick={() => setShowScheduleDialog(true)}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Create First Request
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 gap-4">
+                      {basicFilteredRequests.map((request) => (
+                        <div 
+                          key={request.id} 
+                          className="group border border-border rounded-lg p-6 hover:shadow-lg transition-all duration-200 bg-white hover:bg-gradient-to-r hover:from-white hover:to-primary/5"
+                        >
+                          <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
+                            {/* Main Content */}
+                            <div className="space-y-4 flex-1">
+                              {/* Property Header */}
+                              <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                                <MapPin className="h-5 w-5 text-primary flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="font-semibold text-lg text-primary truncate">
+                                    {formatPropertyAddress(request)}
+                                  </h4>
+                                  <p className="text-sm text-muted-foreground">Property Location</p>
                                 </div>
+                              </div>
 
-                                {/* Work Order Details */}
-                                <div className="flex items-center gap-3">
-                                  <span className="font-mono text-sm text-muted-foreground bg-muted px-2 py-1 rounded">{order.id}</span>
-                                  <h3 className="font-semibold text-xl text-foreground">{order.title}</h3>
-                                  <Badge className={`${getPriorityColor(order.priority)} border`}>{order.priority}</Badge>
-                                  <Badge className={`${getStatusColor(order.status)} border`}>
-                                    {getStatusIcon(order.status)}
-                                    <span className="ml-1">{order.status}</span>
+                              {/* Work Order Details */}
+                              <div className="flex flex-wrap items-center gap-3">
+                                <span className="font-mono text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
+                                  #{request.id.slice(-8)}
+                                </span>
+                                <h3 className="font-semibold text-xl text-foreground min-w-0 flex-1">
+                                  {request.title}
+                                </h3>
+                                <div className="flex gap-2">
+                                  <Badge className={`${getPriorityColor(request.priority)} border`}>
+                                    {request.priority}
+                                  </Badge>
+                                  <Badge className={`${getStatusColor(request.status)} border`}>
+                                    {getStatusIcon(request.status)}
+                                    <span className="ml-1">{request.status}</span>
                                   </Badge>
                                 </div>
-                                
-                                {order.description && (
-                                  <p className="text-muted-foreground">{order.description}</p>
-                                )}
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                  {order.contractor_name && (
-                                    <div className="flex items-center gap-2">
-                                      <Users className="h-4 w-4 text-muted-foreground" />
-                                      <span className="text-muted-foreground">Contractor:</span>
-                                      <span className="text-foreground font-medium">{order.contractor_name}</span>
-                                    </div>
-                                  )}
-                                  {order.contractor_contact && (
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-muted-foreground">Contact:</span>
-                                      <span className="text-foreground">{order.contractor_contact}</span>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-2">
-                                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-muted-foreground">Created:</span>
-                                    <span className="text-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
-                                  </div>
-                                  {order.scheduled_date && (
-                                    <div className="flex items-center gap-2">
-                                      <Clock className="h-4 w-4 text-muted-foreground" />
-                                      <span className="text-muted-foreground">Scheduled:</span>
-                                      <span className="text-foreground">{new Date(order.scheduled_date).toLocaleDateString()}</span>
-                                    </div>
-                                  )}
-                                </div>
                               </div>
-                              <div className="text-right space-y-3 ml-6">
-                                {order.estimated_cost && order.estimated_cost > 0 && (
+                              
+                              {request.description && (
+                                <p className="text-muted-foreground text-sm">
+                                  {request.description}
+                                </p>
+                              )}
+                              
+                              {/* Additional Details */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                {request.contractor_name && (
                                   <div className="flex items-center gap-2">
-                                    <DollarSign className="h-5 w-5 text-green-600" />
-                                    <div className="text-xl font-semibold text-green-600">${order.estimated_cost}</div>
+                                    <Users className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-muted-foreground">Contractor:</span>
+                                    <span className="text-foreground font-medium">
+                                      {request.contractor_name}
+                                    </span>
                                   </div>
                                 )}
-                                <Button size="sm" variant="outline">
-                                  View Details
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Calendar */}
-              <TabsContent value="calendar">
-                <MaintenanceCalendar />
-              </TabsContent>
-
-              {/* Contractors */}
-              <TabsContent value="contractors">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Contractors & Vendors</CardTitle>
-                    <CardDescription>Manage your network of maintenance professionals</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {mockContractors.map((contractor) => (
-                        <div key={contractor.id} className="border border-border rounded-lg p-4 hover:bg-accent/50 transition-colors">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-2">
-                              <h3 className="font-semibold text-foreground">{contractor.name}</h3>
-                              <p className="text-sm text-muted-foreground">{contractor.category}</p>
-                              <div className="flex items-center gap-2">
-                                <div className="flex items-center gap-1">
-                                  <span className="text-sm text-yellow-600">★</span>
-                                  <span className="text-sm font-medium">{contractor.rating}</span>
+                                {request.assigned_to && request.assigned_user && (
+                                  <div className="flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-muted-foreground">Assigned:</span>
+                                    <span className="text-foreground font-medium">
+                                      {request.assigned_user.first_name} {request.assigned_user.last_name}
+                                    </span>
+                                  </div>
+                                )}
+                                <div className="flex items-center gap-2">
+                                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                                  <span className="text-muted-foreground">Created:</span>
+                                  <span className="text-foreground">
+                                    {new Date(request.created_at).toLocaleDateString()}
+                                  </span>
                                 </div>
-                                <span className="text-sm text-muted-foreground">•</span>
-                                <span className="text-sm text-muted-foreground">{contractor.phone}</span>
+                                {request.scheduled_date && (
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-muted-foreground">Scheduled:</span>
+                                    <span className="text-foreground">
+                                      {new Date(request.scheduled_date).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                )}
+                                {request.due_date && (
+                                  <div className="flex items-center gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-orange-500" />
+                                    <span className="text-muted-foreground">Due:</span>
+                                    <span className={`font-medium ${
+                                      new Date(request.due_date) < new Date() ? 'text-red-600' : 'text-foreground'
+                                    }`}>
+                                      {new Date(request.due_date).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <div className="text-right space-y-2">
-                              <Badge variant="outline">
-                                <Users className="w-3 h-3 mr-1" />
-                                {contractor.activeJobs} active
-                              </Badge>
-                              <div>
-                                <Button size="sm" variant="outline">
-                                  Contact
+
+                            {/* Action Panel */}
+                            <div className="flex flex-row lg:flex-col gap-2 lg:items-end">
+                              {(request.estimated_cost && request.estimated_cost > 0) || 
+                               (request.actual_cost && request.actual_cost > 0) ? (
+                                <div className="flex items-center gap-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                                  <DollarSign className="h-5 w-5 text-green-600" />
+                                  <div className="text-right">
+                                    <div className="text-lg font-semibold text-green-600">
+                                      ${(request.actual_cost || request.estimated_cost)?.toLocaleString()}
+                                    </div>
+                                    <div className="text-xs text-green-600">
+                                      {request.actual_cost ? 'Actual' : 'Estimated'}
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : null}
+                              
+                              <div className="flex lg:flex-col gap-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleViewRequest(request)}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  View
                                 </Button>
+                                {request.status === 'scheduled' && (
+                                  <Button 
+                                    size="sm"
+                                    onClick={() => handleStartWork(request)}
+                                    className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                                  >
+                                    <Play className="w-4 h-4" />
+                                    Start
+                                  </Button>
+                                )}
+                                {request.status === 'pending' && (
+                                  <Button 
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => handleViewRequest(request)}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                    Assign
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Preventive Maintenance */}
-              <TabsContent value="schedule">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Scheduled Maintenance</CardTitle>
-                      <CardDescription>Upcoming preventive maintenance tasks</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="border border-border rounded-lg p-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="font-medium">HVAC Filter Replacement</h4>
-                            <p className="text-sm text-muted-foreground">All Properties</p>
-                          </div>
-                          <Badge variant="outline">Due: Jul 15</Badge>
-                        </div>
-                      </div>
-                      <div className="border border-border rounded-lg p-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="font-medium">Fire Alarm Testing</h4>
-                            <p className="text-sm text-muted-foreground">123 Main St</p>
-                          </div>
-                          <Badge variant="outline">Due: Jul 20</Badge>
-                        </div>
-                      </div>
-                      <div className="border border-border rounded-lg p-3">
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <h4 className="font-medium">Gutter Cleaning</h4>
-                            <p className="text-sm text-muted-foreground">456 Oak Ave</p>
-                          </div>
-                          <Badge variant="outline">Due: Jul 25</Badge>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Maintenance Calendar</CardTitle>
-                      <CardDescription>Schedule new preventive maintenance</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <Button className="w-full" variant="outline">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Schedule Maintenance
-                      </Button>
-                      <div className="space-y-2">
-                        <h4 className="font-medium text-sm">Quick Schedule Options:</h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button size="sm" variant="outline">HVAC Service</Button>
-                          <Button size="sm" variant="outline">Plumbing Check</Button>
-                          <Button size="sm" variant="outline">Electrical Inspection</Button>
-                          <Button size="sm" variant="outline">Exterior Cleaning</Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  )}
                 </div>
-                </TabsContent>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Calendar Tab */}
+          <TabsContent value="calendar">
+            <MaintenanceCalendar />
+          </TabsContent>
+
+          {/* Contractors Tab */}
+          <TabsContent value="contractors">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  Contractors & Vendors
+                </CardTitle>
+                <CardDescription>Manage your network of maintenance professionals</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {mockContractors.map((contractor) => (
+                    <div 
+                      key={contractor.id} 
+                      className="border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white hover:bg-gradient-to-r hover:from-white hover:to-primary/5"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2">
+                          <h3 className="font-semibold text-foreground">{contractor.name}</h3>
+                          <p className="text-sm text-muted-foreground">{contractor.category}</p>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1">
+                              <span className="text-sm text-yellow-600">★</span>
+                              <span className="text-sm font-medium">{contractor.rating}</span>
+                            </div>
+                            <span className="text-sm text-muted-foreground">•</span>
+                            <span className="text-sm text-muted-foreground">{contractor.phone}</span>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-2">
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            <Users className="w-3 h-3" />
+                            {contractor.activeJobs} active
+                          </Badge>
+                          <div>
+                            <Button size="sm" variant="outline">
+                              Contact
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics">
+            <div className="space-y-6">
+              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="w-5 h-5 text-primary" />
+                    Performance Analytics
+                  </CardTitle>
+                  <CardDescription>
+                    Detailed insights into maintenance operations and performance
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Advanced analytics dashboard coming soon. This will include:
+                  </p>
+                  <ul className="list-disc list-inside space-y-1 mt-4 text-sm text-muted-foreground">
+                    <li>Response time trends and benchmarks</li>
+                    <li>Cost analysis and budget tracking</li>
+                    <li>Contractor performance ratings</li>
+                    <li>Property maintenance history</li>
+                    <li>Predictive maintenance recommendations</li>
+                    <li>Custom reporting and exports</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
         </Tabs>
-        
-        <ScheduleMaintenanceDialog
+
+        {/* Dialogs */}
+        <ScheduleMaintenanceDialog 
           open={showScheduleDialog}
           onOpenChange={setShowScheduleDialog}
-          onMaintenanceScheduled={() => {
-            setShowScheduleDialog(false);
-            refetch();
-          }}
+        />
+        
+        <MaintenanceDetailsDialog
+          request={selectedRequest}
+          open={showDetailsDialog}
+          onOpenChange={setShowDetailsDialog}
         />
       </div>
     </div>
