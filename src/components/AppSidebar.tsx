@@ -16,7 +16,8 @@ import {
   Search,
   Eye,
   Shield,
-  X
+  X,
+  Navigation
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
@@ -112,6 +113,12 @@ const adminMenuItems = [
     url: "/reports",
     icon: BarChart3,
     description: "Analytics & insights"
+  },
+  {
+    title: "Admin Navigation",
+    url: "/admin-navigation",
+    icon: Navigation,
+    description: "Access all admin pages"
   }
 ];
 

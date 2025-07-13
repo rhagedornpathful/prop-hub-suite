@@ -41,6 +41,7 @@ import Auth from "./pages/Auth";
 import Setup from "./pages/Setup";
 import PropertyOwners from "./pages/PropertyOwners";
 import PropertyOwnerDetail from "./pages/PropertyOwnerDetail";
+import AdminNavigation from "./pages/AdminNavigation";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -221,6 +222,13 @@ const AppContent = () => {
                           </PageTransition>
                         } />
                         <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+                        <Route path="/admin-navigation" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <AdminNavigation />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
                         <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
                         <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
                         <Route path="/client-portal/reports" element={<PageTransition><ClientReports /></PageTransition>} />
