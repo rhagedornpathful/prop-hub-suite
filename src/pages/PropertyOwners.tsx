@@ -239,7 +239,14 @@ const PropertyOwners = () => {
                     className="shadow-md border-0 hover:shadow-lg transition-shadow group cursor-pointer overflow-hidden"
                     onClick={() => handleViewOwner(owner)}
                   >
-                    <CardHeader className="pb-4">
+                     <CardHeader className="pb-4 relative">
+                      {/* "Me" Badge - Top Right Corner */}
+                      {owner.is_self && (
+                        <Badge variant="secondary" className="absolute top-4 right-4 text-xs z-10">
+                          Me
+                        </Badge>
+                      )}
+                      
                       <div className="flex items-start gap-4">
                         {/* Profile Photo Section */}
                         <div className="relative">
@@ -262,7 +269,7 @@ const PropertyOwners = () => {
                         {/* Main Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
-                            <div className="min-w-0 flex-1">
+                            <div className="min-w-0 flex-1 pr-2">
                               <h3 className="font-bold text-lg text-foreground leading-tight">
                                 {owner.first_name} {owner.last_name}
                               </h3>
@@ -270,11 +277,6 @@ const PropertyOwners = () => {
                                 <p className="text-sm text-muted-foreground mt-1">
                                   {owner.company_name}
                                 </p>
-                              )}
-                              {owner.is_self && (
-                                <Badge variant="secondary" className="text-xs mt-2">
-                                  Me
-                                </Badge>
                               )}
                             </div>
                             <DropdownMenu>
