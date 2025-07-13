@@ -38,6 +38,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AddUserDialog from "@/components/AddUserDialog";
+import { UserDetailsDialog } from "@/components/UserDetailsDialog";
 
 interface UserProfile {
   id: string;
@@ -47,6 +48,12 @@ interface UserProfile {
   role: string | null;
   user_created_at: string;
   role_created_at: string | null;
+  phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  company_name?: string | null;
 }
 
 const UserManagement = () => {
@@ -58,6 +65,8 @@ const UserManagement = () => {
   const [error, setError] = useState<string | null>(null);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+  const [userDetailsOpen, setUserDetailsOpen] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -312,6 +321,15 @@ const UserManagement = () => {
       default:
         return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     }
+  };
+
+  const handleUserClick = (userProfile: UserProfile) => {
+    setSelectedUser(userProfile);
+    setUserDetailsOpen(true);
+  };
+
+  const handleUserUpdate = () => {
+    fetchUsers();
   };
 
   const updateUserRole = async (userId: string, newRole: string) => {
@@ -580,7 +598,11 @@ const UserManagement = () => {
                   </TableHeader>
                   <TableBody>
                     {filteredUsers.map((userProfile) => (
-                      <TableRow key={userProfile.id}>
+                      <TableRow 
+                        key={userProfile.id}
+                        className="cursor-pointer hover:bg-muted/50 transition-colors"
+                        onClick={() => handleUserClick(userProfile)}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
@@ -610,7 +632,7 @@ const UserManagement = () => {
                             {formatRoleName(userProfile.role)}
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <Select
                             value={userProfile.role || ''}
                             onValueChange={(newRole) => updateUserRole(userProfile.id, newRole)}
@@ -659,6 +681,14 @@ const UserManagement = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* User Details Dialog */}
+        <UserDetailsDialog
+          user={selectedUser}
+          open={userDetailsOpen}
+          onOpenChange={setUserDetailsOpen}
+          onUserUpdate={handleUserUpdate}
+        />
       </main>
     </div>
   );
