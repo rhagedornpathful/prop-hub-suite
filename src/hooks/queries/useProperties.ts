@@ -48,6 +48,50 @@ export const usePropertiesLimited = (limit: number = 6) => {
   });
 };
 
+export const useUnassignedProperties = () => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['properties', 'unassigned', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('user_id', user.id)
+        .is('owner_id', null)
+        .order('address', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+  });
+};
+
+export const usePropertiesByOwner = (ownerId: string | undefined) => {
+  const { user } = useAuth();
+
+  return useQuery({
+    queryKey: ['properties', 'by-owner', ownerId, user?.id],
+    queryFn: async () => {
+      if (!user || !ownerId) return [];
+      
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('owner_id', ownerId)
+        .order('address', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user && !!ownerId,
+  });
+};
+
 export const usePropertyMetrics = () => {
   const { user } = useAuth();
 

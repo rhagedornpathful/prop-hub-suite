@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnassignedProperties, usePropertiesByOwner, useUpdateProperty } from "@/hooks/queries/useProperties";
 import {
   Dialog,
   DialogContent,
@@ -62,6 +63,13 @@ export function AddPropertyOwnerDialog({
 }: AddPropertyOwnerDialogProps) {
   const { isMobile } = useMobileDetection();
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  
+  // Fetch unassigned properties for new owners or owner-specific properties for editing
+  const { data: unassignedProperties = [] } = useUnassignedProperties();
+  const { data: ownerProperties = [] } = usePropertiesByOwner(editOwner?.id);
+  const updateProperty = useUpdateProperty();
+  
   const [ownerData, setOwnerData] = useState<PropertyOwner>(() => {
     if (mode === "edit" && editOwner) {
       return { ...editOwner };
@@ -92,6 +100,8 @@ export function AddPropertyOwnerDialog({
   useEffect(() => {
     if (mode === "edit" && editOwner) {
       setOwnerData({ ...editOwner });
+      // Set currently assigned properties for editing
+      setSelectedProperties(ownerProperties.map(p => p.id));
     } else if (mode === "add") {
       setOwnerData({
         first_name: "",
@@ -112,8 +122,9 @@ export function AddPropertyOwnerDialog({
         is_self: false,
         notes: "",
       });
+      setSelectedProperties([]);
     }
-  }, [editOwner, mode]);
+  }, [editOwner, mode, ownerProperties]);
 
   const handleSaveOwner = async () => {
     if (!ownerData.first_name.trim() || !ownerData.last_name.trim() || !ownerData.email.trim() || !ownerData.phone.trim()) {
@@ -174,7 +185,8 @@ export function AddPropertyOwnerDialog({
 
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        // Create new owner
+        const { data: newOwner, error } = await supabase
           .from('property_owners')
           .insert({
             ...ownerData,
@@ -190,9 +202,26 @@ export function AddPropertyOwnerDialog({
             bank_account_number: ownerData.bank_account_number || null,
             bank_routing_number: ownerData.bank_routing_number || null,
             notes: ownerData.notes || null,
-          });
+          })
+          .select()
+          .single();
 
         if (error) throw error;
+
+        // Associate selected properties with the new owner
+        if (selectedProperties.length > 0 && newOwner) {
+          for (const propertyId of selectedProperties) {
+            const { error: updateError } = await supabase
+              .from('properties')
+              .update({ owner_id: newOwner.id })
+              .eq('id', propertyId);
+            
+            if (updateError) {
+              console.error('Error associating property:', updateError);
+              // Don't throw here, just log the error so the owner creation doesn't fail
+            }
+          }
+        }
       }
 
       toast({
@@ -361,6 +390,86 @@ export function AddPropertyOwnerDialog({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Property Association */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Property Association</h3>
+            <p className="text-sm text-muted-foreground">
+              Select properties to associate with this owner. Properties can be assigned during creation or later.
+            </p>
+            
+            {mode === "add" && unassignedProperties.length > 0 && (
+              <div className="space-y-3">
+                <Label>Available Properties</Label>
+                <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                  {unassignedProperties.map((property) => (
+                    <div key={property.id} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`property-${property.id}`}
+                        checked={selectedProperties.includes(property.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedProperties(prev => [...prev, property.id]);
+                          } else {
+                            setSelectedProperties(prev => prev.filter(id => id !== property.id));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`property-${property.id}`} className="text-sm cursor-pointer">
+                        {property.address} • {property.city}, {property.state}
+                        {property.monthly_rent && (
+                          <span className="text-muted-foreground ml-2">
+                            (${property.monthly_rent}/month)
+                          </span>
+                        )}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                {selectedProperties.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedProperties.length} propert{selectedProperties.length === 1 ? 'y' : 'ies'} selected
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {mode === "add" && unassignedProperties.length === 0 && (
+              <div className="text-center py-6 border border-dashed rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  No unassigned properties available. Properties can be assigned to this owner later.
+                </p>
+              </div>
+            )}
+            
+            {mode === "edit" && (
+              <div className="space-y-3">
+                <Label>Currently Assigned Properties</Label>
+                {ownerProperties.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
+                    {ownerProperties.map((property) => (
+                      <div key={property.id} className="flex items-center justify-between p-2 bg-muted rounded">
+                        <span className="text-sm">
+                          {property.address} • {property.city}, {property.state}
+                          {property.monthly_rent && (
+                            <span className="text-muted-foreground ml-2">
+                              (${property.monthly_rent}/month)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 border border-dashed rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      No properties currently assigned to this owner.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Tax & Banking Information */}
