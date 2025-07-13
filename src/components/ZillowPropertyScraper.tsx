@@ -21,6 +21,8 @@ interface PropertyData {
   year_built?: number;
   lot_size?: string;
   estimated_value?: number;
+  home_value_estimate?: number;
+  rent_estimate?: number;
 }
 
 interface ZillowPropertyScraperProps {
@@ -149,6 +151,10 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
         return `Address: ${value}`;
       case 'lot_size':
         return `Lot: ${value}`;
+      case 'home_value_estimate':
+        return `Home Value: $${value?.toLocaleString()}`;
+      case 'rent_estimate':
+        return `Rent Est: $${value?.toLocaleString()}`;
       default:
         return value;
     }

@@ -49,6 +49,8 @@ interface PropertyData {
   year_built?: number;
   estimated_value?: number;
   monthly_rent?: number;
+  home_value_estimate?: number;
+  rent_estimate?: number;
   description?: string;
   amenities?: string[];
   gate_code?: string;
@@ -85,6 +87,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         year_built: dbData.year_built || 0,
         estimated_value: dbData.estimated_value || 0,
         monthly_rent: dbData.monthly_rent || editProperty.monthlyRent || editProperty.monthlyFee || 0,
+        home_value_estimate: dbData.home_value_estimate || 0,
+        rent_estimate: dbData.rent_estimate || 0,
         description: dbData.description || "",
         owner_id: dbData.owner_id || "",
       };
@@ -99,6 +103,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       year_built: 0,
       estimated_value: 0,
       monthly_rent: 0,
+      home_value_estimate: 0,
+      rent_estimate: 0,
       description: "",
       owner_id: "",
     };
@@ -129,6 +135,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         year_built: dbData.year_built || 0,
         estimated_value: dbData.estimated_value || 0,
         monthly_rent: dbData.monthly_rent || editProperty.monthlyRent || editProperty.monthlyFee || 0,
+        home_value_estimate: dbData.home_value_estimate || 0,
+        rent_estimate: dbData.rent_estimate || 0,
         description: dbData.description || "",
         owner_id: dbData.owner_id || "",
       });
@@ -144,6 +152,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         year_built: 0,
         estimated_value: 0,
         monthly_rent: 0,
+        home_value_estimate: 0,
+        rent_estimate: 0,
         description: "",
         owner_id: "",
       });
@@ -439,6 +449,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       year_built: 0,
       estimated_value: 0,
       monthly_rent: 0,
+      home_value_estimate: 0,
+      rent_estimate: 0,
       description: "",
       owner_id: "",
     });
@@ -711,6 +723,28 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
                 value={propertyData.monthly_rent || ''}
                 onChange={(e) => handleInputChange('monthly_rent', parseInt(e.target.value) || 0)}
                 placeholder="Monthly rent amount"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="home-value-estimate">Home Value Estimate ($)</Label>
+              <Input
+                id="home-value-estimate"
+                type="number"
+                value={propertyData.home_value_estimate || ''}
+                onChange={(e) => handleInputChange('home_value_estimate', parseInt(e.target.value) || 0)}
+                placeholder="Zillow Zestimate home value"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="rent-estimate">Rent Estimate ($)</Label>
+              <Input
+                id="rent-estimate"
+                type="number"
+                value={propertyData.rent_estimate || ''}
+                onChange={(e) => handleInputChange('rent_estimate', parseInt(e.target.value) || 0)}
+                placeholder="Zillow Rent Zestimate"
               />
             </div>
 

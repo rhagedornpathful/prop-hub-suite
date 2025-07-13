@@ -95,7 +95,9 @@ function extractPropertyData(scrapedData: any) {
     property_type: null,
     year_built: null,
     lot_size: null,
-    estimated_value: null
+    estimated_value: null,
+    home_value_estimate: null,
+    rent_estimate: null
   }
 
   try {
@@ -159,6 +161,8 @@ function extractPropertyData(scrapedData: any) {
     const zestimateMatch = content.match(/zestimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i) ||
                           html.match(/zestimate[^$]*\$(\d{1,3}(?:,\d{3})*)/i)
     if (zestimateMatch) {
+      propertyData.home_value_estimate = parseInt(zestimateMatch[1].replace(/,/g, ''))
+      // Also set estimated_value for backwards compatibility
       propertyData.estimated_value = parseInt(zestimateMatch[1].replace(/,/g, ''))
     }
 
@@ -166,6 +170,8 @@ function extractPropertyData(scrapedData: any) {
     const rentZestimateMatch = content.match(/rent\s*zestimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i) ||
                               html.match(/rent\s*zestimate[^$]*\$(\d{1,3}(?:,\d{3})*)/i)
     if (rentZestimateMatch) {
+      propertyData.rent_estimate = parseInt(rentZestimateMatch[1].replace(/,/g, ''))
+      // Also set monthly_rent for backwards compatibility
       propertyData.monthly_rent = parseInt(rentZestimateMatch[1].replace(/,/g, ''))
     }
 
@@ -218,6 +224,8 @@ function extractPropertyData(scrapedData: any) {
     console.log('- Square Feet:', propertyData.square_feet)
     console.log('- Property Type:', propertyData.property_type)
     console.log('- Estimated Value:', propertyData.estimated_value)
+    console.log('- Home Value Estimate (Zestimate):', propertyData.home_value_estimate)
+    console.log('- Rent Estimate (Rent Zestimate):', propertyData.rent_estimate)
     
     // Also log the raw content to help debug extraction patterns
     console.log('Raw scraped content (first 500 chars):', content.substring(0, 500))

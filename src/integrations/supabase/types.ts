@@ -497,12 +497,14 @@ export type Database = {
           description: string | null
           estimated_value: number | null
           gate_code: string | null
+          home_value_estimate: number | null
           id: string
           images: string[] | null
           lot_size: string | null
           monthly_rent: number | null
           owner_id: string | null
           property_type: string | null
+          rent_estimate: number | null
           service_type: string | null
           square_feet: number | null
           state: string | null
@@ -523,12 +525,14 @@ export type Database = {
           description?: string | null
           estimated_value?: number | null
           gate_code?: string | null
+          home_value_estimate?: number | null
           id?: string
           images?: string[] | null
           lot_size?: string | null
           monthly_rent?: number | null
           owner_id?: string | null
           property_type?: string | null
+          rent_estimate?: number | null
           service_type?: string | null
           square_feet?: number | null
           state?: string | null
@@ -549,12 +553,14 @@ export type Database = {
           description?: string | null
           estimated_value?: number | null
           gate_code?: string | null
+          home_value_estimate?: number | null
           id?: string
           images?: string[] | null
           lot_size?: string | null
           monthly_rent?: number | null
           owner_id?: string | null
           property_type?: string | null
+          rent_estimate?: number | null
           service_type?: string | null
           square_feet?: number | null
           state?: string | null
