@@ -23,6 +23,9 @@ export const usePropertyCheck = () => {
   const { id } = useParams();
   const { toast } = useToast();
   
+  // Use demo ID if no ID provided (for testing purposes)
+  const propertyId = id || 'demo-property-123';
+  
   const [checklistItems, setChecklistItems] = useState<PropertyCheckData>({
     exterior: [
       { id: 1, item: "Roof condition", completed: false, photos: [], notes: "", required: true },
@@ -61,18 +64,18 @@ export const usePropertyCheck = () => {
 
   // Load existing check data if available
   useEffect(() => {
-    if (id) {
+    if (propertyId) {
       loadPropertyCheckData();
     }
-  }, [id]);
+  }, [propertyId]);
 
   const loadPropertyCheckData = async () => {
-    if (!id) return;
+    if (!propertyId) return;
     
     setIsLoading(true);
     try {
       // This would load from your database - for now using localStorage
-      const savedData = localStorage.getItem(`property-check-${id}`);
+      const savedData = localStorage.getItem(`property-check-${propertyId}`);
       if (savedData) {
         setChecklistItems(JSON.parse(savedData));
       }
@@ -84,12 +87,12 @@ export const usePropertyCheck = () => {
   };
 
   const savePropertyCheckData = async () => {
-    if (!id) return;
+    if (!propertyId) return;
     
     setIsSaving(true);
     try {
       // Save to localStorage for now - you can enhance this to save to Supabase
-      localStorage.setItem(`property-check-${id}`, JSON.stringify(checklistItems));
+      localStorage.setItem(`property-check-${propertyId}`, JSON.stringify(checklistItems));
       
       toast({
         title: "Progress saved",
