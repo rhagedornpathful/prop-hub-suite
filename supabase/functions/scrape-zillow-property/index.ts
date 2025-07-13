@@ -155,10 +155,26 @@ function extractPropertyData(scrapedData: any) {
       propertyData.square_feet = parseInt(sqftMatch[1].replace(/,/g, ''))
     }
 
-    // Extract price
-    const priceMatch = content.match(/\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i)
-    if (priceMatch) {
-      propertyData.estimated_value = parseInt(priceMatch[1].replace(/,/g, ''))
+    // Extract Zestimate (Zillow's property value estimate)
+    const zestimateMatch = content.match(/zestimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i) ||
+                          html.match(/zestimate[^$]*\$(\d{1,3}(?:,\d{3})*)/i)
+    if (zestimateMatch) {
+      propertyData.estimated_value = parseInt(zestimateMatch[1].replace(/,/g, ''))
+    }
+
+    // Extract Rent Zestimate (Zillow's rental value estimate)  
+    const rentZestimateMatch = content.match(/rent\s*zestimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i) ||
+                              html.match(/rent\s*zestimate[^$]*\$(\d{1,3}(?:,\d{3})*)/i)
+    if (rentZestimateMatch) {
+      propertyData.monthly_rent = parseInt(rentZestimateMatch[1].replace(/,/g, ''))
+    }
+
+    // Fallback: Extract any price if Zestimate not found
+    if (!propertyData.estimated_value) {
+      const priceMatch = content.match(/\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i)
+      if (priceMatch) {
+        propertyData.estimated_value = parseInt(priceMatch[1].replace(/,/g, ''))
+      }
     }
 
     // Extract year built
