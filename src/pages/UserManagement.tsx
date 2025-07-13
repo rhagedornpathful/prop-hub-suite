@@ -292,12 +292,19 @@ const UserManagement = () => {
     switch (role) {
       case 'admin':
         return 'bg-destructive text-destructive-foreground';
+      case 'property_manager':
+        return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'owner_investor':
       case 'property_owner':
         return 'bg-primary text-primary-foreground';
       case 'tenant':
         return 'bg-secondary text-secondary-foreground';
       case 'house_watcher':
         return 'bg-accent text-accent-foreground';
+      case 'contractor':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'leasing_agent':
+        return 'bg-indigo-100 text-indigo-800 border-indigo-200';
       default:
         return 'bg-muted text-muted-foreground';
     }
@@ -314,10 +321,14 @@ const UserManagement = () => {
         return 'House Watcher';
       case 'property_manager':
         return 'Property Manager';
+      case 'leasing_agent':
+        return 'Leasing Agent';
       case 'admin':
         return 'Admin';
       case 'tenant':
         return 'Tenant';
+      case 'contractor':
+        return 'Contractor';
       default:
         return role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
     }
@@ -524,9 +535,12 @@ const UserManagement = () => {
               <SelectContent className="bg-background border-border shadow-lg z-50">
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="property_owner">Property Owner</SelectItem>
+                <SelectItem value="property_manager">Property Manager</SelectItem>
+                <SelectItem value="owner_investor">Property Owner</SelectItem>
                 <SelectItem value="tenant">Tenant</SelectItem>
                 <SelectItem value="house_watcher">House Watcher</SelectItem>
+                <SelectItem value="contractor">Contractor</SelectItem>
+                <SelectItem value="leasing_agent">Leasing Agent</SelectItem>
               </SelectContent>
             </Select>
             <Button variant="outline" size="sm">
@@ -643,9 +657,12 @@ const UserManagement = () => {
                             </SelectTrigger>
                             <SelectContent className="bg-background border-border shadow-lg z-40">
                               <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="property_owner">Property Owner</SelectItem>
+                              <SelectItem value="property_manager">Property Manager</SelectItem>
+                              <SelectItem value="owner_investor">Property Owner</SelectItem>
                               <SelectItem value="tenant">Tenant</SelectItem>
                               <SelectItem value="house_watcher">House Watcher</SelectItem>
+                              <SelectItem value="contractor">Contractor</SelectItem>
+                              <SelectItem value="leasing_agent">Leasing Agent</SelectItem>
                             </SelectContent>
                           </Select>
                           {userProfile.id === user?.id && (
