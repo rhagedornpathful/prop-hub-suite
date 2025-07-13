@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SchedulePropertyCheckDialog } from "@/components/SchedulePropertyCheckDialog";
 import { useNavigate } from "react-router-dom";
 
 interface PropertyListProps {
@@ -42,6 +44,8 @@ interface PropertyListProps {
 
 export function PropertyList({ properties = [], isLoading, onEdit, onDelete, onView }: PropertyListProps) {
   const navigate = useNavigate();
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
   if (isLoading) {
     return (
       <Card className="shadow-md border-0">
@@ -172,6 +176,13 @@ export function PropertyList({ properties = [], isLoading, onEdit, onDelete, onV
                         <ClipboardCheck className="h-4 w-4 mr-2" />
                         Start Property Check
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => {
+                        setSelectedProperty(property);
+                        setScheduleDialogOpen(true);
+                      }}>
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Schedule Property Check
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit?.(property)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit Property
@@ -188,6 +199,15 @@ export function PropertyList({ properties = [], isLoading, onEdit, onDelete, onV
           </TableBody>
         </Table>
       </CardContent>
+      
+      {selectedProperty && (
+        <SchedulePropertyCheckDialog
+          open={scheduleDialogOpen}
+          onOpenChange={setScheduleDialogOpen}
+          propertyId={selectedProperty.id}
+          propertyAddress={selectedProperty.address}
+        />
+      )}
     </Card>
   );
 }

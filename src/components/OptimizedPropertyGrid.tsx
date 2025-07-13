@@ -31,6 +31,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PropertyImageUpload } from "@/components/PropertyImageUpload";
 import { HouseWatchingImageUpload } from "@/components/HouseWatchingImageUpload";
+import { SchedulePropertyCheckDialog } from "@/components/SchedulePropertyCheckDialog";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -56,6 +57,7 @@ interface TransformedProperty {
 const PropertyManagementCard = ({ property }: { property: Property }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -96,6 +98,11 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
   const handleStartPropertyCheck = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/property-check?property=${property.id}`);
+  };
+
+  const handleSchedulePropertyCheck = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsScheduleDialogOpen(true);
   };
 
   return (
@@ -157,6 +164,10 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
               <DropdownMenuItem onClick={handleStartPropertyCheck}>
                 <ClipboardCheck className="h-4 w-4 mr-2" />
                 Start Property Check
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSchedulePropertyCheck}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule Property Check
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Edit className="h-4 w-4 mr-2" />
@@ -241,6 +252,13 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
           </div>
         </div>
       </CardContent>
+      
+      <SchedulePropertyCheckDialog
+        open={isScheduleDialogOpen}
+        onOpenChange={setIsScheduleDialogOpen}
+        propertyId={property.id}
+        propertyAddress={property.address}
+      />
     </Card>
   );
 };
@@ -248,6 +266,7 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
 const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -292,6 +311,11 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
   const handleStartPropertyCheck = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/property-check?property=${property.id}`);
+  };
+
+  const handleSchedulePropertyCheck = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsScheduleDialogOpen(true);
   };
 
   return (
@@ -348,6 +372,10 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
               <DropdownMenuItem onClick={handleStartPropertyCheck}>
                 <ClipboardCheck className="h-4 w-4 mr-2" />
                 Start Property Check
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleSchedulePropertyCheck}>
+                <Calendar className="h-4 w-4 mr-2" />
+                Schedule Property Check
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Edit className="h-4 w-4 mr-2" />
@@ -425,6 +453,13 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
           </div>
         </div>
       </CardContent>
+      
+      <SchedulePropertyCheckDialog
+        open={isScheduleDialogOpen}
+        onOpenChange={setIsScheduleDialogOpen}
+        propertyId={property.id}
+        propertyAddress={property.property_address}
+      />
     </Card>
   );
 };

@@ -545,7 +545,10 @@ export type Database = {
           id: string
           location_verified: boolean | null
           property_id: string
-          started_at: string
+          scheduled_by: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          started_at: string | null
           status: string
           updated_at: string
           user_id: string
@@ -559,7 +562,10 @@ export type Database = {
           id?: string
           location_verified?: boolean | null
           property_id: string
-          started_at?: string
+          scheduled_by?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          started_at?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -573,12 +579,23 @@ export type Database = {
           id?: string
           location_verified?: boolean | null
           property_id?: string
-          started_at?: string
+          scheduled_by?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          started_at?: string | null
           status?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "property_check_sessions_scheduled_by_fkey"
+            columns: ["scheduled_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_owners: {
         Row: {
