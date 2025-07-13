@@ -185,6 +185,13 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
+                        <Route path="/property-check" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
+                              <HouseWatching />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
                         <Route path="/documents" element={
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
