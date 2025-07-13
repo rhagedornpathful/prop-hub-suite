@@ -156,18 +156,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer role fetching to avoid blocking
-        if (session?.user && event === 'SIGNED_IN') {
-          console.log('👤 AuthProvider: User signed in, fetching role...');
-          setTimeout(() => {
-            if (isSubscriptionActive) {
-              fetchUserRole(session.user.id);
-            }
-          }, 0);
-        } else if (!session) {
-          console.log('❌ AuthProvider: No user session');
-          setUserRole(null);
-        }
+         // Defer role fetching to avoid blocking
+         if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+           console.log('👤 AuthProvider: User signed in, fetching role immediately...');
+           // Fetch role immediately for role switches
+           await fetchUserRole(session.user.id);
+         } else if (!session) {
+           console.log('❌ AuthProvider: No user session');
+           setUserRole(null);
+         }
         
         setLoading(false);
       }

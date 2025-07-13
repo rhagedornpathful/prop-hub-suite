@@ -152,6 +152,9 @@ export function RoleSwitcher() {
         throw new Error(`User does not have ${account.role} role assigned`);
       }
 
+      // Wait a moment for the auth context to update the role
+      await new Promise(resolve => setTimeout(resolve, 500));
+
       toast({
         title: "Role Switched",
         description: `Successfully switched to ${account.label} (${account.email})`,
