@@ -70,6 +70,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
 
   useEffect(() => {
     if (user && open) {
+      console.log('UserDetailsDialog: Loading data for user:', user.email, user.id);
       // Load complete user profile data from database
       loadUserProfile();
       // Load additional role-specific data
@@ -81,6 +82,8 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
     if (!user) return;
 
     try {
+      console.log('UserDetailsDialog: Fetching profile for user ID:', user.id);
+      
       // Fetch complete profile data from profiles table
       const { data: profile, error } = await supabase
         .from('profiles')
@@ -88,13 +91,15 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
         .eq('user_id', user.id)
         .single();
 
+      console.log('UserDetailsDialog: Profile query result:', { profile, error });
+
       if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
         console.error('Error loading user profile:', error);
-        return;
+        // Continue with fallback data
       }
 
-      // Set profile data, using existing user data as fallback
-      setProfileData({
+      // Set profile data, using existing user data as fallback or empty strings
+      const profileData = {
         first_name: profile?.first_name || user.first_name || '',
         last_name: profile?.last_name || user.last_name || '',
         phone: profile?.phone || '',
@@ -103,19 +108,36 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
         state: profile?.state || '',
         zip_code: profile?.zip_code || '',
         company_name: profile?.company_name || ''
-      });
+      };
+
+      console.log('UserDetailsDialog: Setting profile data:', profileData);
+      setProfileData(profileData);
+
+      // If no profile exists, create one with basic info
+      if (error?.code === 'PGRST116' && (user.first_name || user.last_name)) {
+        console.log('UserDetailsDialog: No profile found, creating basic profile');
+        await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+      }
     } catch (error) {
       console.error('Error loading user profile:', error);
       // Set data from user object as fallback
       setProfileData({
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        phone: user.phone || '',
-        address: user.address || '',
-        city: user.city || '',
-        state: user.state || '',
-        zip_code: user.zip_code || '',
-        company_name: user.company_name || ''
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        zip_code: '',
+        company_name: ''
       });
     }
   };
@@ -181,9 +203,10 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
 
     try {
       setSaving(true);
+      console.log('UserDetailsDialog: Saving profile data:', profileData);
 
       // Upsert profile data (insert or update)
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .upsert({
           user_id: user.id,
@@ -195,10 +218,14 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
           state: profileData.state || null,
           zip_code: profileData.zip_code || null,
           company_name: profileData.company_name || null,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
         }, {
           onConflict: 'user_id' // Use user_id as the conflict resolution column
-        });
+        })
+        .select();
+
+      console.log('UserDetailsDialog: Save result:', { data, error });
 
       if (error) {
         console.error('Error saving profile:', error);
