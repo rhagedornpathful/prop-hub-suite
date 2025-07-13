@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Upload, Search, Filter, Download, Trash2, Eye, FileText, Image, Video, Archive } from "lucide-react";
+import { Plus, Upload, Search, Filter, Download, Trash2, Eye, FileText, Image, Video, Archive, Home, User, Users } from "lucide-react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tables } from "@/integrations/supabase/types";
 
 interface Document {
   id: string;
@@ -36,17 +37,54 @@ interface Document {
   tags: string[];
   description?: string;
   uploaded_at: string;
+  property_id?: string;
+  property_owner_id?: string;
+  tenant_id?: string;
+  maintenance_request_id?: string;
+  // Populated from joins
+  property?: { address: string; id: string };
+  property_owner?: { first_name: string; last_name: string; id: string };
+  tenant?: { first_name: string; last_name: string; id: string };
+  maintenance_request?: { title: string; id: string };
+}
+
+type Property = Tables<'properties'>;
+type PropertyOwner = Tables<'property_owners'>;
+type Tenant = Tables<'tenants'>;
+
+interface PropertyOption {
+  id: string;
+  address: string;
+}
+
+interface PropertyOwnerOption {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
+
+interface TenantOption {
+  id: string;
+  first_name: string;
+  last_name: string;
 }
 
 export default function Documents() {
   const [documents, setDocuments] = useState<Document[]>([]);
+  const [properties, setProperties] = useState<PropertyOption[]>([]);
+  const [propertyOwners, setPropertyOwners] = useState<PropertyOwnerOption[]>([]);
+  const [tenants, setTenants] = useState<TenantOption[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [associationFilter, setAssociationFilter] = useState("all");
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadCategory, setUploadCategory] = useState("general");
   const [uploadDescription, setUploadDescription] = useState("");
   const [uploadTags, setUploadTags] = useState("");
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
+  const [selectedPropertyOwnerId, setSelectedPropertyOwnerId] = useState<string>("");
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
@@ -62,13 +100,36 @@ export default function Documents() {
 
   useEffect(() => {
     fetchDocuments();
+    fetchRelatedData();
   }, []);
+
+  const fetchRelatedData = async () => {
+    try {
+      const [propertiesData, ownersData, tenantsData] = await Promise.all([
+        supabase.from('properties').select('id, address').order('address'),
+        supabase.from('property_owners').select('id, first_name, last_name').order('first_name'),
+        supabase.from('tenants').select('id, first_name, last_name').order('first_name')
+      ]);
+
+      if (propertiesData.data) setProperties(propertiesData.data);
+      if (ownersData.data) setPropertyOwners(ownersData.data);
+      if (tenantsData.data) setTenants(tenantsData.data);
+    } catch (error) {
+      console.error('Failed to fetch related data:', error);
+    }
+  };
 
   const fetchDocuments = async () => {
     try {
       const { data, error } = await supabase
         .from('documents')
-        .select('*')
+        .select(`
+          *,
+          property:properties(id, address),
+          property_owner:property_owners(id, first_name, last_name),
+          tenant:tenants(id, first_name, last_name),
+          maintenance_request:maintenance_requests(id, title)
+        `)
         .order('uploaded_at', { ascending: false });
 
       if (error) throw error;
@@ -112,6 +173,9 @@ export default function Documents() {
           category: uploadCategory,
           tags: uploadTags.split(',').map(tag => tag.trim()).filter(Boolean),
           description: uploadDescription || null,
+          property_id: selectedPropertyId || null,
+          property_owner_id: selectedPropertyOwnerId || null,
+          tenant_id: selectedTenantId || null,
         });
 
       if (dbError) throw dbError;
@@ -121,11 +185,7 @@ export default function Documents() {
         description: "Document uploaded successfully",
       });
 
-      setIsUploadDialogOpen(false);
-      setUploadFile(null);
-      setUploadDescription("");
-      setUploadTags("");
-      setUploadCategory("general");
+      resetUploadForm();
       fetchDocuments();
     } catch (error) {
       toast({
@@ -136,6 +196,17 @@ export default function Documents() {
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const resetUploadForm = () => {
+    setIsUploadDialogOpen(false);
+    setUploadFile(null);
+    setUploadDescription("");
+    setUploadTags("");
+    setUploadCategory("general");
+    setSelectedPropertyId("");
+    setSelectedPropertyOwnerId("");
+    setSelectedTenantId("");
   };
 
   const handleDownload = async (document: Document) => {
@@ -216,7 +287,26 @@ export default function Documents() {
                          doc.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          doc.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesCategory = categoryFilter === "all" || doc.category === categoryFilter;
-    return matchesSearch && matchesCategory;
+    
+    let matchesAssociation = true;
+    switch (associationFilter) {
+      case "with-property":
+        matchesAssociation = !!doc.property_id;
+        break;
+      case "with-owner":
+        matchesAssociation = !!doc.property_owner_id;
+        break;
+      case "with-tenant":
+        matchesAssociation = !!doc.tenant_id;
+        break;
+      case "unassociated":
+        matchesAssociation = !doc.property_id && !doc.property_owner_id && !doc.tenant_id && !doc.maintenance_request_id;
+        break;
+      default:
+        matchesAssociation = true;
+    }
+    
+    return matchesSearch && matchesCategory && matchesAssociation;
   });
 
   return (
@@ -286,6 +376,62 @@ export default function Documents() {
                         className="mt-1"
                       />
                     </div>
+
+                    {/* Association Fields */}
+                    <div className="space-y-4 pt-4 border-t">
+                      <h4 className="text-sm font-medium">Associate with:</h4>
+                      
+                      <div>
+                        <Label htmlFor="property">Property (Optional)</Label>
+                        <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select a property..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">None</SelectItem>
+                            {properties.map(property => (
+                              <SelectItem key={property.id} value={property.id}>
+                                {property.address}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="propertyOwner">Property Owner (Optional)</Label>
+                        <Select value={selectedPropertyOwnerId} onValueChange={setSelectedPropertyOwnerId}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select a property owner..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">None</SelectItem>
+                            {propertyOwners.map(owner => (
+                              <SelectItem key={owner.id} value={owner.id}>
+                                {owner.first_name} {owner.last_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="tenant">Tenant (Optional)</Label>
+                        <Select value={selectedTenantId} onValueChange={setSelectedTenantId}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Select a tenant..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">None</SelectItem>
+                            {tenants.map(tenant => (
+                              <SelectItem key={tenant.id} value={tenant.id}>
+                                {tenant.first_name} {tenant.last_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     <Button 
                       onClick={handleFileUpload} 
                       disabled={!uploadFile || isUploading}
@@ -334,6 +480,19 @@ export default function Documents() {
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={associationFilter} onValueChange={setAssociationFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <Users className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Documents</SelectItem>
+                  <SelectItem value="with-property">With Property</SelectItem>
+                  <SelectItem value="with-owner">With Owner</SelectItem>
+                  <SelectItem value="with-tenant">With Tenant</SelectItem>
+                  <SelectItem value="unassociated">Unassociated</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -359,6 +518,36 @@ export default function Documents() {
                           {document.description}
                         </p>
                       )}
+                      
+                      {/* Association badges */}
+                      {(document.property || document.property_owner || document.tenant || document.maintenance_request) && (
+                        <div className="flex flex-wrap gap-1">
+                          {document.property && (
+                            <Badge variant="outline" className="text-xs flex items-center gap-1">
+                              <Home className="w-3 h-3" />
+                              {document.property.address}
+                            </Badge>
+                          )}
+                          {document.property_owner && (
+                            <Badge variant="outline" className="text-xs flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {document.property_owner.first_name} {document.property_owner.last_name}
+                            </Badge>
+                          )}
+                          {document.tenant && (
+                            <Badge variant="outline" className="text-xs flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {document.tenant.first_name} {document.tenant.last_name}
+                            </Badge>
+                          )}
+                          {document.maintenance_request && (
+                            <Badge variant="outline" className="text-xs">
+                              Maintenance: {document.maintenance_request.title}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                      
                       <div className="flex flex-wrap gap-1">
                         {document.tags.map((tag, index) => (
                           <Badge key={index} variant="outline" className="text-xs">

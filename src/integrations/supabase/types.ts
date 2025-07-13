@@ -23,7 +23,11 @@ export type Database = {
           file_size: number
           file_type: string
           id: string
+          maintenance_request_id: string | null
+          property_id: string | null
+          property_owner_id: string | null
           tags: string[] | null
+          tenant_id: string | null
           updated_at: string
           uploaded_at: string
           user_id: string
@@ -36,7 +40,11 @@ export type Database = {
           file_size: number
           file_type: string
           id?: string
+          maintenance_request_id?: string | null
+          property_id?: string | null
+          property_owner_id?: string | null
           tags?: string[] | null
+          tenant_id?: string | null
           updated_at?: string
           uploaded_at?: string
           user_id: string
@@ -49,12 +57,51 @@ export type Database = {
           file_size?: number
           file_type?: string
           id?: string
+          maintenance_request_id?: string | null
+          property_id?: string | null
+          property_owner_id?: string | null
           tags?: string[] | null
+          tenant_id?: string | null
           updated_at?: string
           uploaded_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_property_owner_id_fkey"
+            columns: ["property_owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_user_id_fkey"
             columns: ["user_id"]
