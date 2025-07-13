@@ -26,6 +26,8 @@ import { Loader2, Search, Plus } from "lucide-react";
 import { ZillowPropertyScraper } from "@/components/ZillowPropertyScraper";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PropertyImageUpload } from "@/components/PropertyImageUpload";
+import { PropertyImageUploadPreview } from "@/components/PropertyImageUploadPreview";
 
 interface AddPropertyDialogProps {
   open: boolean;
@@ -56,6 +58,7 @@ interface PropertyData {
   amenities?: string[];
   gate_code?: string;
   gated_community?: boolean;
+  images?: string[];
   owner_id?: string;
 }
 
@@ -94,6 +97,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         description: dbData.description || "",
         gate_code: dbData.gate_code || "",
         gated_community: dbData.gated_community || false,
+        images: dbData.images || [],
         owner_id: dbData.owner_id || "",
       };
     }
@@ -112,6 +116,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       description: "",
       gate_code: "",
       gated_community: false,
+      images: [],
       owner_id: "",
     };
   });
@@ -146,6 +151,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         description: dbData.description || "",
         gate_code: dbData.gate_code || "",
         gated_community: dbData.gated_community || false,
+        images: dbData.images || [],
         owner_id: dbData.owner_id || "",
       });
       setSearchAddress(dbData.address || "");
@@ -165,6 +171,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         description: "",
         gate_code: "",
         gated_community: false,
+        images: [],
         owner_id: "",
       });
       setSearchAddress("");
@@ -491,6 +498,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       description: "",
       gate_code: "",
       gated_community: false,
+      images: [],
       owner_id: "",
     });
   };
@@ -811,6 +819,32 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
               />
             </div>
           </div>
+
+          {/* Property Image Upload - Only show for edit mode when we have a property ID */}
+          {mode === "edit" && editProperty && (
+            <div className="space-y-2">
+              <Label>Property Image</Label>
+              <PropertyImageUpload
+                propertyId={((editProperty as any)._dbData || editProperty).id}
+                currentImage={(((editProperty as any)._dbData || editProperty).images || [])[0]}
+                onImageUpdate={(imageUrl) => {
+                  // Optionally update the local state or refresh the parent
+                  console.log('Image updated:', imageUrl);
+                }}
+              />
+            </div>
+          )}
+
+          {/* Property Image Upload - For add mode, show preview component */}
+          {mode === "add" && (
+            <div className="space-y-2">
+              <Label>Property Images</Label>
+              <PropertyImageUploadPreview
+                images={propertyData.images || []}
+                onImagesChange={(images) => handleInputChange('images', images)}
+              />
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>

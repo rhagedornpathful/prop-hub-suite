@@ -97,7 +97,8 @@ function extractPropertyData(scrapedData: any) {
     lot_size: null,
     estimated_value: null,
     home_value_estimate: null,
-    rent_estimate: null
+    rent_estimate: null,
+    images: []
   }
 
   try {
@@ -211,6 +212,42 @@ function extractPropertyData(scrapedData: any) {
       }
     }
 
+    // Extract property images from HTML
+    const imageUrls: string[] = []
+    if (html) {
+      // Look for Zillow property images in various containers
+      const imagePatterns = [
+        /<img[^>]+src="([^"]*)"[^>]*(?:class="[^"]*(?:photo|image|picture)[^"]*"|alt="[^"]*(?:photo|image|picture)[^"]*")/gi,
+        /<img[^>]+class="[^"]*(?:photo|image|picture)[^"]*"[^>]*src="([^"]*)"/gi,
+        /<picture[^>]*>[\s\S]*?<img[^>]+src="([^"]*)"/gi,
+        /<div[^>]*class="[^"]*(?:photo|image)[^"]*"[^>]*>[\s\S]*?<img[^>]+src="([^"]*)"/gi
+      ]
+      
+      for (const pattern of imagePatterns) {
+        let match
+        while ((match = pattern.exec(html)) !== null) {
+          const imageUrl = match[1]
+          // Filter out non-property images (icons, logos, etc.)
+          if (imageUrl && 
+              imageUrl.includes('photos.zillowstatic.com') &&
+              !imageUrl.includes('icon') &&
+              !imageUrl.includes('logo') &&
+              !imageUrl.includes('svg') &&
+              (imageUrl.includes('.jpg') || imageUrl.includes('.jpeg') || imageUrl.includes('.png') || imageUrl.includes('.webp'))) {
+            // Ensure we get high quality images
+            const highQualityUrl = imageUrl.replace(/\/[0-9]+_[0-9]+_/, '/1024_768_')
+                                           .replace(/\?.*$/, '') // Remove query parameters
+            if (!imageUrls.includes(highQualityUrl)) {
+              imageUrls.push(highQualityUrl)
+            }
+          }
+        }
+      }
+      
+      // Limit to first 5 images to avoid too many
+      propertyData.images = imageUrls.slice(0, 5)
+    }
+
     console.log('Extracted property data:', propertyData)
     
     // Log each field individually to help debug what's being extracted
@@ -226,6 +263,10 @@ function extractPropertyData(scrapedData: any) {
     console.log('- Estimated Value:', propertyData.estimated_value)
     console.log('- Home Value Estimate (Zestimate):', propertyData.home_value_estimate)
     console.log('- Rent Estimate (Rent Zestimate):', propertyData.rent_estimate)
+    console.log('- Images found:', propertyData.images?.length || 0)
+    if (propertyData.images?.length > 0) {
+      console.log('- First image URL:', propertyData.images[0])
+    }
     
     // Also log the raw content to help debug extraction patterns
     console.log('Raw scraped content (first 500 chars):', content.substring(0, 500))

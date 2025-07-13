@@ -23,6 +23,7 @@ interface PropertyData {
   estimated_value?: number;
   home_value_estimate?: number;
   rent_estimate?: number;
+  images?: string[];
 }
 
 interface ZillowPropertyScraperProps {
@@ -155,6 +156,8 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
         return `Home Value: $${value?.toLocaleString()}`;
       case 'rent_estimate':
         return `Rent Est: $${value?.toLocaleString()}`;
+      case 'images':
+        return `Images: ${value?.length || 0} found`;
       default:
         return value;
     }
@@ -228,6 +231,27 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
                   </Badge>
                 ))}
             </div>
+            
+            {/* Show image previews if extracted */}
+            {scrapedData.images && scrapedData.images.length > 0 && (
+              <div className="mt-3">
+                <p className="text-sm font-medium mb-2">Extracted Images:</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {scrapedData.images.slice(0, 6).map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`Property image ${index + 1}`}
+                      className="w-full h-16 object-cover rounded border"
+                      onError={(e) => {
+                        console.log('Failed to load image:', image);
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
