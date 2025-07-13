@@ -14,6 +14,9 @@ interface PropertyData {
   square_feet?: number;
   price?: number;
   address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
   property_type?: string;
   year_built?: number;
   lot_size?: string;
@@ -80,7 +83,7 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
       }
 
       const propertyData = data.propertyData;
-      console.log('Scraped property data:', propertyData);
+      console.log('Scraped property data received in ZillowPropertyScraper:', propertyData);
 
       setScrapedData(propertyData);
       
@@ -97,6 +100,8 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
       const cleanData = Object.fromEntries(
         Object.entries(mappedData).filter(([_, value]) => value != null)
       );
+
+      console.log('Clean data being sent to parent component:', cleanData);
 
       toast({
         title: "Property Data Extracted",
@@ -134,6 +139,16 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
         return `Built ${value}`;
       case 'property_type':
         return value?.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase());
+      case 'city':
+        return `City: ${value}`;
+      case 'state':
+        return `State: ${value}`;
+      case 'zip_code':
+        return `ZIP: ${value}`;
+      case 'address':
+        return `Address: ${value}`;
+      case 'lot_size':
+        return `Lot: ${value}`;
       default:
         return value;
     }

@@ -191,6 +191,21 @@ function extractPropertyData(scrapedData: any) {
 
     console.log('Extracted property data:', propertyData)
     
+    // Log each field individually to help debug what's being extracted
+    console.log('Individual field extraction results:')
+    console.log('- Address:', propertyData.address)
+    console.log('- City:', propertyData.city)
+    console.log('- State:', propertyData.state)
+    console.log('- ZIP:', propertyData.zip_code)
+    console.log('- Bedrooms:', propertyData.bedrooms)
+    console.log('- Bathrooms:', propertyData.bathrooms)
+    console.log('- Square Feet:', propertyData.square_feet)
+    console.log('- Property Type:', propertyData.property_type)
+    console.log('- Estimated Value:', propertyData.estimated_value)
+    
+    // Also log the raw content to help debug extraction patterns
+    console.log('Raw scraped content (first 500 chars):', content.substring(0, 500))
+    
   } catch (error) {
     console.error('Error extracting property data:', error)
   }
