@@ -34,6 +34,9 @@ import MaintenanceAlerts from "@/components/MaintenanceAlerts";
 import MaintenanceDashboard from "@/components/MaintenanceDashboard";
 import MaintenanceFilters from "@/components/MaintenanceFilters";
 import VendorManagementSystem from "@/components/VendorManagementSystem";
+import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
+import OwnerPortalSystem from "@/components/OwnerPortalSystem";
+import RealTimeNotificationSystem from "@/components/RealTimeNotificationSystem";
 import type { MaintenanceRequest } from "@/hooks/queries/useMaintenanceRequests";
 
 const Maintenance = () => {
@@ -267,10 +270,10 @@ const Maintenance = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="work-orders" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 bg-white/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 bg-white/50 backdrop-blur-sm">
             <TabsTrigger value="work-orders" className="flex items-center gap-2">
               <Wrench className="w-4 h-4" />
-              <span className="hidden sm:inline">Work Orders</span>
+              <span className="hidden sm:inline">Orders</span>
             </TabsTrigger>
             <TabsTrigger value="calendar" className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -283,6 +286,14 @@ const Maintenance = () => {
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="owner-portal" className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Owners</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Alerts</span>
             </TabsTrigger>
           </TabsList>
 
@@ -511,32 +522,17 @@ const Maintenance = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
-            <div className="space-y-6">
-              <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bell className="w-5 h-5 text-primary" />
-                    Performance Analytics
-                  </CardTitle>
-                  <CardDescription>
-                    Detailed insights into maintenance operations and performance
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Advanced analytics dashboard coming soon. This will include:
-                  </p>
-                  <ul className="list-disc list-inside space-y-1 mt-4 text-sm text-muted-foreground">
-                    <li>Response time trends and benchmarks</li>
-                    <li>Cost analysis and budget tracking</li>
-                    <li>Contractor performance ratings</li>
-                    <li>Property maintenance history</li>
-                    <li>Predictive maintenance recommendations</li>
-                    <li>Custom reporting and exports</li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
+            <AdvancedAnalyticsDashboard requests={maintenanceRequests} />
+          </TabsContent>
+
+          {/* Owner Portal Tab */}
+          <TabsContent value="owner-portal">
+            <OwnerPortalSystem />
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications">
+            <RealTimeNotificationSystem />
           </TabsContent>
         </Tabs>
 
