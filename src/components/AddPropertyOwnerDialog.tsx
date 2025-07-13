@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search, X } from "lucide-react";
 
 interface PropertyOwner {
   id?: string;
@@ -64,6 +64,8 @@ export function AddPropertyOwnerDialog({
   const { isMobile } = useMobileDetection();
   const [isSaving, setIsSaving] = useState(false);
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [propertySearchTerm, setPropertySearchTerm] = useState("");
+  const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>("all");
   
   // Fetch unassigned properties for new owners or owner-specific properties for editing
   const { data: unassignedProperties = [] } = useUnassignedProperties();
@@ -125,6 +127,25 @@ export function AddPropertyOwnerDialog({
       setSelectedProperties([]);
     }
   }, [editOwner, mode, ownerProperties]);
+
+  // Filter properties based on search and filter criteria
+  const filteredUnassignedProperties = unassignedProperties.filter(property => {
+    const matchesSearch = property.address.toLowerCase().includes(propertySearchTerm.toLowerCase()) ||
+                         property.city?.toLowerCase().includes(propertySearchTerm.toLowerCase()) ||
+                         property.state?.toLowerCase().includes(propertySearchTerm.toLowerCase());
+    
+    const matchesType = propertyTypeFilter === "all" || property.property_type === propertyTypeFilter;
+    
+    return matchesSearch && matchesType;
+  });
+
+  // Get unique property types for filter dropdown
+  const propertyTypes = [...new Set(unassignedProperties.map(p => p.property_type).filter(Boolean))];
+
+  const clearPropertySearch = () => {
+    setPropertySearchTerm("");
+    setPropertyTypeFilter("all");
+  };
 
   const handleSaveOwner = async () => {
     if (!ownerData.first_name.trim() || !ownerData.last_name.trim() || !ownerData.email.trim() || !ownerData.phone.trim()) {
@@ -400,37 +421,114 @@ export function AddPropertyOwnerDialog({
             </p>
             
             {mode === "add" && unassignedProperties.length > 0 && (
-              <div className="space-y-3">
-                <Label>Available Properties</Label>
-                <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto border rounded-lg p-3">
-                  {unassignedProperties.map((property) => (
-                    <div key={property.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`property-${property.id}`}
-                        checked={selectedProperties.includes(property.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setSelectedProperties(prev => [...prev, property.id]);
-                          } else {
-                            setSelectedProperties(prev => prev.filter(id => id !== property.id));
-                          }
-                        }}
-                      />
-                      <Label htmlFor={`property-${property.id}`} className="text-sm cursor-pointer">
-                        {property.address} • {property.city}, {property.state}
-                        {property.monthly_rent && (
-                          <span className="text-muted-foreground ml-2">
-                            (${property.monthly_rent}/month)
-                          </span>
-                        )}
-                      </Label>
-                    </div>
-                  ))}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search properties by address, city..."
+                      value={propertySearchTerm}
+                      onChange={(e) => setPropertySearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={propertyTypeFilter} onValueChange={setPropertyTypeFilter}>
+                      <SelectTrigger className="w-[140px]">
+                        <SelectValue placeholder="All Types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        {propertyTypes.map(type => (
+                          <SelectItem key={type} value={type}>
+                            {type?.charAt(0).toUpperCase() + type?.slice(1).replace('_', ' ')}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {(propertySearchTerm || propertyTypeFilter !== "all") && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearPropertySearch}
+                        className="px-3"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label>Available Properties</Label>
+                    <span className="text-sm text-muted-foreground">
+                      {filteredUnassignedProperties.length} of {unassignedProperties.length} properties
+                    </span>
+                  </div>
+                  
+                  {filteredUnassignedProperties.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-2 max-h-64 overflow-y-auto border rounded-lg p-3">
+                      {filteredUnassignedProperties.map((property) => (
+                        <div key={property.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded">
+                          <Checkbox
+                            id={`property-${property.id}`}
+                            checked={selectedProperties.includes(property.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedProperties(prev => [...prev, property.id]);
+                              } else {
+                                setSelectedProperties(prev => prev.filter(id => id !== property.id));
+                              }
+                            }}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <Label htmlFor={`property-${property.id}`} className="text-sm cursor-pointer font-medium">
+                              {property.address}
+                            </Label>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {property.city}, {property.state}
+                              {property.property_type && (
+                                <span className="ml-2 px-1.5 py-0.5 bg-muted rounded text-xs">
+                                  {property.property_type.replace('_', ' ')}
+                                </span>
+                              )}
+                              {property.monthly_rent && (
+                                <span className="ml-2 font-medium text-foreground">
+                                  ${property.monthly_rent}/month
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 border border-dashed rounded-lg">
+                      <p className="text-sm text-muted-foreground">
+                        No properties found matching your search criteria.
+                      </p>
+                      {(propertySearchTerm || propertyTypeFilter !== "all") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearPropertySearch}
+                          className="mt-2"
+                        >
+                          Clear filters
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {selectedProperties.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {selectedProperties.length} propert{selectedProperties.length === 1 ? 'y' : 'ies'} selected
-                  </p>
+                  <div className="p-3 bg-muted/50 rounded-lg">
+                    <p className="text-sm font-medium">
+                      {selectedProperties.length} propert{selectedProperties.length === 1 ? 'y' : 'ies'} selected
+                    </p>
+                  </div>
                 )}
               </div>
             )}
