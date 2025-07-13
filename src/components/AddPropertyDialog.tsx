@@ -454,10 +454,15 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
   };
 
   const handleZillowDataExtracted = (data: Partial<PropertyData>) => {
-    setPropertyData(prev => ({
-      ...prev,
-      ...data
-    }));
+    console.log('Zillow data received in AddPropertyDialog:', data);
+    setPropertyData(prev => {
+      const updated = {
+        ...prev,
+        ...data
+      };
+      console.log('Updated property data:', updated);
+      return updated;
+    });
     // Also set the address in search if it was extracted
     if (data.address) {
       setSearchAddress(data.address);

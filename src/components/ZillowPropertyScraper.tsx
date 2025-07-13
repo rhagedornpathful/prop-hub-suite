@@ -84,9 +84,18 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
 
       setScrapedData(propertyData);
       
+      // Map the scraped data to match the form's expected field names
+      const mappedData = {
+        ...propertyData,
+        // Map price to estimated_value if price exists but estimated_value doesn't
+        estimated_value: propertyData.estimated_value || propertyData.price,
+        // Remove the price field since we've mapped it to estimated_value
+        price: undefined
+      };
+
       // Filter out null/undefined values before passing to parent
       const cleanData = Object.fromEntries(
-        Object.entries(propertyData).filter(([_, value]) => value != null)
+        Object.entries(mappedData).filter(([_, value]) => value != null)
       );
 
       toast({
