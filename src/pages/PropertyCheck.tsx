@@ -15,9 +15,11 @@ import {
   Shield,
   Wind,
   Save,
-  Navigation
+  Navigation,
+  FileText
 } from "lucide-react";
 import { PropertyCheckItemCard } from "@/components/PropertyCheckItemCard";
+import { SummarySection } from "@/components/SummarySection";
 import { usePropertyCheck } from "@/hooks/usePropertyCheck";
 import { useToast } from "@/hooks/use-toast";
 
@@ -25,6 +27,7 @@ const PropertyCheck = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentSection, setCurrentSection] = useState(0);
+  const [generalNotes, setGeneralNotes] = useState("");
   
   const {
     checklistItems,
@@ -45,6 +48,7 @@ const PropertyCheck = () => {
     { name: "Interior", key: "interior", icon: Wind, color: "bg-gradient-secondary" },
     { name: "Security", key: "security", icon: Shield, color: "bg-gradient-accent" },
     { name: "Utilities", key: "utilities", icon: Zap, color: "bg-gradient-success" },
+    { name: "Summary", key: "summary", icon: FileText, color: "bg-gradient-primary" },
   ];
 
   const currentSectionData = sections[currentSection];
@@ -189,6 +193,15 @@ const PropertyCheck = () => {
                   <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
                   <p className="text-sm text-muted-foreground">Loading property check...</p>
                 </div>
+              ) : currentSectionData.key === 'summary' ? (
+                <SummarySection
+                  items={currentItems}
+                  onToggle={(itemId) => handleItemToggle(itemId, currentSectionData.key as keyof typeof checklistItems)}
+                  onNotesChange={(itemId, notes) => handleNotesChange(itemId, notes, currentSectionData.key as keyof typeof checklistItems)}
+                  onPhotosUpdate={(itemId, photos) => handlePhotosUpdate(itemId, photos, currentSectionData.key as keyof typeof checklistItems)}
+                  generalNotes={generalNotes}
+                  onGeneralNotesChange={setGeneralNotes}
+                />
               ) : (
                 currentItems.map((item) => (
                   <PropertyCheckItemCard

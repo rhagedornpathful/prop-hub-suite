@@ -17,6 +17,7 @@ interface PropertyCheckData {
   interior: PropertyCheckItem[];
   security: PropertyCheckItem[];
   utilities: PropertyCheckItem[];
+  summary: PropertyCheckItem[];
 }
 
 export const usePropertyCheck = () => {
@@ -56,6 +57,11 @@ export const usePropertyCheck = () => {
       { id: 20, item: "Electrical meter reading", completed: false, photos: [], notes: "", required: true },
       { id: 21, item: "Gas meter reading", completed: false, photos: [], notes: "", required: false },
       { id: 22, item: "Water pressure test", completed: false, photos: [], notes: "", required: false },
+    ],
+    summary: [
+      { id: 23, item: "Overall property condition", completed: false, photos: [], notes: "", required: false },
+      { id: 24, item: "General visit notes", completed: false, photos: [], notes: "", required: false },
+      { id: 25, item: "Recommendations or concerns", completed: false, photos: [], notes: "", required: false },
     ]
   });
 
