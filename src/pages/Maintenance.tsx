@@ -33,6 +33,7 @@ import MaintenanceDetailsDialog from "@/components/MaintenanceDetailsDialog";
 import MaintenanceAlerts from "@/components/MaintenanceAlerts";
 import MaintenanceDashboard from "@/components/MaintenanceDashboard";
 import MaintenanceFilters from "@/components/MaintenanceFilters";
+import VendorManagementSystem from "@/components/VendorManagementSystem";
 import type { MaintenanceRequest } from "@/hooks/queries/useMaintenanceRequests";
 
 const Maintenance = () => {
@@ -275,9 +276,9 @@ const Maintenance = () => {
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Calendar</span>
             </TabsTrigger>
-            <TabsTrigger value="contractors" className="flex items-center gap-2">
+            <TabsTrigger value="vendors" className="flex items-center gap-2">
               <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Contractors</span>
+              <span className="hidden sm:inline">Vendors</span>
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <Bell className="w-4 h-4" />
@@ -503,53 +504,9 @@ const Maintenance = () => {
             <MaintenanceCalendar />
           </TabsContent>
 
-          {/* Contractors Tab */}
-          <TabsContent value="contractors">
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  Contractors & Vendors
-                </CardTitle>
-                <CardDescription>Manage your network of maintenance professionals</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {mockContractors.map((contractor) => (
-                    <div 
-                      key={contractor.id} 
-                      className="border border-border rounded-lg p-4 hover:shadow-md transition-all duration-200 bg-white hover:bg-gradient-to-r hover:from-white hover:to-primary/5"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-2">
-                          <h3 className="font-semibold text-foreground">{contractor.name}</h3>
-                          <p className="text-sm text-muted-foreground">{contractor.category}</p>
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <span className="text-sm text-yellow-600">★</span>
-                              <span className="text-sm font-medium">{contractor.rating}</span>
-                            </div>
-                            <span className="text-sm text-muted-foreground">•</span>
-                            <span className="text-sm text-muted-foreground">{contractor.phone}</span>
-                          </div>
-                        </div>
-                        <div className="text-right space-y-2">
-                          <Badge variant="outline" className="flex items-center gap-1">
-                            <Users className="w-3 h-3" />
-                            {contractor.activeJobs} active
-                          </Badge>
-                          <div>
-                            <Button size="sm" variant="outline">
-                              Contact
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+          {/* Vendors Tab */}
+          <TabsContent value="vendors">
+            <VendorManagementSystem />
           </TabsContent>
 
           {/* Analytics Tab */}
