@@ -310,11 +310,11 @@ export default function Documents() {
   });
 
   return (
-    <div className="flex-1 p-6 overflow-auto">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
         <AppSidebar />
         <SidebarInset className="flex-1">
-          <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+          <div className="flex-1 space-y-6 p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
               <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
@@ -597,6 +597,6 @@ export default function Documents() {
           </div>
         </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
