@@ -1,273 +1,385 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { 
-  Building, 
-  Users, 
+  Building2, 
   DollarSign, 
-  TrendingUp,
+  TrendingUp, 
+  Users, 
   Calendar,
+  PieChart,
+  FileText,
+  AlertCircle,
+  Home,
   Wrench,
-  CheckCircle,
-  Plus,
   Eye
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+} from 'lucide-react';
+import { useProperties } from '@/hooks/queries/useProperties';
+import { usePropertyOwners } from '@/hooks/queries/usePropertyOwners';
+import { useAuth } from '@/contexts/AuthContext';
+import { Link } from 'react-router-dom';
 
-export function PropertyOwnerDashboard() {
-  const navigate = useNavigate();
+export default function PropertyOwnerDashboard() {
+  const { user } = useAuth();
+  const { data: properties, isLoading: propertiesLoading } = useProperties();
+  const { data: propertyOwners } = usePropertyOwners();
   
-  // Mock data - replace with actual queries based on current user
-  const metrics = {
-    totalProperties: 5,
-    totalUnits: 8,
-    occupiedUnits: 6,
-    monthlyRevenue: 12800,
-    occupancyRate: 75,
-    pendingMaintenance: 2,
-    upcomingExpirations: 1
+  // Find the current user's property owner record
+  const currentOwner = propertyOwners?.find(owner => owner.user_id === user?.id);
+  const ownedProperties = properties?.filter(property => property.owner_id === currentOwner?.id) || [];
+
+  const [selectedTimeframe, setSelectedTimeframe] = useState('month');
+
+  // Mock data for demonstration - in real app, this would come from API calls
+  const portfolioStats = {
+    totalValue: 850000,
+    monthlyIncome: 4200,
+    annualReturn: 8.5,
+    occupancyRate: 95,
+    maintenanceCosts: 1200,
+    netIncome: 3000
   };
 
-  const myProperties = [
-    { 
-      id: 1, 
-      address: "123 Oak Street", 
-      type: "Single Family", 
-      rent: 2200, 
-      tenant: "John Smith",
-      status: "occupied",
-      leaseExpires: "2024-12-15"
-    },
-    { 
-      id: 2, 
-      address: "456 Pine Avenue", 
-      type: "Duplex", 
-      rent: 3600, 
-      tenant: "Both units occupied",
-      status: "occupied",
-      leaseExpires: "2024-11-30"
-    },
-    { 
-      id: 3, 
-      address: "789 Elm Street", 
-      type: "Condo", 
-      rent: 1800, 
-      tenant: null,
-      status: "vacant",
-      leaseExpires: null
-    }
+  const recentDistributions = [
+    { id: 1, date: '2024-01-15', amount: 2800, property: '123 Main St', status: 'completed' },
+    { id: 2, date: '2024-01-15', amount: 1950, property: '456 Oak Ave', status: 'completed' },
+    { id: 3, date: '2024-02-15', amount: 2850, property: '123 Main St', status: 'pending' },
   ];
 
-  const recentPayments = [
-    { tenant: "John Smith", property: "123 Oak Street", amount: 2200, date: "2024-07-01", status: "received" },
-    { tenant: "Sarah Johnson", property: "456 Pine Avenue Unit A", amount: 1800, date: "2024-07-01", status: "received" },
-    { tenant: "Mike Wilson", property: "456 Pine Avenue Unit B", amount: 1800, date: "2024-07-02", status: "received" }
+  const maintenanceAlerts = [
+    { id: 1, property: '123 Main St', issue: 'HVAC Repair', cost: 450, status: 'in-progress' },
+    { id: 2, property: '456 Oak Ave', issue: 'Plumbing Fix', cost: 280, status: 'completed' },
   ];
 
-  const maintenanceRequests = [
-    { id: 1, property: "123 Oak Street", issue: "Leaky faucet in kitchen", priority: "medium", status: "pending", date: "2024-07-05" },
-    { id: 2, property: "456 Pine Avenue", issue: "AC unit not cooling", priority: "high", status: "in-progress", date: "2024-07-03" }
-  ];
+  if (propertiesLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-background p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Welcome back!</h1>
-          <p className="text-muted-foreground">Here's an overview of your property portfolio</p>
+          <h1 className="text-3xl font-bold tracking-tight">Investment Portfolio</h1>
+          <p className="text-muted-foreground">
+            Manage your property investments and track performance
+          </p>
         </div>
-        <Button onClick={() => navigate('/properties')} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Property
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm">
+            <FileText className="w-4 h-4 mr-2" />
+            Download Report
+          </Button>
+          <Button variant="outline" size="sm">
+            <PieChart className="w-4 h-4 mr-2" />
+            Analytics
+          </Button>
+        </div>
       </div>
 
       {/* Key Metrics */}
-      <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.05}>
-        <AnimatedListItem>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">My Properties</CardTitle>
-              <Building className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.totalProperties}</div>
-              <p className="text-xs text-muted-foreground">{metrics.totalUnits} total units</p>
-            </CardContent>
-          </Card>
-        </AnimatedListItem>
-
-        <AnimatedListItem>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Occupancy Rate</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.occupancyRate}%</div>
-              <p className="text-xs text-muted-foreground">{metrics.occupiedUnits} of {metrics.totalUnits} units</p>
-            </CardContent>
-          </Card>
-        </AnimatedListItem>
-
-        <AnimatedListItem>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Monthly Revenue</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">${metrics.monthlyRevenue.toLocaleString()}</div>
-              <p className="text-xs text-muted-foreground">
-                <TrendingUp className="inline h-3 w-3 mr-1" />
-                +8% from last month
-              </p>
-            </CardContent>
-          </Card>
-        </AnimatedListItem>
-
-        <AnimatedListItem>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Maintenance</CardTitle>
-              <Wrench className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.pendingMaintenance}</div>
-              <p className="text-xs text-muted-foreground">Pending requests</p>
-            </CardContent>
-          </Card>
-        </AnimatedListItem>
-      </AnimatedList>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* My Properties */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Building className="h-5 w-5" />
-              My Properties
-            </CardTitle>
-            <Button variant="outline" size="sm" onClick={() => navigate('/properties')}>
-              <Eye className="h-4 w-4 mr-2" />
-              View All
-            </Button>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Portfolio Value</CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {myProperties.map((property) => (
-                <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">{property.address}</p>
-                    <p className="text-xs text-muted-foreground">{property.type}</p>
-                    {property.tenant && (
-                      <p className="text-xs text-muted-foreground">Tenant: {property.tenant}</p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">${property.rent}/mo</p>
-                    <Badge variant={property.status === 'occupied' ? 'default' : 'secondary'}>
-                      {property.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div className="text-2xl font-bold">${portfolioStats.totalValue.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              +5.2% from last month
+            </p>
           </CardContent>
         </Card>
 
-        {/* Recent Payments */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5" />
-              Recent Payments
-            </CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Monthly Income</CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {recentPayments.map((payment, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-success/10 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">{payment.tenant}</p>
-                    <p className="text-xs text-muted-foreground">{payment.property}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">${payment.amount}</p>
-                    <p className="text-xs text-muted-foreground">{payment.date}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div className="text-2xl font-bold">${portfolioStats.monthlyIncome.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground">
+              Net: ${portfolioStats.netIncome.toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Annual Return</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{portfolioStats.annualReturn}%</div>
+            <p className="text-xs text-muted-foreground">
+              Above market average
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Occupancy Rate</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{portfolioStats.occupancyRate}%</div>
+            <p className="text-xs text-muted-foreground">
+              {ownedProperties.length} properties
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Maintenance Requests */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Wrench className="h-5 w-5" />
-              Maintenance Requests
-            </CardTitle>
-            <Button variant="outline" size="sm" onClick={() => navigate('/maintenance')}>
-              View All
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {maintenanceRequests.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">{request.issue}</p>
-                    <p className="text-xs text-muted-foreground">{request.property}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant={request.priority === 'high' ? 'destructive' : 'outline'}>
-                      {request.priority}
-                    </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">{request.status}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="properties">Properties</TabsTrigger>
+          <TabsTrigger value="financials">Financials</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
+        </TabsList>
 
-        {/* Upcoming Lease Expirations */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Upcoming Lease Expirations
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 border rounded-lg bg-warning/10">
-                <div>
-                  <p className="text-sm font-medium">456 Pine Avenue Unit A</p>
-                  <p className="text-xs text-muted-foreground">Sarah Johnson</p>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Recent Distributions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Recent Distributions
+                </CardTitle>
+                <CardDescription>Your latest rental income payments</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {recentDistributions.map(dist => (
+                    <div key={dist.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{dist.property}</p>
+                        <p className="text-sm text-muted-foreground">{dist.date}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">${dist.amount.toLocaleString()}</p>
+                        <Badge variant={dist.status === 'completed' ? 'default' : 'secondary'}>
+                          {dist.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">122 days</p>
-                  <p className="text-xs text-muted-foreground">Nov 30, 2024</p>
+                <Button variant="outline" className="w-full mt-4">View All Distributions</Button>
+              </CardContent>
+            </Card>
+
+            {/* Maintenance Alerts */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5" />
+                  Maintenance Updates
+                </CardTitle>
+                <CardDescription>Recent maintenance activities</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {maintenanceAlerts.map(alert => (
+                    <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{alert.issue}</p>
+                        <p className="text-sm text-muted-foreground">{alert.property}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold">${alert.cost}</p>
+                        <Badge variant={alert.status === 'completed' ? 'default' : 'secondary'}>
+                          {alert.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-              {metrics.upcomingExpirations === 1 && (
-                <div className="text-center py-4">
-                  <CheckCircle className="h-8 w-8 mx-auto text-success mb-2" />
-                  <p className="text-sm text-muted-foreground">All other leases are current</p>
+                <Button variant="outline" className="w-full mt-4">View All Maintenance</Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="properties" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Your Properties</CardTitle>
+              <CardDescription>Manage and view details of your investment properties</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {ownedProperties.length === 0 ? (
+                <div className="text-center py-8">
+                  <Home className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Properties Found</h3>
+                  <p className="text-muted-foreground mb-4">
+                    You don't have any properties in your portfolio yet.
+                  </p>
+                  <Button asChild>
+                    <Link to="/properties">Add Property</Link>
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {ownedProperties.map(property => (
+                    <Card key={property.id} className="hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{property.address}</CardTitle>
+                            <CardDescription>
+                              {property.city}, {property.state}
+                            </CardDescription>
+                          </div>
+                          <Badge variant="outline">{property.status}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Monthly Rent:</span>
+                          <span className="font-medium">
+                            ${property.monthly_rent?.toLocaleString() || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Property Type:</span>
+                          <span className="font-medium capitalize">
+                            {property.property_type?.replace('_', ' ') || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Bedrooms:</span>
+                          <span className="font-medium">{property.bedrooms || 'N/A'}</span>
+                        </div>
+                        
+                        <div className="flex gap-2 pt-2">
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Eye className="w-4 h-4 mr-1" />
+                            View
+                          </Button>
+                          <Button size="sm" variant="outline" className="flex-1">
+                            <Wrench className="w-4 h-4 mr-1" />
+                            Maintenance
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
               )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="financials" className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Income Summary</CardTitle>
+                <CardDescription>Your rental income performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Gross Monthly Income</span>
+                    <span className="font-semibold">${portfolioStats.monthlyIncome.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Management Fees</span>
+                    <span className="font-semibold text-red-600">-$420</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Maintenance Costs</span>
+                    <span className="font-semibold text-red-600">-${portfolioStats.maintenanceCosts.toLocaleString()}</span>
+                  </div>
+                  <div className="border-t pt-2">
+                    <div className="flex justify-between items-center font-semibold">
+                      <span>Net Monthly Income</span>
+                      <span className="text-green-600">${portfolioStats.netIncome.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Investment Performance</CardTitle>
+                <CardDescription>Track your returns and growth</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span>Annual ROI</span>
+                    <span className="font-semibold text-green-600">{portfolioStats.annualReturn}%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Cash-on-Cash Return</span>
+                    <span className="font-semibold">12.3%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Cap Rate</span>
+                    <span className="font-semibold">6.8%</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Property Appreciation</span>
+                    <span className="font-semibold text-green-600">+4.2%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Reports</CardTitle>
+              <CardDescription>Download detailed reports for your records</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button variant="outline" className="h-auto p-4 justify-start">
+                  <div className="text-left">
+                    <div className="font-medium">Monthly Financial Report</div>
+                    <div className="text-sm text-muted-foreground">Income, expenses, and net profit</div>
+                  </div>
+                </Button>
+                
+                <Button variant="outline" className="h-auto p-4 justify-start">
+                  <div className="text-left">
+                    <div className="font-medium">Tax Summary</div>
+                    <div className="text-sm text-muted-foreground">Annual tax-related documents</div>
+                  </div>
+                </Button>
+                
+                <Button variant="outline" className="h-auto p-4 justify-start">
+                  <div className="text-left">
+                    <div className="font-medium">Property Performance</div>
+                    <div className="text-sm text-muted-foreground">Individual property analytics</div>
+                  </div>
+                </Button>
+                
+                <Button variant="outline" className="h-auto p-4 justify-start">
+                  <div className="text-left">
+                    <div className="font-medium">Maintenance History</div>
+                    <div className="text-sm text-muted-foreground">All maintenance activities and costs</div>
+                  </div>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
