@@ -153,7 +153,7 @@ export function RoleSwitcher() {
       }
 
       // Wait a moment for the auth context to update the role
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 200));
 
       toast({
         title: "Role Switched",
