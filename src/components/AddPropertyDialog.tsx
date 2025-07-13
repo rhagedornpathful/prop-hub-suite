@@ -25,6 +25,7 @@ import {
 import { Loader2, Search, Plus } from "lucide-react";
 import { ZillowPropertyScraper } from "@/components/ZillowPropertyScraper";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddPropertyDialogProps {
   open: boolean;
@@ -54,6 +55,7 @@ interface PropertyData {
   description?: string;
   amenities?: string[];
   gate_code?: string;
+  gated_community?: boolean;
   owner_id?: string;
 }
 
@@ -90,6 +92,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         home_value_estimate: dbData.home_value_estimate || 0,
         rent_estimate: dbData.rent_estimate || 0,
         description: dbData.description || "",
+        gate_code: dbData.gate_code || "",
+        gated_community: dbData.gated_community || false,
         owner_id: dbData.owner_id || "",
       };
     }
@@ -106,6 +110,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       home_value_estimate: 0,
       rent_estimate: 0,
       description: "",
+      gate_code: "",
+      gated_community: false,
       owner_id: "",
     };
   });
@@ -138,6 +144,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         home_value_estimate: dbData.home_value_estimate || 0,
         rent_estimate: dbData.rent_estimate || 0,
         description: dbData.description || "",
+        gate_code: dbData.gate_code || "",
+        gated_community: dbData.gated_community || false,
         owner_id: dbData.owner_id || "",
       });
       setSearchAddress(dbData.address || "");
@@ -155,6 +163,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         home_value_estimate: 0,
         rent_estimate: 0,
         description: "",
+        gate_code: "",
+        gated_community: false,
         owner_id: "",
       });
       setSearchAddress("");
@@ -479,6 +489,8 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       home_value_estimate: 0,
       rent_estimate: 0,
       description: "",
+      gate_code: "",
+      gated_community: false,
       owner_id: "",
     });
   };
@@ -668,6 +680,17 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
                 placeholder="ZIP Code"
                 required
               />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="gated-community"
+                  checked={propertyData.gated_community || false}
+                  onCheckedChange={(checked) => handleInputChange('gated_community', checked === true)}
+                />
+                <Label htmlFor="gated-community">Gated Community</Label>
+              </div>
             </div>
 
             <div className="space-y-2">
