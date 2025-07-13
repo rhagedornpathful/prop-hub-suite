@@ -43,7 +43,7 @@ interface Property {
   monthly_rent: number | null;
 }
 
-export const AddTenantDialog = ({ onTenantAdded }: AddTenantDialogProps) => {
+const AddTenantDialog = ({ onTenantAdded }: AddTenantDialogProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingProperties, setLoadingProperties] = useState(false);
@@ -422,3 +422,6 @@ export const AddTenantDialog = ({ onTenantAdded }: AddTenantDialogProps) => {
     </Dialog>
   );
 };
+
+export { AddTenantDialog };
+export default AddTenantDialog;
