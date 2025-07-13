@@ -28,6 +28,8 @@ import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { PropertyImageUpload } from "@/components/PropertyImageUpload";
+import { HouseWatchingImageUpload } from "@/components/HouseWatchingImageUpload";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -91,10 +93,9 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
       <div className="relative">
-        <img 
-          src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop"
-          alt={property.address}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+        <PropertyImageUpload 
+          propertyId={property.id}
+          currentImage={property.images?.[0]}
         />
         <div className="absolute top-3 right-3">
           <Badge className={getStatusColor(property.status)}>
@@ -278,10 +279,8 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
       <div className="relative">
-        <img 
-          src="https://images.unsplash.com/photo-1460317442991-0ec209397118?w=400&h=300&fit=crop"
-          alt={property.property_address}
-          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+        <HouseWatchingImageUpload 
+          propertyId={property.id}
         />
         <div className="absolute top-3 right-3">
           <Badge className={getStatusColor(property.status)}>
