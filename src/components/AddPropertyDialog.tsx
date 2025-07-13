@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Search, Plus } from "lucide-react";
+import { ZillowPropertyScraper } from "@/components/ZillowPropertyScraper";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
 
 interface AddPropertyDialogProps {
@@ -452,6 +453,17 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
     });
   };
 
+  const handleZillowDataExtracted = (data: Partial<PropertyData>) => {
+    setPropertyData(prev => ({
+      ...prev,
+      ...data
+    }));
+    // Also set the address in search if it was extracted
+    if (data.address) {
+      setSearchAddress(data.address);
+    }
+  };
+
   const handleInputChange = (field: keyof PropertyData, value: any) => {
     setPropertyData(prev => ({
       ...prev,
@@ -512,6 +524,13 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
               </Button>
             </div>
           </div>
+
+          {/* Zillow Property Scraper */}
+          {mode === "add" && (
+            <div className="border rounded-lg p-1">
+              <ZillowPropertyScraper onDataExtracted={handleZillowDataExtracted} />
+            </div>
+          )}
 
           {/* Property Details Form */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
