@@ -11,12 +11,12 @@ import {
   Mail,
   Calendar,
   Filter,
-  Bell,
   User,
   Loader2,
   AlertCircle,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Plus
 } from "lucide-react";
 import {
   Select,
@@ -232,7 +232,6 @@ const UserManagement = () => {
     }
   };
 
-
   // Force load with mock data
   const forceLoadWithMockData = () => {
     console.log('🚨 UserManagement: Force loading with mock data...');
@@ -299,8 +298,6 @@ const UserManagement = () => {
     checkAdminStatus();
     fetchUsers();
   };
-
-
 
   const getRoleBadgeColor = (role: string | null) => {
     switch (role) {
@@ -457,96 +454,39 @@ const UserManagement = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-subtle">
-      {/* Header */}
-      <header className="bg-card border-b border-border p-4 shadow-sm">
+    <div className="flex-1 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Clean Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-                User Management
-                {isEmergencyMode && (
-                  <Badge variant="destructive" className="text-xs">
-                    🚨 EMERGENCY
-                  </Badge>
-                )}
-              </h1>
-              <p className="text-sm text-muted-foreground">Manage user accounts and roles</p>
-            </div>
-            <Badge variant="secondary" className="ml-4">
-              {users.length} Users
-            </Badge>
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+              User Management
+              {isEmergencyMode && (
+                <Badge variant="destructive" className="text-xs">
+                  🚨 EMERGENCY
+                </Badge>
+              )}
+            </h1>
+            <p className="text-muted-foreground">
+              Manage user accounts and permissions • {users.length} users
+            </p>
           </div>
           
-          <div className="flex items-center gap-4">
-            {/* Emergency Controls */}
-            {(error || loadingTimeout) && (
-              <div className="flex gap-2">
-                <Button onClick={retryLoading} size="sm" variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Retry
-                </Button>
-                <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
-                  <AlertTriangle className="h-4 w-4 mr-2" />
-                  Force Load
-                </Button>
-              </div>
-            )}
-            
-            <Button variant="outline" size="sm" className="relative">
-              <Bell className="h-4 w-4" />
-              <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
-                3
-              </Badge>
-            </Button>
-            <Button variant="outline" size="sm">
-              <User className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        {/* Error/Status Banner */}
-        {error && (
-          <div className="mt-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-destructive" />
-              <p className="text-destructive text-sm">{error}</p>
-            </div>
-          </div>
-        )}
-        
-        {isEmergencyMode && (
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/50 dark:border-amber-800">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <p className="text-amber-800 dark:text-amber-200 text-sm">
-                🚨 Emergency admin mode active - Authentication bypassed
-              </p>
-            </div>
-          </div>
-        )}
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 p-6 overflow-auto">
-        <div className="max-w-7xl mx-auto space-y-6">
-
-          {/* Filters */}
-          <div className="flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
+          <div className="flex items-center gap-3">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
-                placeholder="Search users by name or email..." 
-                className="pl-10"
+                placeholder="Search users..." 
+                className="pl-10 w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-48 bg-background border-border z-50">
+              <SelectTrigger className="w-48">
                 <SelectValue placeholder="Filter by role" />
               </SelectTrigger>
-              <SelectContent className="bg-background border-border shadow-lg z-50">
+              <SelectContent>
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="property_manager">Property Manager</SelectItem>
@@ -557,161 +497,172 @@ const UserManagement = () => {
                 <SelectItem value="leasing_agent">Leasing Agent</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm">
+            <Button variant="outline">
               <Filter className="h-4 w-4 mr-2" />
-              More Filters
+              Filter
             </Button>
-            <AddUserDialog onUserAdded={fetchUsers} />
           </div>
+        </div>
 
-          {/* Users Table */}
-          <Card className="shadow-md border-0">
+        {/* Quick Actions */}
+        <div className="flex items-center gap-3">
+          <AddUserDialog onUserAdded={handleUserUpdate} />
+          
+          {/* Emergency Controls */}
+          {(error || loadingTimeout) && (
+            <div className="flex gap-2">
+              <Button onClick={retryLoading} size="sm" variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry
+              </Button>
+              <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                <AlertTriangle className="h-4 w-4 mr-2" />
+                Force Load
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Emergency Status Alerts */}
+        {isEmergencyMode && (
+          <Alert className="border-destructive bg-destructive/5">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              🚨 <strong>EMERGENCY MODE ACTIVE</strong> - Admin access has been bypassed for emergency operations.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading users...</p>
+              {loadingTimeout && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-destructive text-sm">This is taking longer than usual</p>
+                  <div className="flex gap-2 justify-center">
+                    <Button onClick={retryLoading} size="sm" variant="outline">
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Retry
+                    </Button>
+                    <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Force Load
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Users Table */}
+        {!loading && !error && (
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-primary" />
-                User Accounts
+                <Users className="h-5 w-5" />
+                User Accounts ({filteredUsers.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">
-                    {loadingTimeout ? 'Loading timeout - taking longer than expected...' : 'Loading users...'}
-                  </p>
-                  {loadingTimeout && (
-                    <div className="mt-4 space-y-2">
-                      <p className="text-destructive text-sm">This is taking longer than usual</p>
-                      <div className="flex gap-2 justify-center">
-                        <Button onClick={retryLoading} size="sm" variant="outline">
-                          <RefreshCw className="h-4 w-4 mr-2" />
-                          Retry
-                        </Button>
-                        <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
-                          <AlertTriangle className="h-4 w-4 mr-2" />
-                          Force Load
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : error ? (
-                <div className="text-center py-8 space-y-4">
-                  <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
-                  <div>
-                    <h3 className="text-lg font-medium text-foreground mb-2">Loading Failed</h3>
-                    <p className="text-muted-foreground text-sm mb-4">{error}</p>
-                    <div className="flex gap-2 justify-center">
-                      <Button onClick={retryLoading} size="sm" variant="outline">
-                        <RefreshCw className="h-4 w-4 mr-2" />
-                        Retry Loading
-                      </Button>
-                      <Button onClick={forceLoadWithMockData} size="sm" variant="destructive">
-                        <AlertTriangle className="h-4 w-4 mr-2" />
-                        Force Load with Mock Data
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Current Role</TableHead>
-                      <TableHead>Change Role</TableHead>
-                      <TableHead>Created</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((userProfile) => (
-                      <TableRow 
-                        key={userProfile.id}
-                        className="cursor-pointer hover:bg-muted/50 transition-colors"
-                        onClick={() => handleUserClick(userProfile)}
-                      >
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-gradient-primary rounded-full flex items-center justify-center">
-                              <User className="h-4 w-4 text-white" />
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((userProfile) => (
+                    <TableRow 
+                      key={userProfile.id} 
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => handleUserClick(userProfile)}
+                    >
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <User className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <div className="font-medium">
+                              {userProfile.first_name && userProfile.last_name
+                                ? `${userProfile.first_name} ${userProfile.last_name}`
+                                : 'No Name Set'
+                              }
                             </div>
-                            <div>
-                              <div className="font-medium">
-                                {userProfile.first_name && userProfile.last_name
-                                  ? `${userProfile.first_name} ${userProfile.last_name}`
-                                  : 'No Name Set'
-                                }
-                              </div>
+                            {userProfile.phone && (
                               <div className="text-sm text-muted-foreground">
-                                ID: {userProfile.id.slice(0, 8)}...
+                                {userProfile.phone}
                               </div>
-                            </div>
+                            )}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-4 w-4 text-muted-foreground" />
-                            {userProfile.email}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getRoleBadgeColor(userProfile.role)}>
-                            {formatRoleName(userProfile.role)}
-                          </Badge>
-                        </TableCell>
-                        <TableCell onClick={(e) => e.stopPropagation()}>
-                          <Select
-                            value={userProfile.role || ''}
-                            onValueChange={(newRole) => updateUserRole(userProfile.id, newRole)}
-                            disabled={userProfile.id === user?.id} // Prevent self-role change
-                          >
-                            <SelectTrigger className="w-40 bg-background border-border z-40">
-                              <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-background border-border shadow-lg z-40">
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="property_manager">Property Manager</SelectItem>
-                              <SelectItem value="owner_investor">Property Owner</SelectItem>
-                              <SelectItem value="tenant">Tenant</SelectItem>
-                              <SelectItem value="house_watcher">House Watcher</SelectItem>
-                              <SelectItem value="contractor">Contractor</SelectItem>
-                              <SelectItem value="leasing_agent">Leasing Agent</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {userProfile.id === user?.id && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Cannot change own role
-                            </p>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            {formatDate(userProfile.user_created_at)}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-
-              {!loading && filteredUsers.length === 0 && (
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-muted-foreground" />
+                          {userProfile.email}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getRoleBadgeColor(userProfile.role)}>
+                          {formatRoleName(userProfile.role)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          {formatDate(userProfile.user_created_at)}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUserClick(userProfile);
+                          }}
+                        >
+                          <UserCog className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              
+              {filteredUsers.length === 0 && (
                 <div className="text-center py-8">
-                  <UserCog className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No users found</h3>
+                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">No Users Found</h3>
                   <p className="text-muted-foreground">
-                    {searchTerm || roleFilter !== "all" 
-                      ? "Try adjusting your search terms or filters." 
-                      : "No users are currently registered in the system."
+                    {searchTerm || roleFilter !== 'all' 
+                      ? 'No users match your current filters.'
+                      : 'No users have been added yet.'
                     }
                   </p>
                 </div>
               )}
             </CardContent>
           </Card>
-        </div>
+        )}
 
         {/* User Details Dialog */}
         <UserDetailsDialog
@@ -720,7 +671,7 @@ const UserManagement = () => {
           onOpenChange={setUserDetailsOpen}
           onUserUpdate={handleUserUpdate}
         />
-      </main>
+      </div>
     </div>
   );
 };
