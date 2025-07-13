@@ -1,36 +1,154 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Bell, 
   Search, 
-  User, 
+  User,
   Plus,
   Filter,
-  Eye,
-  Calendar,
+  Users,
+  Phone,
+  Mail,
   MapPin,
-  Clock,
-  AlertCircle,
+  Building2,
+  Edit,
+  Eye,
+  Trash2,
+  MoreHorizontal,
+  UserPlus,
+  Calendar,
   CheckCircle,
-  Camera,
-  Route,
-  FileText
+  Clock,
+  AlertCircle
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { useHouseWatchers, useDeleteHouseWatcher } from "@/hooks/queries/useHouseWatchers";
 
 const HouseWatching = () => {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [watcherToDelete, setWatcherToDelete] = useState<any>(null);
+  const { toast } = useToast();
+
+  // Use hooks to fetch data
+  const { data: watchers = [], isLoading, error } = useHouseWatchers();
+  const deleteWatcherMutation = useDeleteHouseWatcher();
+
+  const filteredWatchers = watchers.filter(watcher =>
+    `${watcher.user_profiles?.first_name || ''} ${watcher.user_profiles?.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    watcher.user_profiles?.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleDeleteWatcher = (watcher: any) => {
+    // Check if watcher has assigned properties
+    if (watcher.assigned_properties && watcher.assigned_properties > 0) {
+      toast({
+        title: "Cannot Remove House Watcher",
+        description: `${getDisplayName(watcher)} has ${watcher.assigned_properties} properties assigned. Please reassign properties first.`,
+        variant: "destructive"
+      });
+      return;
+    }
+    setWatcherToDelete(watcher);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (watcherToDelete) {
+      try {
+        await deleteWatcherMutation.mutateAsync(watcherToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setWatcherToDelete(null);
+      } catch (error) {
+        console.error('Error deleting house watcher:', error);
+      }
+    }
+  };
+
+  const handleViewWatcher = (watcher: any) => {
+    // Navigate to watcher detail page (to be created)
+    navigate(`/house-watchers/${watcher.id}`);
+  };
+
+  const getDisplayName = (watcher: any) => {
+    return watcher.user_profiles?.first_name && watcher.user_profiles?.last_name
+      ? `${watcher.user_profiles.first_name} ${watcher.user_profiles.last_name}`
+      : watcher.user_profiles?.email || 'Unknown';
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading house watchers...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Error Loading House Watchers</h2>
+              <p className="text-muted-foreground mb-4">
+                {error.message || "Failed to load house watchers"}
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex-1 p-6 overflow-auto">
+    <div className="flex-1 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Clean Header - matching other pages */}
+        {/* Clean Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold text-foreground">House Watching</h1>
+            <h1 className="text-3xl font-bold text-foreground">House Watchers</h1>
             <p className="text-muted-foreground">
-              Manage property monitoring and check-in services • 42 active properties
+              Manage house watchers and property monitoring staff • {watchers.length} watchers
             </p>
           </div>
           
@@ -38,228 +156,286 @@ const HouseWatching = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
-                placeholder="Search properties..." 
+                placeholder="Search watchers..." 
                 className="pl-10 w-64"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
             <Button variant="outline">
-              <Route className="h-4 w-4 mr-2" />
-              Plan Route
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
             </Button>
           </div>
         </div>
 
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
-          <Button className="bg-gradient-primary hover:bg-primary-dark">
+          <Button 
+            className="bg-gradient-primary hover:bg-primary-dark"
+            onClick={() => navigate('/user-management')} // Link to add new house watcher via user management
+          >
             <Plus className="h-4 w-4 mr-2" />
-            Add Property
+            Add House Watcher
           </Button>
           <Button variant="outline">
             <Calendar className="h-4 w-4 mr-2" />
-            Schedule Visit
-          </Button>
-          <Button variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            Generate Report
+            Schedule Rounds
           </Button>
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <Card className="shadow-md border-0">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Today's Visits</p>
-                        <p className="text-2xl font-bold text-foreground">12</p>
-                      </div>
-                      <div className="h-8 w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                        <Eye className="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="shadow-md border-0">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Completed</p>
-                        <p className="text-2xl font-bold text-foreground">8</p>
-                      </div>
-                      <div className="h-8 w-8 bg-gradient-success rounded-lg flex items-center justify-center">
-                        <CheckCircle className="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="shadow-md border-0">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Issues Found</p>
-                        <p className="text-2xl font-bold text-foreground">3</p>
-                      </div>
-                      <div className="h-8 w-8 bg-gradient-secondary rounded-lg flex items-center justify-center">
-                        <AlertCircle className="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="shadow-md border-0">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-muted-foreground">Photos Taken</p>
-                        <p className="text-2xl font-bold text-foreground">156</p>
-                      </div>
-                      <div className="h-8 w-8 bg-gradient-accent rounded-lg flex items-center justify-center">
-                        <Camera className="h-4 w-4 text-white" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Active Watchers</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{watchers.length}</div>
+              <p className="text-xs text-muted-foreground">Currently monitoring</p>
+            </CardContent>
+          </Card>
 
-        {/* Property Watch List */}
-        <Tabs defaultValue="scheduled" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-                  <TabsTrigger value="completed">Completed</TabsTrigger>
-                  <TabsTrigger value="issues">Issues</TabsTrigger>
-                </TabsList>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Properties Covered</CardTitle>
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {watchers.reduce((sum, w) => sum + (w.assigned_properties || 0), 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">Total assignments</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Today's Checks</CardTitle>
+              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">12</div>
+              <p className="text-xs text-muted-foreground">Scheduled for today</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Issues Reported</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">3</div>
+              <p className="text-xs text-muted-foreground">This week</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* House Watchers Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredWatchers.map((watcher) => (
+            <Card 
+              key={watcher.id} 
+              className="shadow-md border-0 hover:shadow-lg transition-shadow group cursor-pointer overflow-hidden"
+              onClick={() => handleViewWatcher(watcher)}
+            >
+              <CardHeader className="pb-4 relative">
+                {/* Action Menu - Top Right Corner */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewWatcher(watcher);
+                    }}>
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      // Handle edit - navigate to user management or create edit dialog
+                    }}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteWatcher(watcher);
+                      }}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Remove Watcher
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 
-                <TabsContent value="scheduled" className="mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3, 4, 5, 6].map((property) => (
-                      <Card key={property} className="shadow-md border-0 hover:shadow-lg transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-semibold text-foreground">Oak Street Property</h3>
-                              <p className="text-sm text-muted-foreground">Weekly Check</p>
-                            </div>
-                            <Badge variant="outline" className="text-xs">
-                              Due Today
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">456 Oak Street</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Last visit: 5 days ago</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Owner: Sarah Johnson</span>
-                          </div>
-                          <div className="flex items-center justify-between pt-2">
-                            <Button size="sm" variant="outline">
-                              View Details
-                            </Button>
-                            <Link to="/property-check/1">
-                              <Button size="sm" className="bg-gradient-primary hover:bg-primary-dark">
-                                <Eye className="h-4 w-4 mr-2" />
-                                Start Check
-                              </Button>
-                            </Link>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                <div className="flex items-start gap-4">
+                  {/* Profile Photo Section */}
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center text-white text-xl font-semibold overflow-hidden">
+                      <span>
+                        {watcher.user_profiles?.first_name?.charAt(0) || 'H'}
+                        {watcher.user_profiles?.last_name?.charAt(0) || 'W'}
+                      </span>
+                    </div>
+                    {/* Status indicator */}
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 border-2 border-background rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-3 w-3 text-white" />
+                    </div>
                   </div>
-                </TabsContent>
-                
-                <TabsContent value="completed" className="mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2, 3].map((property) => (
-                      <Card key={property} className="shadow-md border-0 hover:shadow-lg transition-shadow">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-semibold text-foreground">Pine Avenue Home</h3>
-                              <p className="text-sm text-muted-foreground">Bi-weekly Check</p>
-                            </div>
-                            <Badge variant="secondary" className="text-xs">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Completed
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">789 Pine Avenue</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">Completed: 2 hours ago</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm">
-                            <Camera className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">24 photos taken</span>
-                          </div>
-                          <div className="flex items-center justify-between pt-2">
-                            <Button size="sm" variant="outline">
-                              View Report
-                            </Button>
-                            <Button size="sm" variant="outline">
-                              Send to Owner
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+
+                  {/* Main Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <h3 className="font-bold text-lg text-foreground leading-tight">
+                          {getDisplayName(watcher)}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          House Watcher
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </TabsContent>
-                
-                <TabsContent value="issues" className="mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1, 2].map((property) => (
-                      <Card key={property} className="shadow-md border-0 hover:shadow-lg transition-shadow border-l-4 border-l-destructive">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="font-semibold text-foreground">Maple Drive House</h3>
-                              <p className="text-sm text-muted-foreground">Monthly Check</p>
-                            </div>
-                            <Badge variant="destructive" className="text-xs">
-                              <AlertCircle className="h-3 w-3 mr-1" />
-                              2 Issues
-                            </Badge>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-muted-foreground">321 Maple Drive</span>
-                          </div>
-                          <div className="bg-destructive/10 p-3 rounded-lg">
-                            <p className="text-sm font-medium text-destructive">Issues Found:</p>
-                            <p className="text-sm text-muted-foreground">• Gutter damage on east side</p>
-                            <p className="text-sm text-muted-foreground">• Pool filter needs replacement</p>
-                          </div>
-                          <div className="flex items-center justify-between pt-2">
-                            <Button size="sm" variant="outline">
-                              View Details
-                            </Button>
-                            <Button size="sm" variant="destructive">
-                              Alert Owner
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                </div>
+              </CardHeader>
+
+              <CardContent className="space-y-3">
+                {/* Contact Information */}
+                {watcher.user_profiles?.email && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground truncate">
+                      {watcher.user_profiles.email}
+                    </span>
                   </div>
-                </TabsContent>
-        </Tabs>
+                )}
+
+                {watcher.user_profiles?.phone && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">
+                      {watcher.user_profiles.phone}
+                    </span>
+                  </div>
+                )}
+
+                {/* Location */}
+                {(watcher.user_profiles?.city || watcher.user_profiles?.state) && (
+                  <div className="flex items-center gap-3 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">
+                      {[watcher.user_profiles.city, watcher.user_profiles.state].filter(Boolean).join(', ')}
+                    </span>
+                  </div>
+                )}
+
+                {/* Stats */}
+                <div className="flex items-center justify-between pt-2 border-t border-border">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-foreground">
+                      {watcher.assigned_properties || 0}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Properties</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-semibold text-foreground">
+                      {formatDate(watcher.created_at)}
+                    </div>
+                    <div className="text-xs text-muted-foreground">Started</div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Handle assign properties
+                    }}
+                  >
+                    <Building2 className="h-4 w-4 mr-2" />
+                    Assign
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="flex-1 bg-gradient-primary hover:bg-primary-dark"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewWatcher(watcher);
+                    }}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Empty State */}
+        {filteredWatchers.length === 0 && (
+          <Card>
+            <CardContent className="p-8">
+              <div className="text-center">
+                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No House Watchers Found</h3>
+                <p className="text-muted-foreground mb-4">
+                  {searchTerm 
+                    ? 'No house watchers match your search criteria.'
+                    : 'No house watchers have been added to the system yet.'
+                  }
+                </p>
+                <Button 
+                  className="bg-gradient-primary hover:bg-primary-dark"
+                  onClick={() => navigate('/user-management')}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add First House Watcher
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Remove House Watcher</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to remove {watcherToDelete && getDisplayName(watcherToDelete)} from the house watching system? 
+                This action cannot be undone and will remove all their property assignments.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={confirmDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Remove Watcher
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
