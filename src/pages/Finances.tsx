@@ -1,5 +1,3 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -77,9 +75,6 @@ const Finances = () => {
   return (
     <div className="flex-1 p-6 overflow-auto">
       <div className="max-w-7xl mx-auto space-y-6">
-        <AppSidebar />
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
             {/* Header */}
             <div className="flex justify-between items-center">
               <div>
@@ -254,8 +249,6 @@ const Finances = () => {
                 </div>
               </TabsContent>
             </Tabs>
-          </div>
-        </main>
       </div>
     </div>
   );
