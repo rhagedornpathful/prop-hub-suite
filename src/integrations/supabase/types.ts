@@ -212,48 +212,81 @@ export type Database = {
       }
       maintenance_requests: {
         Row: {
+          actual_cost: number | null
+          assigned_at: string | null
+          assigned_to: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          completion_notes: string | null
           contractor_contact: string | null
           contractor_name: string | null
           created_at: string
           description: string | null
+          due_date: string | null
           estimated_cost: number | null
           id: string
+          is_recurring: boolean | null
           notes: string | null
+          parent_request_id: string | null
           priority: string
           property_id: string
+          recurrence_interval: string | null
           scheduled_date: string | null
+          started_at: string | null
           status: string
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          actual_cost?: number | null
+          assigned_at?: string | null
+          assigned_to?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          completion_notes?: string | null
           contractor_contact?: string | null
           contractor_name?: string | null
           created_at?: string
           description?: string | null
+          due_date?: string | null
           estimated_cost?: number | null
           id?: string
+          is_recurring?: boolean | null
           notes?: string | null
+          parent_request_id?: string | null
           priority?: string
           property_id: string
+          recurrence_interval?: string | null
           scheduled_date?: string | null
+          started_at?: string | null
           status?: string
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          actual_cost?: number | null
+          assigned_at?: string | null
+          assigned_to?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          completion_notes?: string | null
           contractor_contact?: string | null
           contractor_name?: string | null
           created_at?: string
           description?: string | null
+          due_date?: string | null
           estimated_cost?: number | null
           id?: string
+          is_recurring?: boolean | null
           notes?: string | null
+          parent_request_id?: string | null
           priority?: string
           property_id?: string
+          recurrence_interval?: string | null
           scheduled_date?: string | null
+          started_at?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -268,6 +301,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      maintenance_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          maintenance_request_id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          maintenance_request_id: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          maintenance_request_id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+        }
+        Relationships: []
       }
       owner_distributions: {
         Row: {
@@ -684,6 +747,30 @@ export type Database = {
       }
     }
     Views: {
+      maintenance_calendar_events: {
+        Row: {
+          assigned_to: string | null
+          assigned_to_name: string | null
+          description: string | null
+          end_date: string | null
+          id: string | null
+          priority: string | null
+          property_address: string | null
+          property_id: string | null
+          start_date: string | null
+          status: string | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_requests_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_profiles: {
         Row: {
           address: string | null
