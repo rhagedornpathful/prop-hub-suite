@@ -17,7 +17,9 @@ import {
   Home,
   Gauge,
   TrendingUp,
-  ClipboardCheck
+  ClipboardCheck,
+  Wrench,
+  AlertTriangle
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -33,6 +35,7 @@ import { PropertyImageUpload } from "@/components/PropertyImageUpload";
 import { HouseWatchingImageUpload } from "@/components/HouseWatchingImageUpload";
 import { SchedulePropertyCheckDialog } from "@/components/SchedulePropertyCheckDialog";
 import { useNavigate } from "react-router-dom";
+import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +61,14 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const { data: maintenanceRequests = [] } = useMaintenanceRequests();
+  
+  // Get maintenance requests for this property  
+  const propertyMaintenanceRequests = maintenanceRequests.filter(
+    req => req.property_id === property.id
+  );
+  const pendingMaintenance = propertyMaintenanceRequests.filter(req => req.status === 'pending').length;
+  const urgentMaintenance = propertyMaintenanceRequests.filter(req => req.priority === 'urgent').length;
   
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -93,6 +104,11 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
       description: `Opening tenant management for ${property.address}`,
     });
     // TODO: Navigate to tenants page or open tenant management modal
+  };
+
+  const handleViewMaintenance = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate('/maintenance');
   };
 
   const handleStartPropertyCheck = (e: React.MouseEvent) => {
@@ -229,6 +245,29 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
               )}
             </div>
           )}
+
+          {/* Maintenance Summary */}
+          {propertyMaintenanceRequests.length > 0 && (
+            <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+              <Wrench className="h-4 w-4 text-primary" />
+              <div className="flex-1">
+                <div className="text-sm font-medium">
+                  {propertyMaintenanceRequests.length} maintenance request{propertyMaintenanceRequests.length !== 1 ? 's' : ''}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {pendingMaintenance > 0 && `${pendingMaintenance} pending`}
+                  {urgentMaintenance > 0 && (
+                    <span className="text-destructive ml-2 font-medium">
+                      {urgentMaintenance} urgent
+                    </span>
+                  )}
+                </div>
+              </div>
+              {urgentMaintenance > 0 && (
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+              )}
+            </div>
+          )}
           
           <div className="flex gap-2 pt-2">
             <Button 
@@ -244,10 +283,10 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
               variant="outline" 
               size="sm" 
               className="flex-1"
-              onClick={handleManageTenants}
+              onClick={handleViewMaintenance}
             >
-              <Users className="h-4 w-4 mr-2" />
-              Tenants
+              <Wrench className="h-4 w-4 mr-2" />
+              Maintenance
             </Button>
           </div>
         </div>
