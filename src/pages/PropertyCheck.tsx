@@ -255,6 +255,9 @@ const PropertyCheck = () => {
                       elapsedTime={elapsedTime}
                       formatElapsedTime={formatElapsedTime}
                       startTime={startTime}
+                      onSubmit={handleCompleteCheck}
+                      canSubmit={canCompleteCheck()}
+                      isSubmitting={isSubmitting}
                     />
                   ) : (
                     currentItems.map((item) => (
@@ -300,7 +303,7 @@ const PropertyCheck = () => {
               >
                 Next Section
               </Button>
-            ) : (
+            ) : currentSectionData.key !== 'summary' ? (
               <Button
                 onClick={handleCompleteCheck}
                 disabled={!canCompleteCheck() || isSubmitting}
@@ -318,7 +321,7 @@ const PropertyCheck = () => {
                   </>
                 )}
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       )}

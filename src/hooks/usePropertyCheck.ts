@@ -160,6 +160,19 @@ export const usePropertyCheck = () => {
 
       if (error) throw error;
 
+      // Track the start activity
+      await supabase
+        .from('property_check_activities')
+        .insert({
+          session_id: data.id,
+          activity_type: 'started',
+          activity_data: {
+            property_id: propertyId,
+            started_at: now.toISOString()
+          },
+          user_id: user.id
+        });
+
       setSessionId(data.id);
       setSessionStarted(true);
       setStartTime(now);
@@ -199,6 +212,22 @@ export const usePropertyCheck = () => {
         .eq('id', sessionId);
 
       if (error) throw error;
+
+      // Track the submission activity
+      await supabase
+        .from('property_check_activities')
+        .insert({
+          session_id: sessionId,
+          activity_type: 'submitted',
+          activity_data: {
+            general_notes: generalNotes,
+            duration_minutes: durationMinutes,
+            total_items: Object.values(checklistItems).flat().length,
+            completed_items: Object.values(checklistItems).flat().filter(item => item.completed).length,
+            completed_at: completedAt.toISOString()
+          },
+          user_id: user.id
+        });
 
       // Clear local state
       setSessionStarted(false);

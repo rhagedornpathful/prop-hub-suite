@@ -1,8 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PropertyCheckItemCard } from "./PropertyCheckItemCard";
-import { CheckCircle, FileText, Timer, Clock } from "lucide-react";
+import { CheckCircle, FileText, Timer, Clock, Square } from "lucide-react";
 
 interface PropertyCheckItem {
   id: number;
@@ -23,6 +24,9 @@ interface SummarySectionProps {
   elapsedTime: number;
   formatElapsedTime: (seconds: number) => string;
   startTime: Date | null;
+  onSubmit?: () => void;
+  canSubmit?: boolean;
+  isSubmitting?: boolean;
 }
 
 export const SummarySection = ({ 
@@ -34,7 +38,10 @@ export const SummarySection = ({
   onGeneralNotesChange,
   elapsedTime,
   formatElapsedTime,
-  startTime
+  startTime,
+  onSubmit,
+  canSubmit = false,
+  isSubmitting = false
 }: SummarySectionProps) => {
   return (
     <div className="space-y-4">
@@ -74,6 +81,49 @@ export const SummarySection = ({
           </div>
         </CardContent>
       </Card>
+
+      {/* Submit Section */}
+      {onSubmit && (
+        <Card className="shadow-md border-0 bg-gradient-subtle">
+          <CardContent className="p-6">
+            <div className="text-center space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Ready to Submit?</h3>
+                <p className="text-sm text-muted-foreground">
+                  Complete your property check by submitting your inspection results
+                </p>
+              </div>
+              <Button
+                onClick={onSubmit}
+                disabled={!canSubmit || isSubmitting}
+                size="lg"
+                className={`w-full ${
+                  canSubmit 
+                    ? 'bg-gradient-success hover:bg-success-dark' 
+                    : 'opacity-50 cursor-not-allowed'
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Square className="h-4 w-4 mr-2" />
+                    Submit Check
+                  </>
+                )}
+              </Button>
+              {!canSubmit && (
+                <p className="text-xs text-destructive">
+                  Please complete all required items before submitting
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Summary Items */}
       <Card className="shadow-md border-0">
