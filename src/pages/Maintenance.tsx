@@ -22,7 +22,11 @@ import {
   Settings,
   Eye,
   Edit,
-  Play
+  Play,
+  Smartphone,
+  Zap,
+  Activity,
+  Workflow
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
@@ -37,6 +41,10 @@ import VendorManagementSystem from "@/components/VendorManagementSystem";
 import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import OwnerPortalSystem from "@/components/OwnerPortalSystem";
 import RealTimeNotificationSystem from "@/components/RealTimeNotificationSystem";
+import MobileMaintenanceView from "@/components/mobile/MobileMaintenanceView";
+import IntegrationHub from "@/components/IntegrationHub";
+import AutomationWorkflows from "@/components/AutomationWorkflows";
+import PerformanceMonitor from "@/components/PerformanceMonitor";
 import type { MaintenanceRequest } from "@/hooks/queries/useMaintenanceRequests";
 
 const Maintenance = () => {
@@ -270,7 +278,7 @@ const Maintenance = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="work-orders" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 bg-white/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-5 md:grid-cols-10 bg-white/50 backdrop-blur-sm">
             <TabsTrigger value="work-orders" className="flex items-center gap-2">
               <Wrench className="w-4 h-4" />
               <span className="hidden sm:inline">Orders</span>
@@ -284,16 +292,32 @@ const Maintenance = () => {
               <span className="hidden sm:inline">Vendors</span>
             </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
+              <Activity className="w-4 h-4" />
               <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
             <TabsTrigger value="owner-portal" className="flex items-center gap-2">
-              <Bell className="w-4 h-4" />
+              <Eye className="w-4 h-4" />
               <span className="hidden sm:inline">Owners</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="flex items-center gap-2">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Alerts</span>
+            </TabsTrigger>
+            <TabsTrigger value="mobile" className="flex items-center gap-2">
+              <Smartphone className="w-4 h-4" />
+              <span className="hidden sm:inline">Mobile</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center gap-2">
+              <Zap className="w-4 h-4" />
+              <span className="hidden sm:inline">Integrations</span>
+            </TabsTrigger>
+            <TabsTrigger value="automation" className="flex items-center gap-2">
+              <Workflow className="w-4 h-4" />
+              <span className="hidden sm:inline">Automation</span>
+            </TabsTrigger>
+            <TabsTrigger value="performance" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Performance</span>
             </TabsTrigger>
           </TabsList>
 
@@ -533,6 +557,26 @@ const Maintenance = () => {
           {/* Notifications Tab */}
           <TabsContent value="notifications">
             <RealTimeNotificationSystem />
+          </TabsContent>
+
+          {/* Mobile Tab */}
+          <TabsContent value="mobile">
+            <MobileMaintenanceView />
+          </TabsContent>
+
+          {/* Integrations Tab */}
+          <TabsContent value="integrations">
+            <IntegrationHub />
+          </TabsContent>
+
+          {/* Automation Tab */}
+          <TabsContent value="automation">
+            <AutomationWorkflows />
+          </TabsContent>
+
+          {/* Performance Tab */}
+          <TabsContent value="performance">
+            <PerformanceMonitor />
           </TabsContent>
         </Tabs>
 
