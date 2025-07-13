@@ -220,8 +220,8 @@ export default function Documents() {
   });
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+    <div className="flex-1 p-6 overflow-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
         <AppSidebar />
         <SidebarInset className="flex-1">
           <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
@@ -408,6 +408,6 @@ export default function Documents() {
           </div>
         </SidebarInset>
       </div>
-    </SidebarProvider>
+    </div>
   );
 }

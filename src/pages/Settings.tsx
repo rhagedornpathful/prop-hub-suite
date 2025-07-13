@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -47,34 +45,25 @@ const Settings = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-subtle">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="bg-card border-b border-border px-4 py-6 sm:px-6 lg:px-8 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="no-margin">
-                  <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-                    <SettingsIcon className="h-8 w-8 text-primary" />
-                    Settings
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-1">Manage your account and application preferences</p>
-                </div>
-              </div>
-              
-              <Button onClick={handleSave} className="bg-gradient-primary">
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            </div>
-          </header>
+    <div className="flex-1 p-6 overflow-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+              <SettingsIcon className="h-8 w-8 text-primary" />
+              Settings
+            </h1>
+            <p className="text-muted-foreground">Manage your account and application preferences</p>
+          </div>
+          
+          <Button onClick={handleSave} className="bg-gradient-primary">
+            <Save className="h-4 w-4 mr-2" />
+            Save Changes
+          </Button>
+        </div>
 
-          {/* Main Content */}
-          <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
-            <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto">
               <Tabs defaultValue="profile" className="w-full">
                 <TabsList className="grid w-full grid-cols-6 mb-8">
                   <TabsTrigger value="profile" className="flex items-center gap-2">
@@ -479,12 +468,10 @@ const Settings = () => {
                     </CardContent>
                   </Card>
                 </TabsContent>
-              </Tabs>
-            </div>
-          </main>
+          </Tabs>
         </div>
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 

@@ -1,5 +1,3 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -130,25 +128,22 @@ const Maintenance = () => {
   }).length;
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <AppSidebar />
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Maintenance Management</h1>
-                <p className="text-muted-foreground mt-1">Track work orders, contractors, and maintenance schedules</p>
-              </div>
-              <Button 
-                className="bg-gradient-primary hover:bg-primary-dark"
-                onClick={() => setShowScheduleDialog(true)}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New Work Order
-              </Button>
-            </div>
+    <div className="flex-1 p-6 overflow-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Maintenance Management</h1>
+            <p className="text-muted-foreground mt-1">Track work orders, contractors, and maintenance schedules</p>
+          </div>
+          <Button 
+            className="bg-gradient-primary hover:bg-primary-dark"
+            onClick={() => setShowScheduleDialog(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Work Order
+          </Button>
+        </div>
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -436,10 +431,8 @@ const Maintenance = () => {
                     </CardContent>
                   </Card>
                 </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </main>
+                </TabsContent>
+        </Tabs>
         
         <ScheduleMaintenanceDialog
           open={showScheduleDialog}
@@ -450,7 +443,7 @@ const Maintenance = () => {
           }}
         />
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
