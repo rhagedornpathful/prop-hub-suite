@@ -48,6 +48,7 @@ import { usePropertiesByOwner } from "@/hooks/queries/useProperties";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { AddDistributionDialog } from "@/components/AddDistributionDialog";
+import { PropertyDetailsDialogDB } from "@/components/PropertyDetailsDialogDB";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -77,6 +78,8 @@ const PropertyOwnerDetail = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAddPropertyDialogOpen, setIsAddPropertyDialogOpen] = useState(false);
   const [isAddDistributionDialogOpen, setIsAddDistributionDialogOpen] = useState(false);
+  const [isPropertyDetailsDialogOpen, setIsPropertyDetailsDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date }>({});
   const { toast } = useToast();
 
@@ -217,6 +220,11 @@ const PropertyOwnerDetail = () => {
       description: "Payment distribution has been recorded successfully.",
     });
     loadDistributions(); // Reload distributions
+  };
+
+  const handleViewProperty = (property: Property) => {
+    setSelectedProperty(property);
+    setIsPropertyDetailsDialogOpen(true);
   };
 
   const filteredDistributions = distributions.filter(distribution => {
@@ -465,7 +473,11 @@ const PropertyOwnerDetail = () => {
                           ) : (
                             <div className="space-y-4">
                               {properties.map((property) => (
-                                <div key={property.id} className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group">
+                                <div 
+                                  key={property.id} 
+                                  className="p-4 border rounded-lg hover:bg-muted/50 transition-colors group cursor-pointer"
+                                  onClick={() => handleViewProperty(property)}
+                                >
                                   <div className="flex items-center justify-between">
                                     <div className="flex-1">
                                       <div className="flex items-center gap-3">
@@ -503,11 +515,14 @@ const PropertyOwnerDetail = () => {
                                           <MoreHorizontal className="h-4 w-4" />
                                         </Button>
                                       </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem>
-                                          <Eye className="h-4 w-4 mr-2" />
-                                          View Details
-                                        </DropdownMenuItem>
+                                       <DropdownMenuContent align="end">
+                                         <DropdownMenuItem onClick={(e) => {
+                                           e.stopPropagation();
+                                           handleViewProperty(property);
+                                         }}>
+                                           <Eye className="h-4 w-4 mr-2" />
+                                           View Details
+                                         </DropdownMenuItem>
                                         <DropdownMenuItem>
                                           <Edit className="h-4 w-4 mr-2" />
                                           Edit Property
@@ -815,6 +830,20 @@ const PropertyOwnerDetail = () => {
         onDistributionAdded={handleDistributionAdded}
         ownerId={owner.id}
         properties={properties}
+      />
+
+      <PropertyDetailsDialogDB
+        property={selectedProperty}
+        open={isPropertyDetailsDialogOpen}
+        onOpenChange={setIsPropertyDetailsDialogOpen}
+        onEdit={(property) => {
+          console.log('Edit property:', property);
+          // TODO: Implement property edit functionality
+        }}
+        onDelete={(property) => {
+          console.log('Delete property:', property);
+          // TODO: Implement property delete functionality
+        }}
       />
     </SidebarProvider>
   );
