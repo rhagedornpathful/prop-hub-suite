@@ -332,39 +332,65 @@ const PropertyOwnerDetail = () => {
         
         <div className="flex-1 flex flex-col">
           {/* Header */}
-          <header className="bg-card border-b border-border p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => navigate('/property-owners')}
-                  className="hover:bg-muted"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back
-                </Button>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-bold text-foreground">{getDisplayName(owner)}</h1>
-                    {owner.is_self && (
-                      <Badge variant="secondary" className="text-xs">Me</Badge>
-                    )}
+          <header className="bg-card border-b border-border shadow-sm">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  {/* Back Button - properly aligned */}
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => navigate('/property-owners')}
+                    className="hover:bg-muted flex-shrink-0"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </Button>
+                  
+                  {/* Profile Picture */}
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center text-white text-xl font-semibold overflow-hidden">
+                      {/* TODO: Replace with actual profile photo upload */}
+                      {owner.company_name ? (
+                        <Building2 className="h-8 w-8" />
+                      ) : (
+                        <span>
+                          {owner.first_name.charAt(0)}{owner.last_name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-sm text-muted-foreground">Property Owner Details</p>
+                  
+                  {/* Name and Company Info */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-2xl font-bold text-foreground">
+                        {owner.first_name} {owner.last_name}
+                      </h1>
+                      {owner.is_self && (
+                        <Badge variant="secondary" className="text-xs">Me</Badge>
+                      )}
+                    </div>
+                    {owner.company_name && (
+                      <h2 className="text-lg text-muted-foreground font-medium mt-1">
+                        {owner.company_name}
+                      </h2>
+                    )}
+                    <p className="text-sm text-muted-foreground mt-1">Property Owner Details</p>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <Button variant="outline" size="sm" className="relative">
-                  <Bell className="h-4 w-4" />
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
-                    3
-                  </Badge>
-                </Button>
-                <Button variant="outline" size="sm">
-                  <User className="h-4 w-4" />
-                </Button>
+                
+                <div className="flex items-center gap-4">
+                  <Button variant="outline" size="sm" className="relative">
+                    <Bell className="h-4 w-4" />
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
+                      3
+                    </Badge>
+                  </Button>
+                  <Button variant="outline" size="sm">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </header>
