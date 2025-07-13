@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AdminDashboard } from "@/pages/dashboards/AdminDashboard";
 import { PropertyOwnerDashboard } from "@/pages/dashboards/PropertyOwnerDashboard";
 import { TenantDashboard } from "@/pages/dashboards/TenantDashboard";
-import { HouseWatcherDashboard } from "@/pages/dashboards/HouseWatcherDashboard";
+import HouseWatcherDashboard from "@/pages/dashboards/HouseWatcherDashboard";
 import { MakeAdminButton } from "@/components/dev/MakeAdminButton";
 
 // Lazy load dialogs for better performance

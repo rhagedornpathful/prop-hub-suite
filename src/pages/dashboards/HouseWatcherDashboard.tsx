@@ -1,331 +1,479 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
-import { 
-  MapPin, 
-  CheckCircle, 
-  Calendar,
-  AlertTriangle,
-  FileText,
-  Clock,
-  Shield,
-  Eye,
-  Camera,
-  Plus
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, MapPin, Clock, CheckCircle, AlertTriangle, Eye, Camera, FileText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
-export function HouseWatcherDashboard() {
-  const navigate = useNavigate();
-  
-  // Mock data - replace with actual queries based on current user
-  const metrics = {
-    assignedProperties: 8,
-    todaysTasks: 3,
-    completedThisWeek: 12,
-    overdueChecks: 1
+interface AssignedProperty {
+  id: string;
+  address: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  property_type: string;
+  notes: string;
+  assigned_date: string;
+}
+
+interface PropertyCheck {
+  id: string;
+  property_address: string;
+  check_frequency: string;
+  last_check_date: string;
+  next_check_date: string;
+  status: string;
+  special_instructions: string;
+  monthly_fee: number;
+}
+
+interface CheckSession {
+  id: string;
+  property_id: string;
+  status: string;
+  scheduled_date: string;
+  started_at: string;
+  completed_at: string;
+  duration_minutes: number;
+  general_notes: string;
+}
+
+const HouseWatcherDashboard = () => {
+  const { user } = useAuth();
+  const [assignedProperties, setAssignedProperties] = useState<AssignedProperty[]>([]);
+  const [propertyChecks, setPropertyChecks] = useState<PropertyCheck[]>([]);
+  const [recentSessions, setRecentSessions] = useState<CheckSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    upcomingChecks: 0,
+    completedThisWeek: 0,
+    overdueChecks: 0
+  });
+
+  useEffect(() => {
+    if (user) {
+      loadHouseWatcherData();
+    }
+  }, [user]);
+
+  const loadHouseWatcherData = async () => {
+    try {
+      setLoading(true);
+
+      // Get house watcher record
+      const { data: houseWatcher } = await supabase
+        .from('house_watchers')
+        .select('id')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (!houseWatcher) {
+        toast({
+          title: "Not a House Watcher",
+          description: "You don't have house watcher permissions assigned.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Load assigned properties with proper join syntax
+      const { data: properties, error: propertiesError } = await supabase
+        .from('house_watcher_properties')
+        .select(`
+          id,
+          notes,
+          assigned_date,
+          property_id,
+          properties!inner (
+            id,
+            address,
+            city,
+            state,
+            zip_code,
+            property_type
+          )
+        `)
+        .eq('house_watcher_id', houseWatcher.id);
+
+      if (propertiesError) throw propertiesError;
+
+      const formattedProperties = properties?.map(p => ({
+        id: p.properties.id,
+        address: p.properties.address,
+        city: p.properties.city || 'N/A',
+        state: p.properties.state || 'N/A',
+        zip_code: p.properties.zip_code || 'N/A',
+        property_type: p.properties.property_type || 'Unknown',
+        notes: p.notes || '',
+        assigned_date: p.assigned_date
+      })) || [];
+
+      setAssignedProperties(formattedProperties);
+
+      // Load house watching schedules
+      const { data: watchingData, error: watchingError } = await supabase
+        .from('house_watching')
+        .select('*')
+        .eq('user_id', user?.id);
+
+      if (watchingError) throw watchingError;
+      setPropertyChecks(watchingData || []);
+
+      // Load recent check sessions
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('property_check_sessions')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (sessionsError) throw sessionsError;
+      setRecentSessions(sessions || []);
+
+      // Calculate stats
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      const upcomingChecks = watchingData?.filter(check => 
+        check.next_check_date && new Date(check.next_check_date) <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+      ).length || 0;
+
+      const overdueChecks = watchingData?.filter(check => 
+        check.next_check_date && new Date(check.next_check_date) < now
+      ).length || 0;
+
+      const completedThisWeek = sessions?.filter(session => 
+        session.completed_at && new Date(session.completed_at) >= weekAgo
+      ).length || 0;
+
+      setStats({
+        totalProperties: formattedProperties.length,
+        upcomingChecks,
+        completedThisWeek,
+        overdueChecks
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Error Loading Data",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const assignedProperties = [
-    { 
-      id: 1, 
-      address: "123 Maple Drive", 
-      owner: "John Smith",
-      lastCheck: "2024-07-03",
-      nextCheck: "2024-07-10",
-      status: "upcoming",
-      frequency: "weekly"
-    },
-    { 
-      id: 2, 
-      address: "456 Oak Street", 
-      owner: "Sarah Johnson",
-      lastCheck: "2024-07-05",
-      nextCheck: "2024-07-12",
-      status: "upcoming",
-      frequency: "weekly"
-    },
-    { 
-      id: 3, 
-      address: "789 Pine Avenue", 
-      owner: "Mike Wilson",
-      lastCheck: "2024-06-28",
-      nextCheck: "2024-07-05",
-      status: "overdue",
-      frequency: "weekly"
-    }
-  ];
+  const startPropertyCheck = async (propertyId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('property_check_sessions')
+        .insert({
+          property_id: propertyId,
+          user_id: user?.id,
+          status: 'in_progress',
+          started_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-  const todaysTasks = [
-    { 
-      id: 1, 
-      property: "123 Maple Drive", 
-      type: "routine_check", 
-      time: "10:00 AM",
-      notes: "Check exterior, collect mail, water plants"
-    },
-    { 
-      id: 2, 
-      property: "456 Oak Street", 
-      type: "security_check", 
-      time: "2:00 PM",
-      notes: "Security check after owner's vacation"
-    },
-    { 
-      id: 3, 
-      property: "321 Cedar Lane", 
-      type: "maintenance_check", 
-      time: "4:00 PM",
-      notes: "Check recent plumbing repair"
-    }
-  ];
+      if (error) throw error;
 
-  const recentReports = [
-    { 
-      id: 1, 
-      property: "789 Pine Avenue", 
-      date: "2024-07-03",
-      type: "routine",
-      status: "submitted",
-      issues: 0
-    },
-    { 
-      id: 2, 
-      property: "123 Maple Drive", 
-      date: "2024-07-02",
-      type: "security",
-      status: "submitted", 
-      issues: 1
-    },
-    { 
-      id: 3, 
-      property: "456 Oak Street", 
-      date: "2024-07-01",
-      type: "routine",
-      status: "submitted",
-      issues: 0
-    }
-  ];
+      toast({
+        title: "Property Check Started",
+        description: "You can now begin documenting your property inspection.",
+      });
 
-  const issuesReported = [
-    {
-      id: 1,
-      property: "123 Maple Drive",
-      issue: "Front porch light not working",
-      priority: "medium",
-      status: "reported",
-      date: "2024-07-02"
-    },
-    {
-      id: 2,
-      property: "654 Birch Road",
-      issue: "Suspicious activity noticed",
-      priority: "high", 
-      status: "resolved",
-      date: "2024-06-28"
+      // Refresh data
+      loadHouseWatcherData();
+    } catch (error: any) {
+      toast({
+        title: "Error Starting Check",
+        description: error.message,
+        variant: "destructive"
+      });
     }
-  ];
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'overdue': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPriorityColor = (nextCheckDate: string) => {
+    const daysUntil = Math.ceil((new Date(nextCheckDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    if (daysUntil < 0) return 'border-red-500 bg-red-50';
+    if (daysUntil <= 3) return 'border-orange-500 bg-orange-50';
+    if (daysUntil <= 7) return 'border-yellow-500 bg-yellow-50';
+    return 'border-green-500 bg-green-50';
+  };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="flex justify-between items-center">
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">House Watcher Dashboard</h1>
-          <p className="text-muted-foreground">Your property monitoring assignments</p>
+          <p className="text-muted-foreground">Manage your assigned property inspections</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Submit Report
+        <Button onClick={loadHouseWatcherData} variant="outline">
+          <Clock className="h-4 w-4 mr-2" />
+          Refresh
         </Button>
       </div>
 
-      {/* Key Metrics */}
-      <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.05}>
-        <AnimatedListItem>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Assigned Properties</CardTitle>
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.assignedProperties}</div>
-              <p className="text-xs text-muted-foreground">Under your watch</p>
-            </CardContent>
-          </Card>
-        </AnimatedListItem>
-
-        <AnimatedListItem>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Today's Tasks</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.todaysTasks}</div>
-              <p className="text-xs text-muted-foreground">Scheduled checks</p>
-            </CardContent>
-          </Card>
-        </AnimatedListItem>
-
-        <AnimatedListItem>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">This Week</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metrics.completedThisWeek}</div>
-              <p className="text-xs text-muted-foreground">Checks completed</p>
-            </CardContent>
-          </Card>
-        </AnimatedListItem>
-
-        <AnimatedListItem>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overdue</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-destructive">{metrics.overdueChecks}</div>
-              <p className="text-xs text-muted-foreground">Needs attention</p>
-            </CardContent>
-          </Card>
-        </AnimatedListItem>
-      </AnimatedList>
-
-      {/* Today's Schedule */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Today's Check-in Schedule
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {todaysTasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="h-3 w-3 bg-primary rounded-full"></div>
-                  <div>
-                    <p className="text-sm font-medium">{task.property}</p>
-                    <p className="text-xs text-muted-foreground">{task.notes}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">{task.time}</p>
-                  <Badge variant="outline">{task.type.replace('_', ' ')}</Badge>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Assigned Properties */}
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Assigned Properties
-            </CardTitle>
-            <Button variant="outline" size="sm">
-              View All
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {assignedProperties.map((property) => (
-                <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">{property.address}</p>
-                    <p className="text-xs text-muted-foreground">Owner: {property.owner}</p>
-                    <p className="text-xs text-muted-foreground">Last check: {property.lastCheck}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">Next: {property.nextCheck}</p>
-                    <Badge 
-                      variant={property.status === 'overdue' ? 'destructive' : 'outline'}
-                      className={property.status === 'overdue' ? '' : 'border-primary text-primary'}
-                    >
-                      {property.status}
-                    </Badge>
-                  </div>
-                </div>
-              ))}
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <MapPin className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Assigned Properties</p>
+                <p className="text-2xl font-bold">{stats.totalProperties}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Recent Reports */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Recent Reports
-            </CardTitle>
-            <Button variant="outline" size="sm">
-              View All
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {recentReports.map((report) => (
-                <div key={report.id} className="flex items-center justify-between p-3 bg-success/10 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium">{report.property}</p>
-                    <p className="text-xs text-muted-foreground">{report.type} check - {report.date}</p>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="default" className="bg-success text-success-foreground">
-                      <CheckCircle className="h-3 w-3 mr-1" />
-                      {report.status}
-                    </Badge>
-                    {report.issues > 0 && (
-                      <p className="text-xs text-warning mt-1">{report.issues} issue(s)</p>
-                    )}
-                  </div>
-                </div>
-              ))}
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Clock className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Upcoming Checks</p>
+                <p className="text-2xl font-bold">{stats.upcomingChecks}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Completed This Week</p>
+                <p className="text-2xl font-bold">{stats.completedThisWeek}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center">
+              <div className="p-2 bg-red-100 rounded-lg">
+                <AlertTriangle className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-muted-foreground">Overdue Checks</p>
+                <p className="text-2xl font-bold">{stats.overdueChecks}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Issues Reported */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Issues Reported
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {issuesReported.map((issue) => (
-              <div key={issue.id} className="flex items-center justify-between p-3 border rounded-lg">
-                <div>
-                  <p className="text-sm font-medium">{issue.issue}</p>
-                  <p className="text-xs text-muted-foreground">{issue.property} - {issue.date}</p>
-                </div>
-                <div className="text-right">
-                  <Badge 
-                    variant={issue.priority === 'high' ? 'destructive' : 'outline'}
-                    className={issue.priority === 'medium' ? 'border-warning text-warning' : ''}
-                  >
-                    {issue.priority}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground mt-1">{issue.status}</p>
-                </div>
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="schedule" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="schedule">Check Schedule</TabsTrigger>
+          <TabsTrigger value="properties">Assigned Properties</TabsTrigger>
+          <TabsTrigger value="history">Recent Activity</TabsTrigger>
+        </TabsList>
+
+        {/* Check Schedule Tab */}
+        <TabsContent value="schedule" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Check Schedule</CardTitle>
+              <CardDescription>Upcoming and overdue property inspections</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {propertyChecks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No property checks scheduled</p>
+                    <p className="text-sm text-muted-foreground mt-2">Check with your administrator to get property watch assignments.</p>
+                  </div>
+                ) : (
+                  propertyChecks.map((check) => (
+                    <div
+                      key={check.id}
+                      className={`p-4 rounded-lg border-l-4 ${getPriorityColor(check.next_check_date)}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{check.property_address}</h3>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              Next Check: {check.next_check_date ? format(new Date(check.next_check_date), 'MMM dd, yyyy') : 'Not scheduled'}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {check.check_frequency || 'No frequency set'}
+                            </span>
+                          </div>
+                          {check.special_instructions && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              <strong>Instructions:</strong> {check.special_instructions}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={getStatusColor(check.status || 'pending')}>
+                            {check.status || 'pending'}
+                          </Badge>
+                          <Button 
+                            size="sm" 
+                            onClick={() => startPropertyCheck(check.id)}
+                          >
+                            <Camera className="h-4 w-4 mr-2" />
+                            Start Check
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Assigned Properties Tab */}
+        <TabsContent value="properties" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Assigned Properties</CardTitle>
+              <CardDescription>Properties under your watch</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {assignedProperties.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No properties assigned</p>
+                    <p className="text-sm text-muted-foreground mt-2">Contact your administrator to get property assignments.</p>
+                  </div>
+                ) : (
+                  assignedProperties.map((property) => (
+                    <div key={property.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-semibold">{property.address}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {property.city}, {property.state} {property.zip_code}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2">
+                            <Badge variant="outline">{property.property_type}</Badge>
+                            <span className="text-xs text-muted-foreground">
+                              Assigned: {format(new Date(property.assigned_date), 'MMM dd, yyyy')}
+                            </span>
+                          </div>
+                          {property.notes && (
+                            <p className="text-sm text-muted-foreground mt-2">
+                              <strong>Notes:</strong> {property.notes}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button size="sm" variant="outline">
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Recent Activity Tab */}
+        <TabsContent value="history" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Check Activity</CardTitle>
+              <CardDescription>Your recent property inspections</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentSessions.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground">No recent activity</p>
+                    <p className="text-sm text-muted-foreground mt-2">Start your first property check to see activity here.</p>
+                  </div>
+                ) : (
+                  recentSessions.map((session) => (
+                    <div key={session.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <FileText className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <h4 className="font-medium">Property Check</h4>
+                          <p className="text-sm text-muted-foreground">
+                            {session.scheduled_date ? format(new Date(session.scheduled_date), 'MMM dd, yyyy') : 'No date'}
+                          </p>
+                          {session.general_notes && (
+                            <p className="text-xs text-muted-foreground mt-1">{session.general_notes}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Badge className={getStatusColor(session.status)}>
+                          {session.status}
+                        </Badge>
+                        {session.duration_minutes && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {session.duration_minutes} minutes
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default HouseWatcherDashboard;
