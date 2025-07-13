@@ -16,7 +16,8 @@ import {
   UserCheck,
   Home,
   Gauge,
-  TrendingUp
+  TrendingUp,
+  ClipboardCheck
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -30,6 +31,7 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { PropertyImageUpload } from "@/components/PropertyImageUpload";
 import { HouseWatchingImageUpload } from "@/components/HouseWatchingImageUpload";
+import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +55,7 @@ interface TransformedProperty {
 
 const PropertyManagementCard = ({ property }: { property: Property }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -88,6 +91,11 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
       description: `Opening tenant management for ${property.address}`,
     });
     // TODO: Navigate to tenants page or open tenant management modal
+  };
+
+  const handleStartPropertyCheck = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/property-check?property=${property.id}`);
   };
 
   return (
@@ -145,6 +153,10 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
               <DropdownMenuItem>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleStartPropertyCheck}>
+                <ClipboardCheck className="h-4 w-4 mr-2" />
+                Start Property Check
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Edit className="h-4 w-4 mr-2" />
@@ -235,6 +247,7 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
 
 const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -274,6 +287,11 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
       description: `Opening reports for ${property.property_address}`,
     });
     // TODO: Navigate to reports page or open reports modal
+  };
+
+  const handleStartPropertyCheck = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate(`/property-check?property=${property.id}`);
   };
 
   return (
@@ -326,6 +344,10 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
               <DropdownMenuItem>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleStartPropertyCheck}>
+                <ClipboardCheck className="h-4 w-4 mr-2" />
+                Start Property Check
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Edit className="h-4 w-4 mr-2" />

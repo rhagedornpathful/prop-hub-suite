@@ -13,7 +13,8 @@ import {
   Calendar,
   Clock,
   Shield,
-  UserCheck
+  UserCheck,
+  ClipboardCheck
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -29,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useNavigate } from "react-router-dom";
 
 interface PropertyListProps {
   properties?: any[];
@@ -39,6 +41,7 @@ interface PropertyListProps {
 }
 
 export function PropertyList({ properties = [], isLoading, onEdit, onDelete, onView }: PropertyListProps) {
+  const navigate = useNavigate();
   if (isLoading) {
     return (
       <Card className="shadow-md border-0">
@@ -164,6 +167,10 @@ export function PropertyList({ properties = [], isLoading, onEdit, onDelete, onV
                       <DropdownMenuItem onClick={() => onView?.(property)}>
                         <Eye className="h-4 w-4 mr-2" />
                         View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/property-check?property=${property.id}`)}>
+                        <ClipboardCheck className="h-4 w-4 mr-2" />
+                        Start Property Check
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => onEdit?.(property)}>
                         <Edit className="h-4 w-4 mr-2" />
