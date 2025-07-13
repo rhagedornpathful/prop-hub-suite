@@ -70,7 +70,43 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
 
   useEffect(() => {
     if (user && open) {
-      // Load user profile data
+      // Load complete user profile data from database
+      loadUserProfile();
+      // Load additional role-specific data
+      loadAdditionalData();
+    }
+  }, [user, open]);
+
+  const loadUserProfile = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch complete profile data from profiles table
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error loading user profile:', error);
+        return;
+      }
+
+      // Set profile data, using existing user data as fallback
+      setProfileData({
+        first_name: profile?.first_name || user.first_name || '',
+        last_name: profile?.last_name || user.last_name || '',
+        phone: profile?.phone || '',
+        address: profile?.address || '',
+        city: profile?.city || '',
+        state: profile?.state || '',
+        zip_code: profile?.zip_code || '',
+        company_name: profile?.company_name || ''
+      });
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      // Set data from user object as fallback
       setProfileData({
         first_name: user.first_name || '',
         last_name: user.last_name || '',
@@ -81,26 +117,43 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
         zip_code: user.zip_code || '',
         company_name: user.company_name || ''
       });
-      
-      // Load additional role-specific data
-      loadAdditionalData();
     }
-  }, [user, open]);
+  };
 
   const loadAdditionalData = async () => {
     if (!user) return;
 
     try {
+      // Reset state
+      setPropertyCount(0);
+      setTenantInfo(null);
+
       // Load property count for property owners
       if (user.role === 'owner_investor' || user.role === 'property_owner') {
-        const { data: properties, error: propError } = await supabase
+        // First try to get properties directly owned by user
+        const { data: userProperties, error: userPropError } = await supabase
           .from('properties')
           .select('id')
-          .or(`user_id.eq.${user.id},owner_id.in.(select id from property_owners where user_id.eq.${user.id})`);
+          .eq('user_id', user.id);
+
+        // Then try to get properties through property_owners table
+        const { data: ownerProperties, error: ownerPropError } = await supabase
+          .from('properties')
+          .select('id')
+          .in('owner_id', 
+            await supabase
+              .from('property_owners')
+              .select('id')
+              .eq('user_id', user.id)
+              .then(({ data }) => data?.map(owner => owner.id) || [])
+          );
+
+        const totalProperties = new Set([
+          ...(userProperties || []).map(p => p.id),
+          ...(ownerProperties || []).map(p => p.id)
+        ]);
         
-        if (!propError) {
-          setPropertyCount(properties?.length || 0);
-        }
+        setPropertyCount(totalProperties.size);
       }
 
       // Load tenant information
@@ -112,7 +165,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
             properties!inner(address, city, state)
           `)
           .eq('user_account_id', user.id)
-          .single();
+          .maybeSingle();
         
         if (!tenantError && tenant) {
           setTenantInfo(tenant);
@@ -129,16 +182,28 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
     try {
       setSaving(true);
 
-      // Update profile data
+      // Upsert profile data (insert or update)
       const { error } = await supabase
         .from('profiles')
         .upsert({
           user_id: user.id,
-          ...profileData,
+          first_name: profileData.first_name || null,
+          last_name: profileData.last_name || null,
+          phone: profileData.phone || null,
+          address: profileData.address || null,
+          city: profileData.city || null,
+          state: profileData.state || null,
+          zip_code: profileData.zip_code || null,
+          company_name: profileData.company_name || null,
           updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id' // Use user_id as the conflict resolution column
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error saving profile:', error);
+        throw error;
+      }
 
       toast({
         title: "Profile Updated",
@@ -146,8 +211,9 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
       });
 
       setEditing(false);
-      onUserUpdate();
+      onUserUpdate(); // Refresh the user list
     } catch (error: any) {
+      console.error('Error updating profile:', error);
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update user profile",

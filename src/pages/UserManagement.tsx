@@ -172,10 +172,24 @@ const UserManagement = () => {
       
       console.log('📊 UserManagement: Querying user_profiles table with deduplication...');
       
-      // Updated query to get only one row per user with their most recent role
+      // Updated query to get comprehensive user data including profile information
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('*')
+        .select(`
+          id,
+          email,
+          first_name,
+          last_name,
+          role,
+          user_created_at,
+          role_created_at,
+          phone,
+          address,
+          city,
+          state,
+          zip_code,
+          company_name
+        `)
         .order('user_created_at', { ascending: false });
 
       if (error) {
