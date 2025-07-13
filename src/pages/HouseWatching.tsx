@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useHouseWatchers, useDeleteHouseWatcher } from "@/hooks/queries/useHouseWatchers";
+import AddHouseWatcherDialog from "@/components/AddHouseWatcherDialog";
 
 const HouseWatching = () => {
   const navigate = useNavigate();
@@ -171,13 +172,10 @@ const HouseWatching = () => {
 
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
-          <Button 
-            className="bg-gradient-primary hover:bg-primary-dark"
-            onClick={() => navigate('/user-management')} // Link to add new house watcher via user management
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add House Watcher
-          </Button>
+          <AddHouseWatcherDialog onHouseWatcherAdded={() => {
+            // Refresh the data when a new house watcher is added
+            window.location.reload();
+          }} />
           <Button variant="outline">
             <Calendar className="h-4 w-4 mr-2" />
             Schedule Rounds
@@ -403,13 +401,10 @@ const HouseWatching = () => {
                     : 'No house watchers have been added to the system yet.'
                   }
                 </p>
-                <Button 
-                  className="bg-gradient-primary hover:bg-primary-dark"
-                  onClick={() => navigate('/user-management')}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add First House Watcher
-                </Button>
+                <AddHouseWatcherDialog onHouseWatcherAdded={() => {
+                  // Refresh the data when a new house watcher is added
+                  window.location.reload();
+                }} />
               </div>
             </CardContent>
           </Card>
