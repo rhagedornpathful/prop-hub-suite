@@ -103,6 +103,18 @@ const AppContent = () => {
               <ProtectedRoute>
                 <SidebarProvider 
                   defaultOpen={!isMobile}
+                  open={(() => {
+                    // Get persisted state from localStorage
+                    const persistedState = localStorage.getItem('sidebar-state');
+                    if (persistedState !== null) {
+                      return JSON.parse(persistedState);
+                    }
+                    return !isMobile;
+                  })()}
+                  onOpenChange={(open) => {
+                    // Persist state to localStorage
+                    localStorage.setItem('sidebar-state', JSON.stringify(open));
+                  }}
                   style={{
                     "--sidebar-width": isMobile ? "100vw" : "18rem",
                     "--sidebar-width-icon": "3rem",
