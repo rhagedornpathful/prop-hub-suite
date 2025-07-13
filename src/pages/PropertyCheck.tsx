@@ -1,64 +1,44 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { 
-  Camera,
   MapPin,
   Clock,
   CheckCircle,
   AlertCircle,
   ArrowLeft,
-  Plus,
   Eye,
   Home,
-  TreePine,
-  Droplets,
   Zap,
   Shield,
   Wind,
-  Thermometer
+  Save,
+  Navigation
 } from "lucide-react";
+import { PropertyCheckItemCard } from "@/components/PropertyCheckItemCard";
+import { usePropertyCheck } from "@/hooks/usePropertyCheck";
+import { useToast } from "@/hooks/use-toast";
 
 const PropertyCheck = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentSection, setCurrentSection] = useState(0);
-  const [checklistItems, setChecklistItems] = useState({
-    exterior: [
-      { id: 1, item: "Roof condition", completed: false, photos: [], notes: "", required: true },
-      { id: 2, item: "Gutters and downspouts", completed: false, photos: [], notes: "", required: true },
-      { id: 3, item: "Exterior walls and siding", completed: false, photos: [], notes: "", required: true },
-      { id: 4, item: "Windows and doors", completed: false, photos: [], notes: "", required: true },
-      { id: 5, item: "Driveway and walkways", completed: false, photos: [], notes: "", required: false },
-      { id: 6, item: "Landscaping and lawn", completed: false, photos: [], notes: "", required: false },
-      { id: 7, item: "Pool area (if applicable)", completed: false, photos: [], notes: "", required: false },
-    ],
-    interior: [
-      { id: 8, item: "HVAC system check", completed: false, photos: [], notes: "", required: true },
-      { id: 9, item: "Plumbing inspection", completed: false, photos: [], notes: "", required: true },
-      { id: 10, item: "Electrical systems", completed: false, photos: [], notes: "", required: true },
-      { id: 11, item: "Appliances functionality", completed: false, photos: [], notes: "", required: true },
-      { id: 12, item: "Interior walls and ceilings", completed: false, photos: [], notes: "", required: false },
-      { id: 13, item: "Flooring condition", completed: false, photos: [], notes: "", required: false },
-    ],
-    security: [
-      { id: 14, item: "Door locks and security", completed: false, photos: [], notes: "", required: true },
-      { id: 15, item: "Window locks", completed: false, photos: [], notes: "", required: true },
-      { id: 16, item: "Alarm system test", completed: false, photos: [], notes: "", required: true },
-      { id: 17, item: "Smoke detector test", completed: false, photos: [], notes: "", required: true },
-      { id: 18, item: "Carbon monoxide detector", completed: false, photos: [], notes: "", required: true },
-    ],
-    utilities: [
-      { id: 19, item: "Water meter reading", completed: false, photos: [], notes: "", required: true },
-      { id: 20, item: "Electrical meter reading", completed: false, photos: [], notes: "", required: true },
-      { id: 21, item: "Gas meter reading", completed: false, photos: [], notes: "", required: false },
-      { id: 22, item: "Water pressure test", completed: false, photos: [], notes: "", required: false },
-    ]
-  });
+  
+  const {
+    checklistItems,
+    isLoading,
+    isSaving,
+    handleItemToggle,
+    handleNotesChange,
+    handlePhotosUpdate,
+    getSectionProgress,
+    getOverallProgress,
+    getRequiredItemsProgress,
+    canCompleteCheck,
+    savePropertyCheckData
+  } = usePropertyCheck();
 
   const sections = [
     { name: "Exterior", key: "exterior", icon: Home, color: "bg-gradient-primary" },
@@ -69,50 +49,24 @@ const PropertyCheck = () => {
 
   const currentSectionData = sections[currentSection];
   const currentItems = checklistItems[currentSectionData.key as keyof typeof checklistItems];
+  const requiredProgress = getRequiredItemsProgress();
 
-  const handleItemToggle = (itemId: number) => {
-    const sectionKey = currentSectionData.key as keyof typeof checklistItems;
-    setChecklistItems(prev => ({
-      ...prev,
-      [sectionKey]: prev[sectionKey].map(item => 
-        item.id === itemId ? { ...item, completed: !item.completed } : item
-      )
-    }));
-  };
+  const handleCompleteCheck = async () => {
+    if (!canCompleteCheck()) {
+      toast({
+        title: "Incomplete required items",
+        description: `Please complete all required items (${requiredProgress.completed}/${requiredProgress.total})`,
+        variant: "destructive"
+      });
+      return;
+    }
 
-  const handleNotesChange = (itemId: number, notes: string) => {
-    const sectionKey = currentSectionData.key as keyof typeof checklistItems;
-    setChecklistItems(prev => ({
-      ...prev,
-      [sectionKey]: prev[sectionKey].map(item => 
-        item.id === itemId ? { ...item, notes } : item
-      )
-    }));
-  };
-
-  const simulatePhotoCapture = (itemId: number) => {
-    // Simulate photo capture - in real app would use camera API
-    const sectionKey = currentSectionData.key as keyof typeof checklistItems;
-    setChecklistItems(prev => ({
-      ...prev,
-      [sectionKey]: prev[sectionKey].map(item => 
-        item.id === itemId 
-          ? { ...item, photos: [...item.photos, `photo_${Date.now()}.jpg`] }
-          : item
-      )
-    }));
-  };
-
-  const getSectionProgress = (sectionKey: keyof typeof checklistItems) => {
-    const items = checklistItems[sectionKey];
-    const completed = items.filter(item => item.completed).length;
-    return `${completed}/${items.length}`;
-  };
-
-  const getOverallProgress = () => {
-    const allItems = Object.values(checklistItems).flat();
-    const completed = allItems.filter(item => item.completed).length;
-    return Math.round((completed / allItems.length) * 100);
+    await savePropertyCheckData();
+    toast({
+      title: "Property check completed",
+      description: "All inspection data has been saved successfully"
+    });
+    navigate('/house-watching');
   };
 
   return (
@@ -138,10 +92,21 @@ const PropertyCheck = () => {
             <Badge variant="outline" className="text-xs">
               {getOverallProgress()}% Complete
             </Badge>
-            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>Started 10:30 AM</span>
-            </div>
+            <Badge 
+              variant={canCompleteCheck() ? "default" : "secondary"} 
+              className="text-xs"
+            >
+              Required: {requiredProgress.completed}/{requiredProgress.total}
+            </Badge>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={savePropertyCheckData}
+              disabled={isSaving}
+              className="p-1"
+            >
+              <Save className={`h-3 w-3 ${isSaving ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
         </div>
       </header>
@@ -189,9 +154,22 @@ const PropertyCheck = () => {
                     Weekly check • Owner: Sarah Johnson
                   </p>
                 </div>
-                <Button size="sm" variant="outline">
-                  <Eye className="h-4 w-4 mr-2" />
-                  GPS Verify
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    if ('geolocation' in navigator) {
+                      navigator.geolocation.getCurrentPosition(() => {
+                        toast({
+                          title: "Location verified",
+                          description: "Your location has been verified for this property check"
+                        });
+                      });
+                    }
+                  }}
+                >
+                  <Navigation className="h-4 w-4 mr-2" />
+                  Verify Location
                 </Button>
               </div>
             </CardContent>
@@ -206,63 +184,22 @@ const PropertyCheck = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {currentItems.map((item) => (
-                <div key={item.id} className="border border-border rounded-lg p-4 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      id={`item-${item.id}`}
-                      checked={item.completed}
-                      onCheckedChange={() => handleItemToggle(item.id)}
-                      className="mt-1"
-                    />
-                    <div className="flex-1">
-                      <label 
-                        htmlFor={`item-${item.id}`} 
-                        className={`text-sm font-medium cursor-pointer ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}
-                      >
-                        {item.item}
-                        {item.required && <span className="text-destructive ml-1">*</span>}
-                      </label>
-                      
-                      {/* Photo Section */}
-                      <div className="mt-2 flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => simulatePhotoCapture(item.id)}
-                          className="flex items-center gap-1"
-                        >
-                          <Camera className="h-3 w-3" />
-                          Take Photo
-                        </Button>
-                        {item.photos.length > 0 && (
-                          <Badge variant="secondary" className="text-xs">
-                            {item.photos.length} photo{item.photos.length > 1 ? 's' : ''}
-                          </Badge>
-                        )}
-                      </div>
-
-                      {/* Notes */}
-                      <div className="mt-2">
-                        <Textarea
-                          placeholder="Add notes or observations..."
-                          value={item.notes}
-                          onChange={(e) => handleNotesChange(item.id, e.target.value)}
-                          className="min-h-[60px] text-sm"
-                        />
-                      </div>
-                      
-                      {/* Issue Flag */}
-                      {item.notes && item.notes.toLowerCase().includes('issue') && (
-                        <div className="mt-2 flex items-center gap-2 text-sm text-destructive">
-                          <AlertCircle className="h-4 w-4" />
-                          <span>Issue flagged for review</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                  <p className="text-sm text-muted-foreground">Loading property check...</p>
                 </div>
-              ))}
+              ) : (
+                currentItems.map((item) => (
+                  <PropertyCheckItemCard
+                    key={item.id}
+                    item={item}
+                    onToggle={(itemId) => handleItemToggle(itemId, currentSectionData.key as keyof typeof checklistItems)}
+                    onNotesChange={(itemId, notes) => handleNotesChange(itemId, notes, currentSectionData.key as keyof typeof checklistItems)}
+                    onPhotosUpdate={(itemId, photos) => handlePhotosUpdate(itemId, photos, currentSectionData.key as keyof typeof checklistItems)}
+                  />
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -295,8 +232,9 @@ const PropertyCheck = () => {
             </Button>
           ) : (
             <Button
-              onClick={() => navigate('/house-watching')}
-              className="bg-gradient-success hover:bg-success-dark"
+              onClick={handleCompleteCheck}
+              disabled={!canCompleteCheck()}
+              className={`${canCompleteCheck() ? 'bg-gradient-success hover:bg-success-dark' : 'opacity-50'}`}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Complete Check
