@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -46,6 +47,20 @@ const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { isMobile } = useMobileDetection();
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    // Get persisted state from localStorage on initial load
+    const persistedState = localStorage.getItem('sidebar-state');
+    if (persistedState !== null) {
+      return JSON.parse(persistedState);
+    }
+    return !isMobile;
+  });
+
+  const handleSidebarOpenChange = (open: boolean) => {
+    setSidebarOpen(open);
+    localStorage.setItem('sidebar-state', JSON.stringify(open));
+  };
+
   return (
     <AuthProvider>
       <DevAdminProvider>
@@ -102,19 +117,8 @@ const AppContent = () => {
             <Route path="/*" element={
               <ProtectedRoute>
                 <SidebarProvider 
-                  defaultOpen={!isMobile}
-                  open={(() => {
-                    // Get persisted state from localStorage
-                    const persistedState = localStorage.getItem('sidebar-state');
-                    if (persistedState !== null) {
-                      return JSON.parse(persistedState);
-                    }
-                    return !isMobile;
-                  })()}
-                  onOpenChange={(open) => {
-                    // Persist state to localStorage
-                    localStorage.setItem('sidebar-state', JSON.stringify(open));
-                  }}
+                  open={sidebarOpen}
+                  onOpenChange={handleSidebarOpenChange}
                   style={{
                     "--sidebar-width": isMobile ? "100vw" : "18rem",
                     "--sidebar-width-icon": "3rem",
