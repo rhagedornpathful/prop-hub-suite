@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SeedDatabase } from '@/components/dev/SeedDatabase';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -13,6 +13,11 @@ const DevTools = () => {
   const [testing, setTesting] = useState(false);
   const [testResults, setTestResults] = useState<any[]>([]);
   const [currentTest, setCurrentTest] = useState('');
+  const [dbStats, setDbStats] = useState<any>(null);
+  const [currentRole, setCurrentRole] = useState<string>('');
+  const [seedingBulkData, setSeedingBulkData] = useState(false);
+  const [creatingUsers, setCreatingUsers] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   // Only show in development mode
   if (process.env.NODE_ENV === 'production') {
@@ -1457,6 +1462,216 @@ Missing: ${missingEmails.join(', ')}`;
     }
   };
 
+  // Database Management Functions
+  const seedBulkData = async () => {
+    setSeedingBulkData(true);
+    try {
+      const currentUser = (await supabase.auth.getUser()).data.user?.id;
+      if (!currentUser) throw new Error('No authenticated user');
+
+      // Create multiple properties with realistic data
+      const propertyData = [
+        { address: '123 Oak Street', city: 'Springfield', state: 'CA', zip_code: '90210', property_type: 'single_family', bedrooms: 3, bathrooms: 2, monthly_rent: 2500, user_id: currentUser },
+        { address: '456 Pine Avenue', city: 'Springfield', state: 'CA', zip_code: '90211', property_type: 'apartment', bedrooms: 2, bathrooms: 1, monthly_rent: 1800, user_id: currentUser },
+        { address: '789 Elm Drive', city: 'Springfield', state: 'CA', zip_code: '90212', property_type: 'townhouse', bedrooms: 4, bathrooms: 3, monthly_rent: 3200, user_id: currentUser },
+        { address: '321 Maple Court', city: 'Springfield', state: 'CA', zip_code: '90213', property_type: 'condo', bedrooms: 1, bathrooms: 1, monthly_rent: 1400, user_id: currentUser },
+        { address: '654 Cedar Lane', city: 'Springfield', state: 'CA', zip_code: '90214', property_type: 'single_family', bedrooms: 5, bathrooms: 4, monthly_rent: 4500, user_id: currentUser }
+      ];
+
+      const { data: properties } = await supabase.from('properties').insert(propertyData).select();
+      
+      // Create property owners
+      const ownerData = [
+        { first_name: 'John', last_name: 'Smith', email: 'john.smith@example.com', phone: '555-0101', user_id: currentUser },
+        { first_name: 'Sarah', last_name: 'Johnson', email: 'sarah.johnson@example.com', phone: '555-0102', user_id: currentUser },
+        { first_name: 'Mike', last_name: 'Brown', email: 'mike.brown@example.com', phone: '555-0103', user_id: currentUser }
+      ];
+
+      const { data: owners } = await supabase.from('property_owners').insert(ownerData).select();
+
+      // Update properties with owners
+      if (properties && owners) {
+        for (let i = 0; i < Math.min(properties.length, owners.length); i++) {
+          await supabase.from('properties').update({ owner_id: owners[i].id }).eq('id', properties[i].id);
+        }
+      }
+
+      // Create maintenance requests
+      if (properties) {
+        const maintenanceData = properties.slice(0, 3).map((property, index) => ({
+          property_id: property.id,
+          title: ['Fix Leaky Faucet', 'HVAC Maintenance', 'Paint Touch-up'][index],
+          description: ['Kitchen faucet needs repair', 'Annual HVAC inspection', 'Touch up paint in living room'][index],
+          priority: ['high', 'medium', 'low'][index],
+          status: ['pending', 'in-progress', 'completed'][index],
+          user_id: currentUser
+        }));
+
+        await supabase.from('maintenance_requests').insert(maintenanceData);
+      }
+
+      toast({
+        title: "Bulk Data Seeded!",
+        description: `Created ${propertyData.length} properties, ${ownerData.length} owners, and maintenance requests`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Seeding Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSeedingBulkData(false);
+    }
+  };
+
+  const clearAllData = async () => {
+    setCleaning(true);
+    try {
+      // Delete in correct order to avoid foreign key constraints
+      await supabase.from('maintenance_requests').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('tenants').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('properties').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('property_owners').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('documents').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+      toast({
+        title: "Data Cleared!",
+        description: "All test data has been removed from the database",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Cleanup Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setCleaning(false);
+    }
+  };
+
+  const loadDatabaseStats = async () => {
+    setLoadingStats(true);
+    try {
+      const stats = await Promise.all([
+        supabase.from('properties').select('id', { count: 'exact' }),
+        supabase.from('property_owners').select('id', { count: 'exact' }),
+        supabase.from('tenants').select('id', { count: 'exact' }),
+        supabase.from('maintenance_requests').select('id', { count: 'exact' }),
+        supabase.from('documents').select('id', { count: 'exact' }),
+        supabase.from('user_roles').select('id', { count: 'exact' }),
+        supabase.from('profiles').select('id', { count: 'exact' })
+      ]);
+
+      setDbStats({
+        properties: stats[0].count || 0,
+        propertyOwners: stats[1].count || 0,
+        tenants: stats[2].count || 0,
+        maintenanceRequests: stats[3].count || 0,
+        documents: stats[4].count || 0,
+        userRoles: stats[5].count || 0,
+        profiles: stats[6].count || 0
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to Load Stats",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  // User Management Functions
+  const createBulkUsers = async () => {
+    setCreatingUsers(true);
+    try {
+      const currentUser = (await supabase.auth.getUser()).data.user?.id;
+      
+      // Create test user roles
+      const testRoles = [
+        { role: 'property_manager' as const, user_id: currentUser },
+        { role: 'house_watcher' as const, user_id: currentUser },
+        { role: 'tenant' as const, user_id: currentUser },
+        { role: 'owner_investor' as const, user_id: currentUser }
+      ];
+
+      for (const roleData of testRoles) {
+        try {
+          await supabase.from('user_roles').insert(roleData);
+        } catch (e) {
+          // Role might already exist
+        }
+      }
+
+      toast({
+        title: "Test Roles Created!",
+        description: "Added multiple roles for testing role-based access",
+      });
+    } catch (error: any) {
+      toast({
+        title: "User Creation Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setCreatingUsers(false);
+    }
+  };
+
+  const switchUserRole = async (role: string) => {
+    try {
+      const currentUser = (await supabase.auth.getUser()).data.user?.id;
+      if (!currentUser) return;
+
+      // Remove existing roles
+      await supabase.from('user_roles').delete().eq('user_id', currentUser);
+      
+      // Add new role
+      await supabase.from('user_roles').insert({
+        user_id: currentUser,
+        role: role as 'admin' | 'property_manager' | 'house_watcher' | 'client' | 'contractor' | 'tenant' | 'owner_investor' | 'leasing_agent'
+      });
+
+      setCurrentRole(role);
+      toast({
+        title: "Role Switched!",
+        description: `Now testing as: ${role}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Role Switch Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Load current role on mount
+  useEffect(() => {
+    const getCurrentRole = async () => {
+      try {
+        const currentUser = (await supabase.auth.getUser()).data.user?.id;
+        if (!currentUser) return;
+
+        const { data } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', currentUser)
+          .limit(1)
+          .single();
+
+        if (data) {
+          setCurrentRole(data.role);
+        }
+      } catch (e) {
+        // User might not have a role yet
+      }
+    };
+    getCurrentRole();
+  }, []);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
@@ -1553,7 +1768,158 @@ Missing: ${missingEmails.join(', ')}`;
               <p><strong>House Watcher:</strong> Can monitor assigned properties and submit reports</p>
             </div>
           </CardContent>
-        </Card>
+          </Card>
+
+          {/* Database Management Tools */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="h-5 w-5" />
+                Database Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  onClick={seedBulkData}
+                  disabled={seedingBulkData}
+                  className="w-full"
+                >
+                  {seedingBulkData ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Seeding Data...
+                    </>
+                  ) : (
+                    <>
+                      <Database className="h-4 w-4 mr-2" />
+                      Seed Bulk Test Data
+                    </>
+                  )}
+                </Button>
+
+                <Button 
+                  onClick={clearAllData}
+                  disabled={cleaning}
+                  variant="destructive"
+                  className="w-full"
+                >
+                  {cleaning ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Clearing...
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Clear All Data
+                    </>
+                  )}
+                </Button>
+
+                <Button 
+                  onClick={loadDatabaseStats}
+                  disabled={loadingStats}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {loadingStats ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Load DB Statistics
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {dbStats && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                  <div className="bg-blue-50 p-3 rounded border text-center">
+                    <div className="text-2xl font-bold text-blue-600">{dbStats.properties}</div>
+                    <div className="text-xs text-blue-600">Properties</div>
+                  </div>
+                  <div className="bg-green-50 p-3 rounded border text-center">
+                    <div className="text-2xl font-bold text-green-600">{dbStats.propertyOwners}</div>
+                    <div className="text-xs text-green-600">Owners</div>
+                  </div>
+                  <div className="bg-purple-50 p-3 rounded border text-center">
+                    <div className="text-2xl font-bold text-purple-600">{dbStats.tenants}</div>
+                    <div className="text-xs text-purple-600">Tenants</div>
+                  </div>
+                  <div className="bg-orange-50 p-3 rounded border text-center">
+                    <div className="text-2xl font-bold text-orange-600">{dbStats.maintenanceRequests}</div>
+                    <div className="text-xs text-orange-600">Maintenance</div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* User Management Tools */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <UserCog className="h-5 w-5" />
+                User Management
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button 
+                  onClick={createBulkUsers}
+                  disabled={creatingUsers}
+                  className="w-full"
+                >
+                  {creatingUsers ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <UserCog className="h-4 w-4 mr-2" />
+                      Create Test Roles
+                    </>
+                  )}
+                </Button>
+
+                {currentRole && (
+                  <div className="bg-green-50 p-3 rounded border text-center">
+                    <div className="text-sm font-medium text-green-800">Current Role:</div>
+                    <div className="text-lg font-bold text-green-600 capitalize">
+                      {currentRole.replace('_', ' ')}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium mb-2">Switch Test Role:</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {['admin', 'property_manager', 'house_watcher', 'tenant', 'owner_investor'].map((role) => (
+                    <Button 
+                      key={role}
+                      onClick={() => switchUserRole(role)}
+                      variant={currentRole === role ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs"
+                    >
+                      {role.replace('_', ' ')}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground p-3 bg-yellow-50 rounded border border-yellow-200">
+                <strong>Note:</strong> Role switching affects RLS permissions and testing. Use different roles to test access controls and user-specific data visibility.
+              </div>
+            </CardContent>
+          </Card>
         
         <Card>
           <CardHeader>
