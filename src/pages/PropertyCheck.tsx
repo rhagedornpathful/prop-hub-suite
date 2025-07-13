@@ -16,7 +16,10 @@ import {
   Wind,
   Save,
   Navigation,
-  FileText
+  FileText,
+  Play,
+  Square,
+  Timer
 } from "lucide-react";
 import { PropertyCheckItemCard } from "@/components/PropertyCheckItemCard";
 import { SummarySection } from "@/components/SummarySection";
@@ -33,6 +36,11 @@ const PropertyCheck = () => {
     checklistItems,
     isLoading,
     isSaving,
+    isSubmitting,
+    sessionStarted,
+    sessionId,
+    elapsedTime,
+    startTime,
     handleItemToggle,
     handleNotesChange,
     handlePhotosUpdate,
@@ -40,7 +48,10 @@ const PropertyCheck = () => {
     getOverallProgress,
     getRequiredItemsProgress,
     canCompleteCheck,
-    savePropertyCheckData
+    savePropertyCheckData,
+    startSession,
+    submitSession,
+    formatElapsedTime
   } = usePropertyCheck();
 
   const sections = [
@@ -65,12 +76,14 @@ const PropertyCheck = () => {
       return;
     }
 
-    await savePropertyCheckData();
-    toast({
-      title: "Property check completed",
-      description: "All inspection data has been saved successfully"
-    });
-    navigate('/house-watching');
+    const success = await submitSession(generalNotes);
+    if (success) {
+      navigate('/house-watching');
+    }
+  };
+
+  const handleStartSession = () => {
+    startSession();
   };
 
   return (
@@ -102,6 +115,12 @@ const PropertyCheck = () => {
             >
               Required: {requiredProgress.completed}/{requiredProgress.total}
             </Badge>
+            {sessionStarted && (
+              <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                <Timer className="h-3 w-3" />
+                {formatElapsedTime(elapsedTime)}
+              </Badge>
+            )}
             <Button
               size="sm"
               variant="ghost"
@@ -145,116 +164,164 @@ const PropertyCheck = () => {
       {/* Main Content */}
       <main className="p-4 pb-20">
         <div className="max-w-2xl mx-auto space-y-4">
-          {/* Property Info */}
-          <Card className="shadow-md border-0">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">456 Oak Street</span>
+          {/* Start Session Card */}
+          {!sessionStarted && (
+            <Card className="shadow-md border-0 bg-gradient-primary">
+              <CardContent className="p-6 text-center">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center">
+                    <div className="bg-white/20 p-3 rounded-full">
+                      <Play className="h-8 w-8 text-white" />
+                    </div>
                   </div>
-                  <p className="text-sm mt-1 text-muted-foreground">
-                    Weekly check • Owner: Sarah Johnson
-                  </p>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white mb-2">
+                      Ready to Start Property Check?
+                    </h3>
+                    <p className="text-white/80 text-sm mb-4">
+                      Click start to begin timing your inspection session
+                    </p>
+                    <Button
+                      onClick={handleStartSession}
+                      className="bg-white text-primary hover:bg-white/90"
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Start Property Check
+                    </Button>
+                  </div>
                 </div>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => {
-                    if ('geolocation' in navigator) {
-                      navigator.geolocation.getCurrentPosition(() => {
-                        toast({
-                          title: "Location verified",
-                          description: "Your location has been verified for this property check"
-                        });
-                      });
-                    }
-                  }}
-                >
-                  <Navigation className="h-4 w-4 mr-2" />
-                  Verify Location
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Current Section Items */}
-          <Card className="shadow-md border-0">
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <currentSectionData.icon className="h-5 w-5" />
-                {currentSectionData.name} Inspection
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {isLoading ? (
-                <div className="text-center py-8">
-                  <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                  <p className="text-sm text-muted-foreground">Loading property check...</p>
-                </div>
-              ) : currentSectionData.key === 'summary' ? (
-                <SummarySection
-                  items={currentItems}
-                  onToggle={(itemId) => handleItemToggle(itemId, currentSectionData.key as keyof typeof checklistItems)}
-                  onNotesChange={(itemId, notes) => handleNotesChange(itemId, notes, currentSectionData.key as keyof typeof checklistItems)}
-                  onPhotosUpdate={(itemId, photos) => handlePhotosUpdate(itemId, photos, currentSectionData.key as keyof typeof checklistItems)}
-                  generalNotes={generalNotes}
-                  onGeneralNotesChange={setGeneralNotes}
-                />
-              ) : (
-                currentItems.map((item) => (
-                  <PropertyCheckItemCard
-                    key={item.id}
-                    item={item}
-                    onToggle={(itemId) => handleItemToggle(itemId, currentSectionData.key as keyof typeof checklistItems)}
-                    onNotesChange={(itemId, notes) => handleNotesChange(itemId, notes, currentSectionData.key as keyof typeof checklistItems)}
-                    onPhotosUpdate={(itemId, photos) => handlePhotosUpdate(itemId, photos, currentSectionData.key as keyof typeof checklistItems)}
-                  />
-                ))
-              )}
-            </CardContent>
-          </Card>
+          {/* Property Info */}
+          {sessionStarted && (
+            <>
+              <Card className="shadow-md border-0">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">456 Oak Street</span>
+                      </div>
+                      <p className="text-sm mt-1 text-muted-foreground">
+                        Weekly check • Owner: Sarah Johnson
+                      </p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        if ('geolocation' in navigator) {
+                          navigator.geolocation.getCurrentPosition(() => {
+                            toast({
+                              title: "Location verified",
+                              description: "Your location has been verified for this property check"
+                            });
+                          });
+                        }
+                      }}
+                    >
+                      <Navigation className="h-4 w-4 mr-2" />
+                      Verify Location
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Current Section Items */}
+              <Card className="shadow-md border-0">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <currentSectionData.icon className="h-5 w-5" />
+                    {currentSectionData.name} Inspection
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {isLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading property check...</p>
+                    </div>
+                  ) : currentSectionData.key === 'summary' ? (
+                    <SummarySection
+                      items={currentItems}
+                      onToggle={(itemId) => handleItemToggle(itemId, currentSectionData.key as keyof typeof checklistItems)}
+                      onNotesChange={(itemId, notes) => handleNotesChange(itemId, notes, currentSectionData.key as keyof typeof checklistItems)}
+                      onPhotosUpdate={(itemId, photos) => handlePhotosUpdate(itemId, photos, currentSectionData.key as keyof typeof checklistItems)}
+                      generalNotes={generalNotes}
+                      onGeneralNotesChange={setGeneralNotes}
+                      elapsedTime={elapsedTime}
+                      formatElapsedTime={formatElapsedTime}
+                      startTime={startTime}
+                    />
+                  ) : (
+                    currentItems.map((item) => (
+                      <PropertyCheckItemCard
+                        key={item.id}
+                        item={item}
+                        onToggle={(itemId) => handleItemToggle(itemId, currentSectionData.key as keyof typeof checklistItems)}
+                        onNotesChange={(itemId, notes) => handleNotesChange(itemId, notes, currentSectionData.key as keyof typeof checklistItems)}
+                        onPhotosUpdate={(itemId, photos) => handlePhotosUpdate(itemId, photos, currentSectionData.key as keyof typeof checklistItems)}
+                      />
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 shadow-lg">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
-          <Button
-            variant="outline"
-            disabled={currentSection === 0}
-            onClick={() => setCurrentSection(prev => Math.max(0, prev - 1))}
-          >
-            Previous
-          </Button>
-          
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4 text-success" />
-            <span className="text-sm font-medium">
-              {Object.values(checklistItems).flat().filter(item => item.completed).length} / {Object.values(checklistItems).flat().length} items
-            </span>
+      {sessionStarted && (
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 shadow-lg">
+          <div className="flex items-center justify-between max-w-2xl mx-auto">
+            <Button
+              variant="outline"
+              disabled={currentSection === 0}
+              onClick={() => setCurrentSection(prev => Math.max(0, prev - 1))}
+            >
+              Previous
+            </Button>
+            
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-success" />
+              <span className="text-sm font-medium">
+                {Object.values(checklistItems).flat().filter(item => item.completed).length} / {Object.values(checklistItems).flat().length} items
+              </span>
+            </div>
+            
+            {currentSection < sections.length - 1 ? (
+              <Button
+                onClick={() => setCurrentSection(prev => Math.min(sections.length - 1, prev + 1))}
+                className="bg-gradient-primary hover:bg-primary-dark"
+              >
+                Next Section
+              </Button>
+            ) : (
+              <Button
+                onClick={handleCompleteCheck}
+                disabled={!canCompleteCheck() || isSubmitting}
+                className={`${canCompleteCheck() ? 'bg-gradient-success hover:bg-success-dark' : 'opacity-50'}`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
+                    Submitting...
+                  </>
+                ) : (
+                  <>
+                    <Square className="h-4 w-4 mr-2" />
+                    Submit Check
+                  </>
+                )}
+              </Button>
+            )}
           </div>
-          
-          {currentSection < sections.length - 1 ? (
-            <Button
-              onClick={() => setCurrentSection(prev => Math.min(sections.length - 1, prev + 1))}
-              className="bg-gradient-primary hover:bg-primary-dark"
-            >
-              Next Section
-            </Button>
-          ) : (
-            <Button
-              onClick={handleCompleteCheck}
-              disabled={!canCompleteCheck()}
-              className={`${canCompleteCheck() ? 'bg-gradient-success hover:bg-success-dark' : 'opacity-50'}`}
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              Complete Check
-            </Button>
-          )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

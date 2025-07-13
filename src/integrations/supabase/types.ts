@@ -535,6 +535,51 @@ export type Database = {
           },
         ]
       }
+      property_check_sessions: {
+        Row: {
+          checklist_data: Json | null
+          completed_at: string | null
+          created_at: string
+          duration_minutes: number | null
+          general_notes: string | null
+          id: string
+          location_verified: boolean | null
+          property_id: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checklist_data?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          general_notes?: string | null
+          id?: string
+          location_verified?: boolean | null
+          property_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checklist_data?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          general_notes?: string | null
+          id?: string
+          location_verified?: boolean | null
+          property_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       property_owners: {
         Row: {
           address: string | null
