@@ -1,5 +1,3 @@
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,70 +23,50 @@ import { Link } from "react-router-dom";
 
 const HouseWatching = () => {
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-subtle">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="bg-card border-b border-border p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">House Watching</h1>
-                  <p className="text-sm text-muted-foreground">Manage property monitoring and check-in services</p>
-                </div>
-                <Badge variant="secondary" className="ml-4">
-                  42 Active Properties
-                </Badge>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search properties..." 
-                    className="pl-10 w-64"
-                  />
-                </div>
-                <Button variant="outline" size="sm">
-                  <Route className="h-4 w-4 mr-2" />
-                  Plan Route
-                </Button>
-                <Button variant="outline" size="sm" className="relative">
-                  <Bell className="h-4 w-4" />
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
-                    5
-                  </Badge>
-                </Button>
-                <Button variant="outline" size="sm">
-                  <User className="h-4 w-4" />
-                </Button>
-              </div>
+    <div className="flex-1 p-6 overflow-auto">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Clean Header - matching other pages */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold text-foreground">House Watching</h1>
+            <p className="text-muted-foreground">
+              Manage property monitoring and check-in services • 42 active properties
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search properties..." 
+                className="pl-10 w-64"
+              />
             </div>
-          </header>
+            <Button variant="outline">
+              <Route className="h-4 w-4 mr-2" />
+              Plan Route
+            </Button>
+          </div>
+        </div>
 
-          {/* Main Content */}
-          <main className="flex-1 p-6 overflow-auto">
-            <div className="max-w-7xl mx-auto space-y-8">
-              {/* Quick Actions */}
-              <div className="flex items-center gap-4 mb-6">
-                <Button className="bg-gradient-primary hover:bg-primary-dark">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Property
-                </Button>
-                <Button variant="outline">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Schedule Visit
-                </Button>
-                <Button variant="outline">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Generate Report
-                </Button>
-              </div>
+        {/* Quick Actions */}
+        <div className="flex items-center gap-3">
+          <Button className="bg-gradient-primary hover:bg-primary-dark">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Property
+          </Button>
+          <Button variant="outline">
+            <Calendar className="h-4 w-4 mr-2" />
+            Schedule Visit
+          </Button>
+          <Button variant="outline">
+            <FileText className="h-4 w-4 mr-2" />
+            Generate Report
+          </Button>
+        </div>
 
-              {/* Stats Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <Card className="shadow-md border-0">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
@@ -146,8 +124,8 @@ const HouseWatching = () => {
                 </Card>
               </div>
 
-              {/* Property Watch List */}
-              <Tabs defaultValue="scheduled" className="w-full">
+        {/* Property Watch List */}
+        <Tabs defaultValue="scheduled" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
                   <TabsTrigger value="completed">Completed</TabsTrigger>
@@ -281,12 +259,9 @@ const HouseWatching = () => {
                     ))}
                   </div>
                 </TabsContent>
-              </Tabs>
-            </div>
-          </main>
-        </div>
+        </Tabs>
       </div>
-    </SidebarProvider>
+    </div>
   );
 };
 
