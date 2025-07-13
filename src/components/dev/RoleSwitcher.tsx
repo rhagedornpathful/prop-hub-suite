@@ -9,158 +9,102 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
-import { ChevronDown, User, Crown, Building, Home, Shield, AlertCircle, Loader2 } from 'lucide-react';
+import { ChevronDown, User, Crown, Building, Home, Shield, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
-const testAccounts = [
+const availableRoles = [
   {
-    email: 'admin@test.com',
-    password: 'testpass123',
     role: 'admin',
     label: 'Admin User',
     icon: Crown,
     description: 'Full system access',
-    redirectPath: '/admin'
   },
   {
-    email: 'owner@test.com',
-    password: 'testpass123',
     role: 'owner_investor',
     label: 'Property Owner',
     icon: Building,
     description: 'Manage owned properties',
-    redirectPath: '/properties'
   },
   {
-    email: 'tenant@test.com',
-    password: 'testpass123',
     role: 'tenant',
     label: 'Tenant',
     icon: Home,
     description: 'Tenant portal access',
-    redirectPath: '/tenant/dashboard'
   },
   {
-    email: 'watcher@test.com',
-    password: 'testpass123',
     role: 'house_watcher',
     label: 'House Watcher',
     icon: Shield,
     description: 'Property monitoring',
-    redirectPath: '/house-watching'
   }
 ];
 
 export function RoleSwitcher() {
   const { userRole, getRoleDisplayName, user } = useUserRole();
   const [switching, setSwitching] = useState(false);
-  const [testAccountsExist, setTestAccountsExist] = useState<boolean | null>(null);
-  const [checkingAccounts, setCheckingAccounts] = useState(true);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Check if test accounts exist on component mount
+  // Fetch user's roles on component mount
   useEffect(() => {
-    checkTestAccountsExist();
-  }, []);
+    if (user?.id) {
+      fetchUserRoles();
+    }
+  }, [user?.id]);
 
-  const checkTestAccountsExist = async () => {
+  const fetchUserRoles = async () => {
+    if (!user?.id) return;
+    
     try {
-      setCheckingAccounts(true);
-      const testEmails = testAccounts.map(account => account.email);
-      
+      setLoading(true);
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('email')
-        .in('email', testEmails);
+        .rpc('get_user_roles', { _user_id: user.id });
 
       if (error) throw error;
       
-      // Check if we have all test accounts
-      const foundEmails = new Set(data?.map(user => user.email) || []);
-      const hasAllAccounts = testEmails.every(email => foundEmails.has(email));
-      
-      setTestAccountsExist(hasAllAccounts);
+      setUserRoles(data || []);
     } catch (error) {
-      console.error('Error checking test accounts:', error);
-      setTestAccountsExist(false);
+      console.error('Error fetching user roles:', error);
+      setUserRoles([]);
     } finally {
-      setCheckingAccounts(false);
+      setLoading(false);
     }
   };
 
-  const cleanupAuthState = () => {
-    // Remove all Supabase auth keys from localStorage
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    // Remove from sessionStorage if in use
-    Object.keys(sessionStorage || {}).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-  };
-
-  const switchToRole = async (account: typeof testAccounts[0]) => {
-    if (switching || !testAccountsExist) return;
+  const switchToRole = async (targetRole: string) => {
+    if (switching || !user?.id || userRole === targetRole) return;
     
     setSwitching(true);
     
     try {
-      // Clean up auth state first
-      cleanupAuthState();
-      
-      // Sign out current user with global scope
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-        console.warn('Global signout failed:', err);
+      // Check if user actually has this role
+      const hasRole = userRoles.includes(targetRole);
+      if (!hasRole) {
+        // Add the role to the user
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: user.id,
+            role: targetRole as any,
+            assigned_by: user.id
+          });
+
+        if (insertError && !insertError.message.includes('duplicate')) {
+          throw insertError;
+        }
       }
 
-      // Wait a moment for cleanup
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Sign in as the test account
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: account.email,
-        password: account.password,
-      });
-
-      if (error) {
-        throw new Error(`Login failed: ${error.message}`);
-      }
-
-      if (!data.user) {
-        throw new Error('No user data returned after login');
-      }
-
-      // Verify role assignment
-      const { data: roleData, error: roleError } = await supabase
-        .rpc('has_role', { _user_id: data.user.id, _role: account.role as any });
-      
-      if (roleError) {
-        throw new Error(`Role verification failed: ${roleError.message}`);
-      }
-
-      if (!roleData) {
-        throw new Error(`User does not have ${account.role} role assigned`);
-      }
-
-      // Wait a moment for the auth context to update the role
-      await new Promise(resolve => setTimeout(resolve, 200));
+      // Store the preferred role in localStorage for immediate effect
+      localStorage.setItem('preferred_role', targetRole);
 
       toast({
         title: "Role Switched",
-        description: `Successfully switched to ${account.label} (${account.email})`,
+        description: `Successfully switched to ${availableRoles.find(r => r.role === targetRole)?.label}`,
       });
 
-      // Force full page reload to main dashboard to refresh auth state
+      // Force page reload to refresh auth state
       window.location.href = '/';
       
     } catch (error) {
@@ -172,9 +116,6 @@ export function RoleSwitcher() {
         description: errorMessage,
         variant: "destructive",
       });
-      
-      // Clean up on error
-      cleanupAuthState();
     } finally {
       setSwitching(false);
     }
@@ -185,18 +126,15 @@ export function RoleSwitcher() {
     return null;
   }
 
-  const currentAccount = testAccounts.find(account => 
-    user?.email === account.email
-  );
+  const currentRoleConfig = availableRoles.find(role => role.role === userRole);
+  const CurrentIcon = currentRoleConfig?.icon || User;
 
-  const CurrentIcon = currentAccount?.icon || User;
-
-  // Show loading state while checking accounts
-  if (checkingAccounts) {
+  // Show loading state while fetching roles
+  if (loading) {
     return (
       <Button variant="outline" size="sm" disabled className="gap-2">
         <Loader2 className="h-4 w-4 animate-spin" />
-        <span className="hidden sm:inline">Checking...</span>
+        <span className="hidden sm:inline">Loading...</span>
         <Badge variant="secondary" className="hidden md:inline-flex">
           DEV
         </Badge>
@@ -225,71 +163,49 @@ export function RoleSwitcher() {
       <DropdownMenuContent align="end" className="w-80">
         <DropdownMenuLabel className="flex items-center gap-2">
           <User className="h-4 w-4" />
-          Switch Test Role
+          Switch Role
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         
-        {!testAccountsExist ? (
-          <div className="p-3">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Test accounts not found. Please seed test data first.
-              </AlertDescription>
-            </Alert>
-          </div>
-        ) : (
-          <>
-            {testAccounts.map((account) => {
-              const Icon = account.icon;
-              const isCurrent = user?.email === account.email;
-              
-              return (
-                <DropdownMenuItem
-                  key={account.email}
-                  onClick={() => switchToRole(account)}
-                  disabled={switching || isCurrent}
-                  className="flex items-center gap-3 py-3"
-                >
-                  <Icon className="h-4 w-4" />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{account.label}</span>
-                      {isCurrent && (
-                        <Badge variant="default" className="text-xs">
-                          Current
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {account.description}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {account.email}
-                    </p>
-                  </div>
-                </DropdownMenuItem>
-              );
-            })}
-          </>
-        )}
+        {availableRoles.map((role) => {
+          const Icon = role.icon;
+          const isCurrent = userRole === role.role;
+          const hasRole = userRoles.includes(role.role);
+          
+          return (
+            <DropdownMenuItem
+              key={role.role}
+              onClick={() => switchToRole(role.role)}
+              disabled={switching || isCurrent}
+              className="flex items-center gap-3 py-3"
+            >
+              <Icon className="h-4 w-4" />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{role.label}</span>
+                  {isCurrent && (
+                    <Badge variant="default" className="text-xs">
+                      Current
+                    </Badge>
+                  )}
+                  {!hasRole && (
+                    <Badge variant="outline" className="text-xs">
+                      Will Add
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {role.description}
+                </p>
+              </div>
+            </DropdownMenuItem>
+          );
+        })}
         
         <DropdownMenuSeparator />
         <DropdownMenuItem disabled className="text-xs text-muted-foreground justify-center">
           Development Mode Only
         </DropdownMenuItem>
-        
-        {!testAccountsExist && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={() => window.location.href = '/user-management'}
-              className="text-xs justify-center text-primary"
-            >
-              Go to User Management to Seed Data
-            </DropdownMenuItem>
-          </>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

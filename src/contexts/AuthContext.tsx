@@ -94,12 +94,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     console.log('🔍 AuthProvider: Fetching role for user:', userId);
     
     try {
-      // Use direct user ID query to bypass auth.uid() timing issues
+      // Use direct user ID query to get all user roles
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
-        .eq('user_id', userId)
-        .maybeSingle();
+        .eq('user_id', userId);
 
       console.log('📋 AuthProvider: Role query result:', { data, error, userId });
 
@@ -109,15 +108,27 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
 
-      if (!data) {
-        console.log('⚠️ AuthProvider: No role data returned for user');
+      const roles = data?.map(row => row.role) || [];
+      console.log('📋 AuthProvider: User roles found:', roles);
+      
+      if (roles.length === 0) {
+        console.log('⚠️ AuthProvider: No roles found for user');
         setUserRole(null);
         return;
       }
 
-      // Set the role found
-      console.log('✅ AuthProvider: User role found:', data.role);
-      setUserRole(data.role);
+      // Check for preferred role in localStorage first
+      const preferredRole = localStorage.getItem('preferred_role');
+      if (preferredRole && roles.includes(preferredRole as any)) {
+        console.log('✨ AuthProvider: Using preferred role:', preferredRole);
+        setUserRole(preferredRole as any);
+        return;
+      }
+
+      // Default to first role if no preference
+      const primaryRole = roles[0];
+      console.log('🎯 AuthProvider: Setting primary role:', primaryRole);
+      setUserRole(primaryRole);
       
     } catch (error) {
       console.error('💥 AuthProvider: Exception in fetchUserRole:', error);
@@ -225,6 +236,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     sessionStorage.removeItem('emergencyAdmin');
     sessionStorage.removeItem('emergencyAdminUser');
     delete (window as any).__EMERGENCY_ADMIN_MODE__;
+    
+    // Clear preferred role
+    localStorage.removeItem('preferred_role');
     
     // Clear all auth state
     setUser(null);
