@@ -38,75 +38,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
+import { usePropertyOwners, useDeletePropertyOwner } from "@/hooks/queries/usePropertyOwners";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface PropertyOwner {
-  id: string;
-  first_name: string;
-  last_name: string;
-  company_name?: string;
-  email: string;
-  phone: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip_code?: string;
-  preferred_payment_method: "check" | "direct_deposit" | "other";
-  is_self: boolean;
-  notes?: string;
-  created_at: string;
+type PropertyOwner = Tables<'property_owners'> & {
   property_count?: number;
-}
-
-// Mock data for demo
-const mockOwners: PropertyOwner[] = [
-  {
-    id: "1",
-    first_name: "John",
-    last_name: "Smith",
-    company_name: "Smith Properties LLC",
-    email: "john@smithproperties.com",
-    phone: "(555) 123-4567",
-    address: "123 Business Ave",
-    city: "Downtown",
-    state: "CA",
-    zip_code: "90210",
-    preferred_payment_method: "direct_deposit",
-    is_self: true,
-    property_count: 8,
-    created_at: "2024-01-15T10:00:00Z"
-  },
-  {
-    id: "2",
-    first_name: "Sarah",
-    last_name: "Johnson",
-    email: "sarah.johnson@email.com",
-    phone: "(555) 234-5678",
-    address: "456 Main St",
-    city: "Suburbia",
-    state: "CA",
-    zip_code: "90211",
-    preferred_payment_method: "check",
-    is_self: false,
-    property_count: 3,
-    created_at: "2024-01-20T14:30:00Z"
-  },
-  {
-    id: "3",
-    first_name: "Michael",
-    last_name: "Davis",
-    company_name: "Davis Real Estate Holdings",
-    email: "m.davis@davisrealestate.com",
-    phone: "(555) 345-6789",
-    address: "789 Corporate Blvd",
-    city: "Business District",
-    state: "CA",
-    zip_code: "90212",
-    preferred_payment_method: "direct_deposit",
-    is_self: false,
-    property_count: 12,
-    created_at: "2024-02-01T09:15:00Z"
-  }
-];
+};
 
 const PropertyOwners = () => {
   const navigate = useNavigate();
@@ -117,7 +54,11 @@ const PropertyOwners = () => {
   const [ownerToDelete, setOwnerToDelete] = useState<PropertyOwner | null>(null);
   const { toast } = useToast();
 
-  const filteredOwners = mockOwners.filter(owner =>
+  // Use hooks to fetch data
+  const { data: owners = [], isLoading, error } = usePropertyOwners();
+  const deleteOwnerMutation = useDeletePropertyOwner();
+
+  const filteredOwners = owners.filter(owner =>
     `${owner.first_name} ${owner.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     owner.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     owner.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -142,14 +83,15 @@ const PropertyOwners = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (ownerToDelete) {
-      toast({
-        title: "Property Owner Deleted",
-        description: `${getDisplayName(ownerToDelete)} has been removed.`,
-      });
-      setIsDeleteDialogOpen(false);
-      setOwnerToDelete(null);
+      try {
+        await deleteOwnerMutation.mutateAsync(ownerToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setOwnerToDelete(null);
+      } catch (error) {
+        console.error('Error deleting owner:', error);
+      }
     }
   };
 
@@ -157,32 +99,67 @@ const PropertyOwners = () => {
     // Pre-fill with user's profile data if available
     setSelectedOwner({
       id: "",
+      user_id: "",
       first_name: "",
       last_name: "",
       email: "",
       phone: "",
       preferred_payment_method: "direct_deposit",
       is_self: true,
-      created_at: new Date().toISOString()
-    });
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    } as PropertyOwner);
     setIsAddDialogOpen(true);
   };
 
   const handleOwnerAdded = () => {
-    toast({
-      title: "Property Owner Added",
-      description: "The property owner has been successfully added.",
-    });
     setSelectedOwner(null);
+    // React Query will automatically refetch the data
   };
 
   const handleViewOwner = (owner: PropertyOwner) => {
-    navigate(`/demo/property-owners/${owner.id}`);
+    navigate(`/property-owners/${owner.id}`);
   };
 
   const getDisplayName = (owner: PropertyOwner) => {
     return owner.company_name || `${owner.first_name} ${owner.last_name}`;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading property owners...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Error Loading Property Owners</h2>
+              <p className="text-muted-foreground mb-4">
+                {error.message || "Failed to load property owners"}
+              </p>
+              <Button onClick={() => window.location.reload()}>
+                Try Again
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 p-6">
@@ -192,7 +169,7 @@ const PropertyOwners = () => {
           <div className="space-y-1">
             <h1 className="text-3xl font-bold text-foreground">Property Owners</h1>
             <p className="text-muted-foreground">
-              Manage property owner information and contact details • {mockOwners.length} owners
+              Manage property owner information and contact details • {owners.length} owners
             </p>
           </div>
           

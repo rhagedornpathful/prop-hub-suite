@@ -43,45 +43,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { usePropertyOwner } from "@/hooks/queries/usePropertyOwners";
+import { usePropertiesByOwner } from "@/hooks/queries/useProperties";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { AddDistributionDialog } from "@/components/AddDistributionDialog";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface PropertyOwner {
-  id: string;
-  first_name: string;
-  last_name: string;
-  company_name?: string;
-  email: string;
-  phone: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip_code?: string;
-  tax_id_number?: string;
-  bank_account_name?: string;
-  bank_account_number?: string;
-  bank_routing_number?: string;
-  preferred_payment_method: string;
-  is_self: boolean;
-  notes?: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-interface Property {
-  id: string;
-  address: string;
-  property_type?: string;
-  service_type?: string;
-  monthly_rent?: number;
-  estimated_value?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  status?: string;
-  created_at: string;
-}
+type Property = Tables<'properties'>;
+type PropertyOwner = Tables<'property_owners'>;
 
 interface Distribution {
   id: string;
@@ -98,106 +69,9 @@ interface Distribution {
   };
 }
 
-// Mock data for demo mode
-const mockOwner: PropertyOwner = {
-  id: "1",
-  first_name: "John",
-  last_name: "Smith",
-  company_name: "Smith Properties LLC",
-  email: "john@smithproperties.com",
-  phone: "(555) 123-4567",
-  address: "123 Business Ave",
-  city: "Downtown",
-  state: "CA",
-  zip_code: "90210",
-  tax_id_number: "XX-XXXXXXX",
-  preferred_payment_method: "direct_deposit",
-  is_self: true,
-  notes: "Primary property owner and company founder",
-  created_at: "2024-01-15T10:00:00Z"
-};
-
-const mockProperties: Property[] = [
-  {
-    id: "1",
-    address: "123 Main St, Downtown",
-    property_type: "apartment",
-    service_type: "property_management",
-    monthly_rent: 1200,
-    estimated_value: 450000,
-    bedrooms: 24,
-    bathrooms: 24,
-    status: "occupied",
-    created_at: "2024-01-20T10:00:00Z"
-  },
-  {
-    id: "5",
-    address: "987 Highland Dr, Suburbs",
-    property_type: "single_family",
-    service_type: "property_management",
-    monthly_rent: 3200,
-    estimated_value: 650000,
-    bedrooms: 4,
-    bathrooms: 3,
-    status: "maintenance",
-    created_at: "2024-02-15T10:00:00Z"
-  },
-  {
-    id: "7",
-    address: "456 Corporate Plaza, Business District",
-    property_type: "commercial",
-    service_type: "property_management",
-    monthly_rent: 8500,
-    estimated_value: 1200000,
-    status: "occupied",
-    created_at: "2024-03-01T10:00:00Z"
-  }
-];
-
-const mockDistributions: Distribution[] = [
-  {
-    id: "1",
-    owner_id: "1",
-    property_id: "1",
-    amount: 2800.00,
-    distribution_date: "2024-01-15",
-    payment_method: "direct_deposit",
-    reference_number: "TXN-001234",
-    notes: "Monthly rental distribution",
-    created_at: "2024-01-15T10:00:00Z",
-    property: { address: "123 Main St, Downtown" }
-  },
-  {
-    id: "2",
-    owner_id: "1",
-    property_id: "5",
-    amount: 3200.00,
-    distribution_date: "2024-01-15",
-    payment_method: "direct_deposit",
-    reference_number: "TXN-001235",
-    notes: "Monthly rental distribution",
-    created_at: "2024-01-15T10:00:00Z",
-    property: { address: "987 Highland Dr, Suburbs" }
-  },
-  {
-    id: "3",
-    owner_id: "1",
-    property_id: "7",
-    amount: 8500.00,
-    distribution_date: "2024-01-15",
-    payment_method: "check",
-    reference_number: "CHK-5678",
-    notes: "Commercial property rental distribution",
-    created_at: "2024-01-15T10:00:00Z",
-    property: { address: "456 Corporate Plaza, Business District" }
-  }
-];
-
 const PropertyOwnerDetail = () => {
   const { ownerId } = useParams();
   const navigate = useNavigate();
-  const [owner, setOwner] = useState<PropertyOwner | null>(null);
-  const [properties, setProperties] = useState<Property[]>([]);
   const [distributions, setDistributions] = useState<Distribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -206,47 +80,72 @@ const PropertyOwnerDetail = () => {
   const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date }>({});
   const { toast } = useToast();
 
+  // Use hooks to fetch data
+  const { data: owner, isLoading: isOwnerLoading, error: ownerError } = usePropertyOwner(ownerId);
+  const { data: properties = [], isLoading: isPropertiesLoading } = usePropertiesByOwner(ownerId);
+
   useEffect(() => {
-    loadOwnerData();
+    if (ownerId) {
+      loadDistributions();
+    }
   }, [ownerId]);
 
-  const loadOwnerData = async () => {
+  useEffect(() => {
+    setIsLoading(isOwnerLoading || isPropertiesLoading);
+  }, [isOwnerLoading, isPropertiesLoading]);
+
+  const loadDistributions = async () => {
     if (!ownerId) return;
 
-    setIsLoading(true);
     try {
       // Check if we're in demo mode
       const isDemoMode = window.location.pathname.startsWith('/demo');
       
       if (isDemoMode) {
         // Use mock data for demo
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate loading
-        setOwner(mockOwner);
-        setProperties(mockProperties);
+        const mockDistributions = [
+          {
+            id: "1",
+            owner_id: "1",
+            property_id: "1",
+            amount: 2800.00,
+            distribution_date: "2024-01-15",
+            payment_method: "direct_deposit",
+            reference_number: "TXN-001234",
+            notes: "Monthly rental distribution",
+            created_at: "2024-01-15T10:00:00Z",
+            property: { address: "123 Main St, Downtown" }
+          },
+          {
+            id: "2",
+            owner_id: "1",
+            property_id: "5",
+            amount: 3200.00,
+            distribution_date: "2024-01-15",
+            payment_method: "direct_deposit",
+            reference_number: "TXN-001235",
+            notes: "Monthly rental distribution",
+            created_at: "2024-01-15T10:00:00Z",
+            property: { address: "987 Highland Dr, Suburbs" }
+          },
+          {
+            id: "3",
+            owner_id: "1",
+            property_id: "7",
+            amount: 8500.00,
+            distribution_date: "2024-01-15",
+            payment_method: "check",
+            reference_number: "CHK-5678",
+            notes: "Commercial property rental distribution",
+            created_at: "2024-01-15T10:00:00Z",
+            property: { address: "456 Corporate Plaza, Business District" }
+          }
+        ];
         setDistributions(mockDistributions);
-        setIsLoading(false);
         return;
       }
 
-      // Load owner data
-      const { data: ownerData, error: ownerError } = await supabase
-        .from('property_owners')
-        .select('*')
-        .eq('id', ownerId)
-        .single();
-
-      if (ownerError) throw ownerError;
-
-      // Load properties owned by this owner
-      const { data: propertiesData, error: propertiesError } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', ownerId)
-        .order('created_at', { ascending: false });
-
-      if (propertiesError) throw propertiesError;
-
-      // Load distributions for this owner
+      // Load distributions for this owner from database
       const { data: distributionsData, error: distributionsError } = await supabase
         .from('owner_distributions')
         .select(`
@@ -257,19 +156,14 @@ const PropertyOwnerDetail = () => {
         .order('distribution_date', { ascending: false });
 
       if (distributionsError) throw distributionsError;
-
-      setOwner(ownerData);
-      setProperties(propertiesData || []);
       setDistributions(distributionsData || []);
     } catch (error) {
-      console.error('Error loading owner data:', error);
+      console.error('Error loading distributions:', error);
       toast({
         title: "Error",
-        description: "Failed to load property owner data",
+        description: "Failed to load distribution data",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -306,7 +200,7 @@ const PropertyOwnerDetail = () => {
       title: "Owner Updated",
       description: "Property owner information has been updated successfully.",
     });
-    loadOwnerData(); // Reload data
+    // React Query will automatically refetch the data
   };
 
   const handlePropertyAdded = () => {
@@ -314,7 +208,7 @@ const PropertyOwnerDetail = () => {
       title: "Property Added",
       description: "New property has been added to this owner's portfolio.",
     });
-    loadOwnerData(); // Reload data
+    // React Query will automatically refetch the data
   };
 
   const handleDistributionAdded = () => {
@@ -322,7 +216,7 @@ const PropertyOwnerDetail = () => {
       title: "Distribution Recorded",
       description: "Payment distribution has been recorded successfully.",
     });
-    loadOwnerData(); // Reload data
+    loadDistributions(); // Reload distributions
   };
 
   const filteredDistributions = distributions.filter(distribution => {
@@ -378,6 +272,30 @@ const PropertyOwnerDetail = () => {
     );
   }
 
+  // Handle errors
+  if (ownerError) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-gradient-subtle">
+          <AppSidebar />
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Error Loading Property Owner</h2>
+              <p className="text-muted-foreground mb-4">
+                {ownerError.message || "Failed to load property owner data"}
+              </p>
+              <Button onClick={() => navigate('/property-owners')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Property Owners
+              </Button>
+            </div>
+          </div>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
   if (!owner) {
     return (
       <SidebarProvider>
@@ -388,7 +306,7 @@ const PropertyOwnerDetail = () => {
               <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h2 className="text-xl font-semibold mb-2">Property Owner Not Found</h2>
               <p className="text-muted-foreground mb-4">The requested property owner could not be found.</p>
-              <Button onClick={() => navigate('/demo/property-owners')}>
+              <Button onClick={() => navigate('/property-owners')}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Property Owners
               </Button>
@@ -412,7 +330,7 @@ const PropertyOwnerDetail = () => {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  onClick={() => navigate('/demo/property-owners')}
+                  onClick={() => navigate('/property-owners')}
                   className="hover:bg-muted"
                 >
                   <ArrowLeft className="h-4 w-4 mr-2" />

@@ -25,7 +25,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Search, X } from "lucide-react";
 
-interface PropertyOwner {
+// Use a more flexible type for the form data
+interface PropertyOwnerFormData {
   id?: string;
   first_name: string;
   last_name: string;
@@ -41,7 +42,7 @@ interface PropertyOwner {
   bank_account_name?: string;
   bank_account_number?: string;
   bank_routing_number?: string;
-  preferred_payment_method: "check" | "direct_deposit" | "other";
+  preferred_payment_method: string;
   is_self: boolean;
   notes?: string;
 }
@@ -50,7 +51,7 @@ interface AddPropertyOwnerDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onOwnerAdded?: () => void;
-  editOwner?: PropertyOwner | null;
+  editOwner?: any; // Use any for now to avoid type conflicts
   mode?: "add" | "edit";
 }
 
@@ -72,10 +73,7 @@ export function AddPropertyOwnerDialog({
   const { data: ownerProperties = [] } = usePropertiesByOwner(editOwner?.id);
   const updateProperty = useUpdateProperty();
   
-  const [ownerData, setOwnerData] = useState<PropertyOwner>(() => {
-    if (mode === "edit" && editOwner) {
-      return { ...editOwner };
-    }
+  const [ownerData, setOwnerData] = useState<PropertyOwnerFormData>(() => {
     return {
       first_name: "",
       last_name: "",
@@ -102,8 +100,6 @@ export function AddPropertyOwnerDialog({
   useEffect(() => {
     if (mode === "edit" && editOwner) {
       setOwnerData({ ...editOwner });
-      // Set currently assigned properties for editing
-      setSelectedProperties(ownerProperties.map(p => p.id));
     } else if (mode === "add") {
       setOwnerData({
         first_name: "",
@@ -126,7 +122,14 @@ export function AddPropertyOwnerDialog({
       });
       setSelectedProperties([]);
     }
-  }, [editOwner, mode, ownerProperties]);
+  }, [editOwner, mode]);
+
+  // Separate effect for setting selected properties when editing
+  useEffect(() => {
+    if (mode === "edit" && ownerProperties.length > 0) {
+      setSelectedProperties(ownerProperties.map(p => p.id));
+    }
+  }, [mode, ownerProperties]);
 
   // Filter properties based on search and filter criteria
   const filteredUnassignedProperties = unassignedProperties.filter(property => {
@@ -264,7 +267,7 @@ export function AddPropertyOwnerDialog({
     }
   };
 
-  const handleInputChange = (field: keyof PropertyOwner, value: any) => {
+  const handleInputChange = (field: keyof PropertyOwnerFormData, value: any) => {
     setOwnerData(prev => ({
       ...prev,
       [field]: value
