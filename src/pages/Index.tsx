@@ -228,8 +228,7 @@ const Index = () => {
       {addTenantOpen && (
         <Suspense fallback={<DialogSkeleton />}>
           <AddTenantDialog 
-            open={addTenantOpen} 
-            onOpenChange={handleCloseTenantDialog} 
+            onTenantAdded={handleCloseTenantDialog} 
           />
         </Suspense>
       )}

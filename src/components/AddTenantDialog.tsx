@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { MobileDialog } from "@/components/mobile/MobileDialog";
-import { useMobileDetection } from "@/hooks/useMobileDetection";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -21,54 +18,53 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, User } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, Loader2, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface AddTenantDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onTenantAdded?: () => void;
+  onTenantAdded: () => void;
 }
 
 interface Property {
   id: string;
   address: string;
+  city: string | null;
+  state: string | null;
+  monthly_rent: number | null;
 }
 
-interface TenantData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  property_id: string;
-  lease_start_date: string;
-  lease_end_date: string;
-  monthly_rent: number;
-  security_deposit: number;
-  emergency_contact_name: string;
-  emergency_contact_phone: string;
-  notes: string;
-}
-
-export function AddTenantDialog({ open, onOpenChange, onTenantAdded }: AddTenantDialogProps) {
-  const { isMobile } = useMobileDetection();
+export const AddTenantDialog = ({ onTenantAdded }: AddTenantDialogProps) => {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingProperties, setLoadingProperties] = useState(false);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
-  const [tenantData, setTenantData] = useState<TenantData>({
-    first_name: "",
-    last_name: "",
+  const [leaseStartDate, setLeaseStartDate] = useState<Date>();
+  const [leaseEndDate, setLeaseEndDate] = useState<Date>();
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
-    property_id: "",
-    lease_start_date: "",
-    lease_end_date: "",
-    monthly_rent: 0,
-    security_deposit: 0,
-    emergency_contact_name: "",
-    emergency_contact_phone: "",
-    notes: "",
+    propertyId: "",
+    monthlyRent: "",
+    securityDeposit: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    notes: ""
   });
   const { toast } = useToast();
 
+  // Fetch available properties when dialog opens
   useEffect(() => {
     if (open) {
       fetchProperties();
@@ -76,212 +72,291 @@ export function AddTenantDialog({ open, onOpenChange, onTenantAdded }: AddTenant
   }, [open]);
 
   const fetchProperties = async () => {
+    setLoadingProperties(true);
     try {
       const { data, error } = await supabase
         .from('properties')
-        .select('id, address')
-        .eq('status', 'active');
+        .select('id, address, city, state, monthly_rent')
+        .order('address', { ascending: true });
 
       if (error) throw error;
       setProperties(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching properties:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load properties",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingProperties(false);
     }
   };
 
-  const handleSaveTenant = async () => {
-    if (!tenantData.first_name.trim() || !tenantData.last_name.trim() || !tenantData.property_id) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
+  const resetForm = () => {
+    setFormData({
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      propertyId: "",
+      monthlyRent: "",
+      securityDeposit: "",
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      notes: ""
+    });
+    setLeaseStartDate(undefined);
+    setLeaseEndDate(undefined);
+  };
 
-    setIsSaving(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Not authenticated");
+      if (!formData.firstName || !formData.lastName || !formData.propertyId) {
+        throw new Error("First name, last name, and property are required");
+      }
 
-      // First, create the tenant record in a tenants table
-      // We'll need to create this table first
+      // Get current user for user_id
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
+
       const { error } = await supabase
         .from('tenants')
         .insert({
-          ...tenantData,
-          user_id: userData.user.id,
+          user_id: user.id,
+          property_id: formData.propertyId,
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          email: formData.email || null,
+          phone: formData.phone || null,
+          lease_start_date: leaseStartDate?.toISOString().split('T')[0] || null,
+          lease_end_date: leaseEndDate?.toISOString().split('T')[0] || null,
+          monthly_rent: formData.monthlyRent ? parseFloat(formData.monthlyRent) : null,
+          security_deposit: formData.securityDeposit ? parseFloat(formData.securityDeposit) : null,
+          emergency_contact_name: formData.emergencyContactName || null,
+          emergency_contact_phone: formData.emergencyContactPhone || null,
+          notes: formData.notes || null
         });
 
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Tenant added successfully!",
+        title: "Tenant Added",
+        description: "New tenant has been successfully added to the system",
       });
 
-      onTenantAdded?.();
-      onOpenChange(false);
+      setOpen(false);
       resetForm();
-    } catch (error) {
-      console.error('Error saving tenant:', error);
+      onTenantAdded();
+    } catch (error: any) {
+      console.error('Error adding tenant:', error);
       toast({
         title: "Error",
-        description: "Failed to save tenant",
+        description: error.message || "Failed to add tenant",
         variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
+      setLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setTenantData({
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone: "",
-      property_id: "",
-      lease_start_date: "",
-      lease_end_date: "",
-      monthly_rent: 0,
-      security_deposit: 0,
-      emergency_contact_name: "",
-      emergency_contact_phone: "",
-      notes: "",
-    });
+  const getPropertyDisplay = (propertyId: string) => {
+    const property = properties.find(p => p.id === propertyId);
+    if (!property) return "";
+    return `${property.address}${property.city ? `, ${property.city}` : ''}${property.state ? `, ${property.state}` : ''}`;
   };
 
-  const handleInputChange = (field: keyof TenantData, value: any) => {
-    setTenantData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const DialogWrapper = isMobile ? MobileDialog : Dialog;
-  const ContentWrapper = isMobile ? "div" : DialogContent;
+  // Auto-fill rent from selected property
+  useEffect(() => {
+    if (formData.propertyId) {
+      const property = properties.find(p => p.id === formData.propertyId);
+      if (property?.monthly_rent && !formData.monthlyRent) {
+        setFormData(prev => ({ ...prev, monthlyRent: property.monthly_rent!.toString() }));
+      }
+    }
+  }, [formData.propertyId, properties]);
 
   return (
-    <DialogWrapper open={open} onOpenChange={onOpenChange}>
-      <ContentWrapper className={isMobile ? "" : "max-w-2xl max-h-[90vh] overflow-y-auto"}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="bg-gradient-primary hover:bg-primary-dark">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Tenant
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Tenant</DialogTitle>
           <DialogDescription>
-            Add a new tenant to your property management system.
+            Add a new tenant to your property management system. Fill in their details and lease information.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Personal Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Personal Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h4 className="font-medium text-sm text-muted-foreground">Personal Information</h4>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="first-name">First Name *</Label>
+                <Label htmlFor="firstName">First Name *</Label>
                 <Input
-                  id="first-name"
-                  value={tenantData.first_name}
-                  onChange={(e) => handleInputChange('first_name', e.target.value)}
-                  placeholder="First name"
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
+                  placeholder="Enter first name"
+                  required
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="last-name">Last Name *</Label>
+                <Label htmlFor="lastName">Last Name *</Label>
                 <Input
-                  id="last-name"
-                  value={tenantData.last_name}
-                  onChange={(e) => handleInputChange('last_name', e.target.value)}
-                  placeholder="Last name"
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
+                  placeholder="Enter last name"
+                  required
                 />
               </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
-                  value={tenantData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="Email address"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Enter email address"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
-                  value={tenantData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="Phone number"
+                  value={formData.phone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="Enter phone number"
                 />
               </div>
             </div>
           </div>
 
-          {/* Lease Information */}
+          {/* Property & Lease Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Lease Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="property">Property *</Label>
-                <Select 
-                  value={tenantData.property_id} 
-                  onValueChange={(value) => handleInputChange('property_id', value)}
-                >
+            <h4 className="font-medium text-sm text-muted-foreground">Property & Lease Information</h4>
+            
+            <div className="space-y-2">
+              <Label htmlFor="property">Property *</Label>
+              {loadingProperties ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading properties...
+                </div>
+              ) : (
+                <Select value={formData.propertyId} onValueChange={(value) => setFormData(prev => ({ ...prev, propertyId: value }))}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select a property" />
+                    <SelectValue placeholder="Select a property">
+                      {formData.propertyId ? getPropertyDisplay(formData.propertyId) : "Select a property"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    {properties.map(property => (
+                    {properties.map((property) => (
                       <SelectItem key={property.id} value={property.id}>
-                        {property.address}
+                        <div className="flex flex-col">
+                          <span>{property.address}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {[property.city, property.state].filter(Boolean).join(', ')}
+                            {property.monthly_rent && ` • $${property.monthly_rent}/mo`}
+                          </span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Lease Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !leaseStartDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {leaseStartDate ? format(leaseStartDate, "PPP") : "Select start date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={leaseStartDate}
+                      onSelect={setLeaseStartDate}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lease-start">Lease Start Date</Label>
-                <Input
-                  id="lease-start"
-                  type="date"
-                  value={tenantData.lease_start_date}
-                  onChange={(e) => handleInputChange('lease_start_date', e.target.value)}
-                />
+                <Label>Lease End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !leaseEndDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {leaseEndDate ? format(leaseEndDate, "PPP") : "Select end date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={leaseEndDate}
+                      onSelect={setLeaseEndDate}
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="lease-end">Lease End Date</Label>
+                <Label htmlFor="monthlyRent">Monthly Rent</Label>
                 <Input
-                  id="lease-end"
-                  type="date"
-                  value={tenantData.lease_end_date}
-                  onChange={(e) => handleInputChange('lease_end_date', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="monthly-rent">Monthly Rent ($)</Label>
-                <Input
-                  id="monthly-rent"
+                  id="monthlyRent"
                   type="number"
-                  value={tenantData.monthly_rent || ''}
-                  onChange={(e) => handleInputChange('monthly_rent', parseInt(e.target.value) || 0)}
-                  placeholder="Monthly rent amount"
+                  step="0.01"
+                  value={formData.monthlyRent}
+                  onChange={(e) => setFormData(prev => ({ ...prev, monthlyRent: e.target.value }))}
+                  placeholder="0.00"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="security-deposit">Security Deposit ($)</Label>
+                <Label htmlFor="securityDeposit">Security Deposit</Label>
                 <Input
-                  id="security-deposit"
+                  id="securityDeposit"
                   type="number"
-                  value={tenantData.security_deposit || ''}
-                  onChange={(e) => handleInputChange('security_deposit', parseInt(e.target.value) || 0)}
-                  placeholder="Security deposit amount"
+                  step="0.01"
+                  value={formData.securityDeposit}
+                  onChange={(e) => setFormData(prev => ({ ...prev, securityDeposit: e.target.value }))}
+                  placeholder="0.00"
                 />
               </div>
             </div>
@@ -289,25 +364,24 @@ export function AddTenantDialog({ open, onOpenChange, onTenantAdded }: AddTenant
 
           {/* Emergency Contact */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Emergency Contact</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <h4 className="font-medium text-sm text-muted-foreground">Emergency Contact</h4>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="emergency-name">Contact Name</Label>
+                <Label htmlFor="emergencyContactName">Contact Name</Label>
                 <Input
-                  id="emergency-name"
-                  value={tenantData.emergency_contact_name}
-                  onChange={(e) => handleInputChange('emergency_contact_name', e.target.value)}
-                  placeholder="Emergency contact name"
+                  id="emergencyContactName"
+                  value={formData.emergencyContactName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, emergencyContactName: e.target.value }))}
+                  placeholder="Enter contact name"
                 />
               </div>
-
               <div className="space-y-2">
-                <Label htmlFor="emergency-phone">Contact Phone</Label>
+                <Label htmlFor="emergencyContactPhone">Contact Phone</Label>
                 <Input
-                  id="emergency-phone"
-                  value={tenantData.emergency_contact_phone}
-                  onChange={(e) => handleInputChange('emergency_contact_phone', e.target.value)}
-                  placeholder="Emergency contact phone"
+                  id="emergencyContactPhone"
+                  value={formData.emergencyContactPhone}
+                  onChange={(e) => setFormData(prev => ({ ...prev, emergencyContactPhone: e.target.value }))}
+                  placeholder="Enter contact phone"
                 />
               </div>
             </div>
@@ -315,36 +389,36 @@ export function AddTenantDialog({ open, onOpenChange, onTenantAdded }: AddTenant
 
           {/* Notes */}
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">Notes (Optional)</Label>
             <Textarea
               id="notes"
-              value={tenantData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Additional notes about the tenant"
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+              placeholder="Any additional notes about this tenant..."
               rows={3}
             />
           </div>
 
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button onClick={handleSaveTenant} disabled={isSaving}>
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <User className="w-4 h-4 mr-2" />
-                  Add Tenant
-                </>
-              )}
+            <Button 
+              type="submit" 
+              disabled={loading || !formData.firstName || !formData.lastName || !formData.propertyId}
+              className="bg-gradient-primary hover:bg-primary-dark"
+            >
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Add Tenant
             </Button>
-          </div>
-        </div>
-      </ContentWrapper>
-    </DialogWrapper>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
-}
+};
