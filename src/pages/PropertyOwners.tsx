@@ -199,13 +199,6 @@ const PropertyOwners = () => {
             <Plus className="h-4 w-4 mr-2" />
             Add Property Owner
           </Button>
-          <Button 
-            variant="outline"
-            onClick={handleAddSelf}
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Myself as Owner
-          </Button>
         </div>
 
         {/* Property Owners Grid */}
