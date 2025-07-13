@@ -99,3 +99,20 @@ export const useUpdateProfile = () => {
     },
   });
 };
+
+export const useProfiles = () => {
+  return useQuery({
+    queryKey: ['profiles'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .not('first_name', 'is', null)
+        .not('last_name', 'is', null)
+        .order('first_name', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+};

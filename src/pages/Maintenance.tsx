@@ -8,6 +8,8 @@ import { Plus, Wrench, Clock, CheckCircle, AlertTriangle, Users, Search, Filter,
 import { useState } from "react";
 import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
 import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
+import MaintenanceCalendar from "@/components/MaintenanceCalendar";
+import MaintenanceDetailsDialog from "@/components/MaintenanceDetailsDialog";
 
 const Maintenance = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -194,8 +196,9 @@ const Maintenance = () => {
 
             {/* Tabs for different maintenance views */}
             <Tabs defaultValue="work-orders" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="work-orders">Work Orders</TabsTrigger>
+                <TabsTrigger value="calendar">Calendar</TabsTrigger>
                 <TabsTrigger value="contractors">Contractors</TabsTrigger>
                 <TabsTrigger value="schedule">Preventive Maintenance</TabsTrigger>
               </TabsList>
@@ -325,6 +328,11 @@ const Maintenance = () => {
                     </div>
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* Calendar */}
+              <TabsContent value="calendar">
+                <MaintenanceCalendar />
               </TabsContent>
 
               {/* Contractors */}
