@@ -13,11 +13,8 @@ import {
   Filter,
   Bell,
   User,
-  Database,
   Loader2,
   AlertCircle,
-  CheckCircle,
-  Info,
   RefreshCw,
   AlertTriangle
 } from "lucide-react";
@@ -58,8 +55,6 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [loading, setLoading] = useState(true);
-  const [seeding, setSeeding] = useState(false);
-  const [testUsersExist, setTestUsersExist] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
@@ -98,7 +93,6 @@ const UserManagement = () => {
 
     checkAdminStatus();
     fetchUsers();
-    checkTestUsersExist();
 
     return () => {
       if (timeoutRef.current) {
@@ -110,6 +104,23 @@ const UserManagement = () => {
   useEffect(() => {
     filterUsers();
   }, [users, searchTerm, roleFilter]);
+
+  const filterUsers = () => {
+    let filtered = [...users];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (roleFilter !== 'all') {
+      filtered = filtered.filter(user => user.role === roleFilter);
+    }
+    
+    setFilteredUsers(filtered);
+  };
 
   const checkAdminStatus = async () => {
     console.log('🔍 UserManagement: Checking admin status...');
@@ -182,13 +193,6 @@ const UserManagement = () => {
       
       console.log('✅ UserManagement: Deduplicated users:', deduplicatedUsers.length, 'unique users');
       setUsers(deduplicatedUsers);
-      
-      // Check if test users exist after fetching users
-      const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
-      const hasTestUsers = deduplicatedUsers.some(user => testEmails.includes(user.email));
-      setTestUsersExist(hasTestUsers);
-      
-      console.log('✅ UserManagement: Test users exist:', hasTestUsers);
     } catch (error) {
       console.error('❌ UserManagement: Error fetching users:', error);
       setError('Failed to fetch users: ' + (error as any).message);
@@ -205,26 +209,6 @@ const UserManagement = () => {
     }
   };
 
-  const checkTestUsersExist = async () => {
-    console.log('🔍 UserManagement: Checking test users...');
-    try {
-      const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('email')
-        .in('email', testEmails);
-
-      if (error) {
-        console.error('❌ UserManagement: Test users check error:', error);
-        throw error;
-      }
-      
-      console.log('✅ UserManagement: Test users check result:', (data || []).length, 'found');
-      setTestUsersExist((data || []).length > 0);
-    } catch (error) {
-      console.error('❌ UserManagement: Error checking test users:', error);
-    }
-  };
 
   // Force load with mock data
   const forceLoadWithMockData = () => {
@@ -291,283 +275,9 @@ const UserManagement = () => {
 
     checkAdminStatus();
     fetchUsers();
-    checkTestUsersExist();
   };
 
-  const seedTestUsers = async () => {
-    console.log('🌱 UserManagement: Starting smart seed process...');
-    try {
-      setSeeding(true);
-      setError(null);
-      
-      const testEmails = ['admin@test.com', 'owner@test.com', 'tenant@test.com', 'watcher@test.com'];
-      const testRoles = ['admin', 'owner_investor', 'tenant', 'house_watcher'];
-      
-      // Step 1: Check if test users exist in auth.users (via user_profiles view)
-      toast({
-        title: "Step 1/4",
-        description: "Checking for test users... 🔍",
-        variant: "default"
-      });
-      
-      console.log('🔍 UserManagement: Checking for existing test users...');
-      const { data: existingUsers, error: checkError } = await supabase
-        .from('user_profiles')
-        .select('id, email')
-        .in('email', testEmails);
-      
-      if (checkError) {
-        console.error('❌ UserManagement: Error checking existing users:', checkError);
-        throw checkError;
-      }
-      
-      const existingEmails = (existingUsers || []).map(u => u.email);
-      const missingEmails = testEmails.filter(email => !existingEmails.includes(email));
-      
-      console.log('📊 UserManagement: Existing users:', existingEmails);
-      console.log('❌ UserManagement: Missing users:', missingEmails);
-      
-      // Step 2: If users are missing, show instructions
-      if (missingEmails.length > 0) {
-        const instructionMessage = `Test users need to be created manually in Supabase:
 
-1. Go to Supabase Dashboard → Authentication → Users
-2. Create these missing users:
-${missingEmails.map(email => `   • ${email} (password: testpass123)`).join('\n')}
-3. Then click 'Seed Test Data' again
-
-Found: ${existingEmails.join(', ') || 'none'}
-Missing: ${missingEmails.join(', ')}`;
-
-        setError(instructionMessage);
-        
-        toast({
-          title: "Missing Auth Users",
-          description: `${missingEmails.length} test users need to be created in Supabase Auth first`,
-          variant: "destructive"
-        });
-        
-        return;
-      }
-      
-      // Step 3: Create user roles
-      toast({
-        title: "Step 2/4", 
-        description: "Creating user roles... 👤",
-        variant: "default"
-      });
-      
-      console.log('👤 UserManagement: Creating user roles...');
-      const userRolePromises = existingUsers!.map((user, index) => {
-        const role = testRoles[testEmails.indexOf(user.email!)];
-        return supabase
-          .from('user_roles')
-          .upsert({
-            user_id: user.id,
-            role: role as any,
-            assigned_by: user.id // Self-assigned for testing
-          });
-      });
-      
-      const roleResults = await Promise.allSettled(userRolePromises);
-      const roleErrors = roleResults.filter(r => r.status === 'rejected');
-      
-      if (roleErrors.length > 0) {
-        console.error('❌ UserManagement: Some role creation failed:', roleErrors);
-      }
-      
-      // Step 4: Create profiles (if they don't exist)
-      toast({
-        title: "Step 3/4",
-        description: "Creating user profiles... 📝",
-        variant: "default"
-      });
-      
-      console.log('📝 UserManagement: Creating user profiles...');
-      const profilePromises = existingUsers!.map((user, index) => {
-        const email = user.email!;
-        const [firstName, domain] = email.split('@');
-        const lastName = testRoles[testEmails.indexOf(email)].replace('_', ' ').split(' ').map(w => 
-          w.charAt(0).toUpperCase() + w.slice(1)
-        ).join(' ');
-        
-        return supabase
-          .from('profiles')
-          .upsert({
-            user_id: user.id,
-            first_name: firstName.charAt(0).toUpperCase() + firstName.slice(1),
-            last_name: lastName
-          });
-      });
-      
-      const profileResults = await Promise.allSettled(profilePromises);
-      const profileErrors = profileResults.filter(r => r.status === 'rejected');
-      
-      if (profileErrors.length > 0) {
-        console.error('❌ UserManagement: Some profile creation failed:', profileErrors);
-      }
-      
-      // Step 5: Create additional test data via RPC (this will create properties, etc.)
-      toast({
-        title: "Step 4/4",
-        description: "Creating test properties and data... 🏠",
-        variant: "default"
-      });
-      
-      console.log('🏠 UserManagement: Creating additional test data...');
-      try {
-        const { data: rpcData, error: rpcError } = await supabase.rpc('seed_test_users');
-        if (rpcError) {
-          console.warn('⚠️ UserManagement: RPC seeding partially failed:', rpcError);
-          // Continue anyway, basic setup is done
-        }
-      } catch (rpcError) {
-        console.warn('⚠️ UserManagement: RPC seeding failed, but user setup is complete:', rpcError);
-      }
-      
-      // Success!
-      console.log('✅ UserManagement: Seeding completed successfully');
-      toast({
-        title: "✅ Seeding Complete!",
-        description: `Successfully set up ${existingUsers!.length} test users with roles and profiles`,
-        variant: "default"
-      });
-      
-      // Refresh users list
-      await fetchUsers();
-      setError(null);
-      
-    } catch (error: any) {
-      console.error('❌ UserManagement: Error in smart seeding:', error);
-      
-      const errorMessage = `Seeding failed: ${error.message}
-
-${error.code === '23503' ? 'This usually means test users need to be created in Supabase Auth first.' : 'Check console for detailed error information.'}`;
-      
-      setError(errorMessage);
-      
-      toast({
-        title: "Seeding Failed",
-        description: error.message || "Unknown error occurred",
-        variant: "destructive"
-      });
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  // Create role-only data for emergency testing
-  const createRoleOnlyData = async () => {
-    console.log('🔧 UserManagement: Creating role-only test data...');
-    try {
-      setSeeding(true);
-      setError(null);
-      
-      // Create mock user profiles directly (for emergency testing)
-      const mockProfiles = [
-        {
-          id: 'mock-admin-1',
-          email: 'admin@test.com',
-          first_name: 'Test',
-          last_name: 'Admin',
-          user_created_at: new Date().toISOString()
-        },
-        {
-          id: 'mock-owner-1', 
-          email: 'owner@test.com',
-          first_name: 'Property',
-          last_name: 'Owner',
-          user_created_at: new Date().toISOString()
-        },
-        {
-          id: 'mock-tenant-1',
-          email: 'tenant@test.com', 
-          first_name: 'Test',
-          last_name: 'Tenant',
-          user_created_at: new Date().toISOString()
-        },
-        {
-          id: 'mock-watcher-1',
-          email: 'watcher@test.com',
-          first_name: 'House',
-          last_name: 'Watcher', 
-          user_created_at: new Date().toISOString()
-        }
-      ];
-
-      // Add these as mock users to the state for emergency testing
-      const mockUsersWithRoles = mockProfiles.map((profile, index) => ({
-        ...profile,
-        role: ['admin', 'property_owner', 'tenant', 'house_watcher'][index],
-        role_created_at: new Date().toISOString()
-      }));
-
-      setUsers(prevUsers => [...prevUsers, ...mockUsersWithRoles]);
-      
-      toast({
-        title: "Mock Test Data Created",
-        description: "Created role-only test data for emergency testing (not persisted to database)",
-        variant: "default"
-      });
-      
-    } catch (error: any) {
-      console.error('❌ UserManagement: Error creating role-only data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create role-only test data",
-        variant: "destructive"
-      });
-    } finally {
-      setSeeding(false);
-    }
-  };
-
-  const filterUsers = () => {
-    let filtered = users;
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filter by role
-    if (roleFilter !== "all") {
-      filtered = filtered.filter(user => user.role === roleFilter);
-    }
-
-    setFilteredUsers(filtered);
-  };
-
-  const updateUserRole = async (userId: string, newRole: string) => {
-    try {
-      const { error } = await supabase
-        .from('user_roles')
-        .update({ role: newRole as any, updated_at: new Date().toISOString() })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      // Update local state
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, role: newRole } : user
-      ));
-
-      toast({
-        title: "Role Updated",
-        description: "User role has been successfully updated",
-      });
-    } catch (error) {
-      console.error('Error updating user role:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update user role",
-        variant: "destructive"
-      });
-    }
-  };
 
   const getRoleBadgeColor = (role: string | null) => {
     switch (role) {
@@ -604,144 +314,31 @@ ${error.code === '23503' ? 'This usually means test users need to be created in 
     }
   };
 
-  // Clean up duplicate roles function
-  const cleanupDuplicateRoles = async () => {
-    console.log('🧹 UserManagement: Starting cleanup of duplicate roles...');
+  const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      setSeeding(true);
-      setError(null);
-      
-      toast({
-        title: "Cleaning Duplicates",
-        description: "Removing duplicate role entries...",
-        variant: "default"
-      });
-      
-      // Define correct roles for test users
-      const correctRoles = {
-        'admin@test.com': 'admin',
-        'owner@test.com': 'owner_investor', 
-        'tenant@test.com': 'tenant',
-        'watcher@test.com': 'house_watcher'
-      };
-      
-      // Get all user_roles entries
-      const { data: allRoles, error: fetchError } = await supabase
+      const { error } = await supabase
         .from('user_roles')
-        .select('*');
-      
-      if (fetchError) {
-        console.error('❌ UserManagement: Error fetching roles for cleanup:', fetchError);
-        throw fetchError;
-      }
-      
-      console.log('📊 UserManagement: Found', allRoles?.length || 0, 'total role entries');
-      
-      // Get user emails to map IDs
-      const { data: userProfiles, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('id, email');
-      
-      if (profileError) {
-        console.error('❌ UserManagement: Error fetching user profiles:', profileError);
-        throw profileError;
-      }
-      
-      // Create email to user ID mapping
-      const emailToId = userProfiles?.reduce((acc, profile) => {
-        if (profile.email) {
-          acc[profile.email] = profile.id;
-        }
-        return acc;
-      }, {} as Record<string, string>) || {};
-      
-      let deletedCount = 0;
-      let updatedCount = 0;
-      
-      // For each test user, clean up their roles
-      for (const [email, correctRole] of Object.entries(correctRoles)) {
-        const userId = emailToId[email];
-        if (!userId) {
-          console.log(`⚠️ UserManagement: User ${email} not found, skipping cleanup`);
-          continue;
-        }
-        
-        // Get all roles for this user
-        const userRoles = allRoles?.filter(role => role.user_id === userId) || [];
-        console.log(`🔍 UserManagement: User ${email} has ${userRoles.length} role entries:`, userRoles.map(r => r.role));
-        
-        if (userRoles.length > 1) {
-          // Delete all roles for this user
-          const { error: deleteError } = await supabase
-            .from('user_roles')
-            .delete()
-            .eq('user_id', userId);
-          
-          if (deleteError) {
-            console.error(`❌ UserManagement: Error deleting roles for ${email}:`, deleteError);
-            continue;
-          }
-          
-          deletedCount += userRoles.length;
-          
-          // Insert the correct role
-          const { error: insertError } = await supabase
-            .from('user_roles')
-            .insert({
-              user_id: userId,
-              role: correctRole as any,
-              assigned_by: userId,
-              assigned_at: new Date().toISOString()
-            });
-          
-          if (insertError) {
-            console.error(`❌ UserManagement: Error inserting correct role for ${email}:`, insertError);
-            continue;
-          }
-          
-          updatedCount++;
-          console.log(`✅ UserManagement: Fixed ${email} role to ${correctRole}`);
-        } else if (userRoles.length === 1 && userRoles[0].role !== correctRole) {
-          // Update the existing role if it's wrong
-          const { error: updateError } = await supabase
-            .from('user_roles')
-            .update({ 
-              role: correctRole as any,
-              updated_at: new Date().toISOString()
-            })
-            .eq('user_id', userId);
-          
-          if (updateError) {
-            console.error(`❌ UserManagement: Error updating role for ${email}:`, updateError);
-            continue;
-          }
-          
-          updatedCount++;
-          console.log(`✅ UserManagement: Updated ${email} role from ${userRoles[0].role} to ${correctRole}`);
-        }
-      }
-      
-      console.log(`✅ UserManagement: Cleanup complete - deleted ${deletedCount} entries, updated/created ${updatedCount} correct roles`);
-      
+        .update({ 
+          role: newRole as any,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
       toast({
-        title: "✅ Cleanup Complete!",
-        description: `Removed duplicates and fixed ${updatedCount} user roles`,
+        title: "Role Updated",
+        description: "User role has been successfully updated",
         variant: "default"
       });
-      
-      // Refresh users list
+
       await fetchUsers();
-      
     } catch (error: any) {
-      console.error('❌ UserManagement: Error during cleanup:', error);
-      setError('Cleanup failed: ' + error.message);
       toast({
-        title: "Cleanup Failed",
-        description: error.message || "Unknown error occurred",
+        title: "Update Failed",
+        description: error.message || "Failed to update user role",
         variant: "destructive"
       });
-    } finally {
-      setSeeding(false);
     }
   };
 
@@ -890,131 +487,6 @@ ${error.code === '23503' ? 'This usually means test users need to be created in 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-auto">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Test Data Seeding Section */}
-          {isAdmin && (
-            <Card className="border-dashed border-2 border-muted">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Database className="h-5 w-5 text-primary" />
-                  Development Test Data
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground mb-3">
-                      Seed the database with test users and sample data for development and testing purposes.
-                    </p>
-                    
-                    {testUsersExist && (
-                      <Alert className="mb-4">
-                        <CheckCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          Test users already exist in the system. You can re-run seeding to update test data.
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <Alert>
-                      <Info className="h-4 w-4" />
-                      <AlertDescription>
-                        <strong>Test Account Credentials:</strong>
-                        <div className="mt-2 grid grid-cols-2 gap-2 text-xs font-mono">
-                          <div>admin@test.com / testpass123</div>
-                          <div>owner@test.com / testpass123</div>
-                          <div>tenant@test.com / testpass123</div>
-                          <div>watcher@test.com / testpass123</div>
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-                    
-                    {/* Manual Setup Instructions */}
-                    {error && error.includes('auth users') && (
-                      <Alert className="mt-4 border-amber-200 bg-amber-50 dark:bg-amber-950/50">
-                        <Info className="h-4 w-4 text-amber-600" />
-                        <AlertDescription className="text-amber-800 dark:text-amber-200">
-                          <strong>Manual Setup Required:</strong>
-                          <ol className="mt-2 ml-4 list-decimal text-xs space-y-1">
-                            <li>Go to Supabase Dashboard → Authentication → Users</li>
-                            <li>Click "Add User" for each test account</li>
-                            <li>Create users with the emails shown above</li>
-                            <li>Set password to "testpass123" for each</li>
-                            <li>Then run "Seed Test Data" again</li>
-                          </ol>
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                  </div>
-                  
-                  <div className="shrink-0 space-y-2">
-                    <Button 
-                      onClick={seedTestUsers}
-                      disabled={seeding}
-                      variant={testUsersExist ? "outline" : "default"}
-                      className="w-full"
-                    >
-                      {seeding ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Seeding...
-                        </>
-                      ) : (
-                        <>
-                          <Database className="h-4 w-4 mr-2" />
-                          {testUsersExist ? 'Re-seed Test Data' : 'Seed Test Data'}
-                        </>
-                      )}
-                    </Button>
-                    
-                    {/* Clean Up Duplicates Button */}
-                    {testUsersExist && (
-                      <Button 
-                        onClick={cleanupDuplicateRoles}
-                        disabled={seeding}
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                      >
-                        {seeding ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Cleaning...
-                          </>
-                        ) : (
-                          <>
-                            <AlertTriangle className="h-4 w-4 mr-2" />
-                            Clean Up Duplicates
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    
-                    {error && error.includes('auth users') && (
-                      <Button 
-                        onClick={createRoleOnlyData}
-                        disabled={seeding}
-                        variant="secondary"
-                        size="sm"
-                        className="w-full"
-                      >
-                        {seeding ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Creating...
-                          </>
-                        ) : (
-                          <>
-                            <UserCog className="h-4 w-4 mr-2" />
-                            Create Role-Only Data
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           {/* Filters */}
           <div className="flex items-center gap-4">
