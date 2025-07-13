@@ -1,15 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { 
-  Bell, 
   Search, 
-  User, 
+  User,
   Plus,
   Filter,
   Users,
@@ -188,199 +185,176 @@ const PropertyOwners = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-subtle">
-        <AppSidebar />
-        
-        <div className="flex-1 flex flex-col">
-          {/* Header */}
-          <header className="bg-card border-b border-border p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div>
-                  <h1 className="text-2xl font-bold text-foreground">Property Owners</h1>
-                  <p className="text-sm text-muted-foreground">Manage property owner information and contact details</p>
-                </div>
-                <Badge variant="secondary" className="ml-4">
-                  {mockOwners.length} Owners
-                </Badge>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search owners..." 
-                    className="pl-10 w-64"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filter
-                </Button>
-                <Button variant="outline" size="sm" className="relative">
-                  <Bell className="h-4 w-4" />
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
-                    3
-                  </Badge>
-                </Button>
-                <Button variant="outline" size="sm">
-                  <User className="h-4 w-4" />
-                </Button>
-              </div>
+    <div className="flex-1 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Clean Header */}
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold text-foreground">Property Owners</h1>
+            <p className="text-muted-foreground">
+              Manage property owner information and contact details • {mockOwners.length} owners
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search owners..." 
+                className="pl-10 w-64"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
             </div>
-          </header>
-
-          {/* Main Content */}
-          <main className="flex-1 p-6 overflow-auto">
-            <div className="max-w-7xl mx-auto space-y-8">
-              {/* Quick Actions */}
-              <div className="flex items-center gap-4 mb-6">
-                <Button 
-                  className="bg-gradient-primary hover:bg-primary-dark"
-                  onClick={() => setIsAddDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Property Owner
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={handleAddSelf}
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Add Myself as Owner
-                </Button>
-              </div>
-
-              {/* Property Owners Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredOwners.map((owner) => (
-                  <Card 
-                    key={owner.id} 
-                    className="shadow-md border-0 hover:shadow-lg transition-shadow group cursor-pointer"
-                    onClick={() => handleViewOwner(owner)}
-                  >
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
-                            {owner.company_name ? (
-                              <Building2 className="h-5 w-5 text-white" />
-                            ) : (
-                              <User className="h-5 w-5 text-white" />
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-foreground">
-                              {getDisplayName(owner)}
-                            </h3>
-                            {owner.company_name && (
-                              <p className="text-sm text-muted-foreground">
-                                {owner.first_name} {owner.last_name}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {owner.is_self && (
-                            <Badge variant="secondary" className="text-xs">
-                              Me
-                            </Badge>
-                          )}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewOwner(owner);
-                              }}>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditOwner(owner);
-                              }}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Owner
-                              </DropdownMenuItem>
-                              <DropdownMenuItem 
-                                className="text-destructive" 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteOwner(owner);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Owner
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{owner.email}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">{owner.phone}</span>
-                      </div>
-                      {owner.address && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-muted-foreground">
-                            {owner.city}, {owner.state}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Properties: </span>
-                          <span className="font-semibold text-foreground">{owner.property_count || 0}</span>
-                        </div>
-                        <div className="text-sm">
-                          <span className="text-muted-foreground">Payment: </span>
-                          <span className="font-semibold text-foreground capitalize">
-                            {owner.preferred_payment_method.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {filteredOwners.length === 0 && (
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No property owners found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    {searchTerm ? "Try adjusting your search terms." : "Get started by adding your first property owner."}
-                  </p>
-                  {!searchTerm && (
-                    <Button onClick={() => setIsAddDialogOpen(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Property Owner
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          </main>
+            <Button variant="outline">
+              <Filter className="h-4 w-4 mr-2" />
+              Filter
+            </Button>
+          </div>
         </div>
+
+        {/* Quick Actions */}
+        <div className="flex items-center gap-3">
+          <Button 
+            className="bg-gradient-primary hover:bg-primary-dark"
+            onClick={() => setIsAddDialogOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Property Owner
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={handleAddSelf}
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add Myself as Owner
+          </Button>
+        </div>
+
+        {/* Property Owners Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredOwners.map((owner) => (
+            <Card 
+              key={owner.id} 
+              className="shadow-md border-0 hover:shadow-lg transition-shadow group cursor-pointer"
+              onClick={() => handleViewOwner(owner)}
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-primary rounded-full flex items-center justify-center">
+                      {owner.company_name ? (
+                        <Building2 className="h-5 w-5 text-white" />
+                      ) : (
+                        <User className="h-5 w-5 text-white" />
+                      )}
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">
+                        {getDisplayName(owner)}
+                      </h3>
+                      {owner.company_name && (
+                        <p className="text-sm text-muted-foreground">
+                          {owner.first_name} {owner.last_name}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {owner.is_self && (
+                      <Badge variant="secondary" className="text-xs">
+                        Me
+                      </Badge>
+                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewOwner(owner);
+                        }}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditOwner(owner);
+                        }}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Owner
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-destructive" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteOwner(owner);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Owner
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{owner.email}</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-muted-foreground">{owner.phone}</span>
+                </div>
+                {owner.address && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">
+                      {owner.city}, {owner.state}
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between pt-2">
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Properties: </span>
+                    <span className="font-semibold text-foreground">{owner.property_count || 0}</span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Payment: </span>
+                    <span className="font-semibold text-foreground capitalize">
+                      {owner.preferred_payment_method.replace('_', ' ')}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredOwners.length === 0 && (
+          <div className="text-center py-12">
+            <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No property owners found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchTerm ? "Try adjusting your search terms." : "Get started by adding your first property owner."}
+            </p>
+            {!searchTerm && (
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Property Owner
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       <AddPropertyOwnerDialog
@@ -408,7 +382,7 @@ const PropertyOwners = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </SidebarProvider>
+    </div>
   );
 };
 
