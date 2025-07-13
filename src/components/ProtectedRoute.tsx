@@ -56,11 +56,10 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     
     // If user exists but no role and not on setup page, check if setup is actually needed
     if (user && !userRole && location.pathname !== '/setup') {
-      // If setup is not needed (admin exists), redirect to home instead of setup
+      // If setup is not needed (admin exists), wait for role to load instead of redirecting
       if (needsSetup === false) {
-        console.log('🔒 Admin exists but role not loaded yet, redirecting to home');
-        navigate('/', { replace: true });
-        return;
+        console.log('🔒 Admin exists but role not loaded yet, waiting for role...');
+        return; // Don't redirect, just wait for role to load
       }
       // Only redirect to setup if setup is actually needed
       if (needsSetup === true) {
@@ -94,6 +93,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   if (needsSetup) {
     console.log('🔒 Setup needed, returning null');
     return null;
+  }
+
+  // If user has no role but setup is not needed, show loading (waiting for role to load)
+  if (!userRole && needsSetup === false) {
+    console.log('🔒 Waiting for user role to load');
+    return <LoadingSpinner />;
   }
 
   // If user has no role, don't render (will redirect to setup)
