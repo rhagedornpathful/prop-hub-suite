@@ -36,17 +36,39 @@ export function OptimizedPropertyGrid({
 
   // Transform data into unified format
   const transformedProperties: UnifiedPropertyData[] = [
-    // Property Management properties
+    // Properties from properties table - check service_type to determine actual type
     ...properties.map(property => ({
       id: property.id,
-      type: 'property_management' as const,
+      type: property.service_type === 'house_watching' ? 'house_watching' as const : 'property_management' as const,
       address: property.address,
       displayAddress: `${property.city}, ${property.state}`,
       status: property.status,
       images: property.images,
-      propertyData: property,
+      propertyData: property.service_type === 'property_management' ? property : undefined,
+      houseWatchingData: property.service_type === 'house_watching' ? {
+        id: property.id,
+        property_address: property.address,
+        owner_name: property.property_owner?.first_name && property.property_owner?.last_name 
+          ? `${property.property_owner.first_name} ${property.property_owner.last_name}`
+          : property.property_owner?.company_name || 'Unknown Owner',
+        status: property.status,
+        check_frequency: 'weekly', // Default value, should be updated based on actual data
+        monthly_fee: property.monthly_rent || null,
+        created_at: property.created_at,
+        updated_at: property.updated_at,
+        user_id: property.user_id,
+        notes: property.description || null,
+        start_date: new Date().toISOString().split('T')[0], // Default to today
+        end_date: null,
+        next_check_date: null,
+        last_check_date: null,
+        key_location: null,
+        emergency_contact: null,
+        special_instructions: null,
+        owner_contact: null,
+      } : undefined,
     })),
-    // House Watching properties
+    // House Watching properties from house_watching table
     ...houseWatchingProperties.map(property => ({
       id: property.id,
       type: 'house_watching' as const,
