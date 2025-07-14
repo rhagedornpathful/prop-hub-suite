@@ -30,7 +30,7 @@ export const useProperties = () => {
     queryFn: async (): Promise<PropertyWithRelations[]> => {
       if (!user) return [];
       
-      // Fetch properties with all related data
+      // Let RLS policies handle access control - don't filter by user_id
       const { data: properties, error: propertiesError } = await supabase
         .from('properties')
         .select(`
@@ -39,7 +39,6 @@ export const useProperties = () => {
           tenants(*),
           maintenance_requests(*)
         `)
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (propertiesError) throw propertiesError;
@@ -112,10 +111,10 @@ export const useUnassignedProperties = () => {
     queryFn: async () => {
       if (!user) return [];
       
+      // Let RLS policies handle access control
       const { data, error } = await supabase
         .from('properties')
         .select('*')
-        .eq('user_id', user.id)
         .is('owner_id', null)
         .order('address', { ascending: true });
 
@@ -134,10 +133,10 @@ export const usePropertiesByOwner = (ownerId: string | undefined) => {
     queryFn: async () => {
       if (!user || !ownerId) return [];
       
+      // Let RLS policies handle access control
       const { data, error } = await supabase
         .from('properties')
         .select('*')
-        .eq('user_id', user.id)
         .eq('owner_id', ownerId)
         .order('address', { ascending: true });
 
@@ -156,10 +155,10 @@ export const usePropertyMetrics = () => {
     queryFn: async () => {
       if (!user) return { totalProperties: 0, totalRent: 0, occupiedUnits: 0 };
 
+      // Let RLS policies handle access control
       const { data, error } = await supabase
         .from('properties')
-        .select('monthly_rent, bedrooms, status')
-        .eq('user_id', user.id);
+        .select('monthly_rent, bedrooms, status');
 
       if (error) throw error;
 

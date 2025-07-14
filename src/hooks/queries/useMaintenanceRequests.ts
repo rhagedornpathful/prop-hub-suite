@@ -72,10 +72,11 @@ export const useMaintenanceRequests = () => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['maintenance-requests'],
+    queryKey: ['maintenance-requests', user?.id],
     queryFn: async () => {
       if (!user) return [];
       
+      // Let RLS policies handle access control - get requests user has access to
       const { data, error } = await supabase
         .from('maintenance_requests')
         .select(`
