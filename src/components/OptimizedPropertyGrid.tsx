@@ -60,8 +60,8 @@ export function OptimizedPropertyGrid({
         notes: property.description || null,
         start_date: new Date().toISOString().split('T')[0], // Default to today
         end_date: null,
-        next_check_date: null,
-        last_check_date: null,
+        next_check_date: property.next_check_date,
+        last_check_date: property.last_check_date,
         key_location: null,
         emergency_contact: null,
         special_instructions: null,

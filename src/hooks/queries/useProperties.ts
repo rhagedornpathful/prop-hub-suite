@@ -12,9 +12,12 @@ export interface PropertyWithRelations extends Property {
   property_owner?: Tables<'property_owners'> | null;
   tenants?: Tables<'tenants'>[];
   maintenance_requests?: Tables<'maintenance_requests'>[];
+  property_check_sessions?: Tables<'property_check_sessions'>[];
   maintenance_count?: number;
   pending_maintenance?: number;
   urgent_maintenance?: number;
+  last_check_date?: string | null;
+  next_check_date?: string | null;
 }
 
 export const useProperties = () => {
@@ -41,13 +44,42 @@ export const useProperties = () => {
 
       if (propertiesError) throw propertiesError;
       
-      // Calculate maintenance metrics for each property
-      const propertiesWithMetrics = (properties || []).map(property => ({
-        ...property,
-        maintenance_count: property.maintenance_requests?.length || 0,
-        pending_maintenance: property.maintenance_requests?.filter(req => req.status === 'pending').length || 0,
-        urgent_maintenance: property.maintenance_requests?.filter(req => req.priority === 'urgent').length || 0,
-      }));
+      // Fetch property check sessions for all properties
+      const propertyIds = (properties || []).map(p => p.id);
+      const { data: checkSessions = [] } = propertyIds.length > 0 ? await supabase
+        .from('property_check_sessions')
+        .select('*')
+        .in('property_id', propertyIds) : { data: [] };
+      
+      // Calculate maintenance metrics and check dates for each property
+      const propertiesWithMetrics = (properties || []).map(property => {
+        // Get check sessions for this property
+        const propertySessions = checkSessions.filter(session => session.property_id === property.id);
+        
+        // Find last completed check session
+        const completedSessions = propertySessions.filter(session => session.completed_at);
+        const lastCompletedSession = completedSessions.length > 0 
+          ? completedSessions.sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())[0]
+          : null;
+
+        // Find next scheduled check session
+        const scheduledSessions = propertySessions.filter(session => 
+          session.scheduled_date && new Date(session.scheduled_date) >= new Date() && !session.completed_at
+        );
+        const nextScheduledSession = scheduledSessions.length > 0
+          ? scheduledSessions.sort((a, b) => new Date(a.scheduled_date!).getTime() - new Date(b.scheduled_date!).getTime())[0]
+          : null;
+
+        return {
+          ...property,
+          property_check_sessions: propertySessions,
+          maintenance_count: property.maintenance_requests?.length || 0,
+          pending_maintenance: property.maintenance_requests?.filter(req => req.status === 'pending').length || 0,
+          urgent_maintenance: property.maintenance_requests?.filter(req => req.priority === 'urgent').length || 0,
+          last_check_date: lastCompletedSession?.completed_at || null,
+          next_check_date: nextScheduledSession?.scheduled_date || null,
+        };
+      });
 
       return propertiesWithMetrics;
     },
