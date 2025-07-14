@@ -382,20 +382,12 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
 
   const handleScheduleCheck = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "Schedule Check",
-      description: `Opening schedule dialog for ${property.property_address}`,
-    });
-    // TODO: Open schedule dialog/modal
+    setIsScheduleDialogOpen(true);
   };
 
   const handleViewReports = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "View Reports",
-      description: `Opening reports for ${property.property_address}`,
-    });
-    // TODO: Navigate to reports page or open reports modal
+    navigate('/client-portal/reports');
   };
 
   const handleStartPropertyCheck = (e: React.MouseEvent) => {
@@ -410,14 +402,36 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsDetailsDialogOpen(true);
+    // Convert house watching property to regular property format for the details dialog
+    const propertyForDialog = {
+      ...property,
+      address: property.property_address,
+      owner_id: null,
+      user_id: property.user_id,
+      bedrooms: null,
+      bathrooms: null,
+      square_feet: null,
+      property_type: 'house_watching',
+      monthly_rent: property.monthly_fee,
+      status: property.status,
+      images: null,
+      amenities: null,
+      description: property.notes,
+      service_type: 'house_watching'
+    };
+    
+    // Store the property for the dialog and navigate to property details page
+    navigate(`/property-owners/property/${property.id}`, { 
+      state: { property: propertyForDialog } 
+    });
   };
 
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
       <div className="relative">
-        <HouseWatchingImageUpload 
+        <PropertyImageUpload 
           propertyId={property.id}
+          currentImage={undefined}
         />
         <div className="absolute top-3 right-3">
           <Badge className={getStatusColor(property.status)}>
@@ -555,56 +569,6 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
         propertyId={property.id}
         propertyAddress={property.property_address}
       />
-      
-      {/* House Watching Details Dialog */}
-      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>House Watching Details</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold">{property.property_address}</h3>
-              <p className="text-muted-foreground">Owner: {property.owner_name || "Not specified"}</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Check Frequency</label>
-                <p className="capitalize">{property.check_frequency}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Monthly Fee</label>
-                <p>${property.monthly_fee || 0}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Status</label>
-                <Badge className={getStatusColor(property.status)}>
-                  {getStatusText(property.status)}
-                </Badge>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Start Date</label>
-                <p>{property.start_date ? new Date(property.start_date).toLocaleDateString() : "Not set"}</p>
-              </div>
-            </div>
-            
-            {property.notes && (
-              <div>
-                <label className="text-sm font-medium">Notes</label>
-                <p className="text-sm text-muted-foreground">{property.notes}</p>
-              </div>
-            )}
-            
-            {property.special_instructions && (
-              <div>
-                <label className="text-sm font-medium">Special Instructions</label>
-                <p className="text-sm text-muted-foreground">{property.special_instructions}</p>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
       
     </Card>
   );
