@@ -20,6 +20,7 @@ import { RoleDebugger } from "@/components/dev/RoleDebugger";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
+import PropertyDetail from "./pages/PropertyDetail";
 import Tenants from "./pages/Tenants";
 import Leases from "./pages/Leases";
 import Finances from "./pages/Finances";
@@ -89,6 +90,7 @@ const AppContent = () => {
                 <Routes>
                   <Route path="/" element={<PageTransition><Index /></PageTransition>} />
                   <Route path="/properties" element={<PageTransition><Properties /></PageTransition>} />
+                  <Route path="/properties/:id" element={<PageTransition><PropertyDetail /></PageTransition>} />
                   <Route path="/tenants" element={<PageTransition><Tenants /></PageTransition>} />
                   <Route path="/leases" element={<PageTransition><Leases /></PageTransition>} />
                   <Route path="/finances" element={<PageTransition><Finances /></PageTransition>} />
@@ -134,6 +136,13 @@ const AppContent = () => {
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.PROPERTY_MANAGEMENT}>
                               <Properties />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/properties/:id" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.PROPERTY_MANAGEMENT}>
+                              <PropertyDetail />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />

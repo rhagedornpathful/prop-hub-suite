@@ -28,7 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PropertyDetailsDialogDB } from "@/components/PropertyDetailsDialogDB";
+
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -63,7 +63,6 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { data: maintenanceRequests = [] } = useMaintenanceRequests();
   const { data: propertyOwners = [] } = usePropertyOwners();
@@ -101,7 +100,7 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
 
   const handleViewProperty = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsDetailsDialogOpen(true);
+    navigate(`/properties/${property.id}`);
   };
 
   const handleEditProperty = (property: Property) => {
@@ -327,13 +326,6 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
         propertyAddress={property.address}
       />
       
-      <PropertyDetailsDialogDB
-        property={property}
-        open={isDetailsDialogOpen}
-        onOpenChange={setIsDetailsDialogOpen}
-        onEdit={handleEditProperty}
-        onDelete={handleDeleteProperty}
-      />
       
       <AddPropertyDialog
         open={isEditDialogOpen}
@@ -356,7 +348,6 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
-  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -402,7 +393,8 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
 
   const handleViewDetails = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsDetailsDialogOpen(true);
+    // For house watching, create a property URL using the house watching ID as a fallback
+    navigate(`/properties/${property.id}`);
   };
 
   const handleEditProperty = (property: any) => {
@@ -573,41 +565,6 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
         propertyAddress={property.property_address}
       />
       
-      {/* Use the same PropertyDetailsDialogDB as Property Management cards */}
-      <PropertyDetailsDialogDB
-        property={{
-          ...property,
-          address: property.property_address,
-          owner_id: null,
-          user_id: property.user_id,
-          bedrooms: null,
-          bathrooms: null,
-          square_feet: null,
-          property_type: 'house_watching',
-          monthly_rent: property.monthly_fee,
-          status: property.status,
-          images: null,
-          amenities: null,
-          description: property.notes,
-          service_type: 'house_watching',
-          street_address: property.property_address,
-          city: null,
-          state: null,
-          zip_code: null,
-          estimated_value: null,
-          year_built: null,
-          lot_size: null,
-          gate_code: null,
-          home_value_estimate: null,
-          rent_estimate: null,
-          created_at: property.created_at,
-          updated_at: property.updated_at
-        }}
-        open={isDetailsDialogOpen}
-        onOpenChange={setIsDetailsDialogOpen}
-        onEdit={handleEditProperty}
-        onDelete={handleDeleteProperty}
-      />
     </Card>
   );
 };
