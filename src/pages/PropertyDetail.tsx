@@ -30,7 +30,8 @@ import {
   ArrowLeft,
   Activity,
   Wrench,
-  Receipt
+  Receipt,
+  Lock
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
@@ -392,45 +393,91 @@ export function PropertyDetail() {
 
             {/* Property Details */}
             <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building className="h-5 w-5" />
+              <Card className="overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Building className="h-5 w-5 text-primary" />
+                    </div>
                     Property Information
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm text-muted-foreground">Property Type</label>
-                      <p className="font-medium capitalize">{property.property_type?.replace('_', ' ') || 'Not specified'}</p>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="p-1.5 bg-blue-100 rounded-md">
+                          <Home className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Property Type</label>
+                          <p className="text-lg font-semibold capitalize text-foreground">
+                            {property.property_type?.replace('_', ' ') || 'Not specified'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="text-sm text-muted-foreground">Service Type</label>
-                      <p className="font-medium capitalize">{property.service_type?.replace('_', ' ')}</p>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="p-1.5 bg-green-100 rounded-md">
+                          <Shield className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-muted-foreground">Service Type</label>
+                          <p className="text-lg font-semibold capitalize text-foreground">
+                            {property.service_type === 'house_watching' ? 'House Watching' : 'Property Management'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
+                    
+                    {property.year_built && (
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="p-1.5 bg-purple-100 rounded-md">
+                            <Calendar className="h-4 w-4 text-purple-600" />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground">Year Built</label>
+                            <p className="text-lg font-semibold text-foreground">{property.year_built}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {property.square_feet && (
+                      <div className="space-y-3">
+                        <div className="flex items-start gap-3">
+                          <div className="p-1.5 bg-orange-100 rounded-md">
+                            <Square className="h-4 w-4 text-orange-600" />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground">Square Footage</label>
+                            <p className="text-lg font-semibold text-foreground">
+                              {property.square_feet.toLocaleString()} sq ft
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {property.gate_code && (
+                      <div className="space-y-3 md:col-span-2">
+                        <div className="flex items-start gap-3">
+                          <div className="p-1.5 bg-red-100 rounded-md">
+                            <Lock className="h-4 w-4 text-red-600" />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-muted-foreground">Gate Access Code</label>
+                            <p className="text-lg font-semibold font-mono bg-muted px-3 py-1.5 rounded-md inline-block">
+                              {property.gate_code}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  
-                  {property.year_built && (
-                    <div>
-                      <label className="text-sm text-muted-foreground">Year Built</label>
-                      <p className="font-medium">{property.year_built}</p>
-                    </div>
-                  )}
-                  
-                  {property.lot_size && (
-                    <div>
-                      <label className="text-sm text-muted-foreground">Lot Size</label>
-                      <p className="font-medium">{property.lot_size}</p>
-                    </div>
-                  )}
-                  
-                  {property.gate_code && (
-                    <div>
-                      <label className="text-sm text-muted-foreground">Gate Code</label>
-                      <p className="font-medium font-mono bg-muted px-2 py-1 rounded">{property.gate_code}</p>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
