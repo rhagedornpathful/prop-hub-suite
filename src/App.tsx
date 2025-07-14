@@ -43,6 +43,7 @@ import Setup from "./pages/Setup";
 import PropertyOwners from "./pages/PropertyOwners";
 import PropertyOwnerDetail from "./pages/PropertyOwnerDetail";
 import AdminNavigation from "./pages/AdminNavigation";
+import Activity from "./pages/Activity";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -102,6 +103,7 @@ const AppContent = () => {
                   <Route path="/property-owners" element={<PageTransition><PropertyOwners /></PageTransition>} />
                   <Route path="/user-management" element={<PageTransition><UserManagement /></PageTransition>} />
                   <Route path="/property-owners/:ownerId" element={<PageTransition><PropertyOwnerDetail /></PageTransition>} />
+                  <Route path="/activity" element={<PageTransition><Activity /></PageTransition>} />
                   <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
                   <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
                   <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
@@ -223,21 +225,28 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
-                        <Route path="/property-owners/:ownerId" element={
-                          <PageTransition>
-                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
-                              <PropertyOwnerDetail />
-                            </RoleBasedAccess>
-                          </PageTransition>
-                        } />
-                        <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
-                        <Route path="/admin-navigation" element={
-                          <PageTransition>
-                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
-                              <AdminNavigation />
-                            </RoleBasedAccess>
-                          </PageTransition>
-                        } />
+                         <Route path="/property-owners/:ownerId" element={
+                           <PageTransition>
+                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                               <PropertyOwnerDetail />
+                             </RoleBasedAccess>
+                           </PageTransition>
+                         } />
+                         <Route path="/activity" element={
+                           <PageTransition>
+                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                               <Activity />
+                             </RoleBasedAccess>
+                           </PageTransition>
+                         } />
+                         <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+                         <Route path="/admin-navigation" element={
+                           <PageTransition>
+                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                               <AdminNavigation />
+                             </RoleBasedAccess>
+                           </PageTransition>
+                         } />
                         <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
                         <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
                         <Route path="/client-portal/reports" element={<PageTransition><ClientReports /></PageTransition>} />

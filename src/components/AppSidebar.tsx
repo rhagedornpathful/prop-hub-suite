@@ -17,7 +17,8 @@ import {
   Eye,
   Shield,
   X,
-  Navigation
+  Navigation,
+  Activity
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
@@ -89,6 +90,12 @@ const adminMenuItems = [
     url: "/finances",
     icon: DollarSign,
     description: "Payments & reports"
+  },
+  {
+    title: "Activity",
+    url: "/activity",
+    icon: Activity,
+    description: "Activity dashboard"
   },
   {
     title: "Maintenance",
