@@ -64,6 +64,7 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
   const navigate = useNavigate();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { data: maintenanceRequests = [] } = useMaintenanceRequests();
   const { data: propertyOwners = [] } = usePropertyOwners();
   
@@ -103,13 +104,20 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
     setIsDetailsDialogOpen(true);
   };
 
+  const handleEditProperty = (property: Property) => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteProperty = (property: Property) => {
+    toast({
+      title: "Delete Property",
+      description: "Property deletion functionality coming soon!",
+    });
+  };
+
   const handleManageTenants = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "Manage Tenants",
-      description: `Opening tenant management for ${property.address}`,
-    });
-    // TODO: Navigate to tenants page or open tenant management modal
+    navigate('/tenants');
   };
 
   const handleViewMaintenance = (e: React.MouseEvent) => {
@@ -309,6 +317,22 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
         property={property}
         open={isDetailsDialogOpen}
         onOpenChange={setIsDetailsDialogOpen}
+        onEdit={handleEditProperty}
+        onDelete={handleDeleteProperty}
+      />
+      
+      <AddPropertyDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        editProperty={property}
+        mode="edit"
+        onPropertyAdded={() => {
+          setIsEditDialogOpen(false);
+          toast({
+            title: "Success",
+            description: "Property updated successfully!",
+          });
+        }}
       />
     </Card>
   );
