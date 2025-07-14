@@ -185,7 +185,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
         
         {/* Service Type Badge */}
         <div className="absolute bottom-3 left-3">
-          <Badge className="bg-primary text-primary-foreground">
+          <Badge className={isPropertyManagement 
+            ? "bg-primary text-primary-foreground" 
+            : "bg-secondary text-secondary-foreground"
+          }>
             {isPropertyManagement ? (
               <>
                 <Building className="h-3 w-3 mr-1" />
