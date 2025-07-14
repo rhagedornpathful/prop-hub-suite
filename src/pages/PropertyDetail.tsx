@@ -818,6 +818,7 @@ export function PropertyDetail() {
       <ScheduleMaintenanceDialog
         open={isMaintenanceDialogOpen}
         onOpenChange={setIsMaintenanceDialogOpen}
+        propertyId={id}
         onMaintenanceScheduled={() => {
           setIsMaintenanceDialogOpen(false);
           fetchMaintenanceRequests();

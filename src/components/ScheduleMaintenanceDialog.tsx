@@ -27,6 +27,7 @@ interface ScheduleMaintenanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onMaintenanceScheduled?: () => void;
+  propertyId?: string;
 }
 
 interface Property {
@@ -46,7 +47,7 @@ interface MaintenanceData {
   notes: string;
 }
 
-export function ScheduleMaintenanceDialog({ open, onOpenChange, onMaintenanceScheduled }: ScheduleMaintenanceDialogProps) {
+export function ScheduleMaintenanceDialog({ open, onOpenChange, onMaintenanceScheduled, propertyId }: ScheduleMaintenanceDialogProps) {
   const { isMobile } = useMobileDetection();
   const [properties, setProperties] = useState<Property[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -66,8 +67,15 @@ export function ScheduleMaintenanceDialog({ open, onOpenChange, onMaintenanceSch
   useEffect(() => {
     if (open) {
       fetchProperties();
+      // Pre-select property if propertyId is provided
+      if (propertyId) {
+        setMaintenanceData(prev => ({
+          ...prev,
+          property_id: propertyId
+        }));
+      }
     }
-  }, [open]);
+  }, [open, propertyId]);
 
   const fetchProperties = async () => {
     try {
@@ -129,7 +137,7 @@ export function ScheduleMaintenanceDialog({ open, onOpenChange, onMaintenanceSch
 
   const resetForm = () => {
     setMaintenanceData({
-      property_id: "",
+      property_id: propertyId || "",
       title: "",
       description: "",
       priority: "medium",
