@@ -14,6 +14,7 @@ interface PropertyData {
   square_feet?: number;
   price?: number;
   address?: string;
+  street_address?: string;
   city?: string;
   state?: string;
   zip_code?: string;
@@ -23,7 +24,9 @@ interface PropertyData {
   estimated_value?: number;
   home_value_estimate?: number;
   rent_estimate?: number;
+  monthly_rent?: number;
   images?: string[];
+  description?: string;
 }
 
 interface ZillowPropertyScraperProps {
@@ -93,15 +96,34 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
       // Map the scraped data to match the form's expected field names
       const mappedData = {
         ...propertyData,
-        // Map price to estimated_value if price exists but estimated_value doesn't
-        estimated_value: propertyData.estimated_value || propertyData.price,
+        // Ensure all key fields are properly mapped
+        address: propertyData.address,
+        city: propertyData.city,
+        state: propertyData.state,
+        zip_code: propertyData.zip_code,
+        street_address: propertyData.address, // Also set street_address
+        bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        square_feet: propertyData.square_feet,
+        year_built: propertyData.year_built,
+        lot_size: propertyData.lot_size,
+        property_type: propertyData.property_type,
+        // Map value estimates
+        estimated_value: propertyData.estimated_value || propertyData.price || propertyData.home_value_estimate,
+        home_value_estimate: propertyData.home_value_estimate || propertyData.estimated_value,
+        rent_estimate: propertyData.rent_estimate,
+        monthly_rent: propertyData.monthly_rent || propertyData.rent_estimate,
+        // Images
+        images: propertyData.images || [],
         // Remove the price field since we've mapped it to estimated_value
         price: undefined
       };
 
-      // Filter out null/undefined values before passing to parent
+      // Filter out null/undefined values but keep 0 values for numbers
       const cleanData = Object.fromEntries(
-        Object.entries(mappedData).filter(([_, value]) => value != null)
+        Object.entries(mappedData).filter(([_, value]) => 
+          value !== null && value !== undefined && value !== ''
+        )
       );
 
       console.log('Clean data being sent to parent component:', cleanData);
