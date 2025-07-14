@@ -31,10 +31,15 @@ import {
   Activity,
   Wrench,
   Receipt,
-  Lock
+  Lock,
+  CheckCircle,
+  AlertCircle,
+  DollarSign as PaymentIcon,
+  GitBranch
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
+import { usePropertyActivity } from "@/hooks/usePropertyActivity";
 
 type Property = Tables<'properties'>;
 type MaintenanceRequest = Tables<'maintenance_requests'>;
@@ -57,6 +62,9 @@ export function PropertyDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  
+  // Use the new comprehensive activity hook
+  const { activities, isLoading: activitiesLoading, error: activitiesError, refetch: refetchActivities } = usePropertyActivity(id);
 
   useEffect(() => {
     if (id) {
@@ -501,10 +509,138 @@ export function PropertyDetail() {
         <TabsContent value="activity">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Property Activity
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">Activity tracking coming soon...</p>
+              {activitiesLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
+                      <div className="h-10 w-10 bg-muted rounded-full animate-pulse"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-muted rounded animate-pulse"></div>
+                        <div className="h-3 bg-muted rounded w-2/3 animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : activitiesError ? (
+                <div className="text-center py-8">
+                  <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+                  <p className="text-destructive font-medium">Error loading activities</p>
+                  <p className="text-muted-foreground text-sm mb-4">{activitiesError}</p>
+                  <Button onClick={refetchActivities} variant="outline" size="sm">
+                    Try Again
+                  </Button>
+                </div>
+              ) : activities.length === 0 ? (
+                <div className="text-center py-8">
+                  <Activity className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground">No activity recorded yet</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Activities like maintenance requests, property checks, and payments will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {activities.map((activity) => {
+                    const getActivityIcon = () => {
+                      switch (activity.type) {
+                        case 'maintenance':
+                          return <Wrench className="h-5 w-5 text-orange-600" />;
+                        case 'property_check':
+                          return <CheckCircle className="h-5 w-5 text-blue-600" />;
+                        case 'payment':
+                          return <PaymentIcon className="h-5 w-5 text-green-600" />;
+                        case 'status_change':
+                          return <GitBranch className="h-5 w-5 text-purple-600" />;
+                        default:
+                          return <Activity className="h-5 w-5 text-muted-foreground" />;
+                      }
+                    };
+
+                    const getActivityColor = () => {
+                      switch (activity.type) {
+                        case 'maintenance':
+                          return 'bg-orange-50 border-orange-200';
+                        case 'property_check':
+                          return 'bg-blue-50 border-blue-200';
+                        case 'payment':
+                          return 'bg-green-50 border-green-200';
+                        case 'status_change':
+                          return 'bg-purple-50 border-purple-200';
+                        default:
+                          return 'bg-muted/50 border-muted';
+                      }
+                    };
+
+                    const getActivityType = () => {
+                      switch (activity.type) {
+                        case 'maintenance':
+                          return 'Maintenance';
+                        case 'property_check':
+                          return 'Property Check';
+                        case 'payment':
+                          return 'Payment';
+                        case 'status_change':
+                          return 'Status Change';
+                        default:
+                          return 'Activity';
+                      }
+                    };
+
+                    return (
+                      <div key={activity.id} className={`border rounded-lg p-4 ${getActivityColor()}`}>
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-background rounded-lg border">
+                            {getActivityIcon()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-medium text-foreground truncate">{activity.title}</h4>
+                              <Badge variant="outline" className="text-xs">
+                                {getActivityType()}
+                              </Badge>
+                              {activity.status && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {activity.status}
+                                </Badge>
+                              )}
+                            </div>
+                            {activity.description && (
+                              <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                                {activity.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {new Date(activity.date).toLocaleDateString()} at {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              {activity.amount && (
+                                <span className="flex items-center gap-1">
+                                  <DollarSign className="h-3 w-3" />
+                                  {formatCurrency(activity.amount)}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {activities.length > 0 && (
+                    <div className="text-center pt-4 border-t">
+                      <p className="text-sm text-muted-foreground">
+                        Showing {activities.length} activities • Most recent first
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
