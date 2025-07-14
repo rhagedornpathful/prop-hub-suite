@@ -286,36 +286,39 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
               )}
             </div>
           )}
-          
-          <div className="flex gap-2 pt-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={handleViewProperty}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              View
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={handleViewMaintenance}
-            >
-              <Wrench className="h-4 w-4 mr-2" />
-              Maintenance
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={handleViewReports}
-            >
-              <TrendingUp className="h-4 w-4 mr-2" />
-              Reports
-            </Button>
-          </div>
+           
+           {/* Action Buttons */}
+           <div className="border-t border-border/50 pt-4 mt-4">
+             <div className="grid grid-cols-3 gap-2">
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className="flex-1 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/30 transition-all duration-200"
+                 onClick={handleViewProperty}
+               >
+                 <Eye className="h-4 w-4 mr-1.5" />
+                 <span className="text-xs font-medium">View</span>
+               </Button>
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 hover:border-blue-300 transition-all duration-200"
+                 onClick={handleViewMaintenance}
+               >
+                 <Wrench className="h-4 w-4 mr-1.5" />
+                 <span className="text-xs font-medium">Maintenance</span>
+               </Button>
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 hover:border-emerald-300 transition-all duration-200"
+                 onClick={handleViewReports}
+               >
+                 <TrendingUp className="h-4 w-4 mr-1.5" />
+                 <span className="text-xs font-medium">Reports</span>
+               </Button>
+             </div>
+           </div>
         </div>
       </CardContent>
       
@@ -534,27 +537,29 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
               </div>
             </div>
           </div>
-          
-          <div className="flex gap-2 pt-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={handleScheduleCheck}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1"
-              onClick={handleViewReports}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Reports
-            </Button>
-          </div>
+           {/* Action Buttons */}
+           <div className="border-t border-border/50 pt-4 mt-4">
+             <div className="grid grid-cols-2 gap-2">
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className="flex-1 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/30 transition-all duration-200"
+                 onClick={handleScheduleCheck}
+               >
+                 <Calendar className="h-4 w-4 mr-1.5" />
+                 <span className="text-xs font-medium">Schedule</span>
+               </Button>
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 hover:border-emerald-300 transition-all duration-200"
+                 onClick={handleViewReports}
+               >
+                 <Eye className="h-4 w-4 mr-1.5" />
+                 <span className="text-xs font-medium">Reports</span>
+               </Button>
+             </div>
+           </div>
         </div>
       </CardContent>
       
