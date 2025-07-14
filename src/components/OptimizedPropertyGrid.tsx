@@ -125,6 +125,11 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
     navigate('/maintenance');
   };
 
+  const handleViewReports = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate('/client-portal/reports');
+  };
+
   const handleStartPropertyCheck = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigate(`/property-check?property=${property.id}`);
@@ -199,11 +204,11 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule Property Check
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleEditProperty(property)}>
                 <Edit className="h-4 w-4 mr-2" />
                 Edit Property
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteProperty(property)}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Property
               </DropdownMenuItem>
@@ -301,6 +306,15 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
             >
               <Wrench className="h-4 w-4 mr-2" />
               Maintenance
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={handleViewReports}
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Reports
             </Button>
           </div>
         </div>
