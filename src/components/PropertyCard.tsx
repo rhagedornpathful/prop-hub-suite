@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { PropertyImageUpload } from "@/components/PropertyImageUpload";
+import { PropertyImage } from "@/components/PropertyImage";
 import { HouseWatchingImageUpload } from "@/components/HouseWatchingImageUpload";
 import { SchedulePropertyCheckDialog } from "@/components/SchedulePropertyCheckDialog";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
@@ -161,18 +161,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
       <div className="relative">
-        {/* Conditional Image Upload Component */}
-        {isPropertyManagement ? (
-          <PropertyImageUpload 
-            propertyId={property.id}
-            currentImage={propertyManagementData?.images?.[0]}
-          />
-        ) : (
-          <PropertyImageUpload 
-            propertyId={property.id}
-            currentImage={property.images?.[0]}
-          />
-        )}
+        {/* Simple Image Display - No Edit Functionality */}
+        <PropertyImage 
+          imageUrl={isPropertyManagement ? propertyManagementData?.images?.[0] : property.images?.[0]}
+          address={property.address}
+        />
         
         {/* Status Badge */}
         <div className="absolute top-3 right-3">
