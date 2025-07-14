@@ -648,28 +648,116 @@ export function PropertyDetail() {
         <TabsContent value="maintenance">
           <Card>
             <CardHeader>
-              <CardTitle>Maintenance Requests</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Wrench className="h-5 w-5" />
+                Maintenance Requests
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {maintenanceRequests.length > 0 ? (
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="h-5 bg-muted rounded animate-pulse w-1/3"></div>
+                        <div className="h-5 bg-muted rounded animate-pulse w-16"></div>
+                      </div>
+                      <div className="h-4 bg-muted rounded animate-pulse w-2/3 mb-2"></div>
+                      <div className="h-3 bg-muted rounded animate-pulse w-1/4"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : maintenanceRequests.length > 0 ? (
                 <div className="space-y-4">
                   {maintenanceRequests.map((request) => (
                     <div key={request.id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="font-medium">{request.title}</h4>
-                        <Badge variant="outline">{request.status}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              request.status === 'pending' ? 'bg-yellow-50 text-yellow-800 border-yellow-200' :
+                              request.status === 'in-progress' ? 'bg-blue-50 text-blue-800 border-blue-200' :
+                              request.status === 'completed' ? 'bg-green-50 text-green-800 border-green-200' :
+                              request.status === 'cancelled' ? 'bg-red-50 text-red-800 border-red-200' :
+                              'bg-muted text-muted-foreground'
+                            }
+                          >
+                            {request.status}
+                          </Badge>
+                          <Badge variant="secondary" className="text-xs">
+                            {request.priority}
+                          </Badge>
+                        </div>
                       </div>
                       {request.description && (
-                        <p className="text-sm text-muted-foreground mb-2">{request.description}</p>
+                        <p className="text-sm text-muted-foreground mb-3">{request.description}</p>
                       )}
-                      <p className="text-xs text-muted-foreground">
-                        Created: {new Date(request.created_at).toLocaleDateString()}
-                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            <span>Created: {new Date(request.created_at).toLocaleDateString()}</span>
+                          </div>
+                          {request.scheduled_date && (
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>Scheduled: {new Date(request.scheduled_date).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1">
+                          {request.estimated_cost && (
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <DollarSign className="h-3 w-3" />
+                              <span>Estimated: {formatCurrency(request.estimated_cost)}</span>
+                            </div>
+                          )}
+                          {request.actual_cost && (
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Receipt className="h-3 w-3" />
+                              <span>Actual: {formatCurrency(request.actual_cost)}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {request.contractor_name && (
+                        <div className="mt-3 p-3 bg-muted/50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <UserCheck className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium text-sm">{request.contractor_name}</span>
+                            {request.contractor_contact && (
+                              <span className="text-sm text-muted-foreground">• {request.contractor_contact}</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
+                  <div className="text-center pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {maintenanceRequests.length} maintenance requests • Most recent first
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground">No maintenance requests found.</p>
+                <div className="text-center py-8">
+                  <Wrench className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <p className="text-muted-foreground font-medium">No maintenance requests found</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Create your first maintenance request to get started
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="mt-4"
+                    onClick={() => navigate('/maintenance')}
+                  >
+                    <Wrench className="h-4 w-4 mr-2" />
+                    Create Maintenance Request
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
