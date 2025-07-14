@@ -120,7 +120,7 @@ export function PropertyDetailsDialogDB({ property, open, onOpenChange, onEdit, 
         
         <div className="space-y-8">
           {/* Key Property Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-gradient-subtle rounded-lg p-6 border">
               <div className="flex items-center gap-3 mb-2">
                 <DollarSign className="h-6 w-6 text-success" />
@@ -151,6 +151,17 @@ export function PropertyDetailsDialogDB({ property, open, onOpenChange, onEdit, 
                 </div>
                 <p className="text-2xl font-bold text-warning">{formatCurrency(property.rent_estimate)}</p>
                 <p className="text-sm text-muted-foreground mt-1">Market rental estimate</p>
+              </div>
+            )}
+
+            {property.home_value_estimate && (
+              <div className="bg-gradient-subtle rounded-lg p-6 border">
+                <div className="flex items-center gap-3 mb-2">
+                  <Building className="h-6 w-6 text-info" />
+                  <span className="font-medium text-lg">Home Value</span>
+                </div>
+                <p className="text-2xl font-bold">{formatCurrency(property.home_value_estimate)}</p>
+                <p className="text-sm text-muted-foreground mt-1">Home value estimate</p>
               </div>
             )}
           </div>
@@ -225,60 +236,175 @@ export function PropertyDetailsDialogDB({ property, open, onOpenChange, onEdit, 
           
           <Separator />
           
-          {/* Additional Details */}
-          <div className="space-y-4">
+          {/* Detailed Information */}
+          <div className="space-y-6">
             <h3 className="text-xl font-semibold">Property Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
               {/* Property Specifications */}
-              <div className="space-y-4">
-                <h4 className="font-medium text-lg">Specifications</h4>
-                <div className="space-y-3">
-                  {property.year_built && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Year Built:</span>
-                      <span className="font-medium">{property.year_built}</span>
-                    </div>
-                  )}
-                  {property.lot_size && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Lot Size:</span>
-                      <span className="font-medium">{property.lot_size}</span>
-                    </div>
-                  )}
-                  {property.gate_code && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Gate Code:</span>
-                      <span className="font-medium font-mono">{property.gate_code}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Amenities */}
-              {property.amenities && property.amenities.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="font-medium text-lg">Amenities</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {property.amenities.map((amenity, index) => (
-                      <Badge key={index} variant="outline" className="capitalize">
-                        {amenity.replace('_', ' ')}
-                      </Badge>
-                    ))}
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Building className="h-5 w-5 text-primary" />
+                    Specifications
+                  </h4>
+                  <div className="space-y-4">
+                    {property.year_built && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Year Built:</span>
+                        <span className="font-medium">{property.year_built}</span>
+                      </div>
+                    )}
+                    {property.lot_size && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Lot Size:</span>
+                        <span className="font-medium">{property.lot_size}</span>
+                      </div>
+                    )}
+                    {property.gate_code && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Gate Code:</span>
+                        <span className="font-medium font-mono bg-muted px-2 py-1 rounded">{property.gate_code}</span>
+                      </div>
+                    )}
+                    {property.service_type && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Service Type:</span>
+                        <span className="font-medium capitalize">{property.service_type.replace('_', ' ')}</span>
+                      </div>
+                    )}
+                    {property.status && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Status:</span>
+                        <Badge className={statusColors[property.status as keyof typeof statusColors] || statusColors.inactive}>
+                          {statusText[property.status as keyof typeof statusText] || property.status}
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+
+                {/* Amenities */}
+                {property.amenities && property.amenities.length > 0 && (
+                  <div>
+                    <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                      <Home className="h-5 w-5 text-primary" />
+                      Amenities
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {property.amenities.map((amenity, index) => (
+                        <Badge key={index} variant="outline" className="capitalize">
+                          {amenity.replace('_', ' ')}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Financial Information */}
+              <div className="space-y-6">
+                <div>
+                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-success" />
+                    Financial Details
+                  </h4>
+                  <div className="space-y-4">
+                    {property.monthly_rent && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">
+                          {property.service_type === 'house_watching' ? 'Monthly Fee:' : 'Monthly Rent:'}
+                        </span>
+                        <span className="font-semibold text-success">{formatCurrency(property.monthly_rent)}</span>
+                      </div>
+                    )}
+                    {property.estimated_value && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Estimated Value:</span>
+                        <span className="font-semibold">{formatCurrency(property.estimated_value)}</span>
+                      </div>
+                    )}
+                    {property.rent_estimate && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Rent Estimate:</span>
+                        <span className="font-semibold text-warning">{formatCurrency(property.rent_estimate)}</span>
+                      </div>
+                    )}
+                    {property.home_value_estimate && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Home Value Estimate:</span>
+                        <span className="font-semibold">{formatCurrency(property.home_value_estimate)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Location Details */}
+                <div>
+                  <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    Location Details
+                  </h4>
+                  <div className="space-y-4">
+                    {property.street_address && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">Street Address:</span>
+                        <span className="font-medium">{property.street_address}</span>
+                      </div>
+                    )}
+                    {property.city && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">City:</span>
+                        <span className="font-medium">{property.city}</span>
+                      </div>
+                    )}
+                    {property.state && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">State:</span>
+                        <span className="font-medium">{property.state}</span>
+                      </div>
+                    )}
+                    {property.zip_code && (
+                      <div className="flex justify-between py-2 border-b">
+                        <span className="text-muted-foreground">ZIP Code:</span>
+                        <span className="font-medium">{property.zip_code}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Description */}
             {property.description && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
+              <div className="space-y-3">
+                <h4 className="font-semibold text-lg flex items-center gap-2">
                   <FileText className="h-5 w-5 text-primary" />
-                  <span className="font-medium">Description</span>
+                  Description & Notes
+                </h4>
+                <div className="bg-muted p-4 rounded-lg">
+                  <p className="text-foreground leading-relaxed">{property.description}</p>
                 </div>
-                <p className="text-muted-foreground">{property.description}</p>
               </div>
             )}
+
+            {/* Timestamps */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">Created</span>
+                </div>
+                <p className="text-muted-foreground">{new Date(property.created_at).toLocaleDateString()}</p>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium">Last Updated</span>
+                </div>
+                <p className="text-muted-foreground">{new Date(property.updated_at).toLocaleDateString()}</p>
+              </div>
+            </div>
           </div>
           
           <Separator />
