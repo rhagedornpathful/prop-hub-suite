@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
+import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
 import { usePropertyActivity } from "@/hooks/usePropertyActivity";
 
 type Property = Tables<'properties'>;
@@ -61,6 +62,7 @@ export function PropertyDetail() {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   
   // Use the new comprehensive activity hook
@@ -752,7 +754,7 @@ export function PropertyDetail() {
                     variant="outline" 
                     size="sm" 
                     className="mt-4"
-                    onClick={() => navigate('/maintenance')}
+                    onClick={() => setIsMaintenanceDialogOpen(true)}
                   >
                     <Wrench className="h-4 w-4 mr-2" />
                     Create Maintenance Request
@@ -810,6 +812,15 @@ export function PropertyDetail() {
         onPropertyAdded={() => {
           setIsEditDialogOpen(false);
           fetchPropertyDetails();
+        }}
+      />
+
+      <ScheduleMaintenanceDialog
+        open={isMaintenanceDialogOpen}
+        onOpenChange={setIsMaintenanceDialogOpen}
+        onMaintenanceScheduled={() => {
+          setIsMaintenanceDialogOpen(false);
+          fetchMaintenanceRequests();
         }}
       />
     </div>
