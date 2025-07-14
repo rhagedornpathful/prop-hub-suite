@@ -398,54 +398,54 @@ export function PropertyCard({ property }: PropertyCardProps) {
           {/* Action Buttons - Type Specific */}
           <div className="border-t border-border/50 pt-4 mt-4">
             {isPropertyManagement ? (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex gap-1.5">
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
-                  className="flex-1 h-9 px-2 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/30 transition-all duration-200"
+                  className="flex-1 h-8 px-2 text-xs font-medium bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 hover:border-primary/30"
                   onClick={handleViewProperty}
                 >
-                  <Eye className="h-3.5 w-3.5 mr-1" />
-                  <span className="text-xs font-medium">View</span>
+                  <Eye className="h-3 w-3 mr-1" />
+                  View
                 </Button>
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
-                  className="flex-1 h-9 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 hover:border-blue-300 transition-all duration-200"
+                  className="flex-1 h-8 px-2 text-xs font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 hover:border-blue-300"
                   onClick={handleViewMaintenance}
                 >
-                  <Wrench className="h-3.5 w-3.5 mr-1" />
-                  <span className="text-xs font-medium">Maintenance</span>
+                  <Wrench className="h-3 w-3 mr-1" />
+                  Maintenance
                 </Button>
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
-                  className="flex-1 h-9 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 hover:border-emerald-300 transition-all duration-200"
+                  className="flex-1 h-8 px-2 text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 hover:border-emerald-300"
                   onClick={handleViewReports}
                 >
-                  <TrendingUp className="h-3.5 w-3.5 mr-1" />
-                  <span className="text-xs font-medium">Reports</span>
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                  Reports
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex gap-2">
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
-                  className="flex-1 h-9 px-3 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/30 transition-all duration-200"
+                  className="flex-1 h-8 px-3 text-xs font-medium bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 hover:border-primary/30"
                   onClick={handleScheduleCheck}
                 >
-                  <Calendar className="h-3.5 w-3.5 mr-1.5" />
-                  <span className="text-xs font-medium">Schedule</span>
+                  <Calendar className="h-3 w-3 mr-1.5" />
+                  Schedule
                 </Button>
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm" 
-                  className="flex-1 h-9 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 hover:border-emerald-300 transition-all duration-200"
+                  className="flex-1 h-8 px-3 text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 hover:border-emerald-300"
                   onClick={handleViewReports}
                 >
-                  <Eye className="h-3.5 w-3.5 mr-1.5" />
-                  <span className="text-xs font-medium">Reports</span>
+                  <Eye className="h-3 w-3 mr-1.5" />
+                  Reports
                 </Button>
               </div>
             )}
