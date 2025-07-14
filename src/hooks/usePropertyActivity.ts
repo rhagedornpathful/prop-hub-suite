@@ -115,32 +115,39 @@ export function usePropertyActivity(propertyId: string | undefined) {
       }
 
       // Fetch maintenance status history
-      const { data: statusData, error: statusError } = await supabase
-        .from('maintenance_status_history')
-        .select(`
-          *,
-          maintenance_requests!inner(property_id, title)
-        `)
-        .eq('maintenance_requests.property_id', propertyId)
-        .order('changed_at', { ascending: false });
+      // First get maintenance request IDs for this property
+      const maintenanceRequestIds = maintenanceData?.map(req => req.id) || [];
+      
+      if (maintenanceRequestIds.length > 0) {
+        const { data: statusData, error: statusError } = await supabase
+          .from('maintenance_status_history')
+          .select('*')
+          .in('maintenance_request_id', maintenanceRequestIds)
+          .order('changed_at', { ascending: false });
 
-      if (statusError) throw statusError;
+        if (statusError) throw statusError;
 
-      // Add status change activities
-      if (statusData) {
-        activities.push(...statusData.map(item => ({
-          id: item.id,
-          type: 'status_change' as const,
-          title: `Status Changed: ${(item.maintenance_requests as any)?.title || 'Maintenance Request'}`,
-          description: item.notes || `Status changed from ${item.old_status} to ${item.new_status}`,
-          date: item.changed_at,
-          status: item.new_status,
-          metadata: {
-            old_status: item.old_status,
-            new_status: item.new_status,
-            maintenance_request_id: item.maintenance_request_id
-          }
-        })));
+        // Add status change activities
+        if (statusData) {
+          // Create a map of maintenance request IDs to titles for quick lookup
+          const maintenanceRequestMap = new Map(
+            maintenanceData?.map(req => [req.id, req.title]) || []
+          );
+
+          activities.push(...statusData.map(item => ({
+            id: item.id,
+            type: 'status_change' as const,
+            title: `Status Changed: ${maintenanceRequestMap.get(item.maintenance_request_id) || 'Maintenance Request'}`,
+            description: item.notes || `Status changed from ${item.old_status} to ${item.new_status}`,
+            date: item.changed_at,
+            status: item.new_status,
+            metadata: {
+              old_status: item.old_status,
+              new_status: item.new_status,
+              maintenance_request_id: item.maintenance_request_id
+            }
+          })));
+        }
       }
 
       // Sort all activities by date (most recent first)
