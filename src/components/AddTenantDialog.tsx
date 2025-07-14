@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Popover,
   PopoverContent,
@@ -50,6 +51,7 @@ const AddTenantDialog = ({ onTenantAdded }: AddTenantDialogProps) => {
   const [properties, setProperties] = useState<Property[]>([]);
   const [leaseStartDate, setLeaseStartDate] = useState<Date>();
   const [leaseEndDate, setLeaseEndDate] = useState<Date>();
+  const [createUserAccount, setCreateUserAccount] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -108,6 +110,7 @@ const AddTenantDialog = ({ onTenantAdded }: AddTenantDialogProps) => {
     });
     setLeaseStartDate(undefined);
     setLeaseEndDate(undefined);
+    setCreateUserAccount(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,10 +126,50 @@ const AddTenantDialog = ({ onTenantAdded }: AddTenantDialogProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
+      let tenantUserAccountId = null;
+
+      if (createUserAccount && formData.email) {
+        // Create user account using edge function
+        const { data: createUserResponse, error: createUserError } = await supabase.functions.invoke('create-user-with-role', {
+          body: {
+            email: formData.email,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            role: 'tenant',
+            phone: formData.phone,
+            additionalData: {
+              property_id: formData.propertyId,
+              lease_start_date: leaseStartDate?.toISOString().split('T')[0] || null,
+              lease_end_date: leaseEndDate?.toISOString().split('T')[0] || null,
+              monthly_rent: formData.monthlyRent ? parseFloat(formData.monthlyRent) : null,
+              security_deposit: formData.securityDeposit ? parseFloat(formData.securityDeposit) : null,
+              emergency_contact_name: formData.emergencyContactName || null,
+              emergency_contact_phone: formData.emergencyContactPhone || null,
+            }
+          }
+        });
+
+        if (createUserError) {
+          console.error('Error creating user account:', createUserError);
+          toast({
+            title: "Error",
+            description: "Failed to create user account. Tenant record will still be created.",
+            variant: "destructive",
+          });
+        } else {
+          tenantUserAccountId = createUserResponse.userId;
+          toast({
+            title: "Success",
+            description: "User account created and welcome email sent!",
+          });
+        }
+      }
+
       const { error } = await supabase
         .from('tenants')
         .insert({
           user_id: user.id,
+          user_account_id: tenantUserAccountId,
           property_id: formData.propertyId,
           first_name: formData.firstName,
           last_name: formData.lastName,
@@ -243,6 +286,30 @@ const AddTenantDialog = ({ onTenantAdded }: AddTenantDialogProps) => {
                 />
               </div>
             </div>
+
+            {formData.email && (
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="create-user-account"
+                    checked={createUserAccount}
+                    onCheckedChange={(checked) => setCreateUserAccount(checked === true)}
+                  />
+                  <Label htmlFor="create-user-account" className="text-sm font-medium">
+                    Create user account for this tenant
+                  </Label>
+                </div>
+                
+                {createUserAccount && (
+                  <div className="ml-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      ℹ️ A user account will be created with a temporary password. 
+                      An email with login credentials will be sent to <strong>{formData.email}</strong>.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Property & Lease Information */}

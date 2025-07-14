@@ -68,6 +68,7 @@ export function AddPropertyOwnerDialog({
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [propertySearchTerm, setPropertySearchTerm] = useState("");
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>("all");
+  const [createUserAccount, setCreateUserAccount] = useState(false);
   
   // Fetch unassigned properties for new owners or owner-specific properties for editing
   const { data: unassignedProperties = [] } = useUnassignedProperties();
@@ -126,6 +127,7 @@ export function AddPropertyOwnerDialog({
         notes: "",
       });
       setSelectedProperties([]);
+      setCreateUserAccount(false);
     }
   }, [editOwner, mode]);
 
@@ -213,9 +215,57 @@ export function AddPropertyOwnerDialog({
         });
       } else {
         // Create new owner
-        const newOwner = await createOwnerMutation.mutateAsync({
+        let newOwner;
+        let userAccountId = null;
+
+        if (createUserAccount) {
+          // Create user account using edge function
+          const { data: createUserResponse, error: createUserError } = await supabase.functions.invoke('create-user-with-role', {
+            body: {
+              email: ownerData.email,
+              firstName: ownerData.first_name,
+              lastName: ownerData.last_name,
+              role: 'property_owner',
+              phone: ownerData.phone,
+              address: ownerData.address,
+              city: ownerData.city,
+              state: ownerData.state,
+              zipCode: ownerData.zip_code,
+              companyName: ownerData.company_name,
+              additionalData: {
+                spouse_partner_name: ownerData.spouse_partner_name,
+                tax_id_number: ownerData.tax_id_number,
+                bank_account_name: ownerData.bank_account_name,
+                bank_account_number: ownerData.bank_account_number,
+                bank_routing_number: ownerData.bank_routing_number,
+                preferred_payment_method: ownerData.preferred_payment_method,
+                is_self: ownerData.is_self,
+                notes: ownerData.notes,
+              }
+            }
+          });
+
+          if (createUserError) {
+            console.error('Error creating user account:', createUserError);
+            toast({
+              title: "Error",
+              description: "Failed to create user account. Property owner record will still be created.",
+              variant: "destructive",
+            });
+          } else {
+            userAccountId = createUserResponse.userId;
+            toast({
+              title: "Success",
+              description: "User account created and welcome email sent!",
+            });
+          }
+        }
+
+        // Create property owner record (whether or not user account was created)
+        newOwner = await createOwnerMutation.mutateAsync({
           ...ownerData,
           user_id: userData.user.id,
+          user_account_id: userAccountId,
           company_name: ownerData.company_name || null,
           spouse_partner_name: ownerData.spouse_partner_name || null,
           address: ownerData.address || null,
@@ -330,15 +380,39 @@ export function AddPropertyOwnerDialog({
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="is-self"
-                checked={ownerData.is_self}
-                onCheckedChange={(checked) => handleInputChange('is_self', checked)}
-              />
-              <Label htmlFor="is-self" className="text-sm font-medium">
-                This is me (I am the property owner)
-              </Label>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="is-self"
+                  checked={ownerData.is_self}
+                  onCheckedChange={(checked) => handleInputChange('is_self', checked)}
+                />
+                <Label htmlFor="is-self" className="text-sm font-medium">
+                  This is me (I am the property owner)
+                </Label>
+              </div>
+              
+              {mode === "add" && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="create-user-account"
+                    checked={createUserAccount}
+                    onCheckedChange={(checked) => setCreateUserAccount(checked === true)}
+                  />
+                  <Label htmlFor="create-user-account" className="text-sm font-medium">
+                    Create user account for this owner
+                  </Label>
+                </div>
+              )}
+              
+              {createUserAccount && (
+                <div className="ml-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-sm text-blue-700">
+                    ℹ️ A user account will be created with a temporary password. 
+                    An email with login credentials will be sent to <strong>{ownerData.email || 'the provided email'}</strong>.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
