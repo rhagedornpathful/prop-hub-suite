@@ -180,6 +180,8 @@ export const useUpdateProperty = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: PropertyUpdate }) => {
+      console.log('🔄 Updating property:', id, 'with updates:', updates);
+      
       const { data, error } = await supabase
         .from('properties')
         .update({ ...updates, updated_at: new Date().toISOString() })
@@ -187,23 +189,38 @@ export const useUpdateProperty = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Property update error:', error);
+        throw error;
+      }
+      
+      console.log('✅ Property update result:', data);
       return data;
     },
     onMutate: async ({ id, updates }) => {
-      // Optimistic update
-      const queryKey = ['properties'];
-      await queryClient.cancelQueries({ queryKey });
+      console.log('🔄 Optimistic update for property:', id, updates);
       
-      const previousData = queryClient.getQueryData(queryKey);
+      // Optimistic update - fix the query key specificity
+      const queryKeys = [
+        ['properties'],
+        ['properties', 'limited'],
+        ['properties', 'by-owner'], 
+        ['properties', 'unassigned']
+      ];
       
-      queryClient.setQueriesData({ queryKey }, (old: Property[] = []) =>
-        old.map(property => 
+      await Promise.all(queryKeys.map(key => queryClient.cancelQueries({ queryKey: key })));
+      
+      const previousData = queryClient.getQueryData(['properties']);
+      
+      queryClient.setQueriesData({ queryKey: ['properties'] }, (old: Property[] = []) => {
+        const updated = old.map(property => 
           property.id === id 
             ? { ...property, ...updates, updated_at: new Date().toISOString() }
             : property
-        )
-      );
+        );
+        console.log('🔄 Optimistically updated properties list');
+        return updated;
+      });
       
       return { previousData };
     },
@@ -217,12 +234,15 @@ export const useUpdateProperty = () => {
         variant: "destructive",
       });
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('✅ Property update successful, invalidating queries:', data);
       toast({
         title: "Success", 
         description: "Property updated successfully.",
       });
+      // Invalidate all property queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property-metrics'] });
     },
   });
 };

@@ -41,13 +41,18 @@ export const PropertyImageUpload: React.FC<PropertyImageUploadProps> = ({
         .from('property-images')
         .getPublicUrl(filePath);
 
+      console.log('🖼️ Uploading image for property:', propertyId);
+      console.log('🔗 Image URL:', publicUrl);
+
       // Update property with new image
-      await updateProperty.mutateAsync({
+      const result = await updateProperty.mutateAsync({
         id: propertyId,
         updates: {
           images: [publicUrl]
         }
       });
+      
+      console.log('✅ Property updated with image:', result);
 
       onImageUpdate?.(publicUrl);
       
