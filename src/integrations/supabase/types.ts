@@ -102,13 +102,6 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "documents_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       house_watcher_properties: {
@@ -169,22 +162,7 @@ export type Database = {
           id?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "house_watchers_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "house_watchers_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       house_watching: {
         Row: {
@@ -247,15 +225,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "house_watching_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       maintenance_requests: {
         Row: {
@@ -476,15 +446,7 @@ export type Database = {
           user_id?: string
           zip_code?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       properties: {
         Row: {
@@ -579,13 +541,6 @@ export type Database = {
             referencedRelation: "property_owners"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "properties_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       property_check_activities: {
@@ -619,13 +574,6 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "property_check_sessions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "property_check_activities_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -682,15 +630,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "property_check_sessions_scheduled_by_fkey"
-            columns: ["scheduled_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       property_owners: {
         Row: {
@@ -765,22 +705,7 @@ export type Database = {
           user_id?: string
           zip_code?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "property_owners_user_account_id_fkey"
-            columns: ["user_account_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "property_owners_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       tenants: {
         Row: {
@@ -848,13 +773,6 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "tenants_user_account_id_fkey"
-            columns: ["user_account_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_roles: {
@@ -885,22 +803,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -935,30 +838,20 @@ export type Database = {
           assigned_by: string | null
           city: string | null
           company_name: string | null
-          email: string | null
-          email_confirmed_at: string | null
           first_name: string | null
           id: string | null
           last_name: string | null
-          last_sign_in_at: string | null
           phone: string | null
           role: Database["public"]["Enums"]["app_role"] | null
           role_created_at: string | null
           role_updated_at: string | null
           state: string | null
           user_created_at: string | null
+          user_id: string | null
           user_updated_at: string | null
           zip_code: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_assigned_by_fkey"
-            columns: ["assigned_by"]
-            isOneToOne: false
-            referencedRelation: "user_profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
