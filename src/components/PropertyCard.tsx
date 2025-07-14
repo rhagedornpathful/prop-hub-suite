@@ -65,6 +65,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
+  // Debug logging
+  console.log('PropertyCard - property:', property);
+  console.log('PropertyCard - property.type:', property.type);
+
   const isPropertyManagement = property.type === 'property_management';
   const isHouseWatching = property.type === 'house_watching';
 
@@ -398,49 +402,49 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="flex-1 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/30 transition-all duration-200"
+                  className="flex-1 h-9 px-2 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/30 transition-all duration-200"
                   onClick={handleViewProperty}
                 >
-                  <Eye className="h-4 w-4 mr-1.5" />
+                  <Eye className="h-3.5 w-3.5 mr-1" />
                   <span className="text-xs font-medium">View</span>
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 hover:border-blue-300 transition-all duration-200"
+                  className="flex-1 h-9 px-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 hover:border-blue-300 transition-all duration-200"
                   onClick={handleViewMaintenance}
                 >
-                  <Wrench className="h-4 w-4 mr-1.5" />
+                  <Wrench className="h-3.5 w-3.5 mr-1" />
                   <span className="text-xs font-medium">Maintenance</span>
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 hover:border-emerald-300 transition-all duration-200"
+                  className="flex-1 h-9 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 hover:border-emerald-300 transition-all duration-200"
                   onClick={handleViewReports}
                 >
-                  <TrendingUp className="h-4 w-4 mr-1.5" />
+                  <TrendingUp className="h-3.5 w-3.5 mr-1" />
                   <span className="text-xs font-medium">Reports</span>
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="flex-1 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/30 transition-all duration-200"
+                  className="flex-1 h-9 px-3 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/20 hover:border-primary/30 transition-all duration-200"
                   onClick={handleScheduleCheck}
                 >
-                  <Calendar className="h-4 w-4 mr-1.5" />
+                  <Calendar className="h-3.5 w-3.5 mr-1.5" />
                   <span className="text-xs font-medium">Schedule</span>
                 </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 hover:border-emerald-300 transition-all duration-200"
+                  className="flex-1 h-9 px-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 hover:border-emerald-300 transition-all duration-200"
                   onClick={handleViewReports}
                 >
-                  <Eye className="h-4 w-4 mr-1.5" />
+                  <Eye className="h-3.5 w-3.5 mr-1.5" />
                   <span className="text-xs font-medium">Reports</span>
                 </Button>
               </div>
