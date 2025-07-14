@@ -37,6 +37,14 @@ import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 
 type Property = Tables<'properties'>;
 type MaintenanceRequest = Tables<'maintenance_requests'>;
+type PropertyCheckSession = Tables<'property_check_sessions'>;
+
+interface RecentActivity {
+  id: string;
+  type: 'maintenance' | 'inspection';
+  title: string;
+  date: string;
+}
 
 export function PropertyDetail() {
   const { id } = useParams();
@@ -44,13 +52,16 @@ export function PropertyDetail() {
   const { toast } = useToast();
   const [property, setProperty] = useState<Property | null>(null);
   const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     if (id) {
       fetchPropertyDetails();
       fetchMaintenanceRequests();
+      fetchRecentActivities();
     }
   }, [id]);
 
@@ -89,6 +100,61 @@ export function PropertyDetail() {
       setMaintenanceRequests(data || []);
     } catch (error) {
       console.error('Error fetching maintenance requests:', error);
+    }
+  };
+
+  const fetchRecentActivities = async () => {
+    try {
+      const activities: RecentActivity[] = [];
+
+      // Fetch maintenance requests
+      const { data: maintenanceData, error: maintenanceError } = await supabase
+        .from('maintenance_requests')
+        .select('id, title, created_at')
+        .eq('property_id', id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (maintenanceError) throw maintenanceError;
+
+      // Fetch property check sessions
+      const { data: inspectionData, error: inspectionError } = await supabase
+        .from('property_check_sessions')
+        .select('id, created_at, status')
+        .eq('property_id', id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (inspectionError) throw inspectionError;
+
+      // Add maintenance requests to activities
+      if (maintenanceData) {
+        activities.push(...maintenanceData.map(item => ({
+          id: item.id,
+          type: 'maintenance' as const,
+          title: item.title,
+          date: item.created_at
+        })));
+      }
+
+      // Add property inspections to activities
+      if (inspectionData) {
+        activities.push(...inspectionData.map(item => ({
+          id: item.id,
+          type: 'inspection' as const,
+          title: `Property Inspection - ${item.status}`,
+          date: item.created_at
+        })));
+      }
+
+      // Sort by date and take top 3
+      const sortedActivities = activities
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 3);
+
+      setRecentActivities(sortedActivities);
+    } catch (error) {
+      console.error('Error fetching recent activities:', error);
     }
   };
 
@@ -188,13 +254,27 @@ export function PropertyDetail() {
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-3 mb-2">
-              <DollarSign className="h-6 w-6 text-success" />
-              <span className="font-medium">Monthly Income</span>
+              <Activity className="h-6 w-6 text-primary" />
+              <span className="font-medium">Recent Activity</span>
             </div>
-            <p className="text-2xl font-bold text-success">{formatCurrency(property.monthly_rent)}</p>
-            <p className="text-sm text-muted-foreground">
-              {property.service_type === 'house_watching' ? 'Service fee' : 'Rental income'}
-            </p>
+            <div className="space-y-2">
+              {recentActivities.length > 0 ? (
+                recentActivities.map((activity) => (
+                  <button
+                    key={activity.id}
+                    onClick={() => setActiveTab("activity")}
+                    className="block w-full text-left text-sm hover:bg-muted/50 p-2 rounded transition-colors"
+                  >
+                    <div className="font-medium truncate">{activity.title}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {activity.type === 'maintenance' ? 'Maintenance' : 'Inspection'} • {new Date(activity.date).toLocaleDateString()}
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No recent activity</p>
+              )}
+            </div>
           </CardContent>
         </Card>
         
@@ -224,22 +304,22 @@ export function PropertyDetail() {
           </Card>
         )}
 
-        {property.home_value_estimate && (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <Building className="h-6 w-6 text-info" />
-                <span className="font-medium">Home Value</span>
-              </div>
-              <p className="text-2xl font-bold">{formatCurrency(property.home_value_estimate)}</p>
-              <p className="text-sm text-muted-foreground">Home value estimate</p>
-            </CardContent>
-          </Card>
-        )}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <DollarSign className="h-6 w-6 text-success" />
+              <span className="font-medium">Monthly Income</span>
+            </div>
+            <p className="text-2xl font-bold text-success">{formatCurrency(property.monthly_rent)}</p>
+            <p className="text-sm text-muted-foreground">
+              {property.service_type === 'house_watching' ? 'Service fee' : 'Rental income'}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Content Tabs */}
-      <Tabs defaultValue="overview" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Home className="h-4 w-4" />
