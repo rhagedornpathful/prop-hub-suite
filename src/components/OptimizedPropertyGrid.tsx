@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
   Building, 
   MapPin, 
   DollarSign, 
@@ -317,6 +318,7 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -368,6 +370,11 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
     setIsScheduleDialogOpen(true);
   };
 
+  const handleViewDetails = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDetailsDialogOpen(true);
+  };
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
       <div className="relative">
@@ -415,7 +422,7 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleViewDetails}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
@@ -510,6 +517,56 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
         propertyId={property.id}
         propertyAddress={property.property_address}
       />
+      
+      {/* House Watching Details Dialog */}
+      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>House Watching Details</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-lg font-semibold">{property.property_address}</h3>
+              <p className="text-muted-foreground">Owner: {property.owner_name || "Not specified"}</p>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium">Check Frequency</label>
+                <p className="capitalize">{property.check_frequency}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Monthly Fee</label>
+                <p>${property.monthly_fee || 0}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <Badge className={getStatusColor(property.status)}>
+                  {getStatusText(property.status)}
+                </Badge>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Start Date</label>
+                <p>{property.start_date ? new Date(property.start_date).toLocaleDateString() : "Not set"}</p>
+              </div>
+            </div>
+            
+            {property.notes && (
+              <div>
+                <label className="text-sm font-medium">Notes</label>
+                <p className="text-sm text-muted-foreground">{property.notes}</p>
+              </div>
+            )}
+            
+            {property.special_instructions && (
+              <div>
+                <label className="text-sm font-medium">Special Instructions</label>
+                <p className="text-sm text-muted-foreground">{property.special_instructions}</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };
