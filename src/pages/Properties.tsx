@@ -63,13 +63,19 @@ const Properties = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // Handle dialog actions
-  const handlePropertyAdded = () => {
+  const handlePropertyAdded = async () => {
     toast({
       title: "Success",
       description: "Property added successfully",
     });
-    refetchProperties();
-    refetchHouseWatching();
+    
+    // Add a small delay to ensure database consistency before refetching
+    setTimeout(async () => {
+      await Promise.all([
+        refetchProperties(),
+        refetchHouseWatching()
+      ]);
+    }, 100);
   };
 
   const handleImportProperties = () => {
