@@ -626,7 +626,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
                 value={propertyData.service_type} 
                 onValueChange={(value) => handleInputChange('service_type', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="service-type">
                   <SelectValue placeholder="Select service type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -656,7 +656,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
                 onValueChange={(value) => handleInputChange('owner_id', value)}
                 disabled={isLoadingOwners}
               >
-                <SelectTrigger>
+                <SelectTrigger id="property-owner">
                   <SelectValue placeholder={isLoadingOwners ? "Loading owners..." : "Select property owner"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -729,7 +729,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
                 value={propertyData.property_type} 
                 onValueChange={(value) => handleInputChange('property_type', value)}
               >
-                <SelectTrigger>
+                <SelectTrigger id="property-type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
