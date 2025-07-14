@@ -39,6 +39,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
 import { usePropertyOwners, useDeletePropertyOwner } from "@/hooks/queries/usePropertyOwners";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Tables } from "@/integrations/supabase/types";
 
 type PropertyOwner = Tables<'property_owners'> & {
@@ -57,6 +58,7 @@ const PropertyOwners = () => {
   // Use hooks to fetch data
   const { data: owners = [], isLoading, error } = usePropertyOwners();
   const deleteOwnerMutation = useDeletePropertyOwner();
+  const queryClient = useQueryClient();
 
   const filteredOwners = owners.filter(owner =>
     `${owner.first_name} ${owner.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -114,7 +116,8 @@ const PropertyOwners = () => {
 
   const handleOwnerAdded = () => {
     setSelectedOwner(null);
-    // React Query will automatically refetch the data
+    // Force a manual refetch to ensure immediate update
+    queryClient.invalidateQueries({ queryKey: ['property_owners'] });
   };
 
   const handleViewOwner = (owner: PropertyOwner) => {

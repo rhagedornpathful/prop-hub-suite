@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useUnassignedProperties, usePropertiesByOwner, useUpdateProperty } from "@/hooks/queries/useProperties";
+import { useCreatePropertyOwner, useUpdatePropertyOwner } from "@/hooks/queries/usePropertyOwners";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +73,10 @@ export function AddPropertyOwnerDialog({
   const { data: unassignedProperties = [] } = useUnassignedProperties();
   const { data: ownerProperties = [] } = usePropertiesByOwner(editOwner?.id);
   const updateProperty = useUpdateProperty();
+  
+  // Property owner mutation hooks
+  const createOwnerMutation = useCreatePropertyOwner();
+  const updateOwnerMutation = useUpdatePropertyOwner();
   
   const [ownerData, setOwnerData] = useState<PropertyOwnerFormData>(() => {
     return {
@@ -184,9 +189,9 @@ export function AddPropertyOwnerDialog({
       if (!userData.user) throw new Error("Not authenticated");
 
       if (mode === "edit" && ownerData.id) {
-        const { error } = await supabase
-          .from('property_owners')
-          .update({
+        await updateOwnerMutation.mutateAsync({
+          id: ownerData.id,
+          updates: {
             first_name: ownerData.first_name,
             last_name: ownerData.last_name,
             company_name: ownerData.company_name || null,
@@ -204,33 +209,25 @@ export function AddPropertyOwnerDialog({
             preferred_payment_method: ownerData.preferred_payment_method,
             is_self: ownerData.is_self,
             notes: ownerData.notes || null,
-          })
-          .eq('id', ownerData.id);
-
-        if (error) throw error;
+          }
+        });
       } else {
         // Create new owner
-        const { data: newOwner, error } = await supabase
-          .from('property_owners')
-          .insert({
-            ...ownerData,
-            user_id: userData.user.id,
-            company_name: ownerData.company_name || null,
-            spouse_partner_name: ownerData.spouse_partner_name || null,
-            address: ownerData.address || null,
-            city: ownerData.city || null,
-            state: ownerData.state || null,
-            zip_code: ownerData.zip_code || null,
-            tax_id_number: ownerData.tax_id_number || null,
-            bank_account_name: ownerData.bank_account_name || null,
-            bank_account_number: ownerData.bank_account_number || null,
-            bank_routing_number: ownerData.bank_routing_number || null,
-            notes: ownerData.notes || null,
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
+        const newOwner = await createOwnerMutation.mutateAsync({
+          ...ownerData,
+          user_id: userData.user.id,
+          company_name: ownerData.company_name || null,
+          spouse_partner_name: ownerData.spouse_partner_name || null,
+          address: ownerData.address || null,
+          city: ownerData.city || null,
+          state: ownerData.state || null,
+          zip_code: ownerData.zip_code || null,
+          tax_id_number: ownerData.tax_id_number || null,
+          bank_account_name: ownerData.bank_account_name || null,
+          bank_account_number: ownerData.bank_account_number || null,
+          bank_routing_number: ownerData.bank_routing_number || null,
+          notes: ownerData.notes || null,
+        });
 
         // Associate selected properties with the new owner
         if (selectedProperties.length > 0 && newOwner) {
