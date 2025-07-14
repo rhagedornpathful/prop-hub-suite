@@ -57,7 +57,6 @@ interface PropertyData {
   description?: string;
   amenities?: string[];
   gate_code?: string;
-  gated_community?: boolean;
   images?: string[];
   owner_id?: string;
 }
@@ -96,7 +95,6 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         rent_estimate: dbData.rent_estimate || 0,
         description: dbData.description || "",
         gate_code: dbData.gate_code || "",
-        gated_community: dbData.gated_community || false,
         images: dbData.images || [],
         owner_id: dbData.owner_id || "",
       };
@@ -115,7 +113,6 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       rent_estimate: 0,
       description: "",
       gate_code: "",
-      gated_community: false,
       images: [],
       owner_id: "",
     };
@@ -150,7 +147,6 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         rent_estimate: dbData.rent_estimate || 0,
         description: dbData.description || "",
         gate_code: dbData.gate_code || "",
-        gated_community: dbData.gated_community || false,
         images: dbData.images || [],
         owner_id: dbData.owner_id || "",
       });
@@ -170,7 +166,6 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         rent_estimate: 0,
         description: "",
         gate_code: "",
-        gated_community: false,
         images: [],
         owner_id: "",
       });
@@ -519,7 +514,6 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       rent_estimate: 0,
       description: "",
       gate_code: "",
-      gated_community: false,
       images: [],
       owner_id: "",
     });
@@ -712,16 +706,6 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
               />
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="gated-community"
-                  checked={propertyData.gated_community || false}
-                  onCheckedChange={(checked) => handleInputChange('gated_community', checked === true)}
-                />
-                <Label htmlFor="gated-community">Gated Community</Label>
-              </div>
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="property-type">Property Type</Label>
