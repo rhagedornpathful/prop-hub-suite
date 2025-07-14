@@ -27,7 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
+import { PropertyDetailsDialogDB } from "@/components/PropertyDetailsDialogDB";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +36,7 @@ import { HouseWatchingImageUpload } from "@/components/HouseWatchingImageUpload"
 import { SchedulePropertyCheckDialog } from "@/components/SchedulePropertyCheckDialog";
 import { useNavigate } from "react-router-dom";
 import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
+import { usePropertyOwners } from "@/hooks/queries/usePropertyOwners";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,7 +62,15 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const { data: maintenanceRequests = [] } = useMaintenanceRequests();
+  const { data: propertyOwners = [] } = usePropertyOwners();
+  
+  // Get property owner name
+  const propertyOwner = propertyOwners.find(owner => owner.id === property.owner_id);
+  const ownerName = propertyOwner 
+    ? (propertyOwner.company_name || `${propertyOwner.first_name} ${propertyOwner.last_name}`)
+    : "No Owner Assigned";
   
   // Get maintenance requests for this property  
   const propertyMaintenanceRequests = maintenanceRequests.filter(
@@ -90,11 +99,7 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
 
   const handleViewProperty = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toast({
-      title: "View Property",
-      description: `Opening details for ${property.address}`,
-    });
-    // TODO: Open property details dialog or navigate to property page
+    setIsDetailsDialogOpen(true);
   };
 
   const handleManageTenants = (e: React.MouseEvent) => {
@@ -158,7 +163,7 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
             </div>
             <div className="flex items-center gap-1 mt-1 text-muted-foreground hover:text-primary transition-colors">
               <UserCheck className="h-3 w-3" />
-              <span className="text-xs">Property Owner</span>
+              <span className="text-xs">Owner: {ownerName}</span>
             </div>
           </div>
           <DropdownMenu>
@@ -173,7 +178,7 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleViewProperty}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
               </DropdownMenuItem>
@@ -297,6 +302,12 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
         onOpenChange={setIsScheduleDialogOpen}
         propertyId={property.id}
         propertyAddress={property.address}
+      />
+      
+      <PropertyDetailsDialogDB
+        property={property}
+        open={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
       />
     </Card>
   );
