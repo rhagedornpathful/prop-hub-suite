@@ -102,35 +102,67 @@ function extractPropertyData(scrapedData: any) {
   }
 
   try {
-    // Extract address
-    const addressMatch = content.match(/(?:Address:|Street:)\s*([^\n\r,]+(?:,\s*[^\n\r,]+)*)/i) ||
-                         html.match(/<h1[^>]*>([^<]*(?:St|Ave|Rd|Dr|Ln|Blvd|Way|Ct|Pl)[^<]*)<\/h1>/i)
-    if (addressMatch) {
-      propertyData.address = addressMatch[1].trim()
+    // Extract street address - enhanced patterns for Zillow
+    const addressPatterns = [
+      // Look for address in various formats
+      /(?:Address:|Street:|Property address:)\s*([^\n\r,]+(?:,\s*[^\n\r,]+)*)/i,
+      // Header tags with street address
+      /<h1[^>]*>([^<]*(?:St|Ave|Rd|Dr|Ln|Blvd|Way|Ct|Pl|Street|Avenue|Road|Drive|Lane|Boulevard)[^<]*)<\/h1>/i,
+      // Address in JSON-LD or structured data
+      /"streetAddress":\s*"([^"]+)"/i,
+      // Address in meta tags
+      /<meta[^>]*property="og:street-address"[^>]*content="([^"]+)"/i,
+      // Address near property details
+      /Property Details[^:]*:\s*([^\n\r,]*(?:St|Ave|Rd|Dr|Ln|Blvd|Way|Ct|Pl)[^\n\r,]*)/i
+    ]
+    
+    for (const pattern of addressPatterns) {
+      const addressMatch = content.match(pattern) || html.match(pattern)
+      if (addressMatch && addressMatch[1]?.trim()) {
+        propertyData.address = addressMatch[1].trim()
+        break
+      }
     }
 
-    // Extract city, state, zip from various patterns
-    // Look for patterns like "City, State ZIP" or "City, ST 12345"
-    const locationMatch = content.match(/([A-Za-z\s]+),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)/i) ||
-                         html.match(/([A-Za-z\s]+),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)/i)
+    // Extract city, state, zip from various patterns - enhanced for Zillow
+    const locationPatterns = [
+      // Standard "City, State ZIP" format
+      /([A-Za-z\s]+),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)/i,
+      // JSON-LD structured data
+      /"addressLocality":\s*"([^"]+)"[^}]*"addressRegion":\s*"([^"]+)"[^}]*"postalCode":\s*"([^"]+)"/i,
+      // Meta tags
+      /<meta[^>]*property="og:locality"[^>]*content="([^"]+)"[^>]*>/i
+    ]
     
-    if (locationMatch) {
-      propertyData.city = locationMatch[1].trim()
-      propertyData.state = locationMatch[2].trim()
-      propertyData.zip_code = locationMatch[3].trim()
-    } else {
-      // Try alternative patterns for city/state/zip
-      const cityMatch = content.match(/(?:City|Location):\s*([A-Za-z\s]+)/i)
+    let locationFound = false
+    for (const pattern of locationPatterns) {
+      const locationMatch = content.match(pattern) || html.match(pattern)
+      if (locationMatch && locationMatch[1]?.trim()) {
+        propertyData.city = locationMatch[1].trim()
+        if (locationMatch[2]?.trim()) {
+          propertyData.state = locationMatch[2].trim()
+        }
+        if (locationMatch[3]?.trim()) {
+          propertyData.zip_code = locationMatch[3].trim()
+        }
+        locationFound = true
+        break
+      }
+    }
+    
+    // If location not found in combined pattern, try individual patterns
+    if (!locationFound) {
+      const cityMatch = content.match(/(?:City|Location|addressLocality)[:"\s]*([A-Za-z\s]+)[",\s]/i)
       if (cityMatch) {
         propertyData.city = cityMatch[1].trim()
       }
       
-      const stateMatch = content.match(/(?:State|ST):\s*([A-Z]{2})/i)
+      const stateMatch = content.match(/(?:State|ST|addressRegion)[:"\s]*([A-Z]{2})[",\s]/i)
       if (stateMatch) {
         propertyData.state = stateMatch[1].trim()
       }
       
-      const zipMatch = content.match(/(?:ZIP|Zip Code):\s*(\d{5}(?:-\d{4})?)/i) ||
+      const zipMatch = content.match(/(?:ZIP|Zip Code|postalCode)[:"\s]*(\d{5}(?:-\d{4})?)[",\s]/i) ||
                       content.match(/\b(\d{5}(?:-\d{4})?)\b/)
       if (zipMatch) {
         propertyData.zip_code = zipMatch[1].trim()
@@ -158,29 +190,68 @@ function extractPropertyData(scrapedData: any) {
       propertyData.square_feet = parseInt(sqftMatch[1].replace(/,/g, ''))
     }
 
-    // Extract Zestimate (Zillow's property value estimate)
-    const zestimateMatch = content.match(/zestimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i) ||
-                          html.match(/zestimate[^$]*\$(\d{1,3}(?:,\d{3})*)/i)
-    if (zestimateMatch) {
-      propertyData.home_value_estimate = parseInt(zestimateMatch[1].replace(/,/g, ''))
-      // Also set estimated_value for backwards compatibility
-      propertyData.estimated_value = parseInt(zestimateMatch[1].replace(/,/g, ''))
+    // Extract Zestimate (Zillow's property value estimate) - enhanced patterns
+    const zestimatePatterns = [
+      // Direct Zestimate mentions
+      /zestimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i,
+      /zestimate[^$]*\$(\d{1,3}(?:,\d{3})*)/i,
+      // Home value estimate
+      /home\s*value[:\s]*\$(\d{1,3}(?:,\d{3})*)/i,
+      // Property value
+      /property\s*value[:\s]*\$(\d{1,3}(?:,\d{3})*)/i,
+      // JSON-LD structured data
+      /"price":\s*(\d{1,3}(?:,\d{3})*)/i,
+      // Meta tags for property value
+      /<meta[^>]*property="product:price:amount"[^>]*content="(\d{1,3}(?:,\d{3})*)"/i
+    ]
+    
+    for (const pattern of zestimatePatterns) {
+      const zestimateMatch = content.match(pattern) || html.match(pattern)
+      if (zestimateMatch && zestimateMatch[1]) {
+        const value = parseInt(zestimateMatch[1].replace(/,/g, ''))
+        if (value > 50000) { // Reasonable minimum for home value
+          propertyData.home_value_estimate = value
+          propertyData.estimated_value = value // Also set for backwards compatibility
+          break
+        }
+      }
     }
 
-    // Extract Rent Zestimate (Zillow's rental value estimate)  
-    const rentZestimateMatch = content.match(/rent\s*zestimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i) ||
-                              html.match(/rent\s*zestimate[^$]*\$(\d{1,3}(?:,\d{3})*)/i)
-    if (rentZestimateMatch) {
-      propertyData.rent_estimate = parseInt(rentZestimateMatch[1].replace(/,/g, ''))
-      // Also set monthly_rent for backwards compatibility
-      propertyData.monthly_rent = parseInt(rentZestimateMatch[1].replace(/,/g, ''))
+    // Extract Rent Zestimate (Zillow's rental value estimate) - enhanced patterns
+    const rentZestimatePatterns = [
+      // Rent Zestimate direct mentions
+      /rent\s*zestimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i,
+      /rent\s*zestimate[^$]*\$(\d{1,3}(?:,\d{3})*)/i,
+      // Rental estimate
+      /rental\s*estimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i,
+      // Monthly rent estimate
+      /monthly\s*rent[:\s]*\$(\d{1,3}(?:,\d{3})*)/i,
+      // Rent estimate
+      /rent\s*estimate[:\s]*\$(\d{1,3}(?:,\d{3})*)/i,
+      // JSON-LD for rent
+      /"rentEstimate":\s*(\d{1,3}(?:,\d{3})*)/i
+    ]
+    
+    for (const pattern of rentZestimatePatterns) {
+      const rentMatch = content.match(pattern) || html.match(pattern)
+      if (rentMatch && rentMatch[1]) {
+        const value = parseInt(rentMatch[1].replace(/,/g, ''))
+        if (value > 500 && value < 20000) { // Reasonable range for monthly rent
+          propertyData.rent_estimate = value
+          propertyData.monthly_rent = value // Also set for backwards compatibility
+          break
+        }
+      }
     }
 
     // Fallback: Extract any price if Zestimate not found
     if (!propertyData.estimated_value) {
       const priceMatch = content.match(/\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/i)
       if (priceMatch) {
-        propertyData.estimated_value = parseInt(priceMatch[1].replace(/,/g, ''))
+        const value = parseInt(priceMatch[1].replace(/,/g, ''))
+        if (value > 50000) { // Only use reasonable home values
+          propertyData.estimated_value = value
+        }
       }
     }
 

@@ -96,25 +96,30 @@ export function ZillowPropertyScraper({ onDataExtracted, className }: ZillowProp
       // Map the scraped data to match the form's expected field names
       const mappedData = {
         ...propertyData,
-        // Ensure all key fields are properly mapped
+        // Street Address mapping - ensure both address and street_address are set
         address: propertyData.address,
+        street_address: propertyData.address, // Map address to street_address field
+        // Location fields
         city: propertyData.city,
         state: propertyData.state,
         zip_code: propertyData.zip_code,
-        street_address: propertyData.address, // Also set street_address
+        // Property details
         bedrooms: propertyData.bedrooms,
         bathrooms: propertyData.bathrooms,
         square_feet: propertyData.square_feet,
         year_built: propertyData.year_built,
         lot_size: propertyData.lot_size,
         property_type: propertyData.property_type,
-        // Map value estimates
+        // Value estimates - Zestimate mapping
         estimated_value: propertyData.estimated_value || propertyData.price || propertyData.home_value_estimate,
-        home_value_estimate: propertyData.home_value_estimate || propertyData.estimated_value,
-        rent_estimate: propertyData.rent_estimate,
+        home_value_estimate: propertyData.home_value_estimate || propertyData.estimated_value, // Zestimate -> Home Value Estimate
+        // Rent estimates - Rent Zestimate mapping
+        rent_estimate: propertyData.rent_estimate, // Rent Zestimate -> Rent Estimate
         monthly_rent: propertyData.monthly_rent || propertyData.rent_estimate,
         // Images
         images: propertyData.images || [],
+        // Description if available
+        description: propertyData.description,
         // Remove the price field since we've mapped it to estimated_value
         price: undefined
       };
