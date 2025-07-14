@@ -66,6 +66,7 @@ const sendWelcomeEmail = async (
           <li>Temporary Password: <code>${tempPassword}</code></li>
         </ul>
         <p>Please log in at your earliest convenience and change your password.</p>
+        <p><a href="https://bd81fa1e-51cd-42f4-be62-9fca5c241d7a.lovableproject.com/auth" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Log in to Property Management System</a></p>
         <p>If you have any questions, please contact our support team.</p>
         <p>Best regards,<br>Property Management Team</p>
       `,
