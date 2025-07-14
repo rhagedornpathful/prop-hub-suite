@@ -65,10 +65,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  // Debug logging
-  console.log('PropertyCard - property:', property);
-  console.log('PropertyCard - property.type:', property.type);
-
   const isPropertyManagement = property.type === 'property_management';
   const isHouseWatching = property.type === 'house_watching';
 
@@ -185,15 +181,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           </Badge>
         </div>
         
-        {/* Type-specific Top Left Badge */}
-        <div className="absolute top-3 left-3">
-          <Badge variant="outline" className="bg-white/90 text-foreground border-white/50">
-            {isPropertyManagement 
-              ? propertyManagementData?.property_type || "Property"
-              : `${houseWatchingData?.check_frequency} checks`
-            }
-          </Badge>
-        </div>
+        {/* Remove the cluttered property type badge */}
         
         {/* Service Type Badge */}
         <div className="absolute bottom-3 left-3">
