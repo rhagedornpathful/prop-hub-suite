@@ -405,6 +405,30 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
     setIsDetailsDialogOpen(true);
   };
 
+  const handleEditProperty = (property: any) => {
+    // Convert house watching property to regular property format for editing
+    const propertyForEdit = {
+      ...property,
+      address: property.property_address,
+      monthly_rent: property.monthly_fee,
+      description: property.notes,
+      service_type: 'house_watching'
+    };
+    // TODO: Implement edit functionality for house watching properties
+    toast({
+      title: "Edit Service",
+      description: "House watching service editing coming soon!",
+    });
+  };
+
+  const handleDeleteProperty = (property: any) => {
+    // TODO: Implement delete functionality for house watching properties
+    toast({
+      title: "End Service",
+      description: "House watching service termination coming soon!",
+    });
+  };
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
       <div className="relative">
@@ -549,69 +573,41 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
         propertyAddress={property.property_address}
       />
       
-      {/* House Watching Details Dialog */}
-      <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>House Watching Details</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-semibold">{property.property_address}</h3>
-              <p className="text-muted-foreground">Owner: {property.owner_name || "Not specified"}</p>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Check Frequency</label>
-                <p className="capitalize">{property.check_frequency}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Monthly Fee</label>
-                <p>${property.monthly_fee || 0}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Status</label>
-                <Badge className={getStatusColor(property.status)}>
-                  {getStatusText(property.status)}
-                </Badge>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Start Date</label>
-                <p>{property.start_date ? new Date(property.start_date).toLocaleDateString() : "Not set"}</p>
-              </div>
-            </div>
-            
-            {property.notes && (
-              <div>
-                <label className="text-sm font-medium">Notes</label>
-                <p className="text-sm text-muted-foreground">{property.notes}</p>
-              </div>
-            )}
-            
-            {property.special_instructions && (
-              <div>
-                <label className="text-sm font-medium">Special Instructions</label>
-                <p className="text-sm text-muted-foreground">{property.special_instructions}</p>
-              </div>
-            )}
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium">Last Check</label>
-                <p>{lastCheckDate ? lastCheckDate.toLocaleDateString() : "Not checked"}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Next Check</label>
-                <p className={isOverdue ? 'text-destructive' : ''}>
-                  {nextCheckDate ? nextCheckDate.toLocaleDateString() : "Not scheduled"}
-                  {isOverdue && <span className="text-xs block text-destructive">Overdue</span>}
-                </p>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Use the same PropertyDetailsDialogDB as Property Management cards */}
+      <PropertyDetailsDialogDB
+        property={{
+          ...property,
+          address: property.property_address,
+          owner_id: null,
+          user_id: property.user_id,
+          bedrooms: null,
+          bathrooms: null,
+          square_feet: null,
+          property_type: 'house_watching',
+          monthly_rent: property.monthly_fee,
+          status: property.status,
+          images: null,
+          amenities: null,
+          description: property.notes,
+          service_type: 'house_watching',
+          street_address: property.property_address,
+          city: null,
+          state: null,
+          zip_code: null,
+          estimated_value: null,
+          year_built: null,
+          lot_size: null,
+          gate_code: null,
+          home_value_estimate: null,
+          rent_estimate: null,
+          created_at: property.created_at,
+          updated_at: property.updated_at
+        }}
+        open={isDetailsDialogOpen}
+        onOpenChange={setIsDetailsDialogOpen}
+        onEdit={handleEditProperty}
+        onDelete={handleDeleteProperty}
+      />
     </Card>
   );
 };
