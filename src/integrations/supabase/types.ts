@@ -838,6 +838,7 @@ export type Database = {
           assigned_by: string | null
           city: string | null
           company_name: string | null
+          email: string | null
           first_name: string | null
           id: string | null
           last_name: string | null

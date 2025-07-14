@@ -385,14 +385,22 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         });
       } else {
         // Create new property
-        const { error } = await supabase
+        console.log('Creating new property with data:', propertyData);
+        
+        const { data, error } = await supabase
           .from('properties')
           .insert({
             ...propertyData,
             user_id: userData.user.id,
-          });
+          })
+          .select(); // Add select to get the created property back
 
-        if (error) throw error;
+        if (error) {
+          console.error('Supabase error creating property:', error);
+          throw error;
+        }
+
+        console.log('Property created successfully:', data);
 
         toast({
           title: "Success",
@@ -405,9 +413,23 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       }
     } catch (error) {
       console.error('Error saving property:', error);
+      
+      // Enhanced error logging
+      let errorMessage = `Failed to ${mode === "edit" ? "update" : "save"} property`;
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+        errorMessage += `: ${error.message}`;
+      } else {
+        console.error('Unknown error type:', error);
+      }
+      
       toast({
         title: "Error",
-        description: `Failed to ${mode === "edit" ? "update" : "save"} property`,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

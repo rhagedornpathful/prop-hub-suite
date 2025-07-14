@@ -24,20 +24,7 @@ export const useHouseWatchers = () => {
     queryFn: async (): Promise<HouseWatcher[]> => {
       const { data, error } = await supabase
         .from('house_watchers')
-        .select(`
-          *,
-          user_profiles!house_watchers_user_id_fkey (
-            id,
-            email,
-            first_name,
-            last_name,
-            phone,
-            address,
-            city,
-            state,
-            zip_code
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
