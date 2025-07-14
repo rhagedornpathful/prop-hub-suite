@@ -168,9 +168,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
             currentImage={propertyManagementData?.images?.[0]}
           />
         ) : (
-          <HouseWatchingImageUpload 
+          <PropertyImageUpload 
             propertyId={property.id}
-            currentImage={undefined}
+            currentImage={property.images?.[0]}
           />
         )}
         

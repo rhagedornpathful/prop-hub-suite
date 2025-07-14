@@ -43,7 +43,7 @@ export function OptimizedPropertyGrid({
       address: property.address,
       displayAddress: `${property.city}, ${property.state}`,
       status: property.status,
-      images: property.images,
+      images: property.images, // Preserve images for both types
       propertyData: property.service_type === 'property_management' ? property : undefined,
       houseWatchingData: property.service_type === 'house_watching' ? {
         id: property.id,
