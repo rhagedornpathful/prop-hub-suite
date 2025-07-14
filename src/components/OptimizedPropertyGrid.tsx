@@ -499,40 +499,48 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
       
       <CardContent className="pt-0">
         <div className="space-y-4">
-          {/* Service Details */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
+          {/* Key Metrics */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Clock className="h-4 w-4 text-blue-600" />
+              </div>
               <div>
-                <div className="text-sm font-medium capitalize">{property.check_frequency}</div>
-                <div className="text-xs text-muted-foreground">check frequency</div>
+                <div className="text-lg font-semibold capitalize text-foreground">{property.check_frequency}</div>
+                <div className="text-sm text-muted-foreground">check frequency</div>
               </div>
             </div>
             {property.monthly_fee && (
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-success" />
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                </div>
                 <div>
-                  <div className="text-sm font-medium">${property.monthly_fee}</div>
-                  <div className="text-xs text-muted-foreground">per month</div>
+                  <div className="text-lg font-semibold text-foreground">${property.monthly_fee}</div>
+                  <div className="text-sm text-muted-foreground">per month</div>
                 </div>
               </div>
             )}
           </div>
           
-          {/* Check Dates */}
-          <div className="space-y-2">
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Last Check:</span>
-                <div className="font-medium">
+          {/* Check Status */}
+          <div className="bg-muted/30 rounded-lg p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-muted-foreground">Last Check:</div>
+                <div className="text-base font-semibold text-foreground">
                   {lastCheckDate ? lastCheckDate.toLocaleDateString() : "Not checked"}
                 </div>
               </div>
-              <div>
-                <span className="text-muted-foreground">Next Check:</span>
-                <div className={`font-medium ${isOverdue ? 'text-destructive' : ''}`}>
+              <div className="space-y-1">
+                <div className="text-sm font-medium text-muted-foreground">Next Check:</div>
+                <div className={`text-base font-semibold ${isOverdue ? 'text-destructive' : 'text-foreground'}`}>
                   {nextCheckDate ? nextCheckDate.toLocaleDateString() : "Not scheduled"}
-                  {isOverdue && <span className="text-xs block text-destructive">Overdue</span>}
+                  {isOverdue && (
+                    <span className="block text-xs font-medium text-destructive mt-1">
+                      Overdue
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
