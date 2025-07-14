@@ -49,6 +49,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Tables } from "@/integrations/supabase/types";
+import type { PropertyWithRelations } from "@/hooks/queries/useProperties";
 
 type Property = Tables<'properties'>;
 type HouseWatchingProperty = Tables<'house_watching'>;
@@ -56,29 +57,24 @@ type HouseWatchingProperty = Tables<'house_watching'>;
 interface TransformedProperty {
   id: string;
   serviceType: 'property_management' | 'house_watching';
-  rawData: Property | HouseWatchingProperty;
+  rawData: PropertyWithRelations | HouseWatchingProperty;
 }
 
-const PropertyManagementCard = ({ property }: { property: Property }) => {
+const PropertyManagementCard = ({ property }: { property: PropertyWithRelations }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const { data: maintenanceRequests = [] } = useMaintenanceRequests();
-  const { data: propertyOwners = [] } = usePropertyOwners();
   
-  // Get property owner name
-  const propertyOwner = propertyOwners.find(owner => owner.id === property.owner_id);
-  const ownerName = propertyOwner 
-    ? (propertyOwner.company_name || `${propertyOwner.first_name} ${propertyOwner.last_name}`)
+  // Use connected data instead of separate queries
+  const ownerName = property.property_owner 
+    ? (property.property_owner.company_name || `${property.property_owner.first_name} ${property.property_owner.last_name}`)
     : "No Owner Assigned";
   
-  // Get maintenance requests for this property  
-  const propertyMaintenanceRequests = maintenanceRequests.filter(
-    req => req.property_id === property.id
-  );
-  const pendingMaintenance = propertyMaintenanceRequests.filter(req => req.status === 'pending').length;
-  const urgentMaintenance = propertyMaintenanceRequests.filter(req => req.priority === 'urgent').length;
+  // Use connected maintenance data
+  const maintenanceRequests = property.maintenance_requests || [];
+  const pendingMaintenance = property.pending_maintenance || 0;
+  const urgentMaintenance = property.urgent_maintenance || 0;
   
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -265,12 +261,12 @@ const PropertyManagementCard = ({ property }: { property: Property }) => {
           )}
 
           {/* Maintenance Summary */}
-          {propertyMaintenanceRequests.length > 0 && (
+          {maintenanceRequests.length > 0 && (
             <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
               <Wrench className="h-4 w-4 text-primary" />
               <div className="flex-1">
                 <div className="text-sm font-medium">
-                  {propertyMaintenanceRequests.length} maintenance request{propertyMaintenanceRequests.length !== 1 ? 's' : ''}
+                  {maintenanceRequests.length} maintenance request{maintenanceRequests.length !== 1 ? 's' : ''}
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {pendingMaintenance > 0 && `${pendingMaintenance} pending`}
@@ -583,7 +579,7 @@ const HouseWatchingCard = ({ property }: { property: HouseWatchingProperty }) =>
 };
 
 interface OptimizedPropertyGridProps {
-  properties?: Property[];
+  properties?: PropertyWithRelations[];
   houseWatchingProperties?: HouseWatchingProperty[];
   isLoading?: boolean;
   onRefresh?: () => void;

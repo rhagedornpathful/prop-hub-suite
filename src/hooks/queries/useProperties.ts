@@ -8,6 +8,15 @@ type Property = Tables<'properties'>;
 type PropertyInsert = TablesInsert<'properties'>;
 type PropertyUpdate = TablesUpdate<'properties'>;
 
+export interface PropertyWithRelations extends Property {
+  property_owner?: Tables<'property_owners'> | null;
+  tenants?: Tables<'tenants'>[];
+  maintenance_requests?: Tables<'maintenance_requests'>[];
+  maintenance_count?: number;
+  pending_maintenance?: number;
+  urgent_maintenance?: number;
+}
+
 export const useProperties = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -15,17 +24,32 @@ export const useProperties = () => {
 
   return useQuery({
     queryKey: ['properties', user?.id],
-    queryFn: async () => {
+    queryFn: async (): Promise<PropertyWithRelations[]> => {
       if (!user) return [];
       
-      const { data, error } = await supabase
+      // Fetch properties with all related data
+      const { data: properties, error: propertiesError } = await supabase
         .from('properties')
-        .select('*')
+        .select(`
+          *,
+          property_owner:property_owners(*),
+          tenants(*),
+          maintenance_requests(*)
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (propertiesError) throw propertiesError;
+      
+      // Calculate maintenance metrics for each property
+      const propertiesWithMetrics = (properties || []).map(property => ({
+        ...property,
+        maintenance_count: property.maintenance_requests?.length || 0,
+        pending_maintenance: property.maintenance_requests?.filter(req => req.status === 'pending').length || 0,
+        urgent_maintenance: property.maintenance_requests?.filter(req => req.priority === 'urgent').length || 0,
+      }));
+
+      return propertiesWithMetrics;
     },
     enabled: !!user,
   });
