@@ -279,18 +279,21 @@ export function AddPropertyOwnerDialog({
           notes: ownerData.notes || null,
         });
 
-        // Associate selected properties with the new owner
+        // Associate selected properties with the new owner using junction table
         if (selectedProperties.length > 0 && newOwner) {
-          for (const propertyId of selectedProperties) {
-            const { error: updateError } = await supabase
-              .from('properties')
-              .update({ owner_id: newOwner.id })
-              .eq('id', propertyId);
-            
-            if (updateError) {
-              console.error('Error associating property:', updateError);
-              // Don't throw here, just log the error so the owner creation doesn't fail
-            }
+          const associations = selectedProperties.map(propertyId => ({
+            property_id: propertyId,
+            property_owner_id: newOwner.id,
+            is_primary_owner: true, // Default to primary owner for single association
+          }));
+
+          const { error: associationError } = await supabase
+            .from('property_owner_associations')
+            .insert(associations);
+          
+          if (associationError) {
+            console.error('Error associating properties:', associationError);
+            // Don't throw here, just log the error so the owner creation doesn't fail
           }
         }
       }

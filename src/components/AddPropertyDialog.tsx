@@ -28,6 +28,7 @@ import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PropertyImageUpload } from "@/components/PropertyImageUpload";
 import { PropertyImageUploadPreview } from "@/components/PropertyImageUploadPreview";
+import { PropertyOwnerManager } from "@/components/PropertyOwnerManager";
 
 interface AddPropertyDialogProps {
   open: boolean;
@@ -35,6 +36,14 @@ interface AddPropertyDialogProps {
   onPropertyAdded?: () => void;
   editProperty?: any;
   mode?: "add" | "edit";
+}
+
+interface PropertyOwnerAssociation {
+  id: string;
+  property_owner_id: string;
+  ownership_percentage?: number;
+  is_primary_owner: boolean;
+  property_owner: PropertyOwner;
 }
 
 interface PropertyData {
@@ -58,7 +67,7 @@ interface PropertyData {
   amenities?: string[];
   gate_code?: string;
   images?: string[];
-  owner_id?: string;
+  owner_associations: PropertyOwnerAssociation[];
 }
 
 interface PropertyOwner {
@@ -96,7 +105,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         description: dbData.description || "",
         gate_code: dbData.gate_code || "",
         images: dbData.images || [],
-        owner_id: dbData.owner_id || "",
+        owner_associations: [],
       };
     }
     return {
@@ -114,7 +123,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       description: "",
       gate_code: "",
       images: [],
-      owner_id: "",
+      owner_associations: [],
     };
   });
   const { toast } = useToast();
@@ -148,7 +157,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         description: dbData.description || "",
         gate_code: dbData.gate_code || "",
         images: dbData.images || [],
-        owner_id: dbData.owner_id || "",
+        owner_associations: [],
       });
       setSearchAddress(dbData.address || "");
     } else if (mode === "add") {
@@ -167,7 +176,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         description: "",
         gate_code: "",
         images: [],
-        owner_id: "",
+        owner_associations: [],
       });
       setSearchAddress("");
     }
@@ -382,13 +391,17 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         // Create new property
         console.log('Creating new property with data:', propertyData);
         
+        // Extract owner associations from propertyData
+        const { owner_associations, ...propertyDataWithoutOwners } = propertyData;
+        
         const { data, error } = await supabase
           .from('properties')
           .insert({
-            ...propertyData,
+            ...propertyDataWithoutOwners,
             user_id: userData.user.id,
           })
-          .select(); // Add select to get the created property back
+          .select()
+          .single();
 
         if (error) {
           console.error('Supabase error creating property:', error);
@@ -396,6 +409,34 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
         }
 
         console.log('Property created successfully:', data);
+
+        // Now save the owner associations
+        if (owner_associations && owner_associations.length > 0) {
+          const associations = owner_associations
+            .filter(assoc => assoc.property_owner_id) // Only include associations with valid owner IDs
+            .map(assoc => ({
+              property_id: data.id,
+              property_owner_id: assoc.property_owner_id,
+              ownership_percentage: assoc.ownership_percentage,
+              is_primary_owner: assoc.is_primary_owner,
+            }));
+
+          if (associations.length > 0) {
+            const { error: associationError } = await supabase
+              .from('property_owner_associations')
+              .insert(associations);
+
+            if (associationError) {
+              console.error('Error creating owner associations:', associationError);
+              // Don't throw here - property was created successfully
+              toast({
+                title: "Warning",
+                description: "Property created but some owner associations could not be saved.",
+                variant: "destructive",
+              });
+            }
+          }
+        }
 
         toast({
           title: "Success",
@@ -515,7 +556,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
       description: "",
       gate_code: "",
       images: [],
-      owner_id: "",
+      owner_associations: [],
     });
   };
 
@@ -632,35 +673,14 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="property-owner">Property Owner *</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsQuickAddOwnerOpen(true)}
-                  className="h-6 px-2 text-xs"
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Quick Add
-                </Button>
-              </div>
-              <Select 
-                value={propertyData.owner_id} 
-                onValueChange={(value) => handleInputChange('owner_id', value)}
-                disabled={isLoadingOwners}
-              >
-                <SelectTrigger id="property-owner">
-                  <SelectValue placeholder={isLoadingOwners ? "Loading owners..." : "Select property owner"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {propertyOwners.map((owner) => (
-                    <SelectItem key={owner.id} value={owner.id}>
-                      {getOwnerDisplayName(owner)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <PropertyOwnerManager
+                propertyId={mode === "edit" ? ((editProperty as any)._dbData || editProperty).id : undefined}
+                selectedOwners={propertyData.owner_associations}
+                onOwnersChange={(owners) => handleInputChange('owner_associations', owners)}
+                availableOwners={propertyOwners}
+                isLoadingOwners={isLoadingOwners}
+                onReloadOwners={loadPropertyOwners}
+              />
             </div>
 
             <div className="space-y-2 md:col-span-2">

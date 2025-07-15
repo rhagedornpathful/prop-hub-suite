@@ -820,6 +820,51 @@ export type Database = {
         }
         Relationships: []
       }
+      property_owner_associations: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary_owner: boolean
+          ownership_percentage: number | null
+          property_id: string
+          property_owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary_owner?: boolean
+          ownership_percentage?: number | null
+          property_id: string
+          property_owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary_owner?: boolean
+          ownership_percentage?: number | null
+          property_id?: string
+          property_owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_owner_associations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_owner_associations_property_owner_id_fkey"
+            columns: ["property_owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_owners: {
         Row: {
           address: string | null
