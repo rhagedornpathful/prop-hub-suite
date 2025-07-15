@@ -18,6 +18,10 @@ import { DevAdminToggle } from "@/components/dev/DevAdminToggle";
 import { DebugPanel } from "@/components/dev/DebugPanel";
 import { RoleDebugger } from "@/components/dev/RoleDebugger";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { SimplePerformanceMonitor } from "@/components/SimplePerformanceMonitor";
+import { config } from "@/lib/config";
+import { logger } from "@/lib/logger";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
@@ -64,17 +68,20 @@ const AppContent = () => {
     localStorage.setItem('sidebar-state', JSON.stringify(open));
   };
 
+  logger.info("App initialized");
+
   return (
-    <AuthProvider>
-      <DevAdminProvider>
-        <ViewAsProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <EmergencyAdminBanner />
-              <ViewAsBanner />
+    <ErrorBoundary>
+      <AuthProvider>
+        <DevAdminProvider>
+          <ViewAsProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <EmergencyAdminBanner />
+                <ViewAsBanner />
           <Routes>
             {/* Public Auth Route - Always accessible */}
             <Route path="/auth" element={<Auth />} />
@@ -228,6 +235,7 @@ const AppContent = () => {
                       </Routes>
                     </main>
                   </div>
+                  {config.isDevelopment && <SimplePerformanceMonitor />}
                 </SidebarProvider>
               </ProtectedRoute>
             } />
@@ -243,6 +251,7 @@ const AppContent = () => {
   </ViewAsProvider>
 </DevAdminProvider>
 </AuthProvider>
+    </ErrorBoundary>
   );
 };
 
