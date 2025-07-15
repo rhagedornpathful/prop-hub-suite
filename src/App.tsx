@@ -85,38 +85,6 @@ const AppContent = () => {
             {/* Setup Route - Always accessible for first admin setup */}
             <Route path="/setup" element={<Setup />} />
             
-            {/* Demo Routes - Temporarily accessible without auth */}
-            <Route path="/demo/*" element={
-              <div className="min-h-screen flex w-full">
-                <Routes>
-                  <Route path="/" element={<PageTransition><Index /></PageTransition>} />
-                  <Route path="/properties" element={<PageTransition><Properties /></PageTransition>} />
-                  <Route path="/properties/:id" element={<PageTransition><PropertyDetail /></PageTransition>} />
-                  <Route path="/tenants" element={<PageTransition><Tenants /></PageTransition>} />
-                  <Route path="/leases" element={<PageTransition><Leases /></PageTransition>} />
-                  <Route path="/finances" element={<PageTransition><Finances /></PageTransition>} />
-                  <Route path="/maintenance" element={<PageTransition><Maintenance /></PageTransition>} />
-                  <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
-                  <Route path="/documents" element={<PageTransition><Documents /></PageTransition>} />
-                  <Route path="/house-watching" element={<PageTransition><HouseWatching /></PageTransition>} />
-                  <Route path="/property-check/:id" element={<PageTransition><PropertyCheck /></PageTransition>} />
-                  <Route path="/property-owners" element={<PageTransition><PropertyOwners /></PageTransition>} />
-                  <Route path="/user-management" element={<PageTransition><UserManagement /></PageTransition>} />
-                  <Route path="/property-owners/:ownerId" element={<PageTransition><PropertyOwnerDetail /></PageTransition>} />
-                  <Route path="/activity" element={<PageTransition><Activity /></PageTransition>} />
-                  <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
-                  <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
-                  <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
-                  <Route path="/client-portal/reports" element={<PageTransition><ClientReports /></PageTransition>} />
-                  <Route path="/client-portal/reports/:reportId" element={<PageTransition><ClientReports /></PageTransition>} />
-                  <Route path="/client-portal/requests" element={<PageTransition><ClientRequests /></PageTransition>} />
-                  <Route path="/client-portal/messages" element={<PageTransition><ClientMessages /></PageTransition>} />
-                  {process.env.NODE_ENV === 'development' && (
-                    <Route path="/dev-tools" element={<PageTransition><DevTools /></PageTransition>} />
-                  )}
-                </Routes>
-              </div>
-            } />
             
             {/* Protected Routes */}
             <Route path="/*" element={
