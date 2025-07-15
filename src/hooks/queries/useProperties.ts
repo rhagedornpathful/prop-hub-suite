@@ -23,15 +23,22 @@ export interface PropertyWithRelations extends Property {
   next_check_date?: string | null;
 }
 
-export const useProperties = () => {
+export const useProperties = (page: number = 1, limit: number = 20) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: ['properties', user?.id],
-    queryFn: async (): Promise<PropertyWithRelations[]> => {
-      if (!user) return [];
+    queryKey: ['properties', user?.id, page, limit],
+    queryFn: async (): Promise<{ properties: PropertyWithRelations[], total: number }> => {
+      if (!user) return { properties: [], total: 0 };
+      
+      // Get total count first
+      const { count } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true });
+      
+      const total = count || 0;
       
       // Let RLS policies handle access control - don't filter by user_id
       const { data: properties, error: propertiesError } = await supabase
@@ -46,11 +53,12 @@ export const useProperties = () => {
           tenants(*),
           maintenance_requests(*)
         `)
+        .range((page - 1) * limit, page * limit - 1)
         .order('created_at', { ascending: false });
 
       if (propertiesError) throw propertiesError;
       
-      // Fetch property check sessions for all properties
+      // Fetch property check sessions for current page properties only
       const propertyIds = (properties || []).map(p => p.id);
       const { data: checkSessions = [] } = propertyIds.length > 0 ? await supabase
         .from('property_check_sessions')
@@ -87,9 +95,11 @@ export const useProperties = () => {
         };
       });
 
-      return propertiesWithMetrics;
+      return { properties: propertiesWithMetrics, total };
     },
     enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { OptimizedPropertyGrid } from "@/components/OptimizedPropertyGrid";
+import { PropertyCard } from "@/components/PropertyCard";
 import { PropertyList } from "@/components/PropertyList";
 import { PropertyMap } from "@/components/PropertyMap";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
@@ -52,10 +53,11 @@ const Properties = () => {
     getRoleDisplayName 
   } = useUserRole();
 
-  // Get real property data
-  const { data: properties = [], isLoading: propertiesLoading, refetch: refetchProperties } = useProperties();
+  // Get real property data with pagination
+  const { data: propertyData, isLoading: propertiesLoading, refetch: refetchProperties } = useProperties(1, 100);
   const { data: houseWatchingProperties = [], isLoading: houseWatchingLoading, refetch: refetchHouseWatching } = useHouseWatching();
   
+  const properties = propertyData?.properties || [];
   const isLoading = propertiesLoading || houseWatchingLoading;
   const { toast } = useToast();
 
@@ -308,15 +310,22 @@ const Properties = () => {
                 </TabsList>
                 
                 <TabsContent value="grid" className="mt-6">
-                  <OptimizedPropertyGrid 
-                    properties={properties} 
-                    houseWatchingProperties={houseWatchingProperties}
-                    isLoading={isLoading}
-                    onRefresh={() => {
-                      refetchProperties();
-                      refetchHouseWatching();
-                    }}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {properties.map((property) => (
+                      <PropertyCard 
+                        key={property.id} 
+                        property={{
+                          id: property.id,
+                          type: 'property_management' as const,
+                          address: property.address,
+                          displayAddress: `${property.city}, ${property.state} ${property.zip_code}`,
+                          status: property.status,
+                          images: property.images,
+                          propertyData: property,
+                        }}
+                      />
+                    ))}
+                  </div>
                 </TabsContent>
                 
                 <TabsContent value="list" className="mt-6">

@@ -23,9 +23,10 @@ import { Link } from 'react-router-dom';
 
 export default function PropertyOwnerDashboard() {
   const { user } = useAuth();
-  const { data: properties, isLoading: propertiesLoading } = useProperties();
+  const { data: propertyData, isLoading: propertiesLoading } = useProperties();
   const { data: propertyOwners } = usePropertyOwners();
   
+  const properties = propertyData?.properties || [];
   // Find the current user's property owner record
   const currentOwner = propertyOwners?.find(owner => owner.user_id === user?.id);
   const ownedProperties = properties?.filter(property => property.owner_id === currentOwner?.id) || [];

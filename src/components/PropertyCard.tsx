@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,7 +60,8 @@ interface PropertyCardProps {
   property: UnifiedPropertyData;
 }
 
-export function PropertyCard({ property }: PropertyCardProps) {
+// Memoized PropertyCard component for performance
+const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
@@ -486,4 +488,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
       )}
     </Card>
   );
-}
+});
+
+// Add display name for better debugging
+PropertyCard.displayName = 'PropertyCard';
+
+export { PropertyCard };

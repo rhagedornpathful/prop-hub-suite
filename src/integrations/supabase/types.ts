@@ -94,13 +94,6 @@ export type Database = {
             foreignKeyName: "conversations_maintenance_request_id_fkey"
             columns: ["maintenance_request_id"]
             isOneToOne: false
-            referencedRelation: "maintenance_calendar_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversations_maintenance_request_id_fkey"
-            columns: ["maintenance_request_id"]
-            isOneToOne: false
             referencedRelation: "maintenance_requests"
             referencedColumns: ["id"]
           },
@@ -170,13 +163,6 @@ export type Database = {
             foreignKeyName: "documents_maintenance_request_id_fkey"
             columns: ["maintenance_request_id"]
             isOneToOne: false
-            referencedRelation: "maintenance_calendar_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_maintenance_request_id_fkey"
-            columns: ["maintenance_request_id"]
-            isOneToOne: false
             referencedRelation: "maintenance_requests"
             referencedColumns: ["id"]
           },
@@ -199,6 +185,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -261,7 +254,22 @@ export type Database = {
           id?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "house_watchers_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "house_watchers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       house_watching: {
         Row: {
@@ -324,7 +332,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "house_watching_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       maintenance_requests: {
         Row: {
@@ -634,7 +650,15 @@ export type Database = {
           user_id?: string
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       properties: {
         Row: {
@@ -729,6 +753,13 @@ export type Database = {
             referencedRelation: "property_owners"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "properties_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       property_check_activities: {
@@ -762,6 +793,13 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "property_check_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_check_activities_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -818,7 +856,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "property_check_sessions_scheduled_by_fkey"
+            columns: ["scheduled_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_owner_associations: {
         Row: {
@@ -938,7 +984,22 @@ export type Database = {
           user_id?: string
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "property_owners_user_account_id_fkey"
+            columns: ["user_account_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_owners_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {
@@ -1006,6 +1067,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tenants_user_account_id_fkey"
+            columns: ["user_account_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -1036,34 +1104,25 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
-      }
-    }
-    Views: {
-      maintenance_calendar_events: {
-        Row: {
-          assigned_to: string | null
-          assigned_to_name: string | null
-          description: string | null
-          end_date: string | null
-          id: string | null
-          priority: string | null
-          property_address: string | null
-          property_id: string | null
-          start_date: string | null
-          status: string | null
-          title: string | null
-        }
         Relationships: [
           {
-            foreignKeyName: "maintenance_requests_property_id_fkey"
-            columns: ["property_id"]
+            foreignKeyName: "user_roles_assigned_by_fkey"
+            columns: ["assigned_by"]
             isOneToOne: false
-            referencedRelation: "properties"
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
         ]
       }
+    }
+    Views: {
       user_profiles: {
         Row: {
           address: string | null
@@ -1072,20 +1131,29 @@ export type Database = {
           city: string | null
           company_name: string | null
           email: string | null
+          email_confirmed_at: string | null
           first_name: string | null
           id: string | null
           last_name: string | null
+          last_sign_in_at: string | null
           phone: string | null
           role: Database["public"]["Enums"]["app_role"] | null
           role_created_at: string | null
           role_updated_at: string | null
           state: string | null
           user_created_at: string | null
-          user_id: string | null
           user_updated_at: string | null
           zip_code: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
