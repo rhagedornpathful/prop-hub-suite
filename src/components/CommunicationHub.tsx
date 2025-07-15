@@ -310,7 +310,7 @@ export const CommunicationHub: React.FC = () => {
 
               <div>
                 <Label>Recipients</Label>
-                <Select>
+                <Select value={recipientType} onValueChange={setRecipientType}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select recipients..." />
                   </SelectTrigger>
@@ -321,6 +321,34 @@ export const CommunicationHub: React.FC = () => {
                     <SelectItem value="specific">Specific Users</SelectItem>
                   </SelectContent>
                 </Select>
+                
+                {recipientType === 'specific' && (
+                  <div className="mt-3 space-y-2">
+                    <Label>Select Users</Label>
+                    <div className="border rounded-md p-3 max-h-40 overflow-y-auto space-y-2">
+                      {allUsers.map((user) => (
+                        <div key={user.user_id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={user.user_id}
+                            checked={specificUsers.includes(user.user_id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSpecificUsers([...specificUsers, user.user_id]);
+                              } else {
+                                setSpecificUsers(specificUsers.filter(id => id !== user.user_id));
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <label htmlFor={user.user_id} className="text-sm">
+                            {user.first_name} {user.last_name} 
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2">
