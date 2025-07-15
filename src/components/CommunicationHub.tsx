@@ -82,11 +82,15 @@ export const CommunicationHub: React.FC = () => {
   const [messageSubject, setMessageSubject] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [recipientType, setRecipientType] = useState<string>('');
+  const [specificUsers, setSpecificUsers] = useState<string[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   
   const { toast } = useToast();
 
   useEffect(() => {
     loadCommunicationSettings();
+    loadUsers();
   }, []);
 
   const loadCommunicationSettings = async () => {
@@ -99,6 +103,19 @@ export const CommunicationHub: React.FC = () => {
       console.log('Loading communication settings for user:', user.id);
     } catch (error) {
       console.error('Error loading communication settings:', error);
+    }
+  };
+
+  const loadUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*');
+      
+      if (error) throw error;
+      setAllUsers(data || []);
+    } catch (error) {
+      console.error('Error loading users:', error);
     }
   };
 
