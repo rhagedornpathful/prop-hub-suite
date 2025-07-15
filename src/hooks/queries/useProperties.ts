@@ -242,8 +242,6 @@ export const useUpdateProperty = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: PropertyUpdate }) => {
-      console.log('🔄 Updating property:', id, 'with updates:', updates);
-      
       const { data, error } = await supabase
         .from('properties')
         .update({ ...updates, updated_at: new Date().toISOString() })
@@ -252,16 +250,12 @@ export const useUpdateProperty = () => {
         .single();
 
       if (error) {
-        console.error('❌ Property update error:', error);
         throw error;
       }
       
-      console.log('✅ Property update result:', data);
       return data;
     },
     onMutate: async ({ id, updates }) => {
-      console.log('🔄 Optimistic update for property:', id, updates);
-      
       // Optimistic update - fix the query key specificity
       const queryKeys = [
         ['properties'],
@@ -280,7 +274,6 @@ export const useUpdateProperty = () => {
             ? { ...property, ...updates, updated_at: new Date().toISOString() }
             : property
         );
-        console.log('🔄 Optimistically updated properties list');
         return updated;
       });
       
@@ -297,7 +290,6 @@ export const useUpdateProperty = () => {
       });
     },
     onSuccess: (data) => {
-      console.log('✅ Property update successful, invalidating queries:', data);
       toast({
         title: "Success", 
         description: "Property updated successfully.",

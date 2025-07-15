@@ -24,63 +24,6 @@ export const useUserRole = () => {
   const { isDevAdminActive, isDevelopment } = useDevAdmin();
   const { viewAsRole, isViewingAs } = useViewAs();
 
-  // Check for emergency admin mode FIRST
-  const isEmergencyMode = sessionStorage.getItem('emergencyAdmin') === 'true' || 
-                         (window as any).__EMERGENCY_ADMIN_MODE__;
-
-  if (isEmergencyMode) {
-    console.log('🚨 useUserRole: Emergency mode detected - returning admin role immediately');
-    
-    const emergencyUser = {
-      id: '1c376b70-c535-4ee4-8275-5d017704b3db',
-      email: 'rmh1122@hotmail.com'
-    };
-
-    return {
-      userRole: 'admin' as const,
-      user: emergencyUser,
-      loading: false,
-      isAdmin: () => true,
-      isPropertyManager: () => false,
-      isPropertyOwner: () => false,
-      isTenant: () => false,
-      isHouseWatcher: () => false,
-      hasAdminAccess: () => true,
-      canManageProperties: () => true,
-      getPermissions: () => ({
-        canManageAllProperties: true,
-        canManageOwnProperties: true,
-        canViewAllTenants: true,
-        canManageOwnTenants: true,
-        canViewAllMaintenanceRequests: true,
-        canCreateMaintenanceRequests: true,
-        canManageUsers: true,
-        canViewFinancialReports: true,
-        canManageDocuments: true,
-        canAssignHouseWatchers: true,
-        canViewHouseWatchingReports: true,
-        canSubmitHouseWatchingReports: false,
-      }),
-      getRoleDisplayName: () => 'Administrator (Emergency Access)',
-      canPerformAction: () => true,
-      permissions: {
-        canManageAllProperties: true,
-        canManageOwnProperties: true,
-        canViewAllTenants: true,
-        canManageOwnTenants: true,
-        canViewAllMaintenanceRequests: true,
-        canCreateMaintenanceRequests: true,
-        canManageUsers: true,
-        canViewFinancialReports: true,
-        canManageDocuments: true,
-        canAssignHouseWatchers: true,
-        canViewHouseWatchingReports: true,
-        canSubmitHouseWatchingReports: false,
-      },
-      isViewingAs: false,
-      actualUserRole: 'admin' as const,
-    };
-  }
 
   // Determine the effective role:
   // 1. If in View As mode, use the view as role
