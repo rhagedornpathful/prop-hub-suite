@@ -10,6 +10,9 @@ type PropertyUpdate = TablesUpdate<'properties'>;
 
 export interface PropertyWithRelations extends Property {
   property_owner?: Tables<'property_owners'> | null;
+  property_owner_associations?: (Tables<'property_owner_associations'> & {
+    property_owner: Tables<'property_owners'>;
+  })[];
   tenants?: Tables<'tenants'>[];
   maintenance_requests?: Tables<'maintenance_requests'>[];
   property_check_sessions?: Tables<'property_check_sessions'>[];
@@ -36,6 +39,10 @@ export const useProperties = () => {
         .select(`
           *,
           property_owner:property_owners(*),
+          property_owner_associations(
+            *,
+            property_owner:property_owners(*)
+          ),
           tenants(*),
           maintenance_requests(*)
         `)

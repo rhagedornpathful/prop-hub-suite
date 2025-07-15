@@ -97,13 +97,37 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
   // Get owner/contact information
   const getOwnerInfo = () => {
+    if (isPropertyManagement && propertyManagementData?.property_owner_associations) {
+      const associations = propertyManagementData.property_owner_associations;
+      if (associations.length === 0) {
+        return "No Owner Assigned";
+      }
+      
+      // Show primary owner first, or first owner if no primary
+      const primaryOwner = associations.find(a => a.is_primary_owner);
+      const ownerToShow = primaryOwner || associations[0];
+      const owner = ownerToShow.property_owner;
+      
+      const ownerName = owner.company_name || `${owner.first_name} ${owner.last_name}`;
+      
+      // If there are multiple owners, show count
+      if (associations.length > 1) {
+        return `${ownerName} (+${associations.length - 1} more)`;
+      }
+      
+      return ownerName;
+    }
+    
+    // Fallback to old property_owner field for backward compatibility
     if (isPropertyManagement && propertyManagementData?.property_owner) {
       const owner = propertyManagementData.property_owner;
       return owner.company_name || `${owner.first_name} ${owner.last_name}`;
     }
+    
     if (isHouseWatching && houseWatchingData?.owner_name) {
       return houseWatchingData.owner_name;
     }
+    
     return "No Owner Assigned";
   };
 
