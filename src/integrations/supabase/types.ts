@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          id: string
+          joined_at: string
+          last_read_at: string | null
+          left_at: string | null
+          role: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          left_at?: string | null
+          role: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          left_at?: string | null
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          last_message_at: string | null
+          maintenance_request_id: string | null
+          property_id: string | null
+          status: string
+          title: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          last_message_at?: string | null
+          maintenance_request_id?: string | null
+          property_id?: string | null
+          status?: string
+          title?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          last_message_at?: string | null
+          maintenance_request_id?: string | null
+          property_id?: string | null
+          status?: string
+          title?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_calendar_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string
@@ -348,6 +447,95 @@ export type Database = {
           old_status?: string | null
         }
         Relationships: []
+      }
+      message_deliveries: {
+        Row: {
+          delivered_at: string | null
+          id: string
+          message_id: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          delivered_at?: string | null
+          id?: string
+          message_id: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          delivered_at?: string | null
+          id?: string
+          message_id?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_deliveries_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachments: Json | null
+          content: string
+          conversation_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          message_type: string
+          reply_to_id: string | null
+          sender_id: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          content: string
+          conversation_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          message_type?: string
+          reply_to_id?: string | null
+          sender_id: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          message_type?: string
+          reply_to_id?: string | null
+          sender_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       owner_distributions: {
         Row: {
