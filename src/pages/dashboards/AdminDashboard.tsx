@@ -257,14 +257,20 @@ export function AdminDashboard() {
             <div className="space-y-4">
               {recentActivities.length > 0 ? (
                 recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                    <div className="h-2 w-2 bg-primary rounded-full mt-2"></div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{activity.message}</p>
-                      <p className="text-xs text-muted-foreground">{activity.property}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
+                  <Link 
+                    key={activity.id} 
+                    to="/activity" 
+                    className="block transition-colors hover:bg-muted/30"
+                  >
+                    <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+                      <div className="h-2 w-2 bg-primary rounded-full mt-2"></div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{activity.message}</p>
+                        <p className="text-xs text-muted-foreground">{activity.property}</p>
+                        <p className="text-xs text-muted-foreground">{activity.time}</p>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">
