@@ -33,26 +33,28 @@ import { useToast } from "@/hooks/use-toast";
 interface MaintenanceRequest {
   id: string;
   title: string;
-  description: string;
-  category: string;
-  status: 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
-  priority: 'low' | 'normal' | 'high' | 'emergency';
-  createdAt: string;
-  updatedAt: string;
-  tenantName: string;
-  tenantEmail: string;
-  propertyAddress: string;
-  assignedTo?: string;
-  estimatedCost?: number;
-  actualCost?: number;
-  images?: string[];
-  messages?: Array<{
+  description: string | null;
+  status: 'pending' | 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  created_at: string;
+  updated_at: string;
+  scheduled_date: string | null;
+  due_date: string | null;
+  assigned_to: string | null;
+  estimated_cost: number | null;
+  actual_cost: number | null;
+  properties?: {
     id: string;
-    sender: string;
-    message: string;
-    timestamp: string;
-    isFromTenant: boolean;
-  }>;
+    address: string;
+    city: string | null;
+    state: string | null;
+    zip_code: string | null;
+  };
+  assigned_user?: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+  };
 }
 
 interface MaintenanceRequestCardProps {
@@ -89,8 +91,9 @@ export const MaintenanceRequestCard = ({
   const [newMessage, setNewMessage] = useState("");
   const [isSendingMessage, setIsSendingMessage] = useState(false);
 
-  const CategoryIcon = categoryIcons[request.category as keyof typeof categoryIcons] || Wrench;
-  const categoryColor = categoryColors[request.category as keyof typeof categoryColors] || "bg-gray-500";
+  // Default to general category since we don't have category field in the current data model
+  const CategoryIcon = Wrench;
+  const categoryColor = "bg-gray-500";
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -105,9 +108,9 @@ export const MaintenanceRequestCard = ({
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'emergency': return 'bg-red-500';
+      case 'urgent': return 'bg-red-500';
       case 'high': return 'bg-orange-500';
-      case 'normal': return 'bg-blue-500';
+      case 'medium': return 'bg-blue-500';
       case 'low': return 'bg-gray-500';
       default: return 'bg-gray-500';
     }
@@ -171,18 +174,34 @@ export const MaintenanceRequestCard = ({
                 </Badge>
               </div>
               <div className="space-y-1 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <User className="h-3 w-3" />
-                  <span>{request.tenantName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Home className="h-3 w-3" />
-                  <span className="truncate">{request.propertyAddress}</span>
-                </div>
+                {request.assigned_user && (
+                  <div className="flex items-center gap-2">
+                    <User className="h-3 w-3" />
+                    <span>Assigned to: {request.assigned_user.first_name} {request.assigned_user.last_name}</span>
+                  </div>
+                )}
+                {request.properties && (
+                  <div className="flex items-center gap-2">
+                    <Home className="h-3 w-3" />
+                    <span className="truncate">
+                      {request.properties.address}
+                      {request.properties.city && `, ${request.properties.city}`}
+                      {request.properties.state && `, ${request.properties.state}`}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <Calendar className="h-3 w-3" />
-                  <span>{new Date(request.createdAt).toLocaleDateString()}</span>
+                  <span>Requested: {new Date(request.created_at).toLocaleDateString()}</span>
                 </div>
+                {request.scheduled_date && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    <span className="font-medium text-primary">
+                      Scheduled: {new Date(request.scheduled_date).toLocaleDateString()} at {new Date(request.scheduled_date).toLocaleTimeString()}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -227,132 +246,35 @@ export const MaintenanceRequestCard = ({
           </div>
         )}
 
-        {/* Images */}
-        {request.images && request.images.length > 0 && (
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Attached Photos</p>
-            <div className="grid grid-cols-2 gap-2">
-              {request.images.slice(0, 4).map((image, index) => (
-                <div key={index} className="relative">
-                  <img
-                    src={image}
-                    alt={`Issue photo ${index + 1}`}
-                    className="w-full h-20 object-cover rounded border cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => {
-                      // Open image in full view
-                      toast({
-                        title: "Photo Viewer",
-                        description: "Opening full-size image...",
-                      });
-                    }}
-                  />
-                  {index === 3 && request.images!.length > 4 && (
-                    <div className="absolute inset-0 bg-black/50 rounded flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        +{request.images!.length - 4} more
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Cost Information */}
-        {(request.estimatedCost || request.actualCost) && (
+        {(request.estimated_cost || request.actual_cost) && (
           <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
             <div className="space-y-1">
-              {request.estimatedCost && (
+              {request.estimated_cost && (
                 <div className="text-sm">
                   <span className="text-muted-foreground">Estimated: </span>
-                  <span className="font-medium">${request.estimatedCost}</span>
+                  <span className="font-medium">${request.estimated_cost}</span>
                 </div>
               )}
-              {request.actualCost && (
+              {request.actual_cost && (
                 <div className="text-sm">
                   <span className="text-muted-foreground">Actual: </span>
-                  <span className="font-medium">${request.actualCost}</span>
+                  <span className="font-medium">${request.actual_cost}</span>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        {/* Messages Section */}
-        <div className="border-t pt-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              Communication
-              {request.messages && request.messages.length > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  {request.messages.length}
-                </Badge>
-              )}
-            </h4>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowMessages(!showMessages)}
-            >
-              {showMessages ? "Hide" : "Show"}
-            </Button>
+        {/* Due Date */}
+        {request.due_date && (
+          <div className="flex items-center gap-2 p-2 bg-orange-50 rounded-lg">
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
+            <span className="text-sm text-orange-600">
+              Due: {new Date(request.due_date).toLocaleDateString()}
+            </span>
           </div>
-
-          {showMessages && (
-            <div className="space-y-3">
-              {/* Recent Messages */}
-              {request.messages && request.messages.length > 0 ? (
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {request.messages.slice(-3).map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex gap-2 ${
-                        message.isFromTenant ? 'justify-start' : 'justify-end'
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[80%] p-2 rounded-lg text-sm ${
-                          message.isFromTenant
-                            ? 'bg-muted text-foreground'
-                            : 'bg-primary text-primary-foreground'
-                        }`}
-                      >
-                        <p className="mb-1">{message.message}</p>
-                        <p className="text-xs opacity-70">
-                          {message.sender} • {new Date(message.timestamp).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-2">
-                  No messages yet
-                </p>
-              )}
-
-              {/* New Message Input */}
-              <div className="flex gap-2">
-                <Textarea
-                  placeholder="Type your message..."
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="min-h-[80px] resize-none text-sm"
-                />
-                <Button
-                  size="sm"
-                  onClick={handleSendMessage}
-                  disabled={!newMessage.trim() || isSendingMessage}
-                  className="px-3"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </CardContent>
     </Card>
   );
