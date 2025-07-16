@@ -254,7 +254,7 @@ export function PropertyDetail() {
           <Badge className={statusColors[property.status as keyof typeof statusColors] || statusColors.inactive}>
             {statusText[property.status as keyof typeof statusText] || property.status}
           </Badge>
-          <Badge className="bg-primary text-primary-foreground">
+          <Badge className={property.service_type === 'house_watching' ? 'bg-teal-500 text-white' : 'bg-primary text-primary-foreground'}>
             <Building className="h-3 w-3 mr-1" />
             {property.service_type === 'house_watching' ? 'House Watching' : 'Property Management'}
           </Badge>
