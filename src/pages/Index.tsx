@@ -14,6 +14,7 @@ import { AdminDashboard } from "@/pages/dashboards/AdminDashboard";
 import PropertyOwnerDashboard from "@/pages/dashboards/PropertyOwnerDashboard";
 import { TenantDashboard } from "@/pages/dashboards/TenantDashboard";
 import HouseWatcherDashboard from "@/pages/dashboards/HouseWatcherDashboard";
+import { PropertyManagerDashboard } from "@/pages/dashboards/PropertyManagerDashboard";
 import { MakeAdminButton } from "@/components/dev/MakeAdminButton";
 
 // Lazy load dialogs for better performance
@@ -163,7 +164,7 @@ const Index = () => {
       case 'house_watcher':
         return <HouseWatcherDashboard />;
       case 'property_manager':
-        return <AdminDashboard />; // Property managers see admin view
+        return <PropertyManagerDashboard />;
       case 'client':
         return <TenantDashboard />; // Clients see tenant view
       case 'contractor':
