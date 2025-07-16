@@ -310,22 +310,17 @@ const Properties = () => {
                 </TabsList>
                 
                 <TabsContent value="grid" className="mt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {properties.map((property) => (
-                      <PropertyCard 
-                        key={property.id} 
-                        property={{
-                          id: property.id,
-                          type: 'property_management' as const,
-                          address: property.address,
-                          displayAddress: `${property.city}, ${property.state} ${property.zip_code}`,
-                          status: property.status,
-                          images: property.images,
-                          propertyData: property,
-                        }}
-                      />
-                    ))}
-                  </div>
+                  <OptimizedPropertyGrid
+                    properties={properties}
+                    houseWatchingProperties={houseWatchingProperties}
+                    isLoading={isLoading}
+                    onRefresh={async () => {
+                      await Promise.all([
+                        refetchProperties(),
+                        refetchHouseWatching()
+                      ]);
+                    }}
+                  />
                 </TabsContent>
                 
                 <TabsContent value="list" className="mt-6">
