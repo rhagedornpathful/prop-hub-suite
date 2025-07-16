@@ -40,6 +40,7 @@ import {
 import type { Tables } from "@/integrations/supabase/types";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
+import { PropertyCheckDetailsDialog } from "@/components/PropertyCheckDetailsDialog";
 import { usePropertyActivity } from "@/hooks/usePropertyActivity";
 
 type Property = Tables<'properties'>;
@@ -63,6 +64,8 @@ export function PropertyDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
+  const [isPropertyCheckDialogOpen, setIsPropertyCheckDialogOpen] = useState(false);
+  const [selectedCheckSessionId, setSelectedCheckSessionId] = useState<string>("");
   const [activeTab, setActiveTab] = useState("overview");
   
   // Use the new comprehensive activity hook
@@ -594,8 +597,21 @@ export function PropertyDetail() {
                       }
                     };
 
+                    const isClickable = activity.type === 'property_check';
+                    
+                    const handleActivityClick = () => {
+                      if (activity.type === 'property_check') {
+                        setSelectedCheckSessionId(activity.id);
+                        setIsPropertyCheckDialogOpen(true);
+                      }
+                    };
+
                     return (
-                      <div key={activity.id} className={`border rounded-lg p-4 ${getActivityColor()}`}>
+                      <div 
+                        key={activity.id} 
+                        className={`border rounded-lg p-4 ${getActivityColor()} ${isClickable ? 'cursor-pointer hover:bg-opacity-80 transition-colors' : ''}`}
+                        onClick={handleActivityClick}
+                      >
                         <div className="flex items-start gap-3">
                           <div className="p-2 bg-background rounded-lg border">
                             {getActivityIcon()}
@@ -609,6 +625,11 @@ export function PropertyDetail() {
                               {activity.status && (
                                 <Badge variant="secondary" className="text-xs">
                                   {activity.status}
+                                </Badge>
+                              )}
+                              {isClickable && (
+                                <Badge variant="outline" className="text-xs text-blue-600 border-blue-600">
+                                  Click to view report
                                 </Badge>
                               )}
                             </div>
@@ -820,9 +841,15 @@ export function PropertyDetail() {
         onOpenChange={setIsMaintenanceDialogOpen}
         propertyId={id}
         onMaintenanceScheduled={() => {
-          setIsMaintenanceDialogOpen(false);
           fetchMaintenanceRequests();
+          refetchActivities();
         }}
+      />
+      
+      <PropertyCheckDetailsDialog
+        open={isPropertyCheckDialogOpen}
+        onOpenChange={setIsPropertyCheckDialogOpen}
+        checkSessionId={selectedCheckSessionId}
       />
     </div>
   );
