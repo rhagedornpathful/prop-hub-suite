@@ -29,6 +29,14 @@ interface PropertyCheckItem {
   required: boolean;
 }
 
+interface PropertyCheckData {
+  exterior: PropertyCheckItem[];
+  interior: PropertyCheckItem[];
+  security: PropertyCheckItem[];
+  utilities: PropertyCheckItem[];
+  summary: PropertyCheckItem[];
+}
+
 interface PropertyCheckDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -43,7 +51,7 @@ export function PropertyCheckDetailsDialog({
   const [checkSession, setCheckSession] = useState<Tables<'property_check_sessions'> | null>(null);
   const [property, setProperty] = useState<Tables<'properties'> | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [checklistItems, setChecklistItems] = useState<PropertyCheckItem[]>([]);
+  const [checklistData, setChecklistData] = useState<PropertyCheckData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -95,16 +103,16 @@ export function PropertyCheckDetailsDialog({
       // Parse checklist data
       if (sessionData.checklist_data) {
         try {
-          const parsedData = Array.isArray(sessionData.checklist_data) 
-            ? sessionData.checklist_data 
-            : JSON.parse(sessionData.checklist_data as string);
-          setChecklistItems(parsedData);
+          const parsedData = typeof sessionData.checklist_data === 'object' 
+            ? (sessionData.checklist_data as unknown) as PropertyCheckData
+            : JSON.parse(sessionData.checklist_data as string) as PropertyCheckData;
+          setChecklistData(parsedData);
         } catch (parseError) {
           console.error('Error parsing checklist data:', parseError);
-          setChecklistItems([]);
+          setChecklistData(null);
         }
       } else {
-        setChecklistItems([]);
+        setChecklistData(null);
       }
 
     } catch (err) {
@@ -138,9 +146,21 @@ export function PropertyCheckDetailsDialog({
     }
   };
 
+  const getAllItems = (): PropertyCheckItem[] => {
+    if (!checklistData) return [];
+    return [
+      ...checklistData.exterior,
+      ...checklistData.interior,
+      ...checklistData.security,
+      ...checklistData.utilities,
+      ...checklistData.summary
+    ];
+  };
+
   const generateReport = () => {
     if (!checkSession || !property) return;
 
+    const allItems = getAllItems();
     const reportData = {
       property: property.address,
       date: new Date(checkSession.created_at).toLocaleDateString(),
@@ -148,7 +168,7 @@ export function PropertyCheckDetailsDialog({
       duration: formatDuration(checkSession.duration_minutes),
       status: checkSession.status,
       inspector: userProfile ? `${userProfile.first_name} ${userProfile.last_name}` : 'Unknown',
-      items: checklistItems,
+      items: allItems,
       generalNotes: checkSession.general_notes || 'No general notes provided',
       locationVerified: checkSession.location_verified
     };
@@ -277,52 +297,105 @@ Report generated on ${new Date().toLocaleString()}
                 </Card>
               </div>
 
-              {/* Checklist Items */}
-              {checklistItems.length > 0 && (
-                <Card>
+              {/* Checklist Items by Section */}
+              {checklistData && (
+                <div className="space-y-6">
+                  {Object.entries(checklistData).map(([sectionKey, sectionItems]) => {
+                    const sectionTitle = sectionKey.charAt(0).toUpperCase() + sectionKey.slice(1);
+                    const completedItems = sectionItems.filter(item => item.completed).length;
+                    
+                    return (
+                      <Card key={sectionKey}>
+                        <CardHeader>
+                          <CardTitle className="text-base flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4" />
+                              {sectionTitle} Inspection
+                            </div>
+                            <Badge variant="outline" className="text-xs">
+                              {completedItems}/{sectionItems.length} completed
+                            </Badge>
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            {sectionItems.map((item, index) => (
+                              <div key={item.id} className="border rounded-lg p-3">
+                                <div className="flex items-start gap-3">
+                                  <div className="mt-0.5">
+                                    {item.completed ? (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                      <XCircle className="h-4 w-4 text-red-600" />
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h4 className="text-sm font-medium">{item.item}</h4>
+                                      {item.required && (
+                                        <Badge variant="secondary" className="text-xs">Required</Badge>
+                                      )}
+                                      <Badge variant={item.completed ? "default" : "destructive"} className="text-xs">
+                                        {item.completed ? "✓" : "✗"}
+                                      </Badge>
+                                    </div>
+                                    
+                                    {item.notes && (
+                                      <p className="text-xs text-muted-foreground mb-2 italic">
+                                        "{item.notes}"
+                                      </p>
+                                    )}
+                                    
+                                    {item.photos.length > 0 && (
+                                      <div className="flex items-center gap-1 text-xs text-blue-600">
+                                        <Camera className="h-3 w-3" />
+                                        <span>{item.photos.length} photo{item.photos.length > 1 ? 's' : ''}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Summary Stats */}
+              {checklistData && (
+                <Card className="bg-muted/50">
                   <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <FileText className="h-4 w-4" />
-                      Checklist Items ({checklistItems.filter(item => item.completed).length}/{checklistItems.length} completed)
-                    </CardTitle>
+                    <CardTitle className="text-base">Inspection Summary</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {checklistItems.map((item, index) => (
-                        <div key={index} className="border rounded-lg p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="mt-1">
-                              {item.completed ? (
-                                <CheckCircle className="h-5 w-5 text-green-600" />
-                              ) : (
-                                <XCircle className="h-5 w-5 text-red-600" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h4 className="font-medium">{item.item}</h4>
-                                {item.required && (
-                                  <Badge variant="secondary" className="text-xs">Required</Badge>
-                                )}
-                                <Badge variant={item.completed ? "default" : "destructive"} className="text-xs">
-                                  {item.completed ? "Completed" : "Not Completed"}
-                                </Badge>
-                              </div>
-                              
-                              {item.notes && (
-                                <p className="text-sm text-muted-foreground mb-2">{item.notes}</p>
-                              )}
-                              
-                              {item.photos.length > 0 && (
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                  <Camera className="h-3 w-3" />
-                                  <span>{item.photos.length} photo(s) taken</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                      <div>
+                        <p className="text-2xl font-bold text-green-600">
+                          {getAllItems().filter(item => item.completed).length}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Items Completed</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {getAllItems().filter(item => item.required && item.completed).length}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Required Items</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {getAllItems().reduce((total, item) => total + item.photos.length, 0)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Photos Taken</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-orange-600">
+                          {getAllItems().filter(item => item.notes && item.notes.trim().length > 0).length}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Items with Notes</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -332,10 +405,15 @@ Report generated on ${new Date().toLocaleString()}
               {checkSession.general_notes && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">General Notes</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Inspector's General Notes
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm whitespace-pre-wrap">{checkSession.general_notes}</p>
+                    <p className="text-sm whitespace-pre-wrap bg-muted/50 p-3 rounded-lg italic">
+                      "{checkSession.general_notes}"
+                    </p>
                   </CardContent>
                 </Card>
               )}
