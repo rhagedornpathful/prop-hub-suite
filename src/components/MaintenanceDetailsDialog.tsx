@@ -30,7 +30,7 @@ const MaintenanceDetailsDialog = ({ request, open, onOpenChange }: MaintenanceDe
     request?.due_date ? new Date(request.due_date) : undefined
   );
   const [status, setStatus] = useState<MaintenanceRequest['status']>(request?.status || 'pending');
-  const [assignedTo, setAssignedTo] = useState(request?.assigned_to || '');
+  const [assignedTo, setAssignedTo] = useState(request?.assigned_to || 'unassigned');
   const [completionNotes, setCompletionNotes] = useState(request?.completion_notes || '');
   const [actualCost, setActualCost] = useState(request?.actual_cost?.toString() || '');
 
@@ -54,8 +54,9 @@ const MaintenanceDetailsDialog = ({ request, open, onOpenChange }: MaintenanceDe
   };
 
   const handleAssign = async () => {
-    if (assignedTo && assignedTo !== request.assigned_to) {
-      await assignRequest.mutateAsync({ requestId: request.id, assignedTo });
+    if (assignedTo !== request.assigned_to) {
+      const assignToUser = assignedTo === 'unassigned' ? null : assignedTo;
+      await assignRequest.mutateAsync({ requestId: request.id, assignedTo: assignToUser });
     }
   };
 
@@ -272,7 +273,7 @@ const MaintenanceDetailsDialog = ({ request, open, onOpenChange }: MaintenanceDe
                         <SelectValue placeholder="Select user to assign" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Unassigned</SelectItem>
+                        <SelectItem value="unassigned">Unassigned</SelectItem>
                         {profiles.map((profile) => (
                           <SelectItem key={profile.user_id} value={profile.user_id}>
                             {profile.first_name} {profile.last_name}
