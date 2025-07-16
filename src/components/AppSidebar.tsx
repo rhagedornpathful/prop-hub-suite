@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { 
   Home, 
   Building, 
@@ -38,8 +38,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 
 // Define menu items for different user roles
 const adminMenuItems = [
@@ -207,6 +206,63 @@ const tenantMenuItems = [
   }
 ];
 
+const propertyManagerMenuItems = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: Home,
+    description: "Operations dashboard"
+  },
+  {
+    title: "Properties",
+    url: "/properties",
+    icon: Building,
+    description: "Manage properties"
+  },
+  {
+    title: "Tenants",
+    url: "/tenants",
+    icon: Users,
+    description: "Tenant management"
+  },
+  {
+    title: "Maintenance",
+    url: "/maintenance",
+    icon: Wrench,
+    description: "Work orders"
+  },
+  {
+    title: "House Watching",
+    url: "/house-watching",
+    icon: Eye,
+    description: "Property monitoring"
+  },
+  {
+    title: "Messages",
+    url: "/messages",
+    icon: MessageCircle,
+    description: "Communication"
+  },
+  {
+    title: "Documents",
+    url: "/documents",
+    icon: FolderOpen,
+    description: "File management"
+  },
+  {
+    title: "Activity",
+    url: "/activity",
+    icon: Activity,
+    description: "Activity dashboard"
+  },
+  {
+    title: "My Profile",
+    url: "/settings",
+    icon: Settings,
+    description: "Account settings"
+  }
+];
+
 const houseWatcherMenuItems = [
   {
     title: "Properties",
@@ -240,44 +296,29 @@ export function AppSidebar() {
   const currentPath = location.pathname;
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
-  const [userRole, setUserRole] = useState<string | null>(null);
   const collapsed = state === "collapsed";
   const { isMobile } = useMobileDetection();
-  const { user } = useAuth();
-
-  // Get user role
-  useEffect(() => {
-    const getUserRole = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (error) throw error;
-        setUserRole(data?.role || null);
-      } catch (error) {
-        console.error('Error fetching user role:', error);
-      }
-    };
-
-    getUserRole();
-  }, [user]);
+  const { userRole, getRoleDisplayName } = useUserRole();
 
   // Get menu items based on user role
   const getMenuItems = () => {
     switch (userRole) {
       case 'admin':
         return adminMenuItems;
-      case 'property_owner':
+      case 'property_manager':
+        return propertyManagerMenuItems;
+      case 'owner_investor':
         return propertyOwnerMenuItems;
       case 'tenant':
         return tenantMenuItems;
       case 'house_watcher':
         return houseWatcherMenuItems;
+      case 'client':
+        return tenantMenuItems; // Clients see tenant view
+      case 'contractor':
+        return tenantMenuItems; // Contractors see tenant view
+      case 'leasing_agent':
+        return adminMenuItems; // Leasing agents see admin view
       default:
         return adminMenuItems; // Default fallback
     }
@@ -404,7 +445,7 @@ export function AppSidebar() {
             <div className="p-4 border-t border-sidebar-border">
               <div className="flex items-center gap-2 text-xs text-sidebar-foreground/60">
                 <Shield className="w-3 h-3" />
-                <span>Role: {userRole.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</span>
+                <span>Role: {getRoleDisplayName()}</span>
               </div>
             </div>
           )}
