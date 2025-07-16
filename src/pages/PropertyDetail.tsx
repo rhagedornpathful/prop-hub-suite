@@ -606,11 +606,19 @@ export function PropertyDetail() {
                         setSelectedCheckSessionId(activity.id);
                         setIsPropertyCheckDialogOpen(true);
                       } else if (activity.type === 'maintenance') {
-                        // Fetch the full maintenance request details
+                        // Fetch the full maintenance request details with property data
                         try {
                           const { data, error } = await supabase
                             .from('maintenance_requests')
-                            .select('*')
+                            .select(`
+                              *,
+                              properties (
+                                address,
+                                city,
+                                state,
+                                zip_code
+                              )
+                            `)
                             .eq('id', activity.id)
                             .single();
                           
