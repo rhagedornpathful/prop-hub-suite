@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   MapPin,
   Clock,
@@ -31,6 +32,8 @@ const PropertyCheck = () => {
   const { toast } = useToast();
   const [currentSection, setCurrentSection] = useState(0);
   const [generalNotes, setGeneralNotes] = useState("");
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [submissionDetails, setSubmissionDetails] = useState<{ duration: number; completedItems: number; totalItems: number } | null>(null);
   
   const {
     checklistItems,
@@ -82,8 +85,23 @@ const PropertyCheck = () => {
 
     const success = await submitSession(generalNotes);
     if (success) {
-      navigate('/house-watching');
+      // Calculate submission details for confirmation
+      const totalItems = Object.values(checklistItems).flat().length;
+      const completedItems = Object.values(checklistItems).flat().filter(item => item.completed).length;
+      const durationMinutes = Math.floor(elapsedTime / 60);
+      
+      setSubmissionDetails({
+        duration: durationMinutes,
+        completedItems,
+        totalItems
+      });
+      setShowSuccessDialog(true);
     }
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setShowSuccessDialog(false);
+    navigate('/house-watching');
   };
 
   const handleStartSession = () => {
@@ -328,7 +346,56 @@ const PropertyCheck = () => {
             ) : null}
           </div>
         </div>
-      )}
+        )}
+
+      {/* Success Confirmation Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-success" />
+              Property Check Submitted Successfully!
+            </DialogTitle>
+            <DialogDescription>
+              Your property inspection has been completed and submitted.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {submissionDetails && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Duration</p>
+                  <p className="text-lg font-semibold">
+                    {Math.floor(submissionDetails.duration / 60)}h {submissionDetails.duration % 60}m
+                  </p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Items Completed</p>
+                  <p className="text-lg font-semibold">
+                    {submissionDetails.completedItems}/{submissionDetails.totalItems}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="text-center space-y-2">
+                <Badge variant="default" className="bg-success text-success-foreground">
+                  Report Generated
+                </Badge>
+                <p className="text-sm text-muted-foreground">
+                  The property owner and management team have been notified.
+                </p>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="sm:justify-center">
+            <Button onClick={handleCloseSuccessDialog} className="w-full">
+              Return to House Watching
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
