@@ -43,7 +43,7 @@ export function usePropertyActivity(propertyId: string | undefined) {
           type: 'maintenance' as const,
           title: item.title,
           description: item.description || undefined,
-          date: item.created_at,
+          date: item.scheduled_date || item.created_at, // Use scheduled_date if available, otherwise created_at
           status: item.status,
           amount: item.estimated_cost || undefined,
           metadata: {
@@ -53,7 +53,8 @@ export function usePropertyActivity(propertyId: string | undefined) {
             contractor_contact: item.contractor_contact,
             actual_cost: item.actual_cost,
             scheduled_date: item.scheduled_date,
-            completed_at: item.completed_at
+            completed_at: item.completed_at,
+            created_at: item.created_at // Keep created_at in metadata for reference
           }
         })));
       }

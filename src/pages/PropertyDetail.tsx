@@ -641,7 +641,15 @@ export function PropertyDetail() {
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                {new Date(activity.date).toLocaleDateString()} at {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {activity.type === 'maintenance' && activity.metadata?.scheduled_date && activity.metadata.scheduled_date !== activity.metadata.created_at ? (
+                                  <span className="text-primary font-medium">
+                                    Scheduled: {new Date(activity.date).toLocaleDateString()} at {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                ) : (
+                                  <span>
+                                    {new Date(activity.date).toLocaleDateString()} at {new Date(activity.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  </span>
+                                )}
                               </span>
                               {activity.amount && (
                                 <span className="flex items-center gap-1">
