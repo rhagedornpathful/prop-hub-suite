@@ -205,8 +205,8 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
         {/* Service Type Badge */}
         <div className="absolute bottom-3 left-3">
           <Badge className={isPropertyManagement 
-            ? "bg-primary text-primary-foreground" 
-            : "bg-secondary text-secondary-foreground"
+            ? "bg-primary text-primary-foreground border-primary" 
+            : "bg-secondary text-secondary-foreground border-secondary"
           }>
             {isPropertyManagement ? (
               <>
