@@ -41,10 +41,10 @@ import type { Tables } from "@/integrations/supabase/types";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
 import { PropertyCheckDetailsDialog } from "@/components/PropertyCheckDetailsDialog";
+import MaintenanceDetailsDialog from "@/components/MaintenanceDetailsDialog";
 import { usePropertyActivity } from "@/hooks/usePropertyActivity";
 
 type Property = Tables<'properties'>;
-type MaintenanceRequest = Tables<'maintenance_requests'>;
 type PropertyCheckSession = Tables<'property_check_sessions'>;
 
 interface RecentActivity {
@@ -59,13 +59,15 @@ export function PropertyDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [property, setProperty] = useState<Property | null>(null);
-  const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
+  const [maintenanceRequests, setMaintenanceRequests] = useState<Tables<'maintenance_requests'>[]>([]);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
   const [isPropertyCheckDialogOpen, setIsPropertyCheckDialogOpen] = useState(false);
   const [selectedCheckSessionId, setSelectedCheckSessionId] = useState<string>("");
+  const [selectedMaintenanceRequest, setSelectedMaintenanceRequest] = useState<Tables<'maintenance_requests'> | null>(null);
+  const [isMaintenanceDetailsDialogOpen, setIsMaintenanceDetailsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   
   // Use the new comprehensive activity hook
@@ -597,12 +599,33 @@ export function PropertyDetail() {
                       }
                     };
 
-                    const isClickable = activity.type === 'property_check';
+                    const isClickable = activity.type === 'property_check' || activity.type === 'maintenance';
                     
-                    const handleActivityClick = () => {
+                    const handleActivityClick = async () => {
                       if (activity.type === 'property_check') {
                         setSelectedCheckSessionId(activity.id);
                         setIsPropertyCheckDialogOpen(true);
+                      } else if (activity.type === 'maintenance') {
+                        // Fetch the full maintenance request details
+                        try {
+                          const { data, error } = await supabase
+                            .from('maintenance_requests')
+                            .select('*')
+                            .eq('id', activity.id)
+                            .single();
+                          
+                          if (error) throw error;
+                          
+                          setSelectedMaintenanceRequest(data);
+                          setIsMaintenanceDetailsDialogOpen(true);
+                        } catch (error) {
+                          console.error('Error fetching maintenance request:', error);
+                          toast({
+                            title: "Error",
+                            description: "Failed to load maintenance request details",
+                            variant: "destructive",
+                          });
+                        }
                       }
                     };
 
@@ -629,7 +652,7 @@ export function PropertyDetail() {
                               )}
                               {isClickable && (
                                 <Badge variant="outline" className="text-xs text-blue-600 border-blue-600">
-                                  Click to view report
+                                  {activity.type === 'maintenance' ? 'Click to view details' : 'Click to view report'}
                                 </Badge>
                               )}
                             </div>
@@ -858,6 +881,12 @@ export function PropertyDetail() {
         open={isPropertyCheckDialogOpen}
         onOpenChange={setIsPropertyCheckDialogOpen}
         checkSessionId={selectedCheckSessionId}
+      />
+      
+      <MaintenanceDetailsDialog
+        request={selectedMaintenanceRequest as any}
+        open={isMaintenanceDetailsDialogOpen}
+        onOpenChange={setIsMaintenanceDetailsDialogOpen}
       />
     </div>
   );
