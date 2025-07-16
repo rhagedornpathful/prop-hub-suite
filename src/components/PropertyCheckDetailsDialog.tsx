@@ -309,6 +309,43 @@ Report generated on ${new Date().toLocaleString()}
                 </Card>
               </div>
 
+              {/* Summary Stats */}
+              {checklistData && (
+                <Card className="bg-muted/50">
+                  <CardHeader>
+                    <CardTitle className="text-base">Inspection Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                      <div>
+                        <p className="text-2xl font-bold text-green-600">
+                          {getAllItems().filter(item => item.completed).length}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Items Completed</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-blue-600">
+                          {getAllItems().filter(item => item.required && item.completed).length}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Required Items</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-purple-600">
+                          {getAllItems().reduce((total, item) => total + item.photos.length, 0)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Photos Taken</p>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-orange-600">
+                          {getAllItems().filter(item => item.notes && item.notes.trim().length > 0).length}
+                        </p>
+                        <p className="text-xs text-muted-foreground">Items with Notes</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Checklist Items by Section */}
               {checklistData && (
                 <div className="space-y-6">
@@ -404,43 +441,6 @@ Report generated on ${new Date().toLocaleString()}
                     );
                   })}
                 </div>
-              )}
-
-              {/* Summary Stats */}
-              {checklistData && (
-                <Card className="bg-muted/50">
-                  <CardHeader>
-                    <CardTitle className="text-base">Inspection Summary</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                      <div>
-                        <p className="text-2xl font-bold text-green-600">
-                          {getAllItems().filter(item => item.completed).length}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Items Completed</p>
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-blue-600">
-                          {getAllItems().filter(item => item.required && item.completed).length}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Required Items</p>
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-purple-600">
-                          {getAllItems().reduce((total, item) => total + item.photos.length, 0)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Photos Taken</p>
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-orange-600">
-                          {getAllItems().filter(item => item.notes && item.notes.trim().length > 0).length}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Items with Notes</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
               )}
 
               {/* General Notes */}
