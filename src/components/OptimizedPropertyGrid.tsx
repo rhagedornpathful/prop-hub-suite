@@ -38,16 +38,22 @@ export function OptimizedPropertyGrid({
   const transformedProperties: UnifiedPropertyData[] = [
     // Properties from properties table - check service_type to determine actual type
     ...properties.map(property => {
-      console.log('Property transformation:', {
-        id: property.id,
-        address: property.address,
-        service_type: property.service_type,
-        determined_type: property.service_type === 'house_watching' ? 'house_watching' : 'property_management'
-      });
+      const determinedType: 'property_management' | 'house_watching' = property.service_type === 'house_watching' ? 'house_watching' : 'property_management';
+      
+      // Add visible debugging for the specific property
+      if (property.address === '2168 Falls Manor') {
+        console.log('🔍 2168 Falls Manor transformation:', {
+          id: property.id,
+          address: property.address,
+          service_type: property.service_type,
+          determined_type: determinedType,
+          raw_property: property
+        });
+      }
       
       return {
         id: property.id,
-        type: property.service_type === 'house_watching' ? 'house_watching' as const : 'property_management' as const,
+        type: determinedType,
         address: property.address,
         displayAddress: `${property.city}, ${property.state}`,
         status: property.status,
@@ -79,7 +85,7 @@ export function OptimizedPropertyGrid({
     }),
     // House Watching properties from house_watching table
     ...houseWatchingProperties.map(property => {
-      console.log('House watching property:', {
+      console.log('🏠 House watching table property:', {
         id: property.id,
         address: property.property_address,
         type: 'house_watching'
@@ -96,6 +102,14 @@ export function OptimizedPropertyGrid({
       };
     })
   ];
+
+  console.log('🔄 All transformed properties:', transformedProperties.map(p => ({
+    id: p.id,
+    address: p.address,
+    type: p.type,
+    hasPropertyData: !!p.propertyData,
+    hasHouseWatchingData: !!p.houseWatchingData
+  })));
 
   if (isLoading) {
     return (
