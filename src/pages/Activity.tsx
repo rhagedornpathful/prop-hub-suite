@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAllPropertyActivity } from "@/hooks/useAllPropertyActivity";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,9 @@ import {
   CheckSquare,
   XCircle,
   Clock,
-  User
+  User,
+  Play,
+  FileText
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -63,6 +66,7 @@ interface ActivityFilters {
 }
 
 export default function Activity() {
+  const navigate = useNavigate();
   const { activities, isLoading, error, refetch } = useAllPropertyActivity();
   const [filters, setFilters] = useState<ActivityFilters>({
     search: '',
@@ -98,9 +102,23 @@ export default function Activity() {
     // TODO: Implement bulk actions
   };
 
-  const handleQuickAction = (activityId: string, action: string) => {
+  const handleQuickAction = (activityId: string, action: string, activity?: any) => {
     console.log(`Performing ${action} on activity:`, activityId);
-    // TODO: Implement quick actions
+    
+    if (action === 'start_property_check' && activity) {
+      // Navigate to property check page with the property ID
+      const propertyId = activity.metadata?.property_id;
+      if (propertyId) {
+        navigate(`/property-check/${propertyId}`);
+      }
+    } else if (action === 'view_property_check_report' && activity) {
+      // Navigate to property details and open the report dialog
+      const propertyId = activity.metadata?.property_id;
+      if (propertyId) {
+        navigate(`/properties/${propertyId}?showPropertyCheck=${activityId}`);
+      }
+    }
+    // TODO: Implement other quick actions
   };
 
   const getActivityIcon = (type: string) => {
@@ -436,6 +454,24 @@ export default function Activity() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {activity.type === 'property_check' && activity.status === 'in_progress' && (
+                          <DropdownMenuItem onClick={() => handleQuickAction(activity.id, 'start_property_check', activity)}>
+                            <Play className="w-4 h-4 mr-2" />
+                            Continue Check
+                          </DropdownMenuItem>
+                        )}
+                        {activity.type === 'property_check' && activity.status === 'completed' && (
+                          <DropdownMenuItem onClick={() => handleQuickAction(activity.id, 'view_property_check_report', activity)}>
+                            <FileText className="w-4 h-4 mr-2" />
+                            View Report
+                          </DropdownMenuItem>
+                        )}
+                        {activity.type === 'property_check' && (activity.status === 'pending' || activity.status === 'scheduled') && (
+                          <DropdownMenuItem onClick={() => handleQuickAction(activity.id, 'start_property_check', activity)}>
+                            <Play className="w-4 h-4 mr-2" />
+                            Start Check
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuItem onClick={() => handleQuickAction(activity.id, 'view')}>
                           <Eye className="w-4 h-4 mr-2" />
                           View Details
