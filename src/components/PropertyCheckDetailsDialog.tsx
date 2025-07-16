@@ -16,7 +16,10 @@ import {
   Camera,
   FileText,
   Download,
-  AlertCircle
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Expand
 } from "lucide-react";
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -54,6 +57,8 @@ export function PropertyCheckDetailsDialog({
   const [checklistData, setChecklistData] = useState<PropertyCheckData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [expandedPhotos, setExpandedPhotos] = useState<{ [key: string]: boolean }>({});
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && checkSessionId) {
@@ -155,6 +160,13 @@ export function PropertyCheckDetailsDialog({
       ...checklistData.utilities,
       ...checklistData.summary
     ];
+  };
+
+  const togglePhotos = (itemId: string) => {
+    setExpandedPhotos(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }));
   };
 
   const generateReport = () => {
@@ -347,9 +359,39 @@ Report generated on ${new Date().toLocaleString()}
                                     )}
                                     
                                     {item.photos.length > 0 && (
-                                      <div className="flex items-center gap-1 text-xs text-blue-600">
-                                        <Camera className="h-3 w-3" />
-                                        <span>{item.photos.length} photo{item.photos.length > 1 ? 's' : ''}</span>
+                                      <div className="space-y-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => togglePhotos(`${sectionKey}-${item.id}`)}
+                                          className="h-auto p-1 text-xs text-blue-600 hover:text-blue-700"
+                                        >
+                                          <Camera className="h-3 w-3 mr-1" />
+                                          <span>{item.photos.length} photo{item.photos.length > 1 ? 's' : ''}</span>
+                                          {expandedPhotos[`${sectionKey}-${item.id}`] ? (
+                                            <ChevronUp className="h-3 w-3 ml-1" />
+                                          ) : (
+                                            <ChevronDown className="h-3 w-3 ml-1" />
+                                          )}
+                                        </Button>
+                                        
+                                        {expandedPhotos[`${sectionKey}-${item.id}`] && (
+                                          <div className="grid grid-cols-2 gap-2 mt-2">
+                                            {item.photos.map((photo, photoIndex) => (
+                                              <div key={photoIndex} className="relative group">
+                                                <img
+                                                  src={photo}
+                                                  alt={`${item.item} - Photo ${photoIndex + 1}`}
+                                                  className="w-full h-20 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                                                  onClick={() => setSelectedPhoto(photo)}
+                                                />
+                                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                                  <Expand className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                </div>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                   </div>
@@ -434,6 +476,29 @@ Report generated on ${new Date().toLocaleString()}
           </ScrollArea>
         ) : null}
       </DialogContent>
+      
+      {/* Photo Modal */}
+      {selectedPhoto && (
+        <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+            <div className="relative">
+              <img
+                src={selectedPhoto}
+                alt="Property Check Photo"
+                className="w-full h-auto max-h-[85vh] object-contain"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70"
+                onClick={() => setSelectedPhoto(null)}
+              >
+                ✕
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 }
