@@ -9,7 +9,7 @@ import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { useNavigationSwipes } from "@/hooks/useSwipeGestures";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AdminDashboard } from "@/pages/dashboards/AdminDashboard";
 import PropertyOwnerDashboard from "@/pages/dashboards/PropertyOwnerDashboard";
 import { TenantDashboard } from "@/pages/dashboards/TenantDashboard";
@@ -31,7 +31,7 @@ const Index = () => {
   
   const { notificationCount } = useNotifications();
   const { isMobile } = useMobileDetection();
-  const { userRole, loading: authLoading } = useAuth();
+  const { userRole, loading: authLoading } = useUserRole();
 
   // Memoized dialog handlers for performance
   const handleAddProperty = useCallback(() => setAddPropertyOpen(true), []);
