@@ -37,47 +37,64 @@ export function OptimizedPropertyGrid({
   // Transform data into unified format
   const transformedProperties: UnifiedPropertyData[] = [
     // Properties from properties table - check service_type to determine actual type
-    ...properties.map(property => ({
-      id: property.id,
-      type: property.service_type === 'house_watching' ? 'house_watching' as const : 'property_management' as const,
-      address: property.address,
-      displayAddress: `${property.city}, ${property.state}`,
-      status: property.status,
-      images: property.images, // Preserve images for both types
-      propertyData: property.service_type === 'property_management' ? property : undefined,
-      houseWatchingData: property.service_type === 'house_watching' ? {
+    ...properties.map(property => {
+      console.log('Property transformation:', {
         id: property.id,
-        property_address: property.address,
-        owner_name: property.property_owner?.first_name && property.property_owner?.last_name 
-          ? `${property.property_owner.first_name} ${property.property_owner.last_name}`
-          : property.property_owner?.company_name || 'Unknown Owner',
+        address: property.address,
+        service_type: property.service_type,
+        determined_type: property.service_type === 'house_watching' ? 'house_watching' : 'property_management'
+      });
+      
+      return {
+        id: property.id,
+        type: property.service_type === 'house_watching' ? 'house_watching' as const : 'property_management' as const,
+        address: property.address,
+        displayAddress: `${property.city}, ${property.state}`,
         status: property.status,
-        check_frequency: 'weekly', // Default value, should be updated based on actual data
-        monthly_fee: property.monthly_rent || null,
-        created_at: property.created_at,
-        updated_at: property.updated_at,
-        user_id: property.user_id,
-        notes: property.description || null,
-        start_date: new Date().toISOString().split('T')[0], // Default to today
-        end_date: null,
-        next_check_date: property.next_check_date,
-        last_check_date: property.last_check_date,
-        key_location: null,
-        emergency_contact: null,
-        special_instructions: null,
-        owner_contact: null,
-      } : undefined,
-    })),
+        images: property.images,
+        propertyData: property.service_type !== 'house_watching' ? property : undefined,
+        houseWatchingData: property.service_type === 'house_watching' ? {
+          id: property.id,
+          property_address: property.address,
+          owner_name: property.property_owner?.first_name && property.property_owner?.last_name 
+            ? `${property.property_owner.first_name} ${property.property_owner.last_name}`
+            : property.property_owner?.company_name || 'Unknown Owner',
+          status: property.status,
+          check_frequency: 'weekly',
+          monthly_fee: property.monthly_rent || null,
+          created_at: property.created_at,
+          updated_at: property.updated_at,
+          user_id: property.user_id,
+          notes: property.description || null,
+          start_date: new Date().toISOString().split('T')[0],
+          end_date: null,
+          next_check_date: property.next_check_date,
+          last_check_date: property.last_check_date,
+          key_location: null,
+          emergency_contact: null,
+          special_instructions: null,
+          owner_contact: null,
+        } : undefined,
+      };
+    }),
     // House Watching properties from house_watching table
-    ...houseWatchingProperties.map(property => ({
-      id: property.id,
-      type: 'house_watching' as const,
-      address: property.property_address,
-      displayAddress: property.property_address,
-      status: property.status,
-      images: null,
-      houseWatchingData: property,
-    }))
+    ...houseWatchingProperties.map(property => {
+      console.log('House watching property:', {
+        id: property.id,
+        address: property.property_address,
+        type: 'house_watching'
+      });
+      
+      return {
+        id: property.id,
+        type: 'house_watching' as const,
+        address: property.property_address,
+        displayAddress: property.property_address,
+        status: property.status,
+        images: null,
+        houseWatchingData: property,
+      };
+    })
   ];
 
   if (isLoading) {
