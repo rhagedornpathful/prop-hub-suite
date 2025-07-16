@@ -67,6 +67,10 @@ const PropertyCheck = () => {
   const requiredProgress = getRequiredItemsProgress();
 
   const handleCompleteCheck = async () => {
+    console.log('Handle complete check called');
+    console.log('Can complete check:', canCompleteCheck());
+    console.log('Required progress:', requiredProgress);
+    
     if (!canCompleteCheck()) {
       toast({
         title: "Incomplete required items",

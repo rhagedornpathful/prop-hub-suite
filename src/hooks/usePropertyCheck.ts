@@ -361,6 +361,9 @@ export const usePropertyCheck = () => {
 
   const canCompleteCheck = () => {
     const requiredProgress = getRequiredItemsProgress();
+    console.log('Required items progress:', requiredProgress);
+    console.log('Can complete check:', requiredProgress.completed === requiredProgress.total);
+    console.log('All checklist items:', checklistItems);
     return requiredProgress.completed === requiredProgress.total;
   };
 
