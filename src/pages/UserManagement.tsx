@@ -25,20 +25,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AddUserDialog from "@/components/AddUserDialog";
 import { UserDetailsDialog } from "@/components/UserDetailsDialog";
+import { UserMobileTable } from "@/components/MobileTable";
 
 interface UserProfile {
   id: string;
@@ -567,101 +560,16 @@ const UserManagement = () => {
           </div>
         )}
 
-        {/* Users Table */}
+        {/* Users Table - Mobile Optimized */}
         {!loading && !error && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                User Accounts ({filteredUsers.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>User</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Joined</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.map((userProfile) => (
-                    <TableRow 
-                      key={userProfile.id} 
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleUserClick(userProfile)}
-                    >
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <User className="h-4 w-4" />
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {userProfile.first_name && userProfile.last_name
-                                ? `${userProfile.first_name} ${userProfile.last_name}`
-                                : 'No Name Set'
-                              }
-                            </div>
-                            {userProfile.phone && (
-                              <div className="text-sm text-muted-foreground">
-                                {userProfile.phone}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          {userProfile.email}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={getRoleBadgeColor(userProfile.role)}>
-                          {formatRoleName(userProfile.role)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          {formatDate(userProfile.user_created_at)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUserClick(userProfile);
-                          }}
-                        >
-                          <UserCog className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-              
-              {filteredUsers.length === 0 && (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No Users Found</h3>
-                  <p className="text-muted-foreground">
-                    {searchTerm || roleFilter !== 'all' 
-                      ? 'No users match your current filters.'
-                      : 'No users have been added yet.'
-                    }
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <UserMobileTable
+            users={filteredUsers}
+            onUserClick={handleUserClick}
+            loading={loading}
+            formatRoleName={formatRoleName}
+            getRoleBadgeColor={getRoleBadgeColor}
+            formatDate={formatDate}
+          />
         )}
 
         {/* User Details Dialog */}

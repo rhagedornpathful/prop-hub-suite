@@ -988,3 +988,118 @@
     width: 100%;
     height: 100%;
   }
+
+  /* Mobile Table Styles */
+  .mobile-table-container {
+    width: 100%;
+  }
+
+  .mobile-optimized-card {
+    transition: all 0.2s ease;
+  }
+
+  .mobile-optimized-card:active {
+    transform: scale(0.98);
+  }
+
+  .mobile-card {
+    border: 1px solid hsl(var(--border));
+    transition: all 0.2s ease;
+  }
+
+  .mobile-card:hover {
+    border-color: hsl(var(--primary) / 0.3);
+    box-shadow: 0 2px 8px hsl(var(--primary) / 0.1);
+  }
+
+  /* Table scroll indicator */
+  .table-scroll-indicator {
+    background: linear-gradient(90deg, transparent, hsl(var(--muted) / 0.5), transparent);
+    margin: 0 auto;
+    width: fit-content;
+    padding: 4px 12px;
+    border-radius: 12px;
+  }
+
+  .desktop-scroll-hint {
+    background: hsl(var(--muted) / 0.3);
+    border-top: 1px solid hsl(var(--border));
+  }
+
+  /* Responsive table utilities */
+  @media (max-width: 768px) {
+    .table-responsive {
+      overflow-x: auto;
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted)) transparent;
+    }
+
+    .table-responsive::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    .table-responsive::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb {
+      background: hsl(var(--muted));
+      border-radius: 3px;
+    }
+
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+      background: hsl(var(--primary) / 0.5);
+    }
+
+    /* Optimize touch targets */
+    .mobile-touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Card spacing optimization */
+    .mobile-card-grid {
+      gap: 0.75rem;
+    }
+
+    /* Compact text for mobile */
+    .mobile-compact {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+
+    /* Truncate long text on mobile */
+    .mobile-truncate {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 20ch;
+    }
+  }
+
+  /* Essential column highlighting */
+  .essential-column {
+    font-weight: 600;
+    color: hsl(var(--foreground));
+  }
+
+  /* Mobile priority content */
+  .mobile-priority-high {
+    order: -2;
+  }
+
+  .mobile-priority-medium {
+    order: -1;
+  }
+
+  .mobile-priority-low {
+    order: 1;
+  }
+
+  /* Abbreviated labels */
+  .abbreviated-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    font-weight: 500;
+  }
