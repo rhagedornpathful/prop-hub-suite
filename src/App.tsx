@@ -14,9 +14,6 @@ import { DevAdminProvider } from "@/contexts/DevAdminContext";
 import { ViewAsProvider } from "@/contexts/ViewAsContext";
 import { ViewAsBanner } from "@/components/ViewAsBanner";
 import { EmergencyAdminBanner } from "@/components/EmergencyAdminBanner";
-import { DevAdminToggle } from "@/components/dev/DevAdminToggle";
-import { DebugPanel } from "@/components/dev/DebugPanel";
-import { RoleDebugger } from "@/components/dev/RoleDebugger";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SimplePerformanceMonitor } from "@/components/SimplePerformanceMonitor";
@@ -249,10 +246,6 @@ const AppContent = () => {
             } />
           </Routes>
           
-          {/* Development Tools */}
-          <DevAdminToggle />
-          <DebugPanel />
-          <RoleDebugger />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

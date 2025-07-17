@@ -11,8 +11,13 @@ import {
   Wrench,
   CheckSquare,
   UserCog,
-  Building
+  Building,
+  Bug,
+  Crown
 } from "lucide-react";
+import { DevAdminToggle } from "@/components/dev/DevAdminToggle";
+import { DebugPanel } from "@/components/dev/DebugPanel";
+import { RoleDebugger } from "@/components/dev/RoleDebugger";
 
 const AdminNavigation = () => {
   const navigationSections = [
@@ -48,6 +53,11 @@ const AdminNavigation = () => {
         { title: "User Management", url: "/user-management", icon: UserCog, description: "Manage users and roles" },
         { title: "Property Owners", url: "/property-owners", icon: Users, description: "Manage property owners" },
       ]
+    },
+    {
+      title: "Development Tools",
+      description: "Development and debugging tools (development only)",
+      pages: []
     }
   ];
 
@@ -91,6 +101,57 @@ const AdminNavigation = () => {
           </Card>
         ))}
       </div>
+
+      {/* Development Tools Section - Only show in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+              <Bug className="h-5 w-5" />
+              Development Tools
+            </CardTitle>
+            <CardDescription className="text-blue-700 dark:text-blue-300">
+              Debug utilities and admin tools for development
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <h4 className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                  <Crown className="h-4 w-4" />
+                  Admin Development Mode
+                </h4>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                  Temporarily grant admin privileges without changing database
+                </p>
+                <DevAdminToggle />
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                  <Bug className="h-4 w-4" />
+                  Debug Panel
+                </h4>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                  Debug user information, roles, and permissions
+                </p>
+                <DebugPanel />
+              </div>
+              
+              <div className="space-y-2">
+                <h4 className="font-medium text-blue-800 dark:text-blue-200 flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  Role Debugger
+                </h4>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mb-2">
+                  Advanced role debugging and troubleshooting
+                </p>
+                <RoleDebugger />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
         <CardHeader>
