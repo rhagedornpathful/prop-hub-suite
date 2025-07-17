@@ -27,10 +27,12 @@ export const usePropertyCheck = () => {
   const { user } = useAuth();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Use demo ID if no ID provided (for testing purposes)
-  const propertyId = id || 'demo-property-123';
+  // The ID in the URL could be either a property_id or session_id
+  // We'll determine which one it is by checking if it's a valid session
+  const urlId = id;
 
   // Session tracking state
+  const [propertyId, setPropertyId] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
@@ -100,43 +102,73 @@ export const usePropertyCheck = () => {
 
   // Load existing check data if available
   useEffect(() => {
-    if (propertyId && user) {
+    if (urlId && user) {
       loadPropertyCheckData();
     }
-  }, [propertyId, user]);
+  }, [urlId, user]);
 
   const loadPropertyCheckData = async () => {
-    if (!propertyId || !user) return;
+    if (!urlId || !user) return;
     
     setIsLoading(true);
     try {
-      // Check for existing session first
-      const { data: existingSession, error: sessionError } = await supabase
+      // First, try to load by session ID (if urlId is a session ID)
+      const { data: sessionData, error: sessionError } = await supabase
         .from('property_check_sessions')
         .select('*')
-        .eq('property_id', propertyId)
-        .eq('user_id', user.id)
-        .eq('status', 'in_progress')
+        .eq('id', urlId)
         .single();
 
-      if (existingSession && !sessionError) {
-        // Load existing session
-        setSessionId(existingSession.id);
+      if (sessionData && !sessionError) {
+        // urlId is a session ID
+        setSessionId(sessionData.id);
+        setPropertyId(sessionData.property_id);
         setSessionStarted(true);
-        setStartTime(new Date(existingSession.started_at));
+        setStartTime(new Date(sessionData.started_at));
         
-        if (existingSession.checklist_data) {
-          setChecklistItems(existingSession.checklist_data as any);
+        if (sessionData.checklist_data) {
+          setChecklistItems(sessionData.checklist_data as any);
+        }
+      } else {
+        // urlId might be a property ID, check for existing session
+        const { data: existingSession, error: existingSessionError } = await supabase
+          .from('property_check_sessions')
+          .select('*')
+          .eq('property_id', urlId)
+          .eq('user_id', user.id)
+          .eq('status', 'in_progress')
+          .single();
+
+        if (existingSession && !existingSessionError) {
+          // Found existing session for this property
+          setSessionId(existingSession.id);
+          setPropertyId(existingSession.property_id);
+          setSessionStarted(true);
+          setStartTime(new Date(existingSession.started_at));
+          
+          if (existingSession.checklist_data) {
+            setChecklistItems(existingSession.checklist_data as any);
+          }
+        } else {
+          // No existing session, this is a new property check
+          setPropertyId(urlId);
         }
       }
 
       // Also check localStorage for backup
-      const savedData = localStorage.getItem(`property-check-${propertyId}`);
-      if (savedData && !existingSession) {
+      const currentPropertyId = propertyId || urlId;
+      const savedData = localStorage.getItem(`property-check-${currentPropertyId}`);
+      if (savedData && !sessionData) {
+        // Only load from localStorage if we don't have existing session data
         setChecklistItems(JSON.parse(savedData));
       }
     } catch (error) {
       console.error('Error loading property check data:', error);
+      toast({
+        title: "Failed to load",
+        description: "Could not load property check data. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
