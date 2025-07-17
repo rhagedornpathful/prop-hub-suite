@@ -35,7 +35,8 @@ import {
   CheckCircle,
   AlertCircle,
   DollarSign as PaymentIcon,
-  GitBranch
+  GitBranch,
+  Camera
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
@@ -43,6 +44,8 @@ import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialo
 import { PropertyCheckDetailsDialog } from "@/components/PropertyCheckDetailsDialog";
 import MaintenanceDetailsDialog from "@/components/MaintenanceDetailsDialog";
 import { usePropertyActivity } from "@/hooks/usePropertyActivity";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 type Property = Tables<'properties'>;
 type PropertyCheckSession = Tables<'property_check_sessions'>;
@@ -58,6 +61,8 @@ export function PropertyDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const { userRole } = useUserRole();
   const [property, setProperty] = useState<Property | null>(null);
   const [maintenanceRequests, setMaintenanceRequests] = useState<Tables<'maintenance_requests'>[]>([]);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
@@ -69,6 +74,7 @@ export function PropertyDetail() {
   const [selectedMaintenanceRequest, setSelectedMaintenanceRequest] = useState<Tables<'maintenance_requests'> | null>(null);
   const [isMaintenanceDetailsDialogOpen, setIsMaintenanceDetailsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isStartingCheck, setIsStartingCheck] = useState(false);
   
   // Use the new comprehensive activity hook
   const { activities, isLoading: activitiesLoading, error: activitiesError, refetch: refetchActivities } = usePropertyActivity(id);
@@ -174,6 +180,42 @@ export function PropertyDetail() {
     }
   };
 
+  const startPropertyCheck = async () => {
+    if (!id || !user?.id) return;
+    
+    try {
+      setIsStartingCheck(true);
+      const { data, error } = await supabase
+        .from('property_check_sessions')
+        .insert({
+          property_id: id,
+          user_id: user.id,
+          status: 'in_progress',
+          started_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast({
+        title: "Property Check Started",
+        description: "You can now begin documenting your property inspection.",
+      });
+
+      // Navigate to the property check page
+      navigate(`/property-check/${data.id}`);
+    } catch (error: any) {
+      toast({
+        title: "Error Starting Check",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setIsStartingCheck(false);
+    }
+  };
+
   const handleDelete = () => {
     toast({
       title: "Delete Property",
@@ -258,6 +300,19 @@ export function PropertyDetail() {
             <Building className="h-3 w-3 mr-1" />
             {property.service_type === 'house_watching' ? 'House Watching' : 'Property Management'}
           </Badge>
+          
+          {/* Show property check button for house watchers */}
+          {userRole === 'house_watcher' && (
+            <Button 
+              onClick={startPropertyCheck}
+              disabled={isStartingCheck}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              <Camera className="h-4 w-4 mr-2" />
+              {isStartingCheck ? 'Starting...' : 'Start Property Check'}
+            </Button>
+          )}
+          
           <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
             <Edit className="h-4 w-4 mr-2" />
             Edit Property
