@@ -61,7 +61,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
 
-      // Default to first role if no preference
+      // If user has multiple roles, prefer the most specific one
+      const roleHierarchy = ['house_watcher', 'tenant', 'owner_investor', 'contractor', 'client', 'leasing_agent', 'property_manager', 'admin'];
+      
+      for (const hierarchyRole of roleHierarchy) {
+        if (roles.includes(hierarchyRole as any)) {
+          setUserRole(hierarchyRole as any);
+          return;
+        }
+      }
+
+      // Fallback to first role if no hierarchy match
       const primaryRole = roles[0];
       setUserRole(primaryRole);
       
