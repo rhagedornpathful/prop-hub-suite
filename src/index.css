@@ -845,7 +845,107 @@
     }
     100% {
       background-position: 200% 0;
+  }
+
+  /* Mobile performance optimizations */
+  @media (max-width: 768px) {
+    /* Reduce animations on mobile */
+    .reduce-motion,
+    .reduce-motion * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      transform: none !important;
     }
+
+    /* Simplify shadows and effects on mobile */
+    .mobile-simplified {
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      filter: none !important;
+    }
+
+    /* Optimize touch targets for small screens */
+    .touch-optimize {
+      min-height: var(--touch-target-min);
+      min-width: var(--touch-target-min);
+      padding: var(--mobile-padding-md);
+    }
+  }
+
+  /* Performance optimizations for low-end devices */
+  @media (max-width: 428px) {
+    /* Further reduce visual complexity */
+    .low-end-optimize {
+      border-radius: 0.25rem !important;
+      background-image: none !important;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    /* Limit grid complexity */
+    .mobile-grid-simple {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: var(--mobile-margin-sm) !important;
+    }
+  }
+
+  /* Common mobile viewport optimizations */
+  @media (max-width: 320px) {
+    /* iPhone SE and similar small devices */
+    .text-responsive-xl { font-size: 1.5rem !important; }
+    .text-responsive-lg { font-size: 1.25rem !important; }
+    .section-padding { padding: var(--mobile-padding-sm) !important; }
+  }
+
+  @media (max-width: 375px) {
+    /* iPhone 6/7/8/SE */
+    .container-responsive { padding: 0 var(--mobile-padding-sm) !important; }
+  }
+
+  @media (max-width: 390px) {
+    /* iPhone 12/13 Pro */
+    .mobile-stack > * + * { margin-top: var(--mobile-margin-sm) !important; }
+  }
+
+  @media (max-width: 414px) {
+    /* iPhone 6/7/8 Plus */
+    .grid-responsive-4 { grid-template-columns: 1fr !important; }
+  }
+
+  @media (max-width: 428px) {
+    /* iPhone 12/13 Pro Max */
+    .touch-target { min-height: 48px !important; min-width: 48px !important; }
+  }
+
+  /* Prefers reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-delay: -1ms !important;
+      animation-duration: 1ms !important;
+      animation-iteration-count: 1 !important;
+      background-attachment: initial !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0s !important;
+      transition-delay: 0s !important;
+    }
+  }
+
+  /* Utility classes for performance */
+  .will-change-transform { will-change: transform; }
+  .will-change-opacity { will-change: opacity; }
+  .will-change-auto { will-change: auto; }
+  
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  .content-visibility-auto { content-visibility: auto; }
+}
   }
 
   .image-error {

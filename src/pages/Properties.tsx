@@ -39,6 +39,7 @@ import { RoleBasedWrapper } from "@/components/RoleBasedWrapper";
 import { useProperties } from "@/hooks/queries/useProperties";
 import { useHouseWatching } from "@/hooks/queries/useHouseWatching";
 import { useToast } from "@/hooks/use-toast";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 
 const Properties = () => {
   const navigate = useNavigate();
@@ -52,6 +53,15 @@ const Properties = () => {
     permissions,
     getRoleDisplayName 
   } = useUserRole();
+
+  // Mobile performance optimizations
+  const { 
+    shouldReduceAnimations, 
+    shouldLimitItems, 
+    isSmallMobile,
+    getAnimationClass,
+    config 
+  } = useMobilePerformance();
 
   // Get real property data with pagination
   const { data: propertyData, isLoading: propertiesLoading, refetch: refetchProperties } = useProperties(1, 100);
@@ -155,10 +165,10 @@ const Properties = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-subtle">
+    <div className={`min-h-screen flex flex-col bg-gradient-subtle ${shouldReduceAnimations ? 'reduce-motion' : ''}`}>
       <div className="flex-1 flex flex-col">
         {/* Header - Mobile First */}
-        <header className="bg-card border-b border-border section-padding shadow-sm">
+        <header className={`bg-card border-b border-border section-padding shadow-sm ${shouldReduceAnimations ? 'mobile-simplified' : ''}`}>
           <div className="container-responsive">
             {/* Mobile: Stack vertically, Desktop: Horizontal layout */}
             <div className="mobile-stack items-start md:items-center justify-between">
@@ -238,8 +248,8 @@ const Properties = () => {
               </Button>
             </div>
 
-            {/* Property Summary Stats - Responsive Grid */}
-            <div className="grid-responsive-4">
+            {/* Property Summary Stats - Responsive Grid with Performance Optimizations */}
+            <div className={`grid-responsive-4 ${isSmallMobile ? 'mobile-grid-simple' : ''} ${getAnimationClass('fade')}`}>
                 <Card className="shadow-md border-0">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">

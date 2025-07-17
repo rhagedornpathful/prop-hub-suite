@@ -2,6 +2,7 @@ import { PropertyCard } from "@/components/PropertyCard";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useMobilePerformance } from "@/hooks/useMobilePerformance";
 import type { PropertyWithRelations } from "@/hooks/queries/useProperties";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -33,6 +34,13 @@ export function OptimizedPropertyGrid({
 }: OptimizedPropertyGridProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { 
+    getLimitedItems, 
+    getGridColumns, 
+    shouldReduceAnimations,
+    isSmallMobile,
+    getAnimationClass 
+  } = useMobilePerformance();
 
   // Transform data into unified format
   const transformedProperties: UnifiedPropertyData[] = [
@@ -103,13 +111,10 @@ export function OptimizedPropertyGrid({
     })
   ];
 
-  console.log('🔄 All transformed properties:', transformedProperties.map(p => ({
-    id: p.id,
-    address: p.address,
-    type: p.type,
-    hasPropertyData: !!p.propertyData,
-    hasHouseWatchingData: !!p.houseWatchingData
-  })));
+  // Apply mobile performance optimizations
+  const optimizedProperties = getLimitedItems(transformedProperties, isSmallMobile ? 8 : 20);
+  const gridColumns = getGridColumns(3);
+  const animationClass = getAnimationClass('fade');
 
   if (isLoading) {
     return (
@@ -120,9 +125,15 @@ export function OptimizedPropertyGrid({
             <p className="text-muted-foreground">Loading properties...</p>
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-96 bg-muted animate-pulse rounded-lg" />
+        <div 
+          className={`grid gap-6 ${shouldReduceAnimations ? 'mobile-simplified' : ''}`}
+          style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+        >
+          {Array.from({ length: Math.min(gridColumns * 2, 6) }, (_, i) => (
+            <div 
+              key={i} 
+              className={`h-96 bg-muted rounded-lg ${shouldReduceAnimations ? '' : 'animate-pulse'}`} 
+            />
           ))}
         </div>
       </div>
@@ -154,19 +165,53 @@ export function OptimizedPropertyGrid({
         <div>
           <h2 className="text-2xl font-bold text-foreground">Properties</h2>
           <p className="text-muted-foreground">
-            {transformedProperties.length} {transformedProperties.length === 1 ? 'property' : 'properties'} found
+            {optimizedProperties.length} {optimizedProperties.length === 1 ? 'property' : 'properties'} shown
+            {optimizedProperties.length < transformedProperties.length && 
+              ` (${transformedProperties.length - optimizedProperties.length} more available)`
+            }
           </p>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {transformedProperties.map((property) => (
-          <PropertyCard 
-            key={`${property.type}-${property.id}`} 
-            property={property} 
-          />
+      <div 
+        className={`grid gap-6 ${animationClass} ${shouldReduceAnimations ? 'mobile-simplified' : ''} ${isSmallMobile ? 'mobile-grid-simple' : ''}`}
+        style={{ 
+          gridTemplateColumns: isSmallMobile ? '1fr' : `repeat(${gridColumns}, 1fr)`,
+          contentVisibility: 'auto'
+        }}
+      >
+        {optimizedProperties.map((property, index) => (
+          <div 
+            key={`${property.type}-${property.id}`}
+            className={`${shouldReduceAnimations ? 'will-change-auto' : 'will-change-transform'}`}
+            style={{ 
+              contentVisibility: 'auto',
+              containIntrinsicSize: '300px'
+            }}
+          >
+            <PropertyCard 
+              property={property}
+            />
+          </div>
         ))}
       </div>
+
+      {/* Load More Button for Mobile */}
+      {optimizedProperties.length < transformedProperties.length && (
+        <div className="text-center pt-6">
+          <button 
+            className="touch-target bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium"
+            onClick={() => {
+              toast({
+                title: "Load More",
+                description: "Load more functionality would be implemented here",
+              });
+            }}
+          >
+            Show {Math.min(10, transformedProperties.length - optimizedProperties.length)} More Properties
+          </button>
+        </div>
+      )}
       
       <AddPropertyDialog
         open={isAddDialogOpen}
