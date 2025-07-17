@@ -80,9 +80,9 @@ export default function Documents() {
   const [uploadCategory, setUploadCategory] = useState("general");
   const [uploadDescription, setUploadDescription] = useState("");
   const [uploadTags, setUploadTags] = useState("");
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
-  const [selectedPropertyOwnerId, setSelectedPropertyOwnerId] = useState<string>("");
-  const [selectedTenantId, setSelectedTenantId] = useState<string>("");
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>("none");
+  const [selectedPropertyOwnerId, setSelectedPropertyOwnerId] = useState<string>("none");
+  const [selectedTenantId, setSelectedTenantId] = useState<string>("none");
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
@@ -171,9 +171,9 @@ export default function Documents() {
           category: uploadCategory,
           tags: uploadTags.split(',').map(tag => tag.trim()).filter(Boolean),
           description: uploadDescription || null,
-          property_id: selectedPropertyId || null,
-          property_owner_id: selectedPropertyOwnerId || null,
-          tenant_id: selectedTenantId || null,
+          property_id: selectedPropertyId === "none" ? null : selectedPropertyId || null,
+          property_owner_id: selectedPropertyOwnerId === "none" ? null : selectedPropertyOwnerId || null,
+          tenant_id: selectedTenantId === "none" ? null : selectedTenantId || null,
         });
 
       if (dbError) throw dbError;
@@ -202,9 +202,9 @@ export default function Documents() {
     setUploadDescription("");
     setUploadTags("");
     setUploadCategory("general");
-    setSelectedPropertyId("");
-    setSelectedPropertyOwnerId("");
-    setSelectedTenantId("");
+    setSelectedPropertyId("none");
+    setSelectedPropertyOwnerId("none");
+    setSelectedTenantId("none");
   };
 
   const handleDownload = async (document: Document) => {
@@ -382,7 +382,7 @@ export default function Documents() {
                       <SelectValue placeholder="Select a property..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {properties.map(property => (
                         <SelectItem key={property.id} value={property.id}>
                           {property.address}
@@ -399,7 +399,7 @@ export default function Documents() {
                       <SelectValue placeholder="Select a property owner..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {propertyOwners.map(owner => (
                         <SelectItem key={owner.id} value={owner.id}>
                           {owner.first_name} {owner.last_name}
@@ -416,7 +416,7 @@ export default function Documents() {
                       <SelectValue placeholder="Select a tenant..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">None</SelectItem>
+                      <SelectItem value="none">None</SelectItem>
                       {tenants.map(tenant => (
                         <SelectItem key={tenant.id} value={tenant.id}>
                           {tenant.first_name} {tenant.last_name}
