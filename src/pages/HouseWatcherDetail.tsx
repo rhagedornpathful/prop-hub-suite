@@ -16,6 +16,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import AssignPropertiesDialog from "@/components/AssignPropertiesDialog";
 
 const HouseWatcherDetail = () => {
   const { id } = useParams();
@@ -145,6 +146,19 @@ const HouseWatcherDetail = () => {
             <h1 className="text-3xl font-bold text-foreground">{getDisplayName()}</h1>
             <p className="text-muted-foreground">House Watcher Profile</p>
           </div>
+
+          <AssignPropertiesDialog
+            watcherId={watcher.id}
+            watcherName={getDisplayName()}
+            onAssignmentComplete={() => {
+              window.location.reload();
+            }}
+          >
+            <Button className="bg-gradient-primary hover:bg-primary-dark">
+              <Building2 className="h-4 w-4 mr-2" />
+              Assign Properties
+            </Button>
+          </AssignPropertiesDialog>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

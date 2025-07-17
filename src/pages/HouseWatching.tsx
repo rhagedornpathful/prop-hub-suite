@@ -43,6 +43,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useHouseWatchers, useDeleteHouseWatcher } from "@/hooks/queries/useHouseWatchers";
 import AddHouseWatcherDialog from "@/components/AddHouseWatcherDialog";
+import AssignPropertiesDialog from "@/components/AssignPropertiesDialog";
 
 const HouseWatching = () => {
   const navigate = useNavigate();
@@ -359,18 +360,26 @@ const HouseWatching = () => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // Handle assign properties
+                  <AssignPropertiesDialog
+                    watcherId={watcher.id}
+                    watcherName={getDisplayName(watcher)}
+                    onAssignmentComplete={() => {
+                      // Refresh the data when properties are assigned
+                      window.location.reload();
                     }}
                   >
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Assign
-                  </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                    >
+                      <Building2 className="h-4 w-4 mr-2" />
+                      Assign
+                    </Button>
+                  </AssignPropertiesDialog>
                   <Button 
                     size="sm" 
                     className="flex-1 bg-gradient-primary hover:bg-primary-dark"
