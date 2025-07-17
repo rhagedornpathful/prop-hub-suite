@@ -35,12 +35,13 @@ export const useHouseWatchers = () => {
       // Get user profiles and property count for each house watcher
       const watchersWithProfiles = await Promise.all(
         (data || []).map(async (watcher) => {
-          // Get user profile from user_profiles view
+          // Get user profile from user_profiles view - take first result if multiple exist
           const { data: profileData, error: profileError } = await supabase
             .from('user_profiles')
             .select('id, email, first_name, last_name, phone, address, city, state, zip_code')
             .eq('id', watcher.user_id)
-            .maybeSingle();
+            .limit(1)
+            .single();
 
           if (profileError) {
             console.error('Error fetching profile for user:', watcher.user_id, profileError);

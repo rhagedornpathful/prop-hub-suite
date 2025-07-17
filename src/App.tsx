@@ -31,6 +31,7 @@ import Finances from "./pages/Finances";
 import Maintenance from "./pages/Maintenance";
 import Messages from "./pages/Messages";
 import HouseWatching from "./pages/HouseWatching";
+import HouseWatcherDetail from "./pages/HouseWatcherDetail";
 import PropertyCheck from "./pages/PropertyCheck";
 import Documents from "./pages/Documents";
 import UserManagement from "./pages/UserManagement";
@@ -169,6 +170,13 @@ const AppContent = () => {
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
                               <HouseWatching />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/house-watchers/:id" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
+                              <HouseWatcherDetail />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
