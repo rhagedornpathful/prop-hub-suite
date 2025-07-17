@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Clock, CheckCircle, AlertTriangle, Eye, Camera, FileText, Home, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
 import { format, isToday, isTomorrow, isPast, differenceInDays } from 'date-fns';
 
@@ -35,6 +36,7 @@ interface PropertyCheck {
 
 const HouseWatcherDashboard = () => {
   const { user } = useAuth();
+  const { isViewingAs } = useUserRole();
   const [assignedProperties, setAssignedProperties] = useState<AssignedProperty[]>([]);
   const [propertyChecks, setPropertyChecks] = useState<PropertyCheck[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,14 +51,15 @@ const HouseWatcherDashboard = () => {
     try {
       setLoading(true);
 
-      // Get house watcher record
+      // Get house watcher record - skip validation if in View As mode
       const { data: houseWatcher } = await supabase
         .from('house_watchers')
         .select('id')
         .eq('user_id', user?.id)
         .single();
 
-      if (!houseWatcher) {
+      // Only show error if not in View As mode and no house watcher record exists
+      if (!houseWatcher && !isViewingAs) {
         toast({
           title: "Not a House Watcher",
           description: "You don't have house watcher permissions assigned.",
