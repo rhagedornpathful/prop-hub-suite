@@ -152,16 +152,14 @@ export function DashboardHeader({
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <TouchOptimized>
-                  <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.user_metadata?.avatar_url} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {user?.email ? getInitials(user.email) : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </TouchOptimized>
+                <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                      {user?.email ? getInitials(user.email) : 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-popover border shadow-lg z-50" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
