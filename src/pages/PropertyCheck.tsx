@@ -140,114 +140,114 @@ const PropertyCheck = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
+    <div className="min-h-screen bg-gradient-subtle overflow-safe">
       {/* Mobile-First Header */}
-      <header className="bg-card border-b border-border p-4 shadow-sm sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                // Navigate back based on user role
-                if (userRole === 'house_watcher') {
-                  navigate('/'); // House watchers go to their dashboard (root)
-                } else {
-                  navigate('/house-watching'); // Admins/property managers go to house watching management
-                }
-              }}
-              className="p-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">Property Check</h1>
-              {isLoadingProperty ? (
-                <p className="text-sm text-muted-foreground">Loading property details...</p>
-              ) : propertyError ? (
-                <p className="text-sm text-destructive">Failed to load property details</p>
-              ) : property ? (
-                <p className="text-sm text-muted-foreground">{property.address}</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">Unknown property</p>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">
-              {getOverallProgress()}% Complete
-            </Badge>
-            <Badge 
-              variant={canCompleteCheck() ? "default" : "secondary"} 
-              className="text-xs"
-            >
-              Required: {requiredProgress.completed}/{requiredProgress.total}
-            </Badge>
-            {sessionStarted && (
-              <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                <Timer className="h-3 w-3" />
-                {formatElapsedTime(elapsedTime)}
-              </Badge>
-            )}
-            <div className="flex items-center gap-1">
-              {hasUnsavedChanges && (
-                <Badge variant="secondary" className="text-xs">
-                  Unsaved
-                </Badge>
-              )}
-              {lastSaveTime && !hasUnsavedChanges && (
-                <Badge variant="outline" className="text-xs">
-                  Saved {lastSaveTime.toLocaleTimeString()}
-                </Badge>
-              )}
+      <header className="bg-card border-b border-border section-padding shadow-sm sticky top-0 z-10">
+        <div className="container-responsive">
+          {/* Mobile: Stack vertically, Desktop: Horizontal */}
+          <div className="mobile-stack items-start md:items-center">
+            <div className="flex items-center gap-3 w-full md:w-auto">
               <Button
-                size="sm"
                 variant="ghost"
-                onClick={savePropertyCheckData}
-                disabled={isSaving}
-                className="p-1"
+                size="sm"
+                onClick={() => {
+                  // Navigate back based on user role
+                  if (userRole === 'house_watcher') {
+                    navigate('/'); // House watchers go to their dashboard (root)
+                  } else {
+                    navigate('/house-watching'); // Admins/property managers go to house watching management
+                  }
+                }}
+                className="touch-target"
               >
-                <Save className={`h-3 w-3 ${isSaving ? 'animate-spin' : ''}`} />
+                <ArrowLeft className="h-4 w-4" />
+                <span className="ml-2 desktop-only">Back</span>
               </Button>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-responsive-lg font-bold text-foreground">Property Check</h1>
+                {isLoadingProperty ? (
+                  <p className="text-sm text-muted-foreground">Loading property details...</p>
+                ) : propertyError ? (
+                  <p className="text-sm text-destructive">Failed to load property details</p>
+                ) : property ? (
+                  <p className="text-sm text-muted-foreground overflow-safe">{property.address}</p>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Unknown property</p>
+                )}
+              </div>
+            </div>
+            
+            {/* Progress and Status Badges - Stack on mobile */}
+            <div className="w-full md:w-auto">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline" className="text-xs">
+                  {getOverallProgress()}% Complete
+                </Badge>
+                <Badge 
+                  variant={canCompleteCheck() ? "default" : "secondary"} 
+                  className="text-xs"
+                >
+                  Required: {requiredProgress.completed}/{requiredProgress.total}
+                </Badge>
+                {sessionStarted && (
+                  <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                    <Timer className="h-3 w-3" />
+                    {formatElapsedTime(elapsedTime)}
+                  </Badge>
+                )}
+                <div className="flex items-center gap-1">
+                  {hasUnsavedChanges && (
+                    <Badge variant="secondary" className="text-xs">
+                      Unsaved
+                    </Badge>
+                  )}
+                  {lastSaveTime && !hasUnsavedChanges && (
+                    <Badge variant="outline" className="text-xs">
+                      Saved {lastSaveTime.toLocaleTimeString()}
+                    </Badge>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </header>
-
-      {/* Section Navigation */}
-      <div className="bg-card border-b border-border p-4">
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {sections.map((section, index) => {
-            const Icon = section.icon;
-            const progress = getSectionProgress(section.key as keyof typeof checklistItems);
-            const isActive = currentSection === index;
-            
-            return (
-              <Button
-                key={section.key}
-                variant={isActive ? "default" : "outline"}
-                size="sm"
-                onClick={() => setCurrentSection(index)}
-                className={`flex items-center gap-2 min-w-fit ${isActive ? section.color : ""}`}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="hidden sm:inline">{section.name}</span>
-                <Badge variant="secondary" className="text-xs ml-1">
-                  {progress}
-                </Badge>
-              </Button>
-            );
-          })}
+      {/* Section Navigation - Mobile First */}
+      <div className="bg-card border-b border-border section-padding">
+        <div className="container-responsive">
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {sections.map((section, index) => {
+              const Icon = section.icon;
+              const progress = getSectionProgress(section.key as keyof typeof checklistItems);
+              const isActive = currentSection === index;
+              
+              return (
+                <Button
+                  key={section.key}
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentSection(index)}
+                  className={`flex items-center gap-2 min-w-fit touch-target ${isActive ? section.color : ""}`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span className="hidden sm:inline">{section.name}</span>
+                  <Badge variant="secondary" className="text-xs ml-1">
+                    {progress}
+                  </Badge>
+                </Button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="p-4 pb-20">
-        <div className="max-w-2xl mx-auto space-y-4">
+      {/* Main Content - Mobile First */}
+      <main className="section-padding pb-20 overflow-safe">
+        <div className="container-responsive max-w-2xl space-y-4">
           {/* Start Session Card */}
           {!sessionStarted && (
             <Card className="shadow-md border-0 bg-gradient-primary">
-              <CardContent className="p-6 text-center">
+              <CardContent className="section-padding text-center">
                 <div className="space-y-4">
                   <div className="flex items-center justify-center">
                     <div className="bg-white/20 p-3 rounded-full">
@@ -255,7 +255,7 @@ const PropertyCheck = () => {
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-white mb-2">
+                    <h3 className="text-responsive-lg font-semibold text-white mb-2">
                       Ready to Start Property Check?
                     </h3>
                     <p className="text-white/80 text-sm mb-4">
@@ -263,7 +263,7 @@ const PropertyCheck = () => {
                     </p>
                     <Button
                       onClick={handleStartSession}
-                      className="bg-white text-primary hover:bg-white/90"
+                      className="bg-white text-primary hover:bg-white/90 touch-target"
                     >
                       <Play className="h-4 w-4 mr-2" />
                       Start Property Check

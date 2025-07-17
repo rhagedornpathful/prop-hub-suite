@@ -157,76 +157,89 @@ const Properties = () => {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-subtle">
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-card border-b border-border p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-bold text-foreground">{getRoleSpecificTitle()}</h1>
-            
-            <div className="flex items-center gap-4 flex-1 max-w-4xl">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search properties..." 
-                  className="pl-10 w-full"
-                />
+        {/* Header - Mobile First */}
+        <header className="bg-card border-b border-border section-padding shadow-sm">
+          <div className="container-responsive">
+            {/* Mobile: Stack vertically, Desktop: Horizontal layout */}
+            <div className="mobile-stack items-start md:items-center justify-between">
+              <h1 className="text-responsive-xl font-bold text-foreground mb-4 md:mb-0">
+                {getRoleSpecificTitle()}
+              </h1>
+              
+              {/* Search and Filters - Mobile Stack */}
+              <div className="w-full md:flex-1 md:max-w-4xl mobile-stack">
+                {/* Search Input */}
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input 
+                    placeholder="Search properties..." 
+                    className="pl-10 w-full touch-target"
+                  />
+                </div>
+                
+                {/* Filter Controls - Stack on mobile */}
+                <div className="mobile-stack">
+                  <Select>
+                    <SelectTrigger className="w-full md:w-40 touch-target">
+                      <SelectValue placeholder="Filter by Type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="property_management">Property Management</SelectItem>
+                      <SelectItem value="house_watching">House Watching</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" className="touch-target">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    <span className="mobile-only">Filters</span>
+                    <span className="desktop-only">Advanced</span>
+                  </Button>
+                </div>
               </div>
-              <Select>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filter by Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="property_management">Property Management</SelectItem>
-                  <SelectItem value="house_watching">House Watching</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" size="sm">
-                <SlidersHorizontal className="h-4 w-4 mr-2" />
-                Advanced
-              </Button>
-            </div>
 
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="relative">
+              {/* Action Buttons - Stack on mobile */}
+              <div className="mobile-stack w-full md:w-auto">
+                <Button variant="outline" size="sm" className="relative touch-target">
                   <Bell className="h-4 w-4" />
                   <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
                     3
                   </Badge>
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => navigate('/maintenance')}>
+                <Button variant="outline" size="sm" onClick={() => navigate('/maintenance')} className="touch-target">
                   <Wrench className="h-4 w-4 mr-2" />
-                  Maintenance
+                  <span className="desktop-only">Maintenance</span>
                 </Button>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="touch-target">
                   <User className="h-4 w-4" />
                 </Button>
               </div>
+            </div>
           </div>
         </header>
+        {/* Main Content - Mobile First */}
+        <main className="flex-1 section-padding overflow-auto">
+          <div className="container-responsive space-y-8">
+            {/* Quick Actions - Stack on mobile */}
+            <div className="mobile-stack">
+              <Button 
+                className="bg-gradient-primary hover:bg-primary-dark touch-target"
+                onClick={() => setIsAddDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Property
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={handleImportProperties}
+                className="touch-target"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Import Properties
+              </Button>
+            </div>
 
-          {/* Main Content */}
-          <main className="flex-1 p-6 overflow-auto">
-            <div className="max-w-7xl mx-auto space-y-8">
-              {/* Quick Actions */}
-              <div className="flex items-center gap-4">
-                <Button 
-                  className="bg-gradient-primary hover:bg-primary-dark"
-                  onClick={() => setIsAddDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Property
-                </Button>
-                <Button 
-                  variant="outline"
-                  onClick={handleImportProperties}
-                >
-                  <Filter className="h-4 w-4 mr-2" />
-                  Import Properties
-                </Button>
-              </div>
-
-              {/* Property Summary Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* Property Summary Stats - Responsive Grid */}
+            <div className="grid-responsive-4">
                 <Card className="shadow-md border-0">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">

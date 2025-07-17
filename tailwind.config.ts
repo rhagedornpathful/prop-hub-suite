@@ -21,8 +21,20 @@ export default {
 				'2xl': 'var(--container-padding-desktop)',
 			},
 			screens: {
+				'sm': '640px',
+				'md': '768px',
+				'lg': '1024px',
+				'xl': '1280px',
 				'2xl': '1400px'
 			}
+		},
+		// Mobile-first breakpoints
+		screens: {
+			'sm': '640px',   // Small devices (large phones)
+			'md': '768px',   // Tablets
+			'lg': '1024px',  // Laptops/desktops
+			'xl': '1280px',  // Large desktops
+			'2xl': '1536px', // Extra large screens
 		},
 		extend: {
 			spacing: {
