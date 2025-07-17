@@ -98,26 +98,32 @@
     --grid-gap-tablet: 1.5rem;    /* 24px - tablet grid gap */
     --grid-gap-desktop: 2rem;     /* 32px - desktop grid gap */
 
-    /* Typography Scale */
+    /* Mobile-First Typography Scale - All in rem for accessibility */
     --text-xs: 0.75rem;    /* 12px */
     --text-sm: 0.875rem;   /* 14px */
-    --text-base: 1rem;     /* 16px */
+    --text-base: 1rem;     /* 16px - Mobile minimum for readability */
     --text-lg: 1.125rem;   /* 18px */
     --text-xl: 1.25rem;    /* 20px */
     --text-2xl: 1.5rem;    /* 24px */
     --text-3xl: 1.875rem;  /* 30px */
     --text-4xl: 2.25rem;   /* 36px */
 
-    /* Line Heights */
-    --leading-tight: 1.2;
-    --leading-normal: 1.5;
-    --leading-relaxed: 1.75;
+    /* Improved Line Heights for Mobile Readability */
+    --leading-tight: 1.25;   /* Headings */
+    --leading-normal: 1.5;   /* Body text - minimum for readability */
+    --leading-relaxed: 1.75; /* Long-form content */
 
-    /* Border Radius Standards */
-    --radius-sm: 0.375rem;  /* 6px */
-    --radius-md: 0.5rem;    /* 8px */
-    --radius-lg: 0.75rem;   /* 12px */
-    --radius-xl: 1rem;      /* 16px */
+    /* Mobile-Optimized Spacing - Minimum 16px touch targets */
+    --mobile-padding-sm: 1rem;    /* 16px minimum */
+    --mobile-padding-md: 1.25rem; /* 20px */
+    --mobile-padding-lg: 1.5rem;  /* 24px */
+    --mobile-margin-sm: 1rem;     /* 16px */
+    --mobile-margin-md: 1.5rem;   /* 24px */
+    --mobile-margin-lg: 2rem;     /* 32px */
+
+    /* Content Width for Optimal Readability */
+    --content-readable-width: 65ch; /* 65 characters for optimal reading */
+    --content-max-width: 75ch;      /* 75 characters maximum */
 
     /* Interactive Element Standards */
     --button-height-sm: 2rem;     /* 32px */
@@ -465,5 +471,65 @@
   .overflow-safe {
     max-width: 100%;
     overflow-x: auto;
+  }
+
+  /* Mobile-Optimized Typography */
+  .mobile-text {
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    padding: var(--mobile-padding-sm);
+    margin-bottom: var(--mobile-margin-sm);
+  }
+
+  /* Readable Content Width */
+  .readable-content {
+    max-width: var(--content-readable-width);
+    line-height: var(--leading-relaxed);
+  }
+
+  .readable-content-wide {
+    max-width: var(--content-max-width);
+    line-height: var(--leading-relaxed);
+  }
+
+  /* Mobile-First Paragraph Styling */
+  .mobile-paragraph {
+    font-size: var(--text-base);
+    line-height: var(--leading-relaxed);
+    max-width: var(--content-readable-width);
+    margin-bottom: var(--mobile-margin-md);
+    padding: 0 var(--mobile-padding-sm);
+  }
+
+  @media (min-width: 768px) {
+    .mobile-paragraph {
+      padding: 0;
+      font-size: var(--text-lg);
+    }
+  }
+
+  /* Enhanced spacing for mobile interactions */
+  .mobile-spacing {
+    padding: var(--mobile-padding-md);
+    margin: var(--mobile-margin-sm) 0;
+  }
+
+  @media (min-width: 768px) {
+    .mobile-spacing {
+      padding: var(--mobile-padding-lg);
+      margin: var(--mobile-margin-md) 0;
+    }
+  }
+
+  /* Button spacing for mobile */
+  .mobile-button-spacing {
+    margin: var(--mobile-margin-sm);
+    padding: var(--mobile-padding-sm) var(--mobile-padding-md);
+  }
+
+  @media (min-width: 768px) {
+    .mobile-button-spacing {
+      margin: var(--mobile-margin-sm) var(--mobile-margin-sm) var(--mobile-margin-sm) 0;
+    }
   }
 }
