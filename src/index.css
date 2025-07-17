@@ -1192,3 +1192,41 @@
     top: env(safe-area-inset-top);
     z-index: 50;
   }
+
+  /* Line clamping utility */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Prevent text overflow */
+  .text-ellipsis {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Ensure proper minimum widths */
+  .min-w-0 {
+    min-width: 0;
+  }
+
+  .shrink-0 {
+    flex-shrink: 0;
+  }

@@ -1,4 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MobileDialog } from "@/components/mobile/MobileDialog";
+import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -98,9 +100,13 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
     pending: "Pending Setup"
   };
 
+  const isMobile = useMobileDetection();
+  const DialogWrapper = isMobile ? MobileDialog : Dialog;
+  const ContentWrapper = isMobile ? "div" : DialogContent;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <DialogWrapper open={open} onOpenChange={onOpenChange}>
+      <ContentWrapper className={isMobile ? "p-4" : "max-w-4xl max-h-[90vh] overflow-y-auto"}>
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">{property.name}</DialogTitle>
         </DialogHeader>
@@ -353,7 +359,7 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
             </Button>
           </div>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ContentWrapper>
+    </DialogWrapper>
   );
 }
