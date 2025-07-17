@@ -412,16 +412,19 @@ Report generated on ${new Date().toLocaleString()}
                                           )}
                                         </Button>
                                         
-                                        {expandedPhotos[`${sectionKey}-${item.id}`] && (
-                                          <div className="grid grid-cols-2 gap-2 mt-2">
-                                            {item.photos.map((photo, photoIndex) => (
-                                              <div key={photoIndex} className="relative group">
-                                                <img
-                                                  src={photo}
-                                                  alt={`${item.item} - Photo ${photoIndex + 1}`}
-                                                  className="w-full h-20 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
-                                                  onClick={() => setSelectedPhoto(photo)}
-                                                />
+                                         {expandedPhotos[`${sectionKey}-${item.id}`] && (
+                                           <div className="grid grid-cols-2 gap-2 mt-2">
+                                             {item.photos.map((photo, photoIndex) => (
+                                               <div key={photoIndex} className="relative group">
+                                                 <div className="aspect-[4/3] relative overflow-hidden rounded-lg border bg-muted">
+                                                   <img
+                                                     src={photo}
+                                                     alt={`${item.item} - Photo ${photoIndex + 1}`}
+                                                     className="w-full h-full object-contain hover:object-cover transition-all duration-200 cursor-pointer"
+                                                     onClick={() => setSelectedPhoto(photo)}
+                                                     loading="lazy"
+                                                   />
+                                                 </div>
                                                 <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
                                                   <Expand className="h-4 w-4 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                                                 </div>

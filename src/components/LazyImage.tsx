@@ -54,7 +54,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   return (
     <div ref={imgRef} className={`relative overflow-hidden image-wrapper ${className}`}>
       {!isLoaded && !isError && (
-        <div className="absolute inset-0 w-full h-full image-loading" />
+        <div className="absolute inset-0 w-full h-full bg-muted animate-pulse" />
       )}
       
       {isInView && (
@@ -62,8 +62,8 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           src={isError ? placeholder : src}
           alt={alt}
           className={`
-            responsive-image-fill lazy-image transition-opacity duration-300
-            ${isLoaded ? 'opacity-100 loaded' : 'opacity-0'}
+            w-full h-full object-contain lazy-image transition-all duration-300
+            ${isLoaded ? 'opacity-100' : 'opacity-0'}
           `}
           onLoad={handleLoad}
           onError={handleError}

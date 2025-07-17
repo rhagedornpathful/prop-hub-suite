@@ -167,14 +167,17 @@ export const PropertyCheckItemCard = ({
 
             {/* Photo Grid */}
             {item.photos.length > 0 && (
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {item.photos.map((photoUrl, index) => (
                   <div key={index} className="relative group">
-                    <img
-                      src={photoUrl}
-                      alt={`${item.item} photo ${index + 1}`}
-                      className="w-full h-20 object-cover rounded border"
-                    />
+                    <div className="aspect-[4/3] relative overflow-hidden rounded border bg-muted">
+                      <img
+                        src={photoUrl}
+                        alt={`${item.item} photo ${index + 1}`}
+                        className="w-full h-full object-contain hover:object-cover transition-all duration-200 cursor-pointer"
+                        loading="lazy"
+                      />
+                    </div>
                     <Button
                       size="sm"
                       variant="destructive"
