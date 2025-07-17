@@ -29,7 +29,7 @@ import {
   Workflow
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
+import { useMaintenanceRequests, useUpdateMaintenanceRequest } from "@/hooks/queries/useMaintenanceRequests";
 import { useProfiles } from "@/hooks/queries/useProfiles";
 import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
 import MaintenanceCalendar from "@/components/MaintenanceCalendar";
@@ -58,6 +58,7 @@ const Maintenance = () => {
 
   const { data: maintenanceRequests = [], isLoading, refetch } = useMaintenanceRequests();
   const { data: profiles = [] } = useProfiles();
+  const updateMaintenanceRequest = useUpdateMaintenanceRequest();
 
   // Auto-refresh every 30 seconds for real-time updates
   useEffect(() => {
@@ -66,11 +67,6 @@ const Maintenance = () => {
     }, 30000);
     return () => clearInterval(interval);
   }, [refetch]);
-
-  // Initialize filtered requests
-  useEffect(() => {
-    setFilteredRequests(maintenanceRequests);
-  }, [maintenanceRequests]);
 
   // Mobile detection
   useEffect(() => {
@@ -88,8 +84,13 @@ const Maintenance = () => {
   };
 
   const handleStartWork = (request: MaintenanceRequest) => {
-    // TODO: Implement start work functionality
-    console.log('Starting work on:', request.id);
+    updateMaintenanceRequest.mutate({
+      id: request.id,
+      updates: {
+        status: 'in-progress',
+        started_at: new Date().toISOString()
+      }
+    });
   };
 
   const getPriorityColor = (priority: string) => {
@@ -153,7 +154,7 @@ const Maintenance = () => {
   };
 
   // Apply basic filters for backward compatibility
-  const basicFilteredRequests = filteredRequests.filter(order => {
+  const basicFilteredRequests = (filteredRequests.length > 0 ? filteredRequests : maintenanceRequests).filter(order => {
     const propertyAddress = formatPropertyAddress(order);
     const matchesSearch = order.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          propertyAddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
