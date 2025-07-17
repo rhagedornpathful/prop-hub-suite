@@ -32,9 +32,17 @@ export const useHouseWatchers = () => {
         throw error;
       }
 
-      // Get property count for each house watcher
-      const watchersWithCount = await Promise.all(
+      // Get user profiles and property count for each house watcher
+      const watchersWithProfiles = await Promise.all(
         (data || []).map(async (watcher) => {
+          // Get user profile from user_profiles view
+          const { data: profileData } = await supabase
+            .from('user_profiles')
+            .select('id, email, first_name, last_name, phone, address, city, state, zip_code')
+            .eq('id', watcher.user_id)
+            .single();
+
+          // Get property count
           const { count } = await supabase
             .from('house_watcher_properties')
             .select('*', { count: 'exact', head: true })
@@ -42,12 +50,13 @@ export const useHouseWatchers = () => {
           
           return {
             ...watcher,
+            user_profiles: profileData,
             assigned_properties: count || 0
           };
         })
       );
 
-      return watchersWithCount;
+      return watchersWithProfiles;
     }
   });
 };
