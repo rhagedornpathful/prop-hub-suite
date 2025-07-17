@@ -44,6 +44,8 @@ const PropertyCheck = () => {
     sessionId,
     elapsedTime,
     startTime,
+    lastSaveTime,
+    hasUnsavedChanges,
     handleItemToggle,
     handleNotesChange,
     handlePhotosUpdate,
@@ -52,6 +54,7 @@ const PropertyCheck = () => {
     getRequiredItemsProgress,
     canCompleteCheck,
     savePropertyCheckData,
+    recoverFromLocalStorage,
     startSession,
     submitSession,
     formatElapsedTime
@@ -143,15 +146,27 @@ const PropertyCheck = () => {
                 {formatElapsedTime(elapsedTime)}
               </Badge>
             )}
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={savePropertyCheckData}
-              disabled={isSaving}
-              className="p-1"
-            >
-              <Save className={`h-3 w-3 ${isSaving ? 'animate-spin' : ''}`} />
-            </Button>
+            <div className="flex items-center gap-1">
+              {hasUnsavedChanges && (
+                <Badge variant="secondary" className="text-xs">
+                  Unsaved
+                </Badge>
+              )}
+              {lastSaveTime && !hasUnsavedChanges && (
+                <Badge variant="outline" className="text-xs">
+                  Saved {lastSaveTime.toLocaleTimeString()}
+                </Badge>
+              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={savePropertyCheckData}
+                disabled={isSaving}
+                className="p-1"
+              >
+                <Save className={`h-3 w-3 ${isSaving ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -261,11 +276,19 @@ const PropertyCheck = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {isLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-                      <p className="text-sm text-muted-foreground">Loading property check...</p>
-                    </div>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+              <p className="text-sm text-muted-foreground">Loading property check...</p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={recoverFromLocalStorage}
+                className="mt-4"
+              >
+                Try to recover from local backup
+              </Button>
+            </div>
                   ) : currentSectionData.key === 'summary' ? (
                     <SummarySection
                       items={currentItems}

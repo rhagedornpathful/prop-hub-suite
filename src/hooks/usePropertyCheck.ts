@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface PropertyCheckItem {
   id: number;
@@ -26,6 +26,7 @@ export const usePropertyCheck = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // The ID in the URL could be either a property_id or session_id
   // We'll determine which one it is by checking if it's a valid session
@@ -36,8 +37,14 @@ export const usePropertyCheck = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStarted, setSessionStarted] = useState(false);
   const [startTime, setStartTime] = useState<Date | null>(null);
-  const [elapsedTime, setElapsedTime] = useState(0); // in seconds
+  const [elapsedTime, setElapsedTime] = useState(0);
+
+  // Loading and saving states
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastSaveTime, setLastSaveTime] = useState<Date | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   const [checklistItems, setChecklistItems] = useState<PropertyCheckData>({
     exterior: [
@@ -77,9 +84,6 @@ export const usePropertyCheck = () => {
     ]
   });
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
   // Timer effect to update elapsed time
   useEffect(() => {
     if (sessionStarted && startTime) {
@@ -100,6 +104,34 @@ export const usePropertyCheck = () => {
     };
   }, [sessionStarted, startTime]);
 
+  // Clean up timers on unmount and auto-save on page unload
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        // Perform immediate save
+        savePropertyCheckData(false);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+      // Save on unmount if there are unsaved changes
+      if (hasUnsavedChanges) {
+        savePropertyCheckData(false);
+      }
+    };
+  }, [hasUnsavedChanges]);
+
   // Load existing check data if available
   useEffect(() => {
     if (urlId && user) {
@@ -107,20 +139,128 @@ export const usePropertyCheck = () => {
     }
   }, [urlId, user]);
 
+  // Recovery function to restore from localStorage
+  const recoverFromLocalStorage = useCallback(() => {
+    if (!propertyId && !urlId) return false;
+    
+    const currentPropertyId = propertyId || urlId;
+    
+    try {
+      const savedData = localStorage.getItem(`property-check-${currentPropertyId}`);
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        
+        // Check if we have the new format with metadata
+        if (parsed.checklistItems && parsed.lastSaveTime) {
+          setChecklistItems(parsed.checklistItems);
+          setLastSaveTime(new Date(parsed.lastSaveTime));
+          
+          toast({
+            title: "Progress recovered",
+            description: `Restored from ${new Date(parsed.lastSaveTime).toLocaleTimeString()}`,
+            variant: "default"
+          });
+          
+          return true;
+        } else if (parsed.exterior || parsed.interior) {
+          // Legacy format
+          setChecklistItems(parsed);
+          return true;
+        }
+      }
+    } catch (error) {
+      console.error('Error recovering from localStorage:', error);
+    }
+    
+    return false;
+  }, [propertyId, urlId, toast]);
+
+  const savePropertyCheckData = useCallback(async (showToast = false) => {
+    const currentPropertyId = propertyId || urlId;
+    if (!currentPropertyId) return;
+    
+    setIsSaving(true);
+    const saveData = {
+      checklistItems,
+      lastSaveTime: new Date().toISOString(),
+      sessionId,
+      propertyId: currentPropertyId
+    };
+
+    try {
+      // Always save to localStorage first (immediate backup)
+      localStorage.setItem(`property-check-${currentPropertyId}`, JSON.stringify(saveData));
+      
+      // Save to database if session is active
+      if (sessionStarted && sessionId) {
+        const { error } = await supabase
+          .from('property_check_sessions')
+          .update({
+            checklist_data: checklistItems as any,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', sessionId);
+
+        if (error) throw error;
+      }
+      
+      setLastSaveTime(new Date());
+      setHasUnsavedChanges(false);
+      
+      if (showToast) {
+        toast({
+          title: "Progress saved",
+          description: "Your property check progress has been saved"
+        });
+      }
+    } catch (error: any) {
+      console.error('Error saving to database:', error);
+      
+      // Even if database save fails, localStorage save succeeded
+      setLastSaveTime(new Date());
+      setHasUnsavedChanges(false);
+      
+      if (showToast) {
+        toast({
+          title: "Saved locally",
+          description: "Progress saved locally. Will sync when connection is restored.",
+          variant: "default"
+        });
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }, [checklistItems, propertyId, urlId, sessionId, sessionStarted, toast]);
+
+  // Debounced auto-save function
+  const debouncedSave = useCallback(() => {
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    saveTimeoutRef.current = setTimeout(() => {
+      savePropertyCheckData(false);
+    }, 2000); // Auto-save after 2 seconds of inactivity
+  }, [savePropertyCheckData]);
+
   const loadPropertyCheckData = async () => {
     if (!urlId || !user) return;
     
     setIsLoading(true);
+    let sessionData = null;
+    let existingSession = null;
+    
     try {
       // First, try to load by session ID (if urlId is a session ID)
-      const { data: sessionData, error: sessionError } = await supabase
+      const { data: sessionResult, error: sessionError } = await supabase
         .from('property_check_sessions')
         .select('*')
         .eq('id', urlId)
         .single();
 
-      if (sessionData && !sessionError) {
+      if (sessionResult && !sessionError) {
         // urlId is a session ID
+        sessionData = sessionResult;
         setSessionId(sessionData.id);
         setPropertyId(sessionData.property_id);
         setSessionStarted(true);
@@ -131,7 +271,7 @@ export const usePropertyCheck = () => {
         }
       } else {
         // urlId might be a property ID, check for existing session
-        const { data: existingSession, error: existingSessionError } = await supabase
+        const { data: existingResult, error: existingSessionError } = await supabase
           .from('property_check_sessions')
           .select('*')
           .eq('property_id', urlId)
@@ -139,8 +279,9 @@ export const usePropertyCheck = () => {
           .eq('status', 'in_progress')
           .single();
 
-        if (existingSession && !existingSessionError) {
+        if (existingResult && !existingSessionError) {
           // Found existing session for this property
+          existingSession = existingResult;
           setSessionId(existingSession.id);
           setPropertyId(existingSession.property_id);
           setSessionStarted(true);
@@ -155,20 +296,27 @@ export const usePropertyCheck = () => {
         }
       }
 
-      // Also check localStorage for backup
-      const currentPropertyId = propertyId || urlId;
-      const savedData = localStorage.getItem(`property-check-${currentPropertyId}`);
-      if (savedData && !sessionData) {
-        // Only load from localStorage if we don't have existing session data
-        setChecklistItems(JSON.parse(savedData));
+      // Try to recover from localStorage if no database data
+      if (!sessionData && !existingSession) {
+        const recovered = recoverFromLocalStorage();
+        
+        // If we couldn't recover from localStorage and have no session data, that's ok - we'll start fresh
+        if (!recovered) {
+          console.log("Starting fresh property check");
+        }
       }
     } catch (error) {
       console.error('Error loading property check data:', error);
-      toast({
-        title: "Failed to load",
-        description: "Could not load property check data. Please try again.",
-        variant: "destructive"
-      });
+      
+      // Try to recover from localStorage as last resort
+      const recovered = recoverFromLocalStorage();
+      if (!recovered) {
+        toast({
+          title: "Failed to load",
+          description: "Could not load property check data. Starting fresh.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -225,7 +373,7 @@ export const usePropertyCheck = () => {
   };
 
   const submitSession = async (generalNotes: string) => {
-    if (!sessionId || !user) return;
+    if (!sessionId || !user) return false;
 
     setIsSubmitting(true);
     try {
@@ -261,12 +409,18 @@ export const usePropertyCheck = () => {
           user_id: user.id
         });
 
-      // Clear local state
+      // Clear local state and localStorage
       setSessionStarted(false);
       setStartTime(null);
       setElapsedTime(0);
+      setHasUnsavedChanges(false);
       if (timerRef.current) {
         clearInterval(timerRef.current);
+      }
+      
+      // Clear localStorage data for this property
+      if (propertyId) {
+        localStorage.removeItem(`property-check-${propertyId}`);
       }
 
       toast({
@@ -285,37 +439,6 @@ export const usePropertyCheck = () => {
       return false;
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  const savePropertyCheckData = async () => {
-    if (!propertyId || !sessionId) return;
-    
-    setIsSaving(true);
-    try {
-      // Save to database if session is active
-      if (sessionStarted) {
-        await supabase
-          .from('property_check_sessions')
-          .update({
-            checklist_data: checklistItems as any
-          })
-          .eq('id', sessionId);
-      }
-      
-      // Also save to localStorage as backup
-      localStorage.setItem(`property-check-${propertyId}`, JSON.stringify(checklistItems));
-      
-      toast({
-        title: "Progress saved",
-        description: "Your property check progress has been saved"
-      });
-    } catch (error: any) {
-      console.error('Error saving property check data:', error);
-      // Save to localStorage as fallback
-      localStorage.setItem(`property-check-${propertyId}`, JSON.stringify(checklistItems));
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -341,8 +464,8 @@ export const usePropertyCheck = () => {
       )
     }));
     
-    // Auto-save after changes
-    setTimeout(savePropertyCheckData, 1000);
+    setHasUnsavedChanges(true);
+    debouncedSave();
   };
 
   const handleNotesChange = (itemId: number, notes: string, sectionKey: keyof PropertyCheckData) => {
@@ -353,8 +476,8 @@ export const usePropertyCheck = () => {
       )
     }));
     
-    // Auto-save after changes (debounced)
-    setTimeout(savePropertyCheckData, 2000);
+    setHasUnsavedChanges(true);
+    debouncedSave();
   };
 
   const handlePhotosUpdate = (itemId: number, photos: string[], sectionKey: keyof PropertyCheckData) => {
@@ -365,8 +488,8 @@ export const usePropertyCheck = () => {
       )
     }));
     
-    // Auto-save after photo changes
-    setTimeout(savePropertyCheckData, 1000);
+    setHasUnsavedChanges(true);
+    debouncedSave();
   };
 
   const getSectionProgress = (sectionKey: keyof PropertyCheckData) => {
@@ -393,9 +516,6 @@ export const usePropertyCheck = () => {
 
   const canCompleteCheck = () => {
     const requiredProgress = getRequiredItemsProgress();
-    console.log('Required items progress:', requiredProgress);
-    console.log('Can complete check:', requiredProgress.completed === requiredProgress.total);
-    console.log('All checklist items:', checklistItems);
     return requiredProgress.completed === requiredProgress.total;
   };
 
@@ -408,6 +528,8 @@ export const usePropertyCheck = () => {
     sessionId,
     elapsedTime,
     startTime,
+    lastSaveTime,
+    hasUnsavedChanges,
     handleItemToggle,
     handleNotesChange,
     handlePhotosUpdate,
@@ -415,7 +537,8 @@ export const usePropertyCheck = () => {
     getOverallProgress,
     getRequiredItemsProgress,
     canCompleteCheck,
-    savePropertyCheckData,
+    savePropertyCheckData: () => savePropertyCheckData(true),
+    recoverFromLocalStorage,
     startSession,
     submitSession,
     formatElapsedTime
