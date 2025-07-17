@@ -16,19 +16,20 @@ import { TenantDashboard } from "@/pages/dashboards/TenantDashboard";
 import HouseWatcherDashboard from "@/pages/dashboards/HouseWatcherDashboard";
 import { PropertyManagerDashboard } from "@/pages/dashboards/PropertyManagerDashboard";
 import { MakeAdminButton } from "@/components/dev/MakeAdminButton";
+import { SearchProvider, useSearchContext } from "@/contexts/SearchContext";
 
 // Lazy load dialogs for better performance
 const AddPropertyDialog = lazy(() => import("@/components/AddPropertyDialog").then(module => ({ default: module.AddPropertyDialog })));
 const AddTenantDialog = lazy(() => import("@/components/AddTenantDialog").then(module => ({ default: module.AddTenantDialog })));
 const ScheduleMaintenanceDialog = lazy(() => import("@/components/ScheduleMaintenanceDialog").then(module => ({ default: module.ScheduleMaintenanceDialog })));
 
-const Index = () => {
+const IndexContent = () => {
   const [addPropertyOpen, setAddPropertyOpen] = useState(false);
   const [addTenantOpen, setAddTenantOpen] = useState(false);
   const [scheduleMaintenanceOpen, setScheduleMaintenanceOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  
+  const { setSearchQuery, setSelectedFilters } = useSearchContext();
   
   const { notificationCount } = useNotifications();
   const { isMobile } = useMobileDetection();
@@ -45,15 +46,11 @@ const Index = () => {
   // Search and filter handlers
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
-    // Here you would implement actual search logic
-    console.log('Searching for:', query);
-  }, []);
+  }, [setSearchQuery]);
 
   const handleFilterChange = useCallback((filters: string[]) => {
     setSelectedFilters(filters);
-    // Here you would implement actual filtering logic
-    console.log('Applying filters:', filters);
-  }, []);
+  }, [setSelectedFilters]);
 
   // Keyboard shortcuts setup
   const shortcuts = [
@@ -257,6 +254,14 @@ const Index = () => {
         onOpenChange={closeHelp}
       />
     </ErrorBoundary>
+  );
+};
+
+const Index = () => {
+  return (
+    <SearchProvider>
+      <IndexContent />
+    </SearchProvider>
   );
 };
 

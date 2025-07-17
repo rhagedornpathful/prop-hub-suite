@@ -24,16 +24,20 @@ import {
   Activity,
   BarChart3,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Search,
+  X
 } from "lucide-react";
-import { usePropertyMetrics } from "@/hooks/queries/useProperties";
-import { useHouseWatchingMetrics } from "@/hooks/queries/useHouseWatching";
+import { usePropertyMetrics, usePropertiesLimited } from "@/hooks/queries/useProperties";
+import { useHouseWatchingMetrics, useHouseWatchingLimited } from "@/hooks/queries/useHouseWatching";
 import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
 import { usePropertyOwners } from "@/hooks/queries/usePropertyOwners";
 import { useTenants } from "@/hooks/queries/useTenants";
 import { useConversations } from "@/hooks/queries/useConversations";
 import { useProfiles } from "@/hooks/queries/useProfiles";
 import { useAllPropertyActivity } from "@/hooks/useAllPropertyActivity";
+import { useGlobalSearch, useSearch } from "@/hooks/useSearch";
+import { useSearchContext } from "@/contexts/SearchContext";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -47,6 +51,32 @@ export function AdminDashboard() {
   const { data: tenants = [] } = useTenants();
   const { data: conversations = [] } = useConversations();
   const { activities: recentActivity = [] } = useAllPropertyActivity();
+  
+  // Get actual data for search - using the list hooks instead of metrics
+  const { data: propertiesData } = usePropertiesLimited(50); // Get more for search
+  const { data: houseWatchingData = [] } = useHouseWatchingLimited(50); // Get more for search
+  
+  // Search functionality
+  const { isSearchActive, clearSearch } = useSearchContext();
+  const { shouldShowResults } = useGlobalSearch();
+  
+  // Apply search to different data types
+  const { filteredItems: filteredProperties } = useSearch(
+    propertiesData || [], 
+    'properties'
+  );
+  const { filteredItems: filteredTenants } = useSearch(
+    tenants, 
+    'tenants'
+  );
+  const { filteredItems: filteredMaintenance } = useSearch(
+    maintenanceRequests, 
+    'maintenance'
+  );
+  const { filteredItems: filteredHouseWatching } = useSearch(
+    houseWatchingData, 
+    'house-watching'
+  );
 
   // Calculate real metrics
   const totalProperties = (propertyMetrics?.totalProperties || 0) + (houseWatchingMetrics?.totalClients || 0);
@@ -90,6 +120,185 @@ export function AdminDashboard() {
 
   return (
     <div className="space-y-6">
+      {/* Search Results Header */}
+      {isSearchActive && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-blue-600" />
+                <CardTitle className="text-sm">Search Results</CardTitle>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSearch}
+                className="h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="flex gap-4 text-xs text-muted-foreground">
+              {shouldShowResults('properties') && (
+                <span>Properties: {filteredProperties.length}</span>
+              )}
+              {shouldShowResults('tenants') && (
+                <span>Tenants: {filteredTenants.length}</span>
+              )}
+              {shouldShowResults('maintenance') && (
+                <span>Maintenance: {filteredMaintenance.length}</span>
+              )}
+              {shouldShowResults('house-watching') && (
+                <span>House Watching: {filteredHouseWatching.length}</span>
+              )}
+            </div>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* Search Results Sections */}
+      {isSearchActive && (
+        <div className="space-y-6">
+          {/* Properties Search Results */}
+          {shouldShowResults('properties') && filteredProperties.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building className="h-5 w-5 text-blue-600" />
+                  Properties ({filteredProperties.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {filteredProperties.slice(0, 5).map((property: any) => (
+                    <div key={property.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{property.address}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {property.city}, {property.state} • {property.property_type || 'Unknown type'}
+                        </p>
+                      </div>
+                      <Badge variant={property.status === 'active' ? 'default' : 'secondary'}>
+                        {property.status || 'unknown'}
+                      </Badge>
+                    </div>
+                  ))}
+                  {filteredProperties.length > 5 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      +{filteredProperties.length - 5} more properties
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Tenants Search Results */}
+          {shouldShowResults('tenants') && filteredTenants.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-green-600" />
+                  Tenants ({filteredTenants.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {filteredTenants.slice(0, 5).map((tenant: any) => (
+                    <div key={tenant.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{tenant.first_name} {tenant.last_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {tenant.email} • {tenant.phone}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredTenants.length > 5 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      +{filteredTenants.length - 5} more tenants
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Maintenance Search Results */}
+          {shouldShowResults('maintenance') && filteredMaintenance.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wrench className="h-5 w-5 text-orange-600" />
+                  Maintenance Requests ({filteredMaintenance.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {filteredMaintenance.slice(0, 5).map((request: any) => (
+                    <div key={request.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{request.title}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {request.description?.slice(0, 100)}{request.description && request.description.length > 100 ? '...' : ''}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Badge variant={request.priority === 'high' ? 'destructive' : 'secondary'}>
+                          {request.priority}
+                        </Badge>
+                        <Badge variant="outline">
+                          {request.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredMaintenance.length > 5 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      +{filteredMaintenance.length - 5} more requests
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* House Watching Search Results */}
+          {shouldShowResults('house-watching') && filteredHouseWatching.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-purple-600" />
+                  House Watching ({filteredHouseWatching.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {filteredHouseWatching.slice(0, 5).map((watching: any) => (
+                    <div key={watching.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div>
+                        <p className="font-medium">{watching.property_address}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Owner: {watching.owner_name || 'Unknown'}
+                        </p>
+                      </div>
+                      <Badge variant={watching.status === 'active' ? 'default' : 'secondary'}>
+                        {watching.status || 'unknown'}
+                      </Badge>
+                    </div>
+                  ))}
+                  {filteredHouseWatching.length > 5 && (
+                    <p className="text-sm text-muted-foreground text-center">
+                      +{filteredHouseWatching.length - 5} more watching services
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>

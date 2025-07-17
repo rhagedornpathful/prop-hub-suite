@@ -75,7 +75,7 @@ const AppContent = () => {
       <AuthProvider>
         <DevAdminProvider>
           <ViewAsProvider>
-          <QueryClientProvider client={queryClient}>
+            <QueryClientProvider client={queryClient}>
             <TooltipProvider>
               <Toaster />
               <Sonner />
