@@ -93,6 +93,16 @@ const Maintenance = () => {
     });
   };
 
+  const handleCompleteWork = (request: MaintenanceRequest) => {
+    updateMaintenanceRequest.mutate({
+      id: request.id,
+      updates: {
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      }
+    });
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent":
@@ -502,27 +512,37 @@ const Maintenance = () => {
                                   <Eye className="w-4 h-4" />
                                   View
                                 </Button>
-                                {request.status === 'scheduled' && (
-                                  <Button 
-                                    size="sm"
-                                    onClick={() => handleStartWork(request)}
-                                    className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
-                                  >
-                                    <Play className="w-4 h-4" />
-                                    Start
-                                  </Button>
-                                )}
-                                {request.status === 'pending' && (
-                                  <Button 
-                                    size="sm"
-                                    variant="default"
-                                    onClick={() => handleViewRequest(request)}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Edit className="w-4 h-4" />
-                                    Assign
-                                  </Button>
-                                )}
+                                 {request.status === 'scheduled' && (
+                                   <Button 
+                                     size="sm"
+                                     onClick={() => handleStartWork(request)}
+                                     className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                                   >
+                                     <Play className="w-4 h-4" />
+                                     Start
+                                   </Button>
+                                 )}
+                                 {request.status === 'in-progress' && (
+                                   <Button 
+                                     size="sm"
+                                     onClick={() => handleCompleteWork(request)}
+                                     className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                                   >
+                                     <CheckCircle className="w-4 h-4" />
+                                     Complete
+                                   </Button>
+                                 )}
+                                 {request.status === 'pending' && (
+                                   <Button 
+                                     size="sm"
+                                     variant="default"
+                                     onClick={() => handleViewRequest(request)}
+                                     className="flex items-center gap-2"
+                                   >
+                                     <Edit className="w-4 h-4" />
+                                     Assign
+                                   </Button>
+                                 )}
                               </div>
                             </div>
                           </div>
