@@ -52,9 +52,9 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   };
 
   return (
-    <div ref={imgRef} className={`relative overflow-hidden ${className}`}>
+    <div ref={imgRef} className={`relative overflow-hidden image-wrapper ${className}`}>
       {!isLoaded && !isError && (
-        <Skeleton className="absolute inset-0 w-full h-full" />
+        <div className="absolute inset-0 w-full h-full image-loading" />
       )}
       
       {isInView && (
@@ -62,12 +62,13 @@ export const LazyImage: React.FC<LazyImageProps> = ({
           src={isError ? placeholder : src}
           alt={alt}
           className={`
-            w-full h-full object-cover transition-opacity duration-300
-            ${isLoaded ? 'opacity-100' : 'opacity-0'}
+            responsive-image-fill lazy-image transition-opacity duration-300
+            ${isLoaded ? 'opacity-100 loaded' : 'opacity-0'}
           `}
           onLoad={handleLoad}
           onError={handleError}
           loading="lazy"
+          decoding="async"
         />
       )}
     </div>

@@ -87,11 +87,13 @@ export const HouseWatchingImageUpload: React.FC<HouseWatchingImageUploadProps> =
   return (
     <div className="relative">
       {localImage ? (
-        <div className="relative group">
+        <div className="relative group image-wrapper aspect-photo">
           <img 
             src={localImage} 
             alt="House Watching Property" 
-            className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
+            className="responsive-image-fill lazy-image rounded-t-lg group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+            onLoad={(e) => e.currentTarget.classList.add('loaded')}
           />
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-lg flex items-center justify-center space-x-2">
             <label className="cursor-pointer">
@@ -107,6 +109,7 @@ export const HouseWatchingImageUpload: React.FC<HouseWatchingImageUploadProps> =
                 variant="secondary"
                 disabled={uploading}
                 asChild
+                className="touch-target"
               >
                 <span>
                   <Camera className="w-4 h-4 mr-2" />
@@ -119,6 +122,7 @@ export const HouseWatchingImageUpload: React.FC<HouseWatchingImageUploadProps> =
               variant="destructive"
               onClick={removeImage}
               disabled={uploading}
+              className="touch-target"
             >
               <X className="w-4 h-4 mr-2" />
               Remove
@@ -126,8 +130,8 @@ export const HouseWatchingImageUpload: React.FC<HouseWatchingImageUploadProps> =
           </div>
         </div>
       ) : (
-        <div className="w-full h-48 border-2 border-dashed border-muted-foreground/25 rounded-t-lg flex items-center justify-center bg-muted/10">
-          <label className="cursor-pointer flex flex-col items-center space-y-2">
+        <div className="w-full h-48 border-2 border-dashed border-muted-foreground/25 rounded-t-lg flex items-center justify-center bg-muted/10 touch-target aspect-photo">
+          <label className="cursor-pointer flex flex-col items-center space-y-2 touch-target p-4">
             <Input
               type="file"
               accept="image/*"
@@ -136,7 +140,7 @@ export const HouseWatchingImageUpload: React.FC<HouseWatchingImageUploadProps> =
               className="hidden"
             />
             <Upload className="w-8 h-8 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
+            <span className="text-base text-muted-foreground text-center">
               {uploading ? 'Uploading...' : 'Upload Property Image'}
             </span>
           </label>
