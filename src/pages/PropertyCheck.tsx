@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,15 +27,36 @@ import { SummarySection } from "@/components/SummarySection";
 import { usePropertyCheck } from "@/hooks/usePropertyCheck";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const PropertyCheck = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { userRole } = useUserRole();
+  const { id: propertyId } = useParams();
   const [currentSection, setCurrentSection] = useState(0);
   const [generalNotes, setGeneralNotes] = useState("");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [submissionDetails, setSubmissionDetails] = useState<{ duration: number; completedItems: number; totalItems: number } | null>(null);
+
+  // Fetch property details
+  const { data: property, isLoading: isLoadingProperty, error: propertyError } = useQuery({
+    queryKey: ['property', propertyId],
+    queryFn: async () => {
+      if (!propertyId) return null;
+      
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!propertyId,
+  });
   
   const {
     checklistItems,
@@ -141,7 +162,15 @@ const PropertyCheck = () => {
             </Button>
             <div>
               <h1 className="text-lg font-bold text-foreground">Property Check</h1>
-              <p className="text-sm text-muted-foreground">Oak Street Property</p>
+              {isLoadingProperty ? (
+                <p className="text-sm text-muted-foreground">Loading property details...</p>
+              ) : propertyError ? (
+                <p className="text-sm text-destructive">Failed to load property details</p>
+              ) : property ? (
+                <p className="text-sm text-muted-foreground">{property.address}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">Unknown property</p>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2">
