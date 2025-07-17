@@ -125,10 +125,20 @@
     --content-readable-width: 65ch; /* 65 characters for optimal reading */
     --content-max-width: 75ch;      /* 75 characters maximum */
 
-    /* Interactive Element Standards */
-    --button-height-sm: 2rem;     /* 32px */
-    --button-height-md: 2.5rem;   /* 40px */
-    --button-height-lg: 2.75rem;  /* 44px */
+    /* Touch-Friendly Interactive Element Standards */
+    --touch-target-min: 2.75rem;     /* 44px minimum touch target */
+    --touch-target-comfortable: 3rem; /* 48px comfortable touch target */
+    --touch-spacing-min: 0.5rem;     /* 8px minimum spacing between elements */
+    --touch-spacing-comfortable: 1rem; /* 16px comfortable spacing */
+    
+    --button-height-sm: var(--touch-target-min);      /* 44px */
+    --button-height-md: var(--touch-target-comfortable); /* 48px */
+    --button-height-lg: 3.5rem;                       /* 56px */
+    --input-height: var(--touch-target-comfortable);   /* 48px */
+    
+    /* Touch feedback timing */
+    --touch-feedback-duration: 150ms;
+    --touch-feedback-scale: 0.95;
 
     /* Animation */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -458,14 +468,7 @@
     }
   }
 
-  /* Touch-friendly interactions */
-  .touch-target {
-    min-height: var(--button-height-lg);
-    min-width: var(--button-height-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+  /* Prevent horizontal scrolling */
 
   /* Prevent horizontal scrolling */
   .overflow-safe {
@@ -521,15 +524,96 @@
     }
   }
 
-  /* Button spacing for mobile */
-  .mobile-button-spacing {
-    margin: var(--mobile-margin-sm);
+  /* Touch-friendly interactive elements */
+  .touch-target {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
     padding: var(--mobile-padding-sm) var(--mobile-padding-md);
+    margin: var(--touch-spacing-min);
+    transition: all var(--touch-feedback-duration) ease;
+    touch-action: manipulation; /* Prevents double-tap zoom */
+  }
+
+  .touch-target:active {
+    transform: scale(var(--touch-feedback-scale));
+  }
+
+  /* Touch-friendly button spacing */
+  .touch-button-spacing {
+    margin: var(--touch-spacing-min);
+    padding: var(--mobile-padding-md) var(--mobile-padding-lg);
+    min-height: var(--touch-target-min);
+  }
+
+  .touch-button-spacing + .touch-button-spacing {
+    margin-left: var(--touch-spacing-comfortable);
+  }
+
+  /* Touch-friendly link styling */
+  .touch-link {
+    min-height: var(--touch-target-min);
+    padding: var(--mobile-padding-sm);
+    margin: var(--touch-spacing-min) 0;
+    display: inline-flex;
+    align-items: center;
+    touch-action: manipulation;
+    transition: all var(--touch-feedback-duration) ease;
+  }
+
+  .touch-link:active {
+    opacity: 0.7;
+    transform: scale(var(--touch-feedback-scale));
+  }
+
+  /* Touch-friendly form inputs */
+  .touch-input {
+    min-height: var(--touch-target-comfortable);
+    padding: var(--mobile-padding-md);
+    font-size: var(--text-base); /* 16px prevents zoom on iOS */
+    margin: var(--touch-spacing-min) 0;
+    touch-action: manipulation;
+  }
+
+  /* Touch-friendly dropdown and modal dismissal */
+  .touch-dismissible {
+    touch-action: manipulation;
+  }
+
+  .touch-dismissible-overlay {
+    touch-action: manipulation;
+    cursor: pointer;
+  }
+
+  /* Ensure adequate spacing between interactive elements */
+  .touch-group > * + * {
+    margin-top: var(--touch-spacing-comfortable);
+  }
+
+  .touch-group-horizontal > * + * {
+    margin-left: var(--touch-spacing-comfortable);
+  }
+
+  /* Remove hover-only states on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    .hover-only {
+      display: none;
+    }
+    
+    /* Convert hover states to active states for touch */
+    .touch-hover:hover {
+      /* Remove hover styles */
+    }
+    
+    .touch-hover:active,
+    .touch-hover:focus {
+      background-color: var(--accent);
+      color: var(--accent-foreground);
+    }
   }
 
   @media (min-width: 768px) {
-    .mobile-button-spacing {
-      margin: var(--mobile-margin-sm) var(--mobile-margin-sm) var(--mobile-margin-sm) 0;
+    .touch-button-spacing {
+      margin: var(--touch-spacing-min) var(--touch-spacing-min) var(--touch-spacing-min) 0;
     }
   }
 }

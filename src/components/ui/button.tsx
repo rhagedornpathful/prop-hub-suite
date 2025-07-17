@@ -5,27 +5,27 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 touch-target active:scale-95",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90 transition-all duration-200",
+        default: "bg-primary text-primary-foreground shadow hover:bg-primary/90 active:bg-primary/80",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 transition-all duration-200",
+          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 active:bg-destructive/80",
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground transition-all duration-200",
+          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 transition-all duration-200",
-        ghost: "hover:bg-accent hover:text-accent-foreground transition-all duration-200",
-        link: "text-primary underline-offset-4 hover:underline transition-all duration-200",
-        success: "bg-success text-success-foreground shadow hover:bg-success/90 transition-all duration-200",
-        warning: "bg-warning text-warning-foreground shadow hover:bg-warning/90 transition-all duration-200",
+          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 active:bg-secondary/70",
+        ghost: "hover:bg-accent hover:text-accent-foreground active:bg-accent/80",
+        link: "text-primary underline-offset-4 hover:underline active:opacity-80",
+        success: "bg-success text-success-foreground shadow hover:bg-success/90 active:bg-success/80",
+        warning: "bg-warning text-warning-foreground shadow hover:bg-warning/90 active:bg-warning/80",
       },
       size: {
-        default: "h-10 px-6 py-2 min-h-touch", /* 44px touch target */
-        sm: "h-8 rounded-md px-4 text-xs",
-        lg: "h-12 rounded-md px-8 text-base min-h-touch", /* 48px for larger touch target */
-        icon: "h-10 w-10 min-h-touch", /* Square touch target */
+        default: "h-11 px-6 py-3 text-base", /* 44px touch target with comfortable padding */
+        sm: "h-11 px-4 py-3 text-sm", /* Still 44px but smaller text */
+        lg: "h-12 px-8 py-3 text-lg", /* 48px for larger touch target */
+        icon: "h-11 w-11 p-0", /* 44px square touch target */
       },
     },
     defaultVariants: {
