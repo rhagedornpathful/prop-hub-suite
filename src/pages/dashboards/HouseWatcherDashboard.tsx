@@ -69,52 +69,89 @@ const HouseWatcherDashboard = () => {
       }
 
       // Load assigned properties with property details
-      const { data: properties, error: propertiesError } = await supabase
-        .from('house_watcher_properties')
-        .select(`
-          id,
-          notes,
-          assigned_date,
-          properties!inner (
+      // In View As mode, show sample data since there's no actual house watcher record
+      if (isViewingAs && !houseWatcher) {
+        // Load sample properties for View As mode
+        const { data: sampleProperties, error: sampleError } = await supabase
+          .from('properties')
+          .select('*')
+          .limit(3);
+
+        if (sampleError) throw sampleError;
+
+        const formattedSampleProperties = sampleProperties?.map(p => ({
+          id: p.id,
+          address: p.address,
+          city: p.city || 'N/A',
+          state: p.state || 'N/A',
+          zip_code: p.zip_code || 'N/A',
+          property_type: p.property_type || 'Unknown',
+          notes: 'Sample assignment for demo purposes',
+          assigned_date: new Date().toISOString(),
+          monthly_rent: p.monthly_rent,
+          bedrooms: p.bedrooms,
+          bathrooms: p.bathrooms,
+        })) || [];
+
+        setAssignedProperties(formattedSampleProperties);
+
+        // Load sample house watching data for View As mode
+        const { data: sampleWatching, error: sampleWatchingError } = await supabase
+          .from('house_watching')
+          .select('*')
+          .limit(3);
+
+        if (sampleWatchingError) throw sampleWatchingError;
+        setPropertyChecks(sampleWatching || []);
+      } else if (houseWatcher) {
+        // Load actual assigned properties for real house watchers
+        const { data: properties, error: propertiesError } = await supabase
+          .from('house_watcher_properties')
+          .select(`
             id,
-            address,
-            city,
-            state,
-            zip_code,
-            property_type,
-            monthly_rent,
-            bedrooms,
-            bathrooms
-          )
-        `)
-        .eq('house_watcher_id', houseWatcher.id);
+            notes,
+            assigned_date,
+            properties!inner (
+              id,
+              address,
+              city,
+              state,
+              zip_code,
+              property_type,
+              monthly_rent,
+              bedrooms,
+              bathrooms
+            )
+          `)
+          .eq('house_watcher_id', houseWatcher.id);
 
-      if (propertiesError) throw propertiesError;
+        if (propertiesError) throw propertiesError;
 
-      const formattedProperties = properties?.map(p => ({
-        id: p.properties.id,
-        address: p.properties.address,
-        city: p.properties.city || 'N/A',
-        state: p.properties.state || 'N/A',
-        zip_code: p.properties.zip_code || 'N/A',
-        property_type: p.properties.property_type || 'Unknown',
-        notes: p.notes || '',
-        assigned_date: p.assigned_date,
-        monthly_rent: p.properties.monthly_rent,
-        bedrooms: p.properties.bedrooms,
-        bathrooms: p.properties.bathrooms,
-      })) || [];
+        const formattedProperties = properties?.map(p => ({
+          id: p.properties.id,
+          address: p.properties.address,
+          city: p.properties.city || 'N/A',
+          state: p.properties.state || 'N/A',
+          zip_code: p.properties.zip_code || 'N/A',
+          property_type: p.properties.property_type || 'Unknown',
+          notes: p.notes || '',
+          assigned_date: p.assigned_date,
+          monthly_rent: p.properties.monthly_rent,
+          bedrooms: p.properties.bedrooms,
+          bathrooms: p.properties.bathrooms,
+        })) || [];
 
-      setAssignedProperties(formattedProperties);
+        setAssignedProperties(formattedProperties);
 
-      // Load house watching schedules
-      const { data: watchingData, error: watchingError } = await supabase
-        .from('house_watching')
-        .select('*')
-        .eq('user_id', user?.id);
+        // Load house watching schedules for the actual user
+        const { data: watchingData, error: watchingError } = await supabase
+          .from('house_watching')
+          .select('*')
+          .eq('user_id', user?.id);
 
-      if (watchingError) throw watchingError;
-      setPropertyChecks(watchingData || []);
+        if (watchingError) throw watchingError;
+        setPropertyChecks(watchingData || []);
+      }
 
     } catch (error: any) {
       toast({
