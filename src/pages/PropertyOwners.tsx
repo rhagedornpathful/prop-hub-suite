@@ -177,11 +177,11 @@ const PropertyOwners = () => {
           </div>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-            <div className="relative flex-1 sm:flex-initial">
+            <div className="relative w-full sm:w-auto">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
                 placeholder="Search owners..." 
-                className="pl-10 w-full sm:w-64"
+                className="pl-10 w-full sm:w-64 min-w-0"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
