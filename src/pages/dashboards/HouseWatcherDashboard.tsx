@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
 import { format, isToday, isTomorrow, isPast, differenceInDays } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 interface AssignedProperty {
   id: string;
@@ -35,6 +36,7 @@ interface PropertyCheck {
 }
 
 const HouseWatcherDashboard = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { isViewingAs } = useUserRole();
   const [assignedProperties, setAssignedProperties] = useState<AssignedProperty[]>([]);
@@ -184,7 +186,8 @@ const HouseWatcherDashboard = () => {
         description: "You can now begin documenting your property inspection.",
       });
 
-      loadHouseWatcherData();
+      // Navigate to the property check page
+      navigate(`/property-check/${data.id}`);
     } catch (error: any) {
       toast({
         title: "Error Starting Check",
@@ -192,6 +195,14 @@ const HouseWatcherDashboard = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const viewProperty = (propertyId: string) => {
+    navigate(`/properties/${propertyId}`);
+  };
+
+  const viewHouseWatchingDetails = (watchingId: string) => {
+    navigate(`/house-watching/${watchingId}`);
   };
 
   const getCheckPriority = (nextCheckDate: string) => {
@@ -311,7 +322,12 @@ const HouseWatcherDashboard = () => {
                           <Camera className="h-4 w-4 mr-2" />
                           Start Check
                         </Button>
-                        <Button size="sm" variant="outline" className="w-full">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full"
+                          onClick={() => viewHouseWatchingDetails(check.id)}
+                        >
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </Button>
@@ -390,13 +406,23 @@ const HouseWatcherDashboard = () => {
                   </div>
 
                   <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => viewProperty(property.id)}
+                    >
                       <Eye className="h-4 w-4 mr-2" />
                       View
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
-                      <FileText className="h-4 w-4 mr-2" />
-                      History
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => startPropertyCheck(property.id)}
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Check
                     </Button>
                   </div>
                 </CardContent>
