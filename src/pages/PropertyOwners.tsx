@@ -168,25 +168,25 @@ const PropertyOwners = () => {
     <div className="flex-1 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Clean Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold text-foreground">Property Owners</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Property Owners</h1>
+            <p className="text-muted-foreground text-sm md:text-base">
               Manage property owner information and contact details • {owners.length} owners
             </p>
           </div>
           
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input 
                 placeholder="Search owners..." 
-                className="pl-10 w-64"
+                className="pl-10 w-full sm:w-64"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>
