@@ -20,6 +20,7 @@ import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
 
 const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -31,6 +32,7 @@ const Properties = () => {
   const { data: propertyData, isLoading, error } = useProperties(1, 100);
   const properties = propertyData?.properties || [];
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   // Filter properties based on search
   const filteredProperties = properties.filter(property => 
@@ -48,8 +50,7 @@ const Properties = () => {
     : 0;
 
   const handlePropertyClick = (property: any) => {
-    setSelectedProperty(property);
-    setShowPropertyDetails(true);
+    navigate(`/properties/${property.id}`);
   };
 
   const handleEdit = (property: any) => {
