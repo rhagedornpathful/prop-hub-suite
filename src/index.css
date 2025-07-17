@@ -611,7 +611,133 @@
     }
   }
 
+  /* Mobile-optimized form styling */
+  .mobile-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mobile-margin-md);
+    padding: var(--mobile-padding-md);
+  }
+
+  .mobile-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mobile-margin-sm);
+  }
+
+  .mobile-form-label {
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--foreground);
+    line-height: var(--leading-normal);
+    margin-bottom: 0.5rem;
+  }
+
+  .mobile-form-input {
+    min-height: var(--touch-target-comfortable);
+    padding: var(--mobile-padding-md);
+    font-size: var(--text-base); /* 16px - prevents iOS zoom */
+    line-height: var(--leading-normal);
+    border-radius: 0.5rem;
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    transition: all var(--touch-feedback-duration) ease;
+    touch-action: manipulation;
+  }
+
+  .mobile-form-input:focus {
+    outline: none;
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+  }
+
+  .mobile-form-input:active {
+    border-color: hsl(var(--ring));
+  }
+
+  .mobile-form-input::placeholder {
+    color: hsl(var(--muted-foreground));
+    font-size: var(--text-base);
+  }
+
+  .mobile-form-textarea {
+    min-height: calc(var(--touch-target-comfortable) * 2.5);
+    resize: vertical;
+  }
+
+  .mobile-form-select {
+    min-height: var(--touch-target-comfortable);
+    padding: var(--mobile-padding-md);
+    font-size: var(--text-base);
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1rem;
+    padding-right: 2.5rem;
+  }
+
+  .mobile-form-button {
+    width: 100%;
+    min-height: var(--touch-target-comfortable);
+    padding: var(--mobile-padding-md) var(--mobile-padding-lg);
+    font-size: var(--text-lg);
+    font-weight: 600;
+    margin-top: var(--mobile-margin-md);
+    border-radius: 0.5rem;
+    transition: all var(--touch-feedback-duration) ease;
+    touch-action: manipulation;
+  }
+
+  .mobile-form-button:active {
+    transform: scale(var(--touch-feedback-scale));
+  }
+
+  .mobile-form-error {
+    color: hsl(var(--destructive));
+    font-size: var(--text-sm);
+    font-weight: 500;
+    margin-top: 0.25rem;
+    line-height: var(--leading-normal);
+    min-height: 1.25rem; /* Prevent layout shift */
+  }
+
+  .mobile-form-group {
+    margin-bottom: var(--mobile-margin-md);
+  }
+
+  /* Mobile form field spacing */
+  .mobile-form-spacing > * + * {
+    margin-top: var(--mobile-margin-md);
+  }
+
+  /* Horizontal button groups on mobile */
+  .mobile-form-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mobile-margin-sm);
+    margin-top: var(--mobile-margin-lg);
+  }
+
+  @media (min-width: 640px) {
+    .mobile-form-button {
+      width: auto;
+      min-width: 200px;
+    }
+
+    .mobile-form-buttons {
+      flex-direction: row;
+      justify-content: flex-end;
+    }
+  }
+
   @media (min-width: 768px) {
+    .mobile-form {
+      padding: var(--mobile-padding-lg);
+      gap: var(--mobile-margin-lg);
+    }
+  }
     .touch-button-spacing {
       margin: var(--touch-spacing-min) var(--touch-spacing-min) var(--touch-spacing-min) 0;
     }

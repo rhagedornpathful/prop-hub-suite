@@ -296,21 +296,23 @@ const AddHouseWatcherDialog = ({ onHouseWatcherAdded }: AddHouseWatcherDialogPro
             </div>
           ) : (
             /* New User Form */
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+            <div className="mobile-form-spacing">
+              <div className="mobile-stack">
+                <div className="mobile-form-field">
                   <Label htmlFor="firstName">First Name</Label>
                   <Input
                     id="firstName"
+                    inputType="text"
                     value={formData.firstName}
                     onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
                     placeholder="Enter first name"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="mobile-form-field">
                   <Label htmlFor="lastName">Last Name</Label>
                   <Input
                     id="lastName"
+                    inputType="text"
                     value={formData.lastName}
                     onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
                     placeholder="Enter last name"
@@ -318,64 +320,68 @@ const AddHouseWatcherDialog = ({ onHouseWatcherAdded }: AddHouseWatcherDialogPro
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="mobile-form-field">
                 <Label htmlFor="email">Email Address *</Label>
                 <Input
                   id="email"
-                  type="email"
+                  inputType="email"
                   value={formData.email}
                   onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  placeholder="Enter email address"
+                  placeholder="your.email@example.com"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="mobile-form-field">
                 <Label htmlFor="password">Password *</Label>
                 <Input
                   id="password"
-                  type="password"
+                  inputType="password"
                   value={formData.password}
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                  placeholder="Enter password"
+                  placeholder="Enter secure password"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="mobile-form-field">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
                   id="phone"
+                  inputType="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="Enter phone number"
+                  placeholder="(555) 123-4567"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="mobile-form-field">
                 <Label htmlFor="address">Address</Label>
                 <Input
                   id="address"
+                  inputType="text"
                   value={formData.address}
                   onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-                  placeholder="Enter address"
+                  placeholder="Enter street address"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
+              <div className="mobile-stack">
+                <div className="mobile-form-field">
                   <Label htmlFor="city">City</Label>
                   <Input
                     id="city"
+                    inputType="text"
                     value={formData.city}
                     onChange={(e) => setFormData(prev => ({ ...prev, city: e.target.value }))}
                     placeholder="Enter city"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="mobile-form-field">
                   <Label htmlFor="state">State</Label>
                   <Input
                     id="state"
+                    inputType="text"
                     value={formData.state}
                     onChange={(e) => setFormData(prev => ({ ...prev, state: e.target.value }))}
                     placeholder="Enter state"
@@ -383,10 +389,11 @@ const AddHouseWatcherDialog = ({ onHouseWatcherAdded }: AddHouseWatcherDialogPro
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="mobile-form-field">
                 <Label htmlFor="zipCode">Zip Code</Label>
                 <Input
                   id="zipCode"
+                  inputType="text"
                   value={formData.zipCode}
                   onChange={(e) => setFormData(prev => ({ ...prev, zipCode: e.target.value }))}
                   placeholder="Enter zip code"
@@ -396,7 +403,7 @@ const AddHouseWatcherDialog = ({ onHouseWatcherAdded }: AddHouseWatcherDialogPro
           )}
 
           {/* Notes */}
-          <div className="space-y-2">
+          <div className="mobile-form-field">
             <Label htmlFor="notes">Notes (Optional)</Label>
             <Textarea
               id="notes"
@@ -407,19 +414,20 @@ const AddHouseWatcherDialog = ({ onHouseWatcherAdded }: AddHouseWatcherDialogPro
             />
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="mobile-form-buttons">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={loading}
+              className="mobile-form-button"
             >
               Cancel
             </Button>
             <Button 
               type="submit" 
               disabled={loading || (mode === 'existing' && !selectedUserId)}
-              className="bg-gradient-primary hover:bg-primary-dark"
+              className="bg-gradient-primary hover:bg-primary-dark mobile-form-button"
             >
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {mode === 'existing' ? 'Assign as House Watcher' : 'Create House Watcher'}
