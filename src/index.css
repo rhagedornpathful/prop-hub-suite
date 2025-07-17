@@ -737,7 +737,7 @@
       padding: var(--mobile-padding-lg);
       gap: var(--mobile-margin-lg);
     }
-  }
+    
     .touch-button-spacing {
       margin: var(--touch-spacing-min) var(--touch-spacing-min) var(--touch-spacing-min) 0;
     }
