@@ -26,10 +26,12 @@ import { PropertyCheckItemCard } from "@/components/PropertyCheckItemCard";
 import { SummarySection } from "@/components/SummarySection";
 import { usePropertyCheck } from "@/hooks/usePropertyCheck";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const PropertyCheck = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { userRole } = useUserRole();
   const [currentSection, setCurrentSection] = useState(0);
   const [generalNotes, setGeneralNotes] = useState("");
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -104,7 +106,12 @@ const PropertyCheck = () => {
 
   const handleCloseSuccessDialog = () => {
     setShowSuccessDialog(false);
-    navigate('/house-watching');
+    // Redirect based on user role
+    if (userRole === 'house_watcher') {
+      navigate('/'); // House watchers go to their dashboard (root)
+    } else {
+      navigate('/house-watching'); // Admins/property managers go to house watching management
+    }
   };
 
   const handleStartSession = () => {
@@ -120,7 +127,14 @@ const PropertyCheck = () => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => navigate('/house-watching')}
+              onClick={() => {
+                // Navigate back based on user role
+                if (userRole === 'house_watcher') {
+                  navigate('/'); // House watchers go to their dashboard (root)
+                } else {
+                  navigate('/house-watching'); // Admins/property managers go to house watching management
+                }
+              }}
               className="p-2"
             >
               <ArrowLeft className="h-4 w-4" />
