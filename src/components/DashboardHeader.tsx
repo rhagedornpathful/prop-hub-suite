@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { TouchOptimized } from "@/components/mobile/TouchOptimized";
 import { ViewAsDropdown } from "@/components/ViewAsDropdown";
+import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 import { useUserRole } from "@/hooks/useUserRole";
 
 interface DashboardHeaderProps {
@@ -133,21 +134,7 @@ export function DashboardHeader({
             </Sheet>
             
             {/* Notifications */}
-            <TouchOptimized>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="relative h-9 w-9 p-0" 
-                aria-label={`Notifications (${notificationCount} unread)`}
-              >
-                <Bell className="h-4 w-4" />
-                {notificationCount > 0 && (
-                  <Badge className="absolute -top-1 -right-1 h-4 w-4 rounded-full p-0 flex items-center justify-center text-xs bg-destructive">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </Badge>
-                )}
-              </Button>
-            </TouchOptimized>
+            <NotificationsDropdown notificationCount={notificationCount} />
             
             {/* User Menu */}
             <DropdownMenu>
@@ -285,19 +272,10 @@ export function DashboardHeader({
           {actualUserRole === 'admin' && <ViewAsDropdown />}
           
           {/* Notifications */}
-          <Button 
-            variant="outline" 
-            size={isTablet ? "sm" : "default"} 
-            className="relative transition-all duration-200" 
-            aria-label={`Notifications (${notificationCount} unread)`}
-          >
-            <Bell className="h-4 w-4" />
-            {notificationCount > 0 && (
-              <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive animate-pulse">
-                {notificationCount > 99 ? '99+' : notificationCount}
-              </Badge>
-            )}
-          </Button>
+          <NotificationsDropdown 
+            notificationCount={notificationCount} 
+            className={isTablet ? "h-8" : "h-10"}
+          />
           
           {/* User Menu */}
           <DropdownMenu>

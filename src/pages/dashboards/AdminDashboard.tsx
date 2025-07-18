@@ -41,6 +41,7 @@ import { useSearchContext } from "@/contexts/SearchContext";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { format } from "date-fns";
+import MaintenanceAlerts from "@/components/MaintenanceAlerts";
 
 export function AdminDashboard() {
   // Fetch real data from all sources
@@ -397,56 +398,16 @@ export function AdminDashboard() {
       </AnimatedList>
 
       {/* Critical Alerts */}
-      <Card className="border-warning">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5 text-warning" />
-            Critical Alerts
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {urgentMaintenance > 0 && (
-              <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
-                  <span className="font-medium text-destructive">Urgent Maintenance</span>
-                </div>
-                <p className="text-2xl font-bold text-destructive">{urgentMaintenance}</p>
-                <Link to="/maintenance" className="text-sm text-destructive hover:underline">
-                  View requests →
-                </Link>
-              </div>
-            )}
-            
-            {pendingMaintenance > 0 && (
-              <div className="p-4 bg-warning/10 rounded-lg border border-warning/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Wrench className="h-4 w-4 text-warning" />
-                  <span className="font-medium text-warning">Pending Maintenance</span>
-                </div>
-                <p className="text-2xl font-bold text-warning">{pendingMaintenance}</p>
-                <Link to="/maintenance" className="text-sm text-warning hover:underline">
-                  Manage requests →
-                </Link>
-              </div>
-            )}
-
-            {unreadMessages > 0 && (
-              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  <span className="font-medium text-primary">Unread Messages</span>
-                </div>
-                <p className="text-2xl font-bold text-primary">{unreadMessages}</p>
-                <Link to="/messages" className="text-sm text-primary hover:underline">
-                  View messages →
-                </Link>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <div>
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Bell className="h-5 w-5 text-warning" />
+          Critical Alerts
+        </h2>
+        <MaintenanceAlerts 
+          requests={maintenanceRequests} 
+          onViewRequest={(request) => console.log('View request:', request)}
+        />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activity */}
