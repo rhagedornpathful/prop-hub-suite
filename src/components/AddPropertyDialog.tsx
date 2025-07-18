@@ -574,14 +574,16 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
     setPropertyData(prev => {
       const updated = {
         ...prev,
-        ...data
+        ...data,
+        // Ensure proper field mapping
+        address: data.street_address || data.address || prev.address,
       };
       console.log('Updated property data:', updated);
       return updated;
     });
     // Also set the address in search if it was extracted
-    if (data.address) {
-      setSearchAddress(data.address);
+    if (data.street_address || data.address) {
+      setSearchAddress(data.street_address || data.address || '');
     }
   };
 
