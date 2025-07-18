@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,15 +12,31 @@ export const ProfileSetup = () => {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    first_name: profile?.first_name || '',
-    last_name: profile?.last_name || '',
-    phone: profile?.phone || '',
-    company_name: profile?.company_name || '',
-    address: profile?.address || '',
-    city: profile?.city || '',
-    state: profile?.state || '',
-    zip_code: profile?.zip_code || '',
+    first_name: '',
+    last_name: '',
+    phone: '',
+    company_name: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
   });
+
+  // Update form data when profile loads
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        phone: profile.phone || '',
+        company_name: profile.company_name || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        state: profile.state || '',
+        zip_code: profile.zip_code || '',
+      });
+    }
+  }, [profile]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,13 +80,14 @@ export const ProfileSetup = () => {
   };
 
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle>Profile Setup</CardTitle>
-        <CardDescription>
-          Complete your profile information and view your current roles.
-        </CardDescription>
-      </CardHeader>
+    <div className="container mx-auto px-4 py-8">
+      <Card className="max-w-2xl mx-auto">
+        <CardHeader>
+          <CardTitle>Profile Setup</CardTitle>
+          <CardDescription>
+            Complete your profile information and view your current roles.
+          </CardDescription>
+        </CardHeader>
       <CardContent className="space-y-6">
         <div>
           <Label className="text-sm font-medium">Current Roles</Label>
@@ -173,5 +190,6 @@ export const ProfileSetup = () => {
         </form>
       </CardContent>
     </Card>
+    </div>
   );
 };
