@@ -5,22 +5,18 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { 
   Plus, 
-  Download, 
   Building, 
   Home, 
   DollarSign,
   Grid3X3,
   List,
   Map,
-  Search,
-  Filter
+  Search
 } from "lucide-react";
 import { useProperties } from "@/hooks/queries/useProperties";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
-import { ZillowPropertyScraper } from "@/components/ZillowPropertyScraper";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 
@@ -28,8 +24,6 @@ const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
   const [showAddProperty, setShowAddProperty] = useState(false);
-  const [showImportDialog, setShowImportDialog] = useState(false);
-  const [importedPropertyData, setImportedPropertyData] = useState(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -67,12 +61,6 @@ const Properties = () => {
     console.log('Schedule maintenance for:', property);
   };
 
-  const handleImportData = (data: any) => {
-    setImportedPropertyData(data);
-    setShowImportDialog(false);
-    setSelectedProperty(data);
-    setShowAddProperty(true);
-  };
 
   if (error) {
     return (
@@ -101,25 +89,14 @@ const Properties = () => {
           </p>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
-          <Button 
-            variant="outline" 
-            size={isMobile ? "default" : "sm"}
-            className="w-full sm:w-auto"
-            onClick={() => setShowImportDialog(true)}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Import Properties
-          </Button>
-          <Button 
-            onClick={() => setShowAddProperty(true)}
-            size={isMobile ? "default" : "sm"}
-            className="w-full sm:w-auto"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Property
-          </Button>
-        </div>
+        <Button 
+          onClick={() => setShowAddProperty(true)}
+          size={isMobile ? "default" : "sm"}
+          className="w-full sm:w-auto"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Add Property
+        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -369,15 +346,6 @@ const Properties = () => {
         onOpenChange={setShowPropertyDetails}
       />
 
-      {/* Import Properties Dialog */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Import Property from Zillow</DialogTitle>
-          </DialogHeader>
-          <ZillowPropertyScraper onDataExtracted={handleImportData} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
