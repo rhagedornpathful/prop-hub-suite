@@ -19,6 +19,8 @@ import { useProperties } from "@/hooks/queries/useProperties";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
+import { ZillowPropertyScraper } from "@/components/ZillowPropertyScraper";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 
@@ -26,6 +28,8 @@ const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
   const [showAddProperty, setShowAddProperty] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importedPropertyData, setImportedPropertyData] = useState(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const [searchTerm, setSearchTerm] = useState("");
   
@@ -63,6 +67,13 @@ const Properties = () => {
     console.log('Schedule maintenance for:', property);
   };
 
+  const handleImportData = (data: any) => {
+    setImportedPropertyData(data);
+    setShowImportDialog(false);
+    setSelectedProperty(data);
+    setShowAddProperty(true);
+  };
+
   if (error) {
     return (
       <div className="flex-1 p-4 md:p-6 safe-area-inset">
@@ -95,6 +106,7 @@ const Properties = () => {
             variant="outline" 
             size={isMobile ? "default" : "sm"}
             className="w-full sm:w-auto"
+            onClick={() => setShowImportDialog(true)}
           >
             <Download className="h-4 w-4 mr-2" />
             Import Properties
@@ -356,6 +368,16 @@ const Properties = () => {
         open={showPropertyDetails}
         onOpenChange={setShowPropertyDetails}
       />
+
+      {/* Import Properties Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Import Property from Zillow</DialogTitle>
+          </DialogHeader>
+          <ZillowPropertyScraper onDataExtracted={handleImportData} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
