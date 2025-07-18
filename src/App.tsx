@@ -47,6 +47,7 @@ import PropertyOwnerDetail from "./pages/PropertyOwnerDetail";
 import AdminNavigation from "./pages/AdminNavigation";
 import Activity from "./pages/Activity";
 import NotFound from "./pages/NotFound";
+import { ProfileSetup } from "./components/ProfileSetup";
 
 const queryClient = new QueryClient();
 
@@ -220,6 +221,7 @@ const AppContent = () => {
                            </PageTransition>
                          } />
                          <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+                         <Route path="/profile" element={<PageTransition><ProfileSetup /></PageTransition>} />
                          <Route path="/admin-navigation" element={
                            <PageTransition>
                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
