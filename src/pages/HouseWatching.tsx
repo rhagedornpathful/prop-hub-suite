@@ -42,19 +42,33 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useHouseWatchers, useDeleteHouseWatcher } from "@/hooks/queries/useHouseWatchers";
+import { useProperties } from "@/hooks/queries/useProperties";
 import AddHouseWatcherDialog from "@/components/AddHouseWatcherDialog";
 import AssignPropertiesDialog from "@/components/AssignPropertiesDialog";
+import { SchedulePropertyCheckDialog } from "@/components/SchedulePropertyCheckDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const HouseWatching = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [watcherToDelete, setWatcherToDelete] = useState<any>(null);
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<string>("");
   const { toast } = useToast();
 
   // Use hooks to fetch data
   const { data: watchers = [], isLoading, error } = useHouseWatchers();
+  const { data: propertiesData } = useProperties();
   const deleteWatcherMutation = useDeleteHouseWatcher();
+
+  const properties = propertiesData?.properties || [];
 
   const filteredWatchers = watchers.filter(watcher =>
     `${watcher.user_profiles?.first_name || ''} ${watcher.user_profiles?.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -105,6 +119,20 @@ const HouseWatching = () => {
       day: 'numeric'
     });
   };
+
+  const handleScheduleCheck = () => {
+    if (!selectedProperty) {
+      toast({
+        title: "Select Property",
+        description: "Please select a property to schedule a check for.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsScheduleDialogOpen(true);
+  };
+
+  const selectedPropertyData = properties.find(p => p.id === selectedProperty);
 
   if (isLoading) {
     return (
@@ -177,10 +205,24 @@ const HouseWatching = () => {
             // Refresh the data when a new house watcher is added
             window.location.reload();
           }} />
-          <Button variant="outline">
-            <Calendar className="h-4 w-4 mr-2" />
-            Schedule Rounds
-          </Button>
+          <div className="flex items-center gap-2">
+            <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+              <SelectTrigger className="w-64">
+                <SelectValue placeholder="Select property to schedule check..." />
+              </SelectTrigger>
+              <SelectContent>
+                {properties.map((property) => (
+                  <SelectItem key={property.id} value={property.id}>
+                    {property.address}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={handleScheduleCheck}>
+              <Calendar className="h-4 w-4 mr-2" />
+              Schedule Check
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}
@@ -440,6 +482,16 @@ const HouseWatching = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Schedule Property Check Dialog */}
+        {selectedPropertyData && (
+          <SchedulePropertyCheckDialog
+            open={isScheduleDialogOpen}
+            onOpenChange={setIsScheduleDialogOpen}
+            propertyId={selectedPropertyData.id}
+            propertyAddress={selectedPropertyData.address}
+          />
+        )}
       </div>
     </div>
   );
