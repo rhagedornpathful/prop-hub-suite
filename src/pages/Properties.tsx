@@ -7,7 +7,8 @@ import {
   Plus, 
   Building, 
   Home, 
-  DollarSign,
+  Eye,
+  Settings,
   Grid3X3,
   List,
   Map,
@@ -42,10 +43,8 @@ const Properties = () => {
   // Calculate summary stats
   const totalProperties = properties.length;
   const activeProperties = properties.filter(p => p.status === 'active' || !p.status).length;
-  const inactiveProperties = properties.filter(p => p.status === 'inactive').length;
-  const avgMonthlyRent = properties.length > 0 
-    ? Math.round(properties.reduce((sum, p) => sum + (p.monthly_rent || 0), 0) / properties.length)
-    : 0;
+  const houseWatchingProperties = properties.filter(p => p.service_type === 'house_watching').length;
+  const propertyManagementProperties = properties.filter(p => p.service_type === 'property_management' || !p.service_type).length;
 
   const handlePropertyClick = (property: any) => {
     navigate(`/properties/${property.id}`);
@@ -104,20 +103,6 @@ const Properties = () => {
         <Card className="min-h-[80px]">
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
-                <Building className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xl font-bold">{totalProperties}</p>
-                <p className="text-xs text-muted-foreground">Total Properties</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="min-h-[80px]">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
               <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg shrink-0">
                 <Home className="h-4 w-4 text-green-600 dark:text-green-400" />
               </div>
@@ -132,12 +117,12 @@ const Properties = () => {
         <Card className="min-h-[80px]">
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg shrink-0">
-                <Home className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg shrink-0">
+                <Eye className="h-4 w-4 text-purple-600 dark:text-purple-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{inactiveProperties}</p>
-                <p className="text-xs text-muted-foreground">Inactive</p>
+                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{houseWatchingProperties}</p>
+                <p className="text-xs text-muted-foreground">House Watching</p>
               </div>
             </div>
           </CardContent>
@@ -146,14 +131,26 @@ const Properties = () => {
         <Card className="min-h-[80px]">
           <CardContent className="p-3">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-orange-100 dark:bg-orange-900 rounded-lg shrink-0">
-                <DollarSign className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg shrink-0">
+                <Settings className="h-4 w-4 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-xl font-bold text-orange-600 dark:text-orange-400">
-                  ${avgMonthlyRent.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">Avg. Monthly</p>
+                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{propertyManagementProperties}</p>
+                <p className="text-xs text-muted-foreground">Property Management</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="min-h-[80px]">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+                <Building className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xl font-bold">{totalProperties}</p>
+                <p className="text-xs text-muted-foreground">Total Properties</p>
               </div>
             </div>
           </CardContent>
