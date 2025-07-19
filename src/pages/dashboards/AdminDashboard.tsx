@@ -116,7 +116,8 @@ export function AdminDashboard() {
     type: activity.type,
     message: activity.description || activity.title,
     time: format(new Date(activity.date), 'MMM dd, h:mm a'),
-    property: activity.metadata?.property_address || 'Unknown Property'
+    property: activity.metadata?.property_address || 'Unknown Property',
+    propertyId: activity.metadata?.property_id // Add property ID for linking
   }));
 
   return (
@@ -429,7 +430,7 @@ export function AdminDashboard() {
                 recentActivities.map((activity) => (
                   <Link 
                     key={activity.id} 
-                    to="/activity" 
+                    to={activity.propertyId ? `/property/${activity.propertyId}?tab=activity` : "/activity"} 
                     className="block transition-colors hover:bg-muted/30"
                   >
                     <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
