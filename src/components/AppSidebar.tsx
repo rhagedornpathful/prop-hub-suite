@@ -43,10 +43,28 @@ import { useUserRole } from "@/hooks/useUserRole";
 // Define menu items for different user roles
 const adminMenuItems = [
   {
-    title: "Dashboard",
+    title: "Admin Dashboard",
     url: "/",
     icon: Home,
     description: "Overview & metrics"
+  },
+  {
+    title: "Activity Dashboard",
+    url: "/activity",
+    icon: Activity,
+    description: "Activity dashboard"
+  },
+  {
+    title: "Messages",
+    url: "/messages",
+    icon: MessageCircle,
+    description: "Communication"
+  },
+  {
+    title: "Maintenance Management",
+    url: "/maintenance",
+    icon: Wrench,
+    description: "Work orders"
   },
   {
     title: "Properties",
@@ -61,52 +79,28 @@ const adminMenuItems = [
     description: "Manage property owners"
   },
   {
+    title: "House Watcher",
+    url: "/house-watching",
+    icon: Eye,
+    description: "Property monitoring"
+  },
+  {
     title: "Tenants",
     url: "/tenants",
     icon: Users,
     description: "Tenant management"
   },
   {
-    title: "User Management",
-    url: "/user-management",
-    icon: UserCog,
-    description: "Manage users & roles"
-  },
-  {
-    title: "House Watching",
-    url: "/house-watching",
-    icon: Eye,
-    description: "Property monitoring"
-  },
-  {
-    title: "Leases",
+    title: "Lease Management",
     url: "/leases",
     icon: FileText,
     description: "Lease agreements"
   },
   {
-    title: "Finances",
+    title: "Financial Management",
     url: "/finances",
     icon: DollarSign,
     description: "Payments & reports"
-  },
-  {
-    title: "Activity",
-    url: "/activity",
-    icon: Activity,
-    description: "Activity dashboard"
-  },
-  {
-    title: "Maintenance",
-    url: "/maintenance",
-    icon: Wrench,
-    description: "Work orders"
-  },
-  {
-    title: "Messages",
-    url: "/messages",
-    icon: MessageCircle,
-    description: "Communication"
   },
   {
     title: "Documents",
@@ -121,10 +115,10 @@ const adminMenuItems = [
     description: "Analytics & insights"
   },
   {
-    title: "Admin Navigation",
-    url: "/admin-navigation",
-    icon: Navigation,
-    description: "Access all admin pages"
+    title: "User Management",
+    url: "/user-management",
+    icon: UserCog,
+    description: "Manage users & roles"
   }
 ];
 
