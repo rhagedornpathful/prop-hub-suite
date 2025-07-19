@@ -356,8 +356,8 @@ export function AppSidebar() {
               {!collapsed && (
                 <div className="flex items-center justify-center w-full">
                   <img 
-                    src="/lovable-uploads/a1c36a6f-e37d-42f5-9f3c-f434a26e8627.png" 
-                    alt="Lattitude Premier Properties" 
+                    src="/lovable-uploads/3102d2d8-1c41-484b-a873-0b9ae2b75918.png" 
+                    alt="Latitude Premier Properties" 
                     className={`${isMobile ? "w-32 h-32" : "w-40 h-40"} object-contain`}
                   />
                 </div>
