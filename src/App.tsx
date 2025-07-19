@@ -47,6 +47,7 @@ import PropertyOwnerDetail from "./pages/PropertyOwnerDetail";
 import AdminNavigation from "./pages/AdminNavigation";
 import Activity from "./pages/Activity";
 import NotFound from "./pages/NotFound";
+import PropertyManagerView from "./pages/PropertyManagerView";
 import { ProfileSetup } from "./components/ProfileSetup";
 
 const queryClient = new QueryClient();
@@ -182,6 +183,13 @@ const AppContent = () => {
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
                               <PropertyCheck />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/property-manager-dashboard" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <PropertyManagerView />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />

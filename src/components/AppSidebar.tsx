@@ -85,6 +85,12 @@ const adminMenuItems = [
     description: "Property monitoring"
   },
   {
+    title: "Property Manager Dashboard",
+    url: "/property-manager-dashboard",
+    icon: UserCog,
+    description: "Property manager operations"
+  },
+  {
     title: "Tenants",
     url: "/tenants",
     icon: Users,
