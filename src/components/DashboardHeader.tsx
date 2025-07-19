@@ -82,8 +82,7 @@ export function DashboardHeader({
         
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-foreground truncate">Dashboard</h1>
-            <p className="text-xs text-muted-foreground truncate">Property overview</p>
+            {/* Dashboard title removed - handled by individual dashboard components */}
           </div>
           
           <div className="flex items-center gap-2">
@@ -204,10 +203,7 @@ export function DashboardHeader({
       
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <div className="no-margin">
-            <h1 className={`font-bold text-foreground ${isTablet ? 'text-2xl' : 'text-3xl'}`}>Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-1">Welcome back! Here's your property overview</p>
-          </div>
+          {/* Dashboard title removed - handled by individual dashboard components */}
         </div>
         
         <div className="flex items-center gap-4">
