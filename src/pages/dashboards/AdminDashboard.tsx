@@ -430,7 +430,7 @@ export function AdminDashboard() {
                 recentActivities.map((activity) => (
                   <Link 
                     key={activity.id} 
-                    to={activity.propertyId ? `/property/${activity.propertyId}?tab=activity` : "/activity"} 
+                    to={activity.propertyId ? `/properties/${activity.propertyId}?tab=activity` : "/activity"} 
                     className="block transition-colors hover:bg-muted/30"
                   >
                     <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
