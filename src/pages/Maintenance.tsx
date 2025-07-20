@@ -38,7 +38,7 @@ import MaintenanceAlerts from "@/components/MaintenanceAlerts";
 import MaintenanceDashboard from "@/components/MaintenanceDashboard";
 import MaintenanceFilters from "@/components/MaintenanceFilters";
 import VendorManagementSystem from "@/components/VendorManagementSystem";
-import { AdvancedAnalyticsDashboard } from "@/components/AdvancedAnalyticsDashboard";
+import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
 import OwnerPortalSystem from "@/components/OwnerPortalSystem";
 import { RealTimeNotificationSystem } from "@/components/RealTimeNotificationSystem";
 import MobileMaintenanceView from "@/components/mobile/MobileMaintenanceView";

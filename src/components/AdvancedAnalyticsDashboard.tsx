@@ -378,3 +378,5 @@ export const AdvancedAnalyticsDashboard = () => {
     </div>
   );
 };
+
+export default AdvancedAnalyticsDashboard;
