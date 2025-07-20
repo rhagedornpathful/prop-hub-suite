@@ -28,7 +28,22 @@ import { supabase } from "@/integrations/supabase/client";
 const HomeCheck = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userRole } = useUserRole();
+  const { userRole, isAdmin } = useUserRole();
+
+  // Restrict Home Checks to House Watchers and Admins only
+  if (!isAdmin() && userRole !== 'house_watcher') {
+    return (
+      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-foreground mb-4">Access Restricted</h1>
+          <p className="text-muted-foreground mb-4">Home checks are only available to House Watchers and Administrators.</p>
+          <Button onClick={() => navigate('/')} variant="outline">
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
   const { id: propertyId } = useParams();
   const [currentSection, setCurrentSection] = useState(0);
   const [generalNotes, setGeneralNotes] = useState("");
@@ -86,7 +101,7 @@ const HomeCheck = () => {
     startSession,
     submitSession,
     formatElapsedTime
-  } = useHomeCheck();
+  } = useHomeCheck(propertyId);
 
   const sections = [
     { name: "Exterior", key: "exterior", icon: Home, color: "bg-gradient-primary" },

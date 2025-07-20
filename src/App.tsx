@@ -30,6 +30,7 @@ import Messages from "./pages/Messages";
 import HouseWatching from "./pages/HouseWatching";
 import HouseWatcherDetail from "./pages/HouseWatcherDetail";
 import PropertyCheck from "./pages/PropertyCheck";
+import HomeCheck from "./pages/HomeCheck";
 import Documents from "./pages/Documents";
 import UserManagement from "./pages/UserManagement";
 import DevTools from "./pages/DevTools";
@@ -209,8 +210,15 @@ const AppContent = () => {
                         } />
                         <Route path="/property-check/:id" element={
                           <PageTransition>
-                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
+                            <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
                               <PropertyCheck />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/home-check/:id" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
+                              <HomeCheck />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />

@@ -55,7 +55,7 @@ const DEFAULT_CHECKLIST_DATA: HomeCheckData = {
   ]
 };
 
-export const useHomeCheck = () => {
+export const useHomeCheck = (propertyId?: string) => {
   const [checklistItems, setChecklistItems] = useState<HomeCheckData>(DEFAULT_CHECKLIST_DATA);
   const [weather, setWeather] = useState<string>('');
   const [overallCondition, setOverallCondition] = useState<string>('');
@@ -209,7 +209,7 @@ export const useHomeCheck = () => {
         .from('home_check_sessions')
         .insert({
           user_id: user.id,
-          property_id: 'temp-property-id',
+          property_id: propertyId || 'temp-property-id',
           status: 'in_progress',
           checklist_data: checklistItems as any,
           weather,
