@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,9 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Mail, Lock, UserPlus, LogIn, AlertCircle } from 'lucide-react';
+import { Loader2, Mail, Lock, UserPlus, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { clearEmergencyMode, getAuthRedirectUrl } from '@/lib/authUtils';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
+import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { FormFieldError } from '@/components/FormFieldError';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -19,9 +23,17 @@ const Auth = () => {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('signin');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [rememberMe, setRememberMe] = useState(false);
+  
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  // Check if user is already logged in
+  // Check if user is already logged in and handle password reset
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
@@ -30,6 +42,16 @@ const Auth = () => {
         // Clear emergency mode on auth page visit
         clearEmergencyMode();
         
+        // Check for password reset flow
+        const isReset = searchParams.get('reset');
+        if (isReset === 'true') {
+          setActiveTab('reset-password');
+          toast({
+            title: "Password Reset",
+            description: "Please enter your new password below.",
+          });
+        }
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         console.log('🔍 Auth page: Session check result:', {
@@ -37,7 +59,7 @@ const Auth = () => {
           error: error
         });
         
-        if (session && !error) {
+        if (session && !error && !isReset) {
           console.log('✅ Auth page: User already logged in, redirecting to dashboard');
           
           // Force page refresh to ensure clean state
@@ -53,12 +75,71 @@ const Auth = () => {
     };
 
     checkExistingSession();
-  }, []);
+  }, [searchParams]);
+
+  // Validation helper
+  const validateField = (field: string, value: string) => {
+    const errors: Record<string, string> = {};
+    
+    switch (field) {
+      case 'email':
+        if (!value.trim()) {
+          errors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(value)) {
+          errors.email = 'Please enter a valid email address';
+        }
+        break;
+      case 'password':
+        if (!value) {
+          errors.password = 'Password is required';
+        } else if (activeTab === 'signup' && value.length < 6) {
+          errors.password = 'Password must be at least 6 characters';
+        }
+        break;
+      case 'confirmPassword':
+        if (activeTab === 'signup' && value !== password) {
+          errors.confirmPassword = 'Passwords do not match';
+        }
+        break;
+    }
+    
+    setFieldErrors(prev => ({ ...prev, ...errors }));
+    return Object.keys(errors).length === 0;
+  };
+
+  // Clear field error when user types
+  const handleFieldChange = (field: string, value: string) => {
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    
+    switch (field) {
+      case 'email':
+        setEmail(value);
+        break;
+      case 'password':
+        setPassword(value);
+        break;
+      case 'confirmPassword':
+        setConfirmPassword(value);
+        break;
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({});
+    
+    // Validate form
+    const emailValid = validateField('email', email);
+    const passwordValid = validateField('password', password);
+    
+    if (!emailValid || !passwordValid) {
+      setLoading(false);
+      return;
+    }
     
     try {
       console.log('🔐 Auth: Starting sign in process...');
@@ -83,6 +164,14 @@ const Auth = () => {
       
       if (data.user) {
         console.log('✅ Auth: Sign in successful');
+        
+        // Store remember me preference
+        if (rememberMe) {
+          localStorage.setItem('auth_remember_me', 'true');
+        } else {
+          localStorage.removeItem('auth_remember_me');
+        }
+        
         toast({
           title: "Welcome back!",
           description: "You have been signed in successfully.",
@@ -101,6 +190,10 @@ const Auth = () => {
       
       if (error.name === 'AbortError') {
         errorMessage = 'Login timed out. Please check your connection and try again.';
+      } else if (error.message?.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'Please check your email and click the confirmation link before signing in.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -120,14 +213,27 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setFieldErrors({});
+    
+    // Validate form
+    const emailValid = validateField('email', email);
+    const passwordValid = validateField('password', password);
+    const confirmPasswordValid = validateField('confirmPassword', confirmPassword);
+    
+    if (!emailValid || !passwordValid || !confirmPasswordValid) {
+      setLoading(false);
+      return;
+    }
+    
+    // Check password strength
+    if (passwordStrength < 60) {
+      setError('Please choose a stronger password');
+      setLoading(false);
+      return;
+    }
     
     try {
       console.log('🔐 Auth: Starting sign up process...');
-      
-      // Validate passwords match
-      if (password !== confirmPassword) {
-        throw new Error('Passwords do not match');
-      }
       
       // Clear any existing state
       clearEmergencyMode();
@@ -155,6 +261,9 @@ const Auth = () => {
             description: "Welcome! You can now sign in.",
           });
           setActiveTab('signin');
+          // Clear form
+          setPassword('');
+          setConfirmPassword('');
         } else {
           // User needs to confirm email
           toast({
@@ -166,10 +275,19 @@ const Auth = () => {
       
     } catch (error: any) {
       console.error('💥 Sign up failed:', error);
-      setError(error.message || 'Failed to create account');
+      
+      let errorMessage = error.message || 'Failed to create account';
+      
+      if (error.message?.includes('User already registered')) {
+        errorMessage = 'An account with this email already exists. Please sign in instead.';
+      } else if (error.message?.includes('Password should be')) {
+        errorMessage = 'Password does not meet requirements. Please choose a stronger password.';
+      }
+      
+      setError(errorMessage);
       toast({
         title: "Sign Up Failed",
-        description: error.message || 'Failed to create account',
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -235,11 +353,12 @@ const Auth = () => {
                       type="email"
                       placeholder="Enter your email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => handleFieldChange('email', e.target.value)}
                       className="pl-9"
                       required
                     />
                   </div>
+                  <FormFieldError error={fieldErrors.email} />
                 </div>
                 
                 <div className="space-y-2">
@@ -248,14 +367,51 @@ const Auth = () => {
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-9"
+                      onChange={(e) => handleFieldChange('password', e.target.value)}
+                      className="pl-9 pr-10"
                       required
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                   </div>
+                  <FormFieldError error={fieldErrors.password} />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="remember-me"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300"
+                    />
+                    <Label htmlFor="remember-me" className="text-sm">
+                      Remember me
+                    </Label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="link"
+                    className="p-0 h-auto text-sm"
+                    onClick={() => setForgotPasswordOpen(true)}
+                  >
+                    Forgot password?
+                  </Button>
                 </div>
                 
                 {error && (
@@ -296,11 +452,12 @@ const Auth = () => {
                       type="email"
                       placeholder="Enter your email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => handleFieldChange('email', e.target.value)}
                       className="pl-9"
                       required
                     />
                   </div>
+                  <FormFieldError error={fieldErrors.email} />
                 </div>
                 
                 <div className="space-y-2">
@@ -309,14 +466,35 @@ const Auth = () => {
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="signup-password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       placeholder="Create a password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pl-9"
+                      onChange={(e) => handleFieldChange('password', e.target.value)}
+                      className="pl-9 pr-10"
                       required
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                   </div>
+                  <FormFieldError error={fieldErrors.password} />
+                  
+                  {password && (
+                    <PasswordStrengthIndicator 
+                      password={password} 
+                      onStrengthChange={setPasswordStrength}
+                    />
+                  )}
                 </div>
                 
                 <div className="space-y-2">
@@ -325,14 +503,28 @@ const Auth = () => {
                     <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="confirm-password"
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       placeholder="Confirm your password"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-9"
+                      onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
+                      className="pl-9 pr-10"
                       required
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
                   </div>
+                  <FormFieldError error={fieldErrors.confirmPassword} />
                 </div>
                 
                 {error && (
@@ -345,7 +537,7 @@ const Auth = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={loading}
+                  disabled={loading || (activeTab === 'signup' && passwordStrength < 60)}
                 >
                   {loading ? (
                     <>
@@ -364,6 +556,11 @@ const Auth = () => {
           </Tabs>
         </CardContent>
       </Card>
+
+      <ForgotPasswordDialog
+        open={forgotPasswordOpen}
+        onOpenChange={setForgotPasswordOpen}
+      />
     </div>
   );
 };
