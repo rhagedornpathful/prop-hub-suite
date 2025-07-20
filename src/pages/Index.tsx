@@ -250,8 +250,9 @@ const IndexContent = () => {
       />
       
       <KeyboardShortcutsHelp
+        shortcuts={shortcuts}
         isOpen={isHelpOpen}
-        onOpenChange={closeHelp}
+        onClose={closeHelp}
       />
     </ErrorBoundary>
   );
