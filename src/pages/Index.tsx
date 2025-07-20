@@ -17,6 +17,9 @@ import HouseWatcherDashboard from "@/pages/dashboards/HouseWatcherDashboard";
 import { PropertyManagerDashboard } from "@/pages/dashboards/PropertyManagerDashboard";
 import { MakeAdminButton } from "@/components/dev/MakeAdminButton";
 import { SearchProvider, useSearchContext } from "@/contexts/SearchContext";
+import { QuickActions } from "@/components/QuickActions";
+import { RealTimeNotificationSystem } from "@/components/RealTimeNotificationSystem";
+import { useRealtime } from "@/hooks/useRealtime";
 
 // Lazy load dialogs for better performance
 const AddPropertyDialog = lazy(() => import("@/components/AddPropertyDialog").then(module => ({ default: module.AddPropertyDialog })));
@@ -34,6 +37,9 @@ const IndexContent = () => {
   const { notificationCount } = useNotifications();
   const { isMobile } = useMobileDetection();
   const { userRole, loading: authLoading } = useUserRole();
+  
+  // Initialize real-time updates
+  useRealtime();
 
   // Memoized dialog handlers for performance
   const handleAddProperty = useCallback(() => setAddPropertyOpen(true), []);
@@ -253,6 +259,13 @@ const IndexContent = () => {
         shortcuts={shortcuts}
         isOpen={isHelpOpen}
         onClose={closeHelp}
+      />
+      
+      {/* Quick Actions Floating Button */}
+      <QuickActions
+        onAddProperty={handleAddProperty}
+        onAddTenant={handleAddTenant}
+        onScheduleMaintenance={handleScheduleMaintenance}
       />
     </ErrorBoundary>
   );

@@ -1,143 +1,120 @@
-import { useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from './use-toast';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from '@/hooks/use-toast';
 
 export const useRealtime = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const channelsRef = useRef<any[]>([]);
+
+  const showNotification = useCallback((message: string, type: 'info' | 'success' | 'warning' = 'info') => {
+    toast({
+      title: 'Real-time Update',
+      description: message,
+      variant: type === 'warning' ? 'destructive' : 'default',
+    });
+  }, []);
 
   useEffect(() => {
-    if (!user) return;
-
-    // Properties real-time updates
+    // Listen to properties changes
     const propertiesChannel = supabase
       .channel('properties-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'properties'
-      }, (payload) => {
-        console.log('Properties change:', payload);
-        
-        // Invalidate related queries
-        queryClient.invalidateQueries({ queryKey: ['properties'] });
-        queryClient.invalidateQueries({ queryKey: ['property-metrics'] });
-        queryClient.invalidateQueries({ queryKey: ['business-summary'] });
-        
-        // Show notification for changes by other users
-        if (payload.new && typeof payload.new === 'object' && 'user_id' in payload.new && payload.new.user_id !== user.id) {
-          toast({
-            title: "Property Updated",
-            description: "A property has been updated by another user.",
-          });
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'properties'
+        },
+        (payload) => {
+          console.log('Properties change:', payload);
+          queryClient.invalidateQueries({ queryKey: ['properties'] });
+          
+          if (payload.eventType === 'INSERT') {
+            showNotification('New property added', 'success');
+          } else if (payload.eventType === 'UPDATE') {
+            showNotification('Property updated', 'info');
+          }
         }
-      })
+      )
       .subscribe();
 
-    // House watching real-time updates
-    const houseWatchingChannel = supabase
-      .channel('house-watching-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'house_watching'
-      }, (payload) => {
-        console.log('House watching change:', payload);
-        
-        queryClient.invalidateQueries({ queryKey: ['house-watching'] });
-        queryClient.invalidateQueries({ queryKey: ['house-watching-metrics'] });
-        queryClient.invalidateQueries({ queryKey: ['business-summary'] });
-        
-        if (payload.new && typeof payload.new === 'object' && 'user_id' in payload.new && payload.new.user_id !== user.id) {
-          toast({
-            title: "House Watching Updated",
-            description: "A house watching service has been updated by another user.",
-          });
+    // Listen to maintenance requests changes
+    const maintenanceChannel = supabase
+      .channel('maintenance-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'maintenance_requests'
+        },
+        (payload) => {
+          console.log('Maintenance change:', payload);
+          queryClient.invalidateQueries({ queryKey: ['maintenance-requests'] });
+          
+          if (payload.eventType === 'INSERT') {
+            showNotification('New maintenance request created', 'info');
+          } else if (payload.eventType === 'UPDATE') {
+            const newRecord = payload.new as any;
+            if (newRecord?.status === 'completed') {
+              showNotification('Maintenance request completed', 'success');
+            } else if (newRecord?.status === 'in-progress') {
+              showNotification('Maintenance request in progress', 'info');
+            }
+          }
         }
-      })
+      )
       .subscribe();
 
-    // Profiles real-time updates
-    const profilesChannel = supabase
-      .channel('profiles-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'profiles',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        console.log('Profile change:', payload);
-        
-        queryClient.invalidateQueries({ queryKey: ['profile', user.id] });
-        
-        if (payload.eventType === 'UPDATE') {
-          toast({
-            title: "Profile Updated",
-            description: "Your profile has been updated.",
-          });
+    // Listen to tenants changes
+    const tenantsChannel = supabase
+      .channel('tenants-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tenants'
+        },
+        (payload) => {
+          console.log('Tenants change:', payload);
+          queryClient.invalidateQueries({ queryKey: ['tenants'] });
+          
+          if (payload.eventType === 'INSERT') {
+            showNotification('New tenant added', 'success');
+          }
         }
-      })
+      )
       .subscribe();
 
-    // User roles real-time updates
-    const rolesChannel = supabase
-      .channel('user-roles-changes')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'user_roles',
-        filter: `user_id=eq.${user.id}`
-      }, (payload) => {
-        console.log('User roles change:', payload);
-        
-        queryClient.invalidateQueries({ queryKey: ['user-roles', user.id] });
-        
-        if (payload.eventType === 'INSERT') {
-          toast({
-            title: "Role Added",
-            description: "A new role has been assigned to you.",
-          });
-        } else if (payload.eventType === 'DELETE') {
-          toast({
-            title: "Role Removed",
-            description: "A role has been removed from your account.",
-          });
+    // Listen to messages for real-time chat
+    const messagesChannel = supabase
+      .channel('messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        (payload) => {
+          console.log('New message:', payload);
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          queryClient.invalidateQueries({ queryKey: ['messages'] });
         }
-      })
+      )
       .subscribe();
-
-    channelsRef.current = [propertiesChannel, houseWatchingChannel, profilesChannel, rolesChannel];
 
     return () => {
-      channelsRef.current.forEach(channel => {
-        supabase.removeChannel(channel);
-      });
-      channelsRef.current = [];
+      supabase.removeChannel(propertiesChannel);
+      supabase.removeChannel(maintenanceChannel);
+      supabase.removeChannel(tenantsChannel);
+      supabase.removeChannel(messagesChannel);
     };
-  }, [user, queryClient, toast]);
-
-  // Conflict resolution utility
-  const resolveConflict = async (table: string, id: string, clientVersion: any, serverVersion: any) => {
-    // Simple conflict resolution strategy: server wins, but notify user
-    toast({
-      title: "Conflict Detected",
-      description: `The ${table} was modified by another user. Your changes have been overridden.`,
-      variant: "destructive",
-    });
-    
-    // Could implement more sophisticated strategies here:
-    // - Last write wins
-    // - Merge changes
-    // - Let user choose
-    
-    return serverVersion;
-  };
+  }, [queryClient, showNotification]);
 
   return {
-    resolveConflict,
+    // Could return real-time connection status if needed
+    isConnected: true
   };
 };

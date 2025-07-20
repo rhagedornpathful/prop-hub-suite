@@ -38,9 +38,9 @@ import MaintenanceAlerts from "@/components/MaintenanceAlerts";
 import MaintenanceDashboard from "@/components/MaintenanceDashboard";
 import MaintenanceFilters from "@/components/MaintenanceFilters";
 import VendorManagementSystem from "@/components/VendorManagementSystem";
-import AdvancedAnalyticsDashboard from "@/components/AdvancedAnalyticsDashboard";
+import { AdvancedAnalyticsDashboard } from "@/components/AdvancedAnalyticsDashboard";
 import OwnerPortalSystem from "@/components/OwnerPortalSystem";
-import RealTimeNotificationSystem from "@/components/RealTimeNotificationSystem";
+import { RealTimeNotificationSystem } from "@/components/RealTimeNotificationSystem";
 import MobileMaintenanceView from "@/components/mobile/MobileMaintenanceView";
 import IntegrationHub from "@/components/IntegrationHub";
 import AutomationWorkflows from "@/components/AutomationWorkflows";
@@ -567,7 +567,7 @@ const Maintenance = () => {
 
           {/* Analytics Tab */}
           <TabsContent value="analytics">
-            <AdvancedAnalyticsDashboard requests={maintenanceRequests} />
+            <AdvancedAnalyticsDashboard />
           </TabsContent>
 
           {/* Owner Portal Tab */}
