@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/contexts/AuthContext';
 import { CommunicationHub } from '@/components/CommunicationHub';
 import { MaintenanceMessaging } from '@/components/MaintenanceMessaging';
+import VideoCallSystem from '@/components/VideoCallSystem';
+import EnhancedEmailTemplates from '@/components/EnhancedEmailTemplates';
 import { 
   useConversations, 
   useConversationMessages, 
@@ -196,10 +198,12 @@ const Messages = () => {
 
         <Tabs defaultValue="conversations" className="space-y-4 sm:space-y-6">
           <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-            <TabsList className="grid w-full sm:w-auto grid-cols-3 h-auto">
-              <TabsTrigger value="conversations" className="text-xs sm:text-sm">Conversations</TabsTrigger>
+            <TabsList className="grid w-full sm:w-auto grid-cols-5 h-auto">
+              <TabsTrigger value="conversations" className="text-xs sm:text-sm">Chat</TabsTrigger>
               <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
-              <TabsTrigger value="communication" className="text-xs sm:text-sm">Communication</TabsTrigger>
+              <TabsTrigger value="video" className="text-xs sm:text-sm">Video Calls</TabsTrigger>
+              <TabsTrigger value="templates" className="text-xs sm:text-sm">Templates</TabsTrigger>
+              <TabsTrigger value="communication" className="text-xs sm:text-sm">Hub</TabsTrigger>
             </TabsList>
             <Button onClick={() => setShowNewConversation(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
