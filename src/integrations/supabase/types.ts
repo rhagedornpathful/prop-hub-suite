@@ -196,6 +196,102 @@ export type Database = {
           },
         ]
       }
+      home_check_activities: {
+        Row: {
+          activity_data: Json | null
+          activity_type: string
+          created_at: string
+          id: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_type: string
+          created_at?: string
+          id?: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_type?: string
+          created_at?: string
+          id?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      home_check_sessions: {
+        Row: {
+          checklist_data: Json | null
+          completed_at: string | null
+          created_at: string
+          duration_minutes: number | null
+          general_notes: string | null
+          id: string
+          next_visit_date: string | null
+          overall_condition: string | null
+          photos_taken: number | null
+          property_id: string
+          scheduled_by: string | null
+          scheduled_date: string | null
+          scheduled_time: string | null
+          started_at: string | null
+          status: string
+          total_issues_found: number | null
+          updated_at: string
+          user_id: string
+          weather: string | null
+          weather_impact: string | null
+        }
+        Insert: {
+          checklist_data?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          general_notes?: string | null
+          id?: string
+          next_visit_date?: string | null
+          overall_condition?: string | null
+          photos_taken?: number | null
+          property_id: string
+          scheduled_by?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          started_at?: string | null
+          status?: string
+          total_issues_found?: number | null
+          updated_at?: string
+          user_id: string
+          weather?: string | null
+          weather_impact?: string | null
+        }
+        Update: {
+          checklist_data?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          general_notes?: string | null
+          id?: string
+          next_visit_date?: string | null
+          overall_condition?: string | null
+          photos_taken?: number | null
+          property_id?: string
+          scheduled_by?: string | null
+          scheduled_date?: string | null
+          scheduled_time?: string | null
+          started_at?: string | null
+          status?: string
+          total_issues_found?: number | null
+          updated_at?: string
+          user_id?: string
+          weather?: string | null
+          weather_impact?: string | null
+        }
+        Relationships: []
+      }
       house_watcher_properties: {
         Row: {
           assigned_date: string

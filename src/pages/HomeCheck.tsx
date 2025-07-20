@@ -6,49 +6,29 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   MapPin,
-  Clock,
-  CheckCircle,
-  AlertCircle,
   ArrowLeft,
-  Eye,
   Home,
-  Zap,
   Shield,
   Wind,
-  Save,
-  Navigation,
-  FileText,
-  Play,
   Square,
-  Timer
+  Play,
+  Timer,
+  Navigation,
+  CheckCircle,
+  FileText
 } from "lucide-react";
-import { PropertyCheckItemCard } from "@/components/PropertyCheckItemCard";
-import { SummarySection } from "@/components/SummarySection";
-import { usePropertyCheck } from "@/hooks/usePropertyCheck";
+import { HomeCheckItemCard } from "@/components/HomeCheckItemCard";
+import { HomeCheckSummarySection } from "@/components/HomeCheckSummarySection";
+import { useHomeCheck } from "@/hooks/useHomeCheck";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const PropertyCheck = () => {
+const HomeCheck = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { userRole, isAdmin, isPropertyManager } = useUserRole();
-
-  // Restrict Property Checks to Property Managers and Admins only
-  if (!isAdmin() && !isPropertyManager()) {
-    return (
-      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Access Restricted</h1>
-          <p className="text-muted-foreground mb-4">Property checks are only available to Property Managers and Administrators.</p>
-          <Button onClick={() => navigate('/')} variant="outline">
-            Return to Dashboard
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const { userRole } = useUserRole();
   const { id: propertyId } = useParams();
   const [currentSection, setCurrentSection] = useState(0);
   const [generalNotes, setGeneralNotes] = useState("");
@@ -75,6 +55,14 @@ const PropertyCheck = () => {
   
   const {
     checklistItems,
+    weather,
+    setWeather,
+    overallCondition,
+    setOverallCondition,
+    weatherImpact,
+    setWeatherImpact,
+    nextVisitDate,
+    setNextVisitDate,
     isLoading,
     isSaving,
     isSubmitting,
@@ -90,31 +78,31 @@ const PropertyCheck = () => {
     getSectionProgress,
     getOverallProgress,
     getRequiredItemsProgress,
+    getTotalIssuesFound,
+    getTotalPhotos,
     canCompleteCheck,
-    savePropertyCheckData,
+    saveHomeCheckData,
     recoverFromLocalStorage,
     startSession,
     submitSession,
     formatElapsedTime
-  } = usePropertyCheck();
+  } = useHomeCheck();
 
   const sections = [
     { name: "Exterior", key: "exterior", icon: Home, color: "bg-gradient-primary" },
-    { name: "Interior", key: "interior", icon: Wind, color: "bg-gradient-secondary" },
-    { name: "Security", key: "security", icon: Shield, color: "bg-gradient-accent" },
-    { name: "Utilities", key: "utilities", icon: Zap, color: "bg-gradient-success" },
+    { name: "Entry & Security", key: "entry_security", icon: Shield, color: "bg-gradient-secondary" },
+    { name: "Interior", key: "interior", icon: Wind, color: "bg-gradient-accent" },
+    { name: "Final Steps", key: "final_steps", icon: Square, color: "bg-gradient-success" },
     { name: "Summary", key: "summary", icon: FileText, color: "bg-gradient-primary" },
   ];
 
   const currentSectionData = sections[currentSection];
-  const currentItems = checklistItems[currentSectionData.key as keyof typeof checklistItems];
+  const currentItems = currentSectionData.key === 'summary' 
+    ? [] 
+    : checklistItems[currentSectionData.key as keyof typeof checklistItems];
   const requiredProgress = getRequiredItemsProgress();
 
   const handleCompleteCheck = async () => {
-    console.log('Handle complete check called');
-    console.log('Can complete check:', canCompleteCheck());
-    console.log('Required progress:', requiredProgress);
-    
     if (!canCompleteCheck()) {
       toast({
         title: "Incomplete required items",
@@ -142,12 +130,7 @@ const PropertyCheck = () => {
 
   const handleCloseSuccessDialog = () => {
     setShowSuccessDialog(false);
-    // Redirect based on user role
-    if (userRole === 'house_watcher') {
-      navigate('/'); // House watchers go to their dashboard (root)
-    } else {
-      navigate('/house-watching'); // Admins/property managers go to house watching management
-    }
+    navigate('/house-watching');
   };
 
   const handleStartSession = () => {
@@ -159,27 +142,19 @@ const PropertyCheck = () => {
       {/* Mobile-First Header */}
       <header className="bg-card border-b border-border section-padding shadow-sm sticky top-0 z-10">
         <div className="container-responsive">
-          {/* Mobile: Stack vertically, Desktop: Horizontal */}
           <div className="mobile-stack items-start md:items-center">
             <div className="flex items-center gap-3 w-full md:w-auto">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => {
-                  // Navigate back based on user role
-                  if (userRole === 'house_watcher') {
-                    navigate('/'); // House watchers go to their dashboard (root)
-                  } else {
-                    navigate('/house-watching'); // Admins/property managers go to house watching management
-                  }
-                }}
+                onClick={() => navigate('/house-watching')}
                 className="touch-target"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span className="ml-2 desktop-only">Back</span>
               </Button>
               <div className="flex-1 min-w-0">
-                <h1 className="text-responsive-lg font-bold text-foreground">Property Check</h1>
+                <h1 className="text-responsive-lg font-bold text-foreground">Home Check</h1>
                 {isLoadingProperty ? (
                   <p className="text-sm text-muted-foreground">Loading property details...</p>
                 ) : propertyError ? (
@@ -192,7 +167,7 @@ const PropertyCheck = () => {
               </div>
             </div>
             
-            {/* Progress and Status Badges - Stack on mobile */}
+            {/* Progress and Status Badges */}
             <div className="w-full md:w-auto">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-xs">
@@ -227,13 +202,16 @@ const PropertyCheck = () => {
           </div>
         </div>
       </header>
-      {/* Section Navigation - Mobile First */}
+
+      {/* Section Navigation */}
       <div className="bg-card border-b border-border section-padding">
         <div className="container-responsive">
           <div className="flex gap-2 overflow-x-auto pb-2">
             {sections.map((section, index) => {
               const Icon = section.icon;
-              const progress = getSectionProgress(section.key as keyof typeof checklistItems);
+              const progress = section.key === 'summary' 
+                ? '✓' 
+                : getSectionProgress(section.key as keyof typeof checklistItems);
               const isActive = currentSection === index;
               
               return (
@@ -256,7 +234,7 @@ const PropertyCheck = () => {
         </div>
       </div>
 
-      {/* Main Content - Mobile First */}
+      {/* Main Content */}
       <main className="section-padding pb-20 overflow-safe">
         <div className="container-responsive max-w-2xl space-y-4">
           {/* Start Session Card */}
@@ -271,17 +249,17 @@ const PropertyCheck = () => {
                   </div>
                   <div>
                     <h3 className="text-responsive-lg font-semibold text-white mb-2">
-                      Ready to Start Property Check?
+                      Ready to Start Home Check?
                     </h3>
                     <p className="text-white/80 text-sm mb-4">
-                      Click start to begin timing your inspection session
+                      Click start to begin timing your home inspection session
                     </p>
                     <Button
                       onClick={handleStartSession}
                       className="bg-white text-primary hover:bg-white/90 touch-target"
                     >
                       <Play className="h-4 w-4 mr-2" />
-                      Start Property Check
+                      Start Home Check
                     </Button>
                   </div>
                 </div>
@@ -298,10 +276,12 @@ const PropertyCheck = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 text-sm">
                         <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">456 Oak Street</span>
+                        <span className="text-muted-foreground">
+                          {property?.address || 'Loading address...'}
+                        </span>
                       </div>
                       <p className="text-sm mt-1 text-muted-foreground">
-                        Weekly check • Owner: Sarah Johnson
+                        Weekly home check
                       </p>
                     </div>
                     <Button 
@@ -312,7 +292,7 @@ const PropertyCheck = () => {
                           navigator.geolocation.getCurrentPosition(() => {
                             toast({
                               title: "Location verified",
-                              description: "Your location has been verified for this property check"
+                              description: "Your location has been verified for this home check"
                             });
                           });
                         }
@@ -334,25 +314,25 @@ const PropertyCheck = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-          {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
-              <p className="text-sm text-muted-foreground">Loading property check...</p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={recoverFromLocalStorage}
-                className="mt-4"
-              >
-                Try to recover from local backup
-              </Button>
-            </div>
+                  {isLoading ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading home check...</p>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={recoverFromLocalStorage}
+                        className="mt-4"
+                      >
+                        Try to recover from local backup
+                      </Button>
+                    </div>
                   ) : currentSectionData.key === 'summary' ? (
-                    <SummarySection
-                      items={currentItems}
-                      onToggle={(itemId) => handleItemToggle(itemId, currentSectionData.key as keyof typeof checklistItems)}
-                      onNotesChange={(itemId, notes) => handleNotesChange(itemId, notes, currentSectionData.key as keyof typeof checklistItems)}
-                      onPhotosUpdate={(itemId, photos) => handlePhotosUpdate(itemId, photos, currentSectionData.key as keyof typeof checklistItems)}
+                    <HomeCheckSummarySection
+                      items={[]}
+                      onToggle={() => {}}
+                      onNotesChange={() => {}}
+                      onPhotosUpdate={() => {}}
                       generalNotes={generalNotes}
                       onGeneralNotesChange={setGeneralNotes}
                       elapsedTime={elapsedTime}
@@ -361,10 +341,20 @@ const PropertyCheck = () => {
                       onSubmit={handleCompleteCheck}
                       canSubmit={canCompleteCheck()}
                       isSubmitting={isSubmitting}
+                      weather={weather}
+                      setWeather={setWeather}
+                      overallCondition={overallCondition}
+                      setOverallCondition={setOverallCondition}
+                      weatherImpact={weatherImpact}
+                      setWeatherImpact={setWeatherImpact}
+                      nextVisitDate={nextVisitDate}
+                      setNextVisitDate={setNextVisitDate}
+                      totalIssuesFound={getTotalIssuesFound()}
+                      totalPhotos={getTotalPhotos()}
                     />
                   ) : (
                     currentItems.map((item) => (
-                      <PropertyCheckItemCard
+                      <HomeCheckItemCard
                         key={item.id}
                         item={item}
                         onToggle={(itemId) => handleItemToggle(itemId, currentSectionData.key as keyof typeof checklistItems)}
@@ -408,26 +398,15 @@ const PropertyCheck = () => {
               </Button>
             ) : currentSectionData.key !== 'summary' ? (
               <Button
-                onClick={handleCompleteCheck}
-                disabled={!canCompleteCheck() || isSubmitting}
-                className={`${canCompleteCheck() ? 'bg-gradient-success hover:bg-success-dark' : 'opacity-50'}`}
+                onClick={() => setCurrentSection(sections.length - 1)}
+                className="bg-gradient-success hover:bg-success-dark"
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    <Square className="h-4 w-4 mr-2" />
-                    Submit Check
-                  </>
-                )}
+                Summary
               </Button>
             ) : null}
           </div>
         </div>
-        )}
+      )}
 
       {/* Success Confirmation Dialog */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
@@ -435,10 +414,10 @@ const PropertyCheck = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-success" />
-              Property Check Submitted Successfully!
+              Home Check Submitted Successfully!
             </DialogTitle>
             <DialogDescription>
-              Your property inspection has been completed and submitted.
+              Your home inspection has been completed and submitted.
             </DialogDescription>
           </DialogHeader>
           
@@ -458,21 +437,12 @@ const PropertyCheck = () => {
                   </p>
                 </div>
               </div>
-              
-              <div className="text-center space-y-2">
-                <Badge variant="default" className="bg-success text-success-foreground">
-                  Report Generated
-                </Badge>
-                <p className="text-sm text-muted-foreground">
-                  The property owner and management team have been notified.
-                </p>
-              </div>
             </div>
           )}
-          
-          <DialogFooter className="sm:justify-center">
+
+          <DialogFooter>
             <Button onClick={handleCloseSuccessDialog} className="w-full">
-              Return to House Watching
+              Continue
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -481,4 +451,4 @@ const PropertyCheck = () => {
   );
 };
 
-export default PropertyCheck;
+export default HomeCheck;
