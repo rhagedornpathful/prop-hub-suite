@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { CommandPalette } from "@/components/CommandPalette";
-import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
+import KeyboardShortcutsHelp from "@/components/KeyboardShortcutsHelp";
 import { PullToRefresh } from "@/components/mobile/PullToRefresh";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { useNavigationSwipes } from "@/hooks/useSwipeGestures";
