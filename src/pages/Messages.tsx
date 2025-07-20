@@ -120,106 +120,107 @@ const Messages = () => {
   const activeMaintenanceCount = maintenanceRequests.filter(req => req.status === 'in-progress').length;
 
   return (
-    <div className="flex-1 space-y-6 p-6">
+    <div className="flex-1 space-y-4 p-4 sm:p-6 overflow-x-hidden">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
-          <p className="text-muted-foreground">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">Messages</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Communication hub for tenants, contractors, and internal team
           </p>
         </div>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-4 sm:mb-6">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Unread Messages</p>
-                  <p className="text-2xl font-bold text-red-600">{unreadCount}</p>
-                  <p className="text-xs text-muted-foreground">Requires attention</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Unread Messages</p>
+                  <p className="text-xl sm:text-2xl font-bold text-red-600">{unreadCount}</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">Requires attention</p>
                 </div>
-                <div className="p-3 rounded-full bg-red-100">
-                  <MessageCircle className="h-6 w-6 text-red-600" />
+                <div className="p-2 sm:p-3 rounded-full bg-red-100 flex-shrink-0">
+                  <MessageCircle className="h-4 w-4 sm:h-6 sm:w-6 text-red-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Active Conversations</p>
-                  <p className="text-2xl font-bold text-blue-600">{totalConversations}</p>
-                  <p className="text-xs text-muted-foreground">Total threads</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Active Conversations</p>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-600">{totalConversations}</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">Total threads</p>
                 </div>
-                <div className="p-3 rounded-full bg-blue-100">
-                  <Users className="h-6 w-6 text-blue-600" />
+                <div className="p-2 sm:p-3 rounded-full bg-blue-100 flex-shrink-0">
+                  <Users className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Maintenance Requests</p>
-                  <p className="text-2xl font-bold text-orange-600">{activeMaintenanceCount}</p>
-                  <p className="text-xs text-muted-foreground">In progress</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Maintenance Requests</p>
+                  <p className="text-xl sm:text-2xl font-bold text-orange-600">{activeMaintenanceCount}</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">In progress</p>
                 </div>
-                <div className="p-3 rounded-full bg-orange-100">
-                  <Wrench className="h-6 w-6 text-orange-600" />
+                <div className="p-2 sm:p-3 rounded-full bg-orange-100 flex-shrink-0">
+                  <Wrench className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Response Time</p>
-                  <p className="text-2xl font-bold text-green-600">2.5h</p>
-                  <p className="text-xs text-muted-foreground">Average response</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Response Time</p>
+                  <p className="text-xl sm:text-2xl font-bold text-green-600">2.5h</p>
+                  <p className="text-xs text-muted-foreground hidden sm:block">Average response</p>
                 </div>
-                <div className="p-3 rounded-full bg-green-100">
-                  <Clock className="h-6 w-6 text-green-600" />
+                <div className="p-2 sm:p-3 rounded-full bg-green-100 flex-shrink-0">
+                  <Clock className="h-4 w-4 sm:h-6 sm:w-6 text-green-600" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="conversations" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList className="grid w-[400px] grid-cols-3">
-              <TabsTrigger value="conversations">Conversations</TabsTrigger>
-              <TabsTrigger value="maintenance">Maintenance Chat</TabsTrigger>
-              <TabsTrigger value="communication">Communication</TabsTrigger>
+        <Tabs defaultValue="conversations" className="space-y-4 sm:space-y-6">
+          <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+            <TabsList className="grid w-full sm:w-auto grid-cols-3 h-auto">
+              <TabsTrigger value="conversations" className="text-xs sm:text-sm">Conversations</TabsTrigger>
+              <TabsTrigger value="maintenance" className="text-xs sm:text-sm">Maintenance</TabsTrigger>
+              <TabsTrigger value="communication" className="text-xs sm:text-sm">Communication</TabsTrigger>
             </TabsList>
-            <Button onClick={() => setShowNewConversation(true)}>
+            <Button onClick={() => setShowNewConversation(true)} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
-              New Message
+              <span className="hidden sm:inline">New Message</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </div>
 
-          <TabsContent value="conversations" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <TabsContent value="conversations" className="space-y-4 sm:space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Conversations List */}
               <div className="lg:col-span-1">
                 <Card>
                   <CardHeader className="pb-3">
                     <div>
-                      <CardTitle>Conversations</CardTitle>
-                      <CardDescription>
+                      <CardTitle className="text-base sm:text-lg">Conversations</CardTitle>
+                      <CardDescription className="text-sm">
                         All active message threads
                       </CardDescription>
                     </div>
-                    <div className="flex items-center space-x-2 mt-4">
+                    <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-2 mt-4">
                       <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                         <Input
@@ -230,7 +231,7 @@ const Messages = () => {
                         />
                       </div>
                       <Select value={senderFilter} onValueChange={setSenderFilter}>
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-full sm:w-32">
                           <Filter className="h-4 w-4 mr-2" />
                           <SelectValue />
                         </SelectTrigger>
