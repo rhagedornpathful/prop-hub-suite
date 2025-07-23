@@ -1,13 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.4";
-import { Resend } from "npm:resend@2.0.0";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
 const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,46 +34,6 @@ const generateTemporaryPassword = (): string => {
   return password;
 };
 
-const sendWelcomeEmail = async (
-  email: string,
-  firstName: string,
-  lastName: string,
-  tempPassword: string,
-  role: string
-) => {
-  if (!resend) {
-    console.log("Resend not configured, skipping email");
-    return;
-  }
-
-  const roleDisplayName = role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-  
-  try {
-    await resend.emails.send({
-      from: "Property Management <onboarding@resend.dev>",
-      to: [email],
-      subject: "Welcome to Property Management System",
-      html: `
-        <h1>Welcome to Property Management System</h1>
-        <p>Hello ${firstName} ${lastName},</p>
-        <p>You have been added to our property management system as a <strong>${roleDisplayName}</strong>.</p>
-        <p><strong>Your login credentials:</strong></p>
-        <ul>
-          <li>Email: ${email}</li>
-          <li>Temporary Password: <code>${tempPassword}</code></li>
-        </ul>
-        <p>Please log in at your earliest convenience and change your password.</p>
-        <p><a href="https://bd81fa1e-51cd-42f4-be62-9fca5c241d7a.lovableproject.com/auth" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Log in to Property Management System</a></p>
-        <p>If you have any questions, please contact our support team.</p>
-        <p>Best regards,<br>Property Management Team</p>
-      `,
-    });
-    console.log(`Welcome email sent to ${email}`);
-  } catch (error) {
-    console.error("Failed to send welcome email:", error);
-  }
-};
-
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -85,6 +42,8 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const { email, firstName, lastName, role, phone, address, city, state, zipCode, companyName, additionalData }: CreateUserRequest = await req.json();
+
+    console.log('Creating user with data:', { email, firstName, lastName, role });
 
     // Validate required fields
     if (!email || !firstName || !lastName || !role) {
@@ -217,15 +176,12 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("Tenant user created - property assignment will be handled separately");
     }
 
-    // Send welcome email
-    await sendWelcomeEmail(email, firstName, lastName, tempPassword, role);
-
     return new Response(
       JSON.stringify({ 
         success: true, 
         userId: userId,
         tempPassword: tempPassword,
-        message: "User created successfully and welcome email sent"
+        message: "User created successfully. Temporary password generated."
       }),
       {
         status: 200,
