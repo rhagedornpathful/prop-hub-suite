@@ -31,7 +31,6 @@ const AddUserDialog = ({ onUserAdded }: AddUserDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
-    password: "",
     firstName: "",
     lastName: "",
     role: "",
@@ -42,10 +41,10 @@ const AddUserDialog = ({ onUserAdded }: AddUserDialogProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.email || !formData.password || !formData.role) {
+    if (!formData.email || !formData.firstName || !formData.lastName || !formData.role) {
       toast({
         title: "Error",
-        description: "Email, password, and role are required",
+        description: "Email, first name, last name, and role are required",
         variant: "destructive",
       });
       return;
@@ -53,45 +52,20 @@ const AddUserDialog = ({ onUserAdded }: AddUserDialogProps) => {
 
     setLoading(true);
     try {
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: formData.email,
-        password: formData.password,
-        email_confirm: true,
-        user_metadata: {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+      // Call the edge function to create user with role
+      const { data, error } = await supabase.functions.invoke('create-user-with-role', {
+        body: {
+          email: formData.email,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          role: formData.role,
+          phone: formData.phone || undefined,
+          companyName: formData.companyName || undefined,
         },
       });
 
-      if (authError) throw authError;
-
-      const userId = authData.user.id;
-
-      // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: userId,
-          first_name: formData.firstName || null,
-          last_name: formData.lastName || null,
-          phone: formData.phone || null,
-          company_name: formData.companyName || null,
-        });
-
-      if (profileError) {
-        console.warn('Profile creation failed:', profileError);
-      }
-
-      // Assign role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: userId,
-          role: formData.role as any,
-        });
-
-      if (roleError) throw roleError;
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Failed to create user');
 
       toast({
         title: "Success",
@@ -100,7 +74,6 @@ const AddUserDialog = ({ onUserAdded }: AddUserDialogProps) => {
 
       setFormData({
         email: "",
-        password: "",
         firstName: "",
         lastName: "",
         role: "",
@@ -133,32 +106,19 @@ const AddUserDialog = ({ onUserAdded }: AddUserDialogProps) => {
         <DialogHeader>
           <DialogTitle>Add New User</DialogTitle>
           <DialogDescription>
-            Create a new user account with profile and role assignment.
+            Create a new user account with profile and role assignment. A temporary password will be generated and sent via email.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
-              <Input
-                id="password"
-                type="password"
-                value={formData.password}
-                onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
-                required
-                minLength={6}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              required
+            />
           </div>
           
           <div className="grid grid-cols-2 gap-4">

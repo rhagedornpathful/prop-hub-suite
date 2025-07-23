@@ -18,7 +18,7 @@ interface CreateUserRequest {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'property_owner' | 'tenant' | 'house_watcher' | 'property_manager';
+  role: 'admin' | 'property_manager' | 'owner_investor' | 'tenant' | 'house_watcher' | 'contractor' | 'client' | 'leasing_agent';
   phone?: string;
   address?: string;
   city?: string;
@@ -178,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Create role-specific records
-    if (role === 'property_owner') {
+    if (role === 'owner_investor') {
       const { error: ownerError } = await supabase
         .from('property_owners')
         .insert({
