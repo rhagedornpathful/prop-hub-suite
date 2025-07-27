@@ -185,8 +185,8 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
   };
 
   return (
-    <Card className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md overflow-hidden cursor-pointer">
-      <div className="relative">
+    <Card className="group hover:shadow-md transition-all duration-300 border-0 shadow-sm overflow-hidden cursor-pointer rounded-lg p-4 min-h-[120px] touch-manipulation active:scale-[0.98] transition-transform">
+      <div className="relative">{/* Main card container with mobile optimizations */}
         {/* Simple Image Display - No Edit Functionality */}
         <PropertyImage 
           imageUrl={isPropertyManagement ? propertyManagementData?.images?.[0] : property.images?.[0]}
@@ -194,7 +194,7 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
         />
         
         {/* Status Badge */}
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 right-3 flex flex-wrap gap-2">
           <Badge className={getStatusColor(property.status)}>
             {getStatusText(property.status)}
           </Badge>
@@ -223,19 +223,19 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
         </div>
       </div>
       
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 p-0 mt-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
+            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
               {property.address}
             </CardTitle>
-            <div className="flex items-center gap-1 mt-1 text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span className="text-sm">{property.displayAddress}</span>
+            <div className="flex items-center gap-1 mt-1">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-gray-600">{property.displayAddress}</span>
             </div>
             <div className="flex items-center gap-1 mt-1 text-muted-foreground hover:text-primary transition-colors">
               <UserCheck className="h-3 w-3" />
-              <span className="text-xs">Owner: {getOwnerInfo()}</span>
+              <span className="text-base">Owner: {getOwnerInfo()}</span>{/* Increased to 16px */}
             </div>
           </div>
           
@@ -244,7 +244,7 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-11 w-11 p-3 -m-2 opacity-0 group-hover:opacity-100 transition-opacity min-h-[44px]"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
@@ -276,7 +276,7 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 p-0 mt-4">
         <div className="space-y-4">
           {/* Type-specific Content */}
           {isPropertyManagement ? (
@@ -287,8 +287,8 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
                   <div className="flex items-center gap-2">
                     <Home className="h-4 w-4 text-primary" />
                     <div>
-                      <div className="text-sm font-medium">{propertyManagementData.bedrooms}BR/{propertyManagementData.bathrooms}BA</div>
-                      <div className="text-xs text-muted-foreground">Bedrooms/Baths</div>
+                      <div className="text-base font-medium">{propertyManagementData.bedrooms}BR/{propertyManagementData.bathrooms}BA</div>{/* Increased to 16px */}
+                      <div className="text-sm text-muted-foreground">Bedrooms/Baths</div>
                     </div>
                   </div>
                 )}
@@ -296,8 +296,8 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-success" />
                     <div>
-                      <div className="text-sm font-medium">${propertyManagementData.monthly_rent}</div>
-                      <div className="text-xs text-muted-foreground">monthly rent</div>
+                      <div className="text-base font-medium">${propertyManagementData.monthly_rent}</div>{/* Increased to 16px */}
+                      <div className="text-sm text-muted-foreground">monthly rent</div>
                     </div>
                   </div>
                 )}
@@ -408,11 +408,11 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
           {/* Action Buttons - Type Specific */}
           <div className="border-t border-border/50 pt-4 mt-4">
             {isPropertyManagement ? (
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1 h-8 px-2 text-xs font-medium bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 hover:border-primary/30"
+                  className="flex-1 min-h-[44px] px-2 text-base font-medium bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 hover:border-primary/30"
                   onClick={handleViewProperty}
                 >
                   <Eye className="h-3 w-3 mr-1" />
@@ -421,7 +421,7 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1 h-8 px-2 text-xs font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 hover:border-blue-300"
+                  className="flex-1 min-h-[44px] px-2 text-base font-medium bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 hover:border-blue-300"
                   onClick={handleViewMaintenance}
                 >
                   <Wrench className="h-3 w-3 mr-1" />
@@ -430,7 +430,7 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1 h-8 px-2 text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 hover:border-emerald-300"
+                  className="flex-1 min-h-[44px] px-2 text-base font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 hover:border-emerald-300"
                   onClick={handleViewReports}
                 >
                   <TrendingUp className="h-3 w-3 mr-1" />
@@ -438,11 +438,11 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
                 </Button>
               </div>
             ) : (
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1 h-8 px-3 text-xs font-medium bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 hover:border-primary/30"
+                  className="flex-1 min-h-[44px] px-3 text-base font-medium bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 hover:border-primary/30"
                   onClick={handleScheduleCheck}
                 >
                   <Calendar className="h-3 w-3 mr-1.5" />
@@ -451,7 +451,7 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="flex-1 h-8 px-3 text-xs font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 hover:border-emerald-300"
+                  className="flex-1 min-h-[44px] px-3 text-base font-medium bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200 hover:border-emerald-300"
                   onClick={handleViewReports}
                 >
                   <Eye className="h-3 w-3 mr-1.5" />
