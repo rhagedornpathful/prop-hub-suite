@@ -19,6 +19,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { SimplePerformanceMonitor } from "@/components/SimplePerformanceMonitor";
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
+import { MobileNavigation } from "@/components/MobileNavigation";
 import Index from "./pages/Index";
 import Properties from "./pages/Properties";
 import PropertyDetail from "./pages/PropertyDetail";
@@ -107,7 +108,7 @@ const AppContent = () => {
                 >
                   <div className="min-h-screen flex w-full">
                     <AppSidebar />
-                    <main className="flex-1 flex flex-col min-w-0">{/* Remove redundant classes */}
+                    <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">{/* Add mobile bottom padding */}
                       <Routes>
                         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
                         <Route path="/properties" element={
@@ -258,6 +259,7 @@ const AppContent = () => {
                       </Routes>
                     </main>
                   </div>
+                  <MobileNavigation />
                   {config.isDevelopment && <SimplePerformanceMonitor />}
                 </SidebarProvider>
               </ProtectedRoute>
