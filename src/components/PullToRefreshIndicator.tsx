@@ -29,24 +29,52 @@ export function PullToRefreshIndicator({
         transform: `translateY(${translateY}px)`,
         opacity: Math.max(progress, 0.3)
       }}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: Math.max(progress, 0.3) }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ 
+        opacity: Math.max(progress, 0.3),
+        scale: isRefreshing ? 1 : Math.max(0.8 + progress * 0.2, 0.8)
+      }}
+      transition={{ 
+        type: "spring",
+        stiffness: 300,
+        damping: 30
+      }}
     >
-      <div className="bg-background/90 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg border border-border flex items-center gap-3">
+      <div className="bg-background/95 backdrop-blur-md rounded-full px-6 py-3 shadow-xl border border-border/50 flex items-center gap-3">
         <div className="relative">
           {isRefreshing ? (
-            <RefreshCw className="h-5 w-5 text-primary animate-spin" />
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ 
+                duration: 1,
+                repeat: Infinity,
+                ease: "linear"
+              }}
+            >
+              <RefreshCw className="h-5 w-5 text-primary" />
+            </motion.div>
           ) : canRelease ? (
             <motion.div
-              animate={{ rotateX: 180 }}
-              transition={{ duration: 0.2 }}
+              animate={{ rotateX: 180, scale: 1.1 }}
+              transition={{ 
+                type: "spring",
+                stiffness: 400,
+                damping: 20
+              }}
             >
               <ChevronDown className="h-5 w-5 text-success" />
             </motion.div>
           ) : (
             <motion.div
-              animate={{ rotateX: pullDistance > threshold * 0.7 ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
+              animate={{ 
+                rotateX: pullDistance > threshold * 0.7 ? 160 : 0,
+                scale: Math.max(1, progress * 1.2)
+              }}
+              transition={{ 
+                type: "spring",
+                stiffness: 200,
+                damping: 15
+              }}
             >
               <ChevronDown className="h-5 w-5 text-muted-foreground" />
             </motion.div>
@@ -77,20 +105,30 @@ export function PullToRefreshIndicator({
               strokeDasharray={`${progress * 62.8} 62.8`}
               transform="rotate(-90 12 12)"
               style={{
-                transition: 'stroke-dasharray 0.1s ease-out'
+                transition: 'stroke-dasharray 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
               }}
             />
           </svg>
         </div>
         
-        <span className="text-sm font-medium">
+        <motion.span 
+          className="text-sm font-medium select-none"
+          animate={{
+            color: isRefreshing 
+              ? 'hsl(var(--primary))' 
+              : canRelease 
+              ? 'hsl(var(--success))' 
+              : 'hsl(var(--foreground))'
+          }}
+          transition={{ duration: 0.2 }}
+        >
           {isRefreshing 
             ? 'Refreshing...' 
             : canRelease 
             ? 'Release to refresh' 
             : 'Pull to refresh'
           }
-        </span>
+        </motion.span>
       </div>
     </motion.div>
   );

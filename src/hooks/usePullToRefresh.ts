@@ -63,7 +63,9 @@ export function usePullToRefresh({
       // Prevent default scroll behavior when pulling down
       e.preventDefault();
 
-      const distance = Math.min(deltaY * resistanceRatio, threshold * 1.5);
+      // Add elastic resistance - gets harder to pull as distance increases
+      const elasticFactor = Math.max(0.1, 1 - (deltaY / (threshold * 3)));
+      const distance = Math.min(deltaY * resistanceRatio * elasticFactor, threshold * 1.5);
       const canRelease = distance >= threshold;
 
       setState(prev => ({
@@ -76,6 +78,13 @@ export function usePullToRefresh({
       // Trigger haptic feedback when threshold is reached
       if (canRelease && !state.canRelease) {
         triggerHapticFeedback();
+      }
+      
+      // Additional subtle haptic feedback during pull
+      if (deltaY > threshold * 0.3 && deltaY < threshold * 0.4) {
+        if ('vibrate' in navigator && navigator.vibrate) {
+          navigator.vibrate(20); // Very light feedback
+        }
       }
     }
 
@@ -102,6 +111,7 @@ export function usePullToRefresh({
         }));
       }
     } else {
+      // Smooth spring-back animation when not releasing
       setState(prev => ({ 
         ...prev, 
         isPulling: false, 
