@@ -300,7 +300,9 @@ const Setup = () => {
                   className={errors.firstName ? 'border-red-500' : ''}
                 />
                 {errors.firstName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+                  <div className="flex items-center gap-2 text-destructive text-sm mt-2 p-2 bg-destructive/10 rounded-md border border-destructive/20">
+                    <span className="font-medium">{errors.firstName}</span>
+                  </div>
                 )}
               </div>
               <div>
@@ -313,7 +315,9 @@ const Setup = () => {
                   className={errors.lastName ? 'border-red-500' : ''}
                 />
                 {errors.lastName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+                  <div className="flex items-center gap-2 text-destructive text-sm mt-2 p-2 bg-destructive/10 rounded-md border border-destructive/20">
+                    <span className="font-medium">{errors.lastName}</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -329,7 +333,9 @@ const Setup = () => {
                 className={errors.email ? 'border-red-500' : ''}
               />
               {errors.email && (
-                <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                <div className="flex items-center gap-2 text-destructive text-sm mt-2 p-2 bg-destructive/10 rounded-md border border-destructive/20">
+                  <span className="font-medium">{errors.email}</span>
+                </div>
               )}
             </div>
 
@@ -343,7 +349,9 @@ const Setup = () => {
                 className={errors.phone ? 'border-red-500' : ''}
               />
               {errors.phone && (
-                <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                <div className="flex items-center gap-2 text-destructive text-sm mt-2 p-2 bg-destructive/10 rounded-md border border-destructive/20">
+                  <span className="font-medium">{errors.phone}</span>
+                </div>
               )}
             </div>
 

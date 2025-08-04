@@ -10,9 +10,9 @@ export const FormFieldError = ({ error, className }: FormFieldErrorProps) => {
   if (!error) return null;
 
   return (
-    <div className={cn("flex items-center gap-1 text-red-500 text-xs mt-1", className)}>
-      <AlertCircle className="h-3 w-3" />
-      <span>{error}</span>
+    <div className={cn("flex items-center gap-2 text-destructive text-sm mt-2 p-2 bg-destructive/10 rounded-md border border-destructive/20", className)}>
+      <AlertCircle className="h-4 w-4 flex-shrink-0" />
+      <span className="font-medium">{error}</span>
     </div>
   );
 };

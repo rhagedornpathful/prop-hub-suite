@@ -206,6 +206,11 @@
   body {
     @apply bg-background text-foreground font-sans leading-normal;
     font-size: var(--text-base);
+    /* Optimize scroll performance */
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    /* Force hardware acceleration for better performance */
+    will-change: scroll-position;
   }
 
   /* Typography Hierarchy */
@@ -846,6 +851,29 @@
     100% {
       background-position: 200% 0;
   }
+
+  /* Scroll Performance Optimization */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .performance-scroll {
+    /* Hardware acceleration for smooth scrolling */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    will-change: scroll-position;
+  }
+
+  /* Optimize scrollable containers */
+  .scrollable-container {
+    contain: layout style paint;
+    content-visibility: auto;
+  }
+
+  /* Mobile performance optimizations */
 
   /* Mobile performance optimizations */
   @media (max-width: 768px) {

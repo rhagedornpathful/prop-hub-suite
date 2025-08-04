@@ -203,30 +203,30 @@ const Properties = () => {
         <div className="flex bg-muted rounded-lg p-1">
           <Button
             variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            size="sm"
+            size="default"
             onClick={() => setViewMode('grid')}
-            className="flex-1 h-9"
+            className="flex-1 h-11 touch-target"
           >
             <Grid3X3 className="h-4 w-4 mr-1" />
-            <span className="text-xs">Grid</span>
+            <span className="text-base">Grid</span>
           </Button>
           <Button
             variant={viewMode === 'list' ? 'default' : 'ghost'}
-            size="sm"
+            size="default"
             onClick={() => setViewMode('list')}
-            className="flex-1 h-9"
+            className="flex-1 h-11 touch-target"
           >
             <List className="h-4 w-4 mr-1" />
-            <span className="text-xs">List</span>
+            <span className="text-base">List</span>
           </Button>
           <Button
             variant={viewMode === 'map' ? 'default' : 'ghost'}
-            size="sm"
+            size="default"
             onClick={() => setViewMode('map')}
-            className="flex-1 h-9"
+            className="flex-1 h-11 touch-target"
           >
             <Map className="h-4 w-4 mr-1" />
-            <span className="text-xs">Map</span>
+            <span className="text-base">Map</span>
           </Button>
         </div>
       </div>
