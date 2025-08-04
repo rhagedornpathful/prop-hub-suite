@@ -18,8 +18,11 @@ import { useProperties } from "@/hooks/queries/useProperties";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
+import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -28,10 +31,24 @@ const Properties = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const [searchTerm, setSearchTerm] = useState("");
   
-  const { data: propertyData, isLoading, error } = useProperties(1, 100);
+  const { data: propertyData, isLoading, error, refetch } = useProperties(1, 100);
   const properties = propertyData?.properties || [];
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  // Pull to refresh functionality
+  const handleRefresh = async () => {
+    await refetch();
+    // Also invalidate related queries
+    queryClient.invalidateQueries({ queryKey: ['properties'] });
+  };
+
+  const pullToRefresh = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+    resistanceRatio: 0.5
+  });
 
   // Filter properties based on search
   const filteredProperties = properties.filter(property => 
@@ -78,7 +95,20 @@ const Properties = () => {
   }
 
   return (
-    <div className="flex-1 p-4 md:p-6 safe-area-inset space-y-6">
+    <div 
+      className="flex-1 p-4 md:p-6 safe-area-inset space-y-6 relative overflow-hidden"
+      ref={pullToRefresh.bindToContainer}
+      style={{ touchAction: 'pan-y' }}
+    >
+      {/* Pull to Refresh Indicator */}
+      <PullToRefreshIndicator
+        isPulling={pullToRefresh.isPulling}
+        isRefreshing={pullToRefresh.isRefreshing}
+        pullDistance={pullToRefresh.pullDistance}
+        canRelease={pullToRefresh.canRelease}
+        threshold={80}
+      />
+
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
         <div className="space-y-1">
