@@ -264,12 +264,15 @@ const Properties = () => {
             {isLoading ? (
               Array.from({ length: 8 }).map((_, i) => (
                 <Card key={i} className="overflow-hidden">
-                  <div className="aspect-video bg-muted animate-pulse" />
+                  <div className="aspect-video bg-muted animate-pulse rounded-t-lg" />
                   <CardContent className="p-4">
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <div className="h-4 bg-muted rounded animate-pulse" />
                       <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
-                      <div className="h-3 bg-muted rounded w-1/2 animate-pulse" />
+                      <div className="flex justify-between items-center">
+                        <div className="h-3 bg-muted rounded w-1/3 animate-pulse" />
+                        <div className="h-3 bg-muted rounded w-1/4 animate-pulse" />
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

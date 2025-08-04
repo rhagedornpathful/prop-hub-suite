@@ -38,6 +38,7 @@ import { usePropertyActivity } from "@/hooks/usePropertyActivity";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
+import { PropertyDetailsSkeleton } from "@/components/PropertyDetailsSkeleton";
 
 type Property = Tables<'properties'>;
 
@@ -210,15 +211,7 @@ export function PropertyDetail() {
   if (isLoading) {
     return (
       <div className={`${isMobile ? 'px-4 py-6' : 'container mx-auto p-6'}`}>
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-1/3"></div>
-          <div className="h-64 bg-muted rounded"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="h-32 bg-muted rounded"></div>
-            <div className="h-32 bg-muted rounded"></div>
-            <div className="h-32 bg-muted rounded"></div>
-          </div>
-        </div>
+        <PropertyDetailsSkeleton />
       </div>
     );
   }
