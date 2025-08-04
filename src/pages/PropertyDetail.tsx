@@ -317,39 +317,47 @@ export function PropertyDetail() {
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 active:scale-95 transition-transform"
-              onClick={() => {/* Add photo action */}}
+              className="min-h-[80px] h-20 flex flex-col items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 active:scale-[0.98] transition-transform touch-manipulation"
+              onClick={() => {
+                // TODO: Implement camera capture functionality
+                toast({
+                  title: "Add Photo",
+                  description: "Camera functionality coming soon",
+                });
+              }}
             >
-              <Camera className="h-6 w-6" />
+              <Camera className="h-6 w-6 text-blue-600" />
               <span className="text-sm font-medium">Add Photo</span>
             </Button>
             
             <Button
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 border-green-200 active:scale-95 transition-transform"
+              className="min-h-[80px] h-20 flex flex-col items-center justify-center gap-2 bg-green-50 hover:bg-green-100 text-green-700 border-green-200 active:scale-[0.98] transition-transform touch-manipulation"
               onClick={startPropertyCheck}
               disabled={isStartingCheck}
             >
-              <ClipboardCheck className="h-6 w-6" />
-              <span className="text-sm font-medium">Complete Check</span>
+              <ClipboardCheck className="h-6 w-6 text-green-600" />
+              <span className="text-sm font-medium">
+                {isStartingCheck ? 'Starting...' : 'Complete Check'}
+              </span>
             </Button>
             
             <Button
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 border-red-200 active:scale-95 transition-transform"
+              className="min-h-[80px] h-20 flex flex-col items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-700 border-red-200 active:scale-[0.98] transition-transform touch-manipulation"
               onClick={() => setIsMaintenanceDialogOpen(true)}
             >
-              <AlertCircle className="h-6 w-6" />
+              <AlertCircle className="h-6 w-6 text-red-600" />
               <span className="text-sm font-medium">Report Issue</span>
             </Button>
             
             <Button
               variant="outline"
-              className="h-20 flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200 active:scale-95 transition-transform"
+              className="min-h-[80px] h-20 flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200 active:scale-[0.98] transition-transform touch-manipulation"
               onClick={() => navigate('/documents')}
             >
-              <FileText className="h-6 w-6" />
-              <span className="text-sm font-medium">Documents</span>
+              <FileText className="h-6 w-6 text-gray-600" />
+              <span className="text-sm font-medium">View Documents</span>
             </Button>
           </div>
         </div>
