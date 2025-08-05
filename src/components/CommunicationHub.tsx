@@ -109,7 +109,7 @@ export const CommunicationHub: React.FC = () => {
   const loadUsers = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('*');
       
       if (error) throw error;

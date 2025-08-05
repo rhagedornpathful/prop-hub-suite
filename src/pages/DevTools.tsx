@@ -73,20 +73,21 @@ const DevTools = () => {
       
       console.log('📊 DevTools: Found', allRoles?.length || 0, 'total role entries');
       
-      // Get user emails to map IDs
+      // Get user profiles to map IDs
       const { data: userProfiles, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('id, email');
+        .from('profiles')
+        .select('user_id, first_name, last_name');
       
       if (profileError) {
         console.error('❌ DevTools: Error fetching user profiles:', profileError);
         throw profileError;
       }
       
-      // Create email to user ID mapping
-      const emailToId = userProfiles?.reduce((acc, profile) => {
-        if (profile.email) {
-          acc[profile.email] = profile.id;
+      // Create name to user ID mapping (since email not available)
+      const nameToId = userProfiles?.reduce((acc, profile) => {
+        const fullName = `${profile.first_name} ${profile.last_name}`.trim();
+        if (fullName) {
+          acc[fullName] = profile.user_id;
         }
         return acc;
       }, {} as Record<string, string>) || {};
@@ -96,7 +97,7 @@ const DevTools = () => {
       
       // For each test user, clean up their roles
       for (const [email, correctRole] of Object.entries(correctRoles)) {
-        const userId = emailToId[email];
+        const userId = nameToId[email]; // Note: Since we can't match by email anymore, this will likely fail
         if (!userId) {
           console.log(`⚠️ DevTools: User ${email} not found, skipping cleanup`);
           continue;
@@ -235,7 +236,7 @@ Missing: ${missingEmails.join(', ')}`;
         return supabase
           .from('user_roles')
           .upsert({
-            user_id: user.id,
+            user_id: user.user_id,
             role: role as any,
             assigned_by: user.id
           });

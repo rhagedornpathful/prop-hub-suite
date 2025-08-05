@@ -271,17 +271,17 @@ export function SeedDatabase() {
     try {
       console.log('Starting property creation...');
       
-      // Get all property management users
+      // Get all property management users from profiles table
       const { data: pmUsers, error: pmError } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, email')
-        .ilike('email', 'pmclient%@test.com');
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .limit(10); // Since we can't filter by email, get first 10
 
-      // Get all house watching users
+      // Get all house watching users from profiles table  
       const { data: hwUsers, error: hwError } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, email')
-        .ilike('email', 'hwclient%@test.com');
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .limit(10);
 
       console.log('PM Users found:', pmUsers?.length || 0, pmUsers);
       console.log('HW Users found:', hwUsers?.length || 0, hwUsers);
@@ -290,8 +290,8 @@ export function SeedDatabase() {
       if (hwError) console.error('HW Users error:', hwError);
 
       if (!pmUsers?.length && !hwUsers?.length) {
-        console.log('No test users found for property creation. Emails in DB:');
-        const { data: allUsers } = await supabase.from('user_profiles').select('email').limit(10);
+        console.log('No test users found for property creation. Users in DB:');
+        const { data: allUsers } = await supabase.from('profiles').select('first_name, last_name').limit(10);
         console.log(allUsers);
         return;
       }
@@ -302,10 +302,10 @@ export function SeedDatabase() {
         const { data: owner, error } = await supabase
           .from('property_owners')
           .insert({
-            user_id: user.id,
+            user_id: user.user_id,
             first_name: user.first_name || 'Test',
             last_name: user.last_name || 'Owner',
-            email: user.email || `${user.id}@test.com`,
+            email: 'test@example.com', // Default email since not available in profiles
             phone: '555-0100',
             is_self: true
           })
@@ -323,10 +323,10 @@ export function SeedDatabase() {
         const { data: owner, error } = await supabase
           .from('property_owners')
           .insert({
-            user_id: user.id,
+            user_id: user.user_id,
             first_name: user.first_name || 'Test',
             last_name: user.last_name || 'Owner',
-            email: user.email || `${user.id}@test.com`,
+            email: 'test@example.com', // Default email since not available in profiles
             phone: '555-0200',
             is_self: true
           })
@@ -432,9 +432,9 @@ export function SeedDatabase() {
         .limit(4);
 
       const { data: tenantUsers } = await supabase
-        .from('user_profiles')
-        .select('id, first_name, last_name, email')
-        .ilike('email', 'tenant%@test.com');
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .limit(4);
 
       if (pmPropsData && tenantUsers) {
         for (let i = 0; i < Math.min(pmPropsData.length, tenantUsers.length); i++) {
@@ -443,11 +443,11 @@ export function SeedDatabase() {
           
           await supabase.from('tenants').insert({
             user_id: property.user_id,
-            user_account_id: tenant.id,
+            user_account_id: tenant.user_id,
             property_id: property.id,
             first_name: tenant.first_name || 'Test',
             last_name: tenant.last_name || 'Tenant',
-            email: tenant.email,
+            email: 'tenant@example.com',
             phone: '555-0300',
             lease_start_date: new Date().toISOString().split('T')[0],
             lease_end_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],

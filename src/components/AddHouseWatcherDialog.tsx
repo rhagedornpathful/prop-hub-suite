@@ -66,15 +66,37 @@ const AddHouseWatcherDialog = ({ onHouseWatcherAdded }: AddHouseWatcherDialogPro
   const fetchAvailableUsers = async () => {
     setLoadingUsers(true);
     try {
-      // Get users who don't have house_watcher role or have no role
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('id, email, first_name, last_name, role')
-        .or('role.is.null,role.neq.house_watcher')
+      // Get all profiles and then filter by checking roles separately
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, first_name, last_name')
         .order('first_name', { ascending: true });
 
-      if (error) throw error;
-      setExistingUsers(data || []);
+      if (profilesError) throw profilesError;
+
+      // Get all user roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Filter users who don't have house_watcher role
+      const usersWithoutHWRole = profilesData?.filter(profile => {
+        const userRoles = rolesData?.filter(role => role.user_id === profile.user_id) || [];
+        return !userRoles.some(role => role.role === 'house_watcher');
+      }) || [];
+
+      // Transform to match expected interface
+      const data = usersWithoutHWRole.map(profile => ({
+        id: profile.user_id,
+        email: '', // Email not available in profiles table
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        role: null
+      }));
+
+      setExistingUsers(data);
     } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({

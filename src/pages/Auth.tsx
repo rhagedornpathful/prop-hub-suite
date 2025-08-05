@@ -295,20 +295,7 @@ const Auth = () => {
     }
   };
 
-  // Emergency admin bypass (hidden feature)
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'A') {
-        if (email === 'rmh1122@hotmail.com') {
-          console.log('🚨 Emergency admin bypass triggered');
-          window.location.href = '/admin-emergency';
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [email]);
+  // Emergency admin bypass removed for production security
 
   if (checkingAuth) {
     return (

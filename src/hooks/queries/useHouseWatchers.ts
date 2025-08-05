@@ -35,11 +35,11 @@ export const useHouseWatchers = () => {
       // Get user profiles and property count for each house watcher
       const watchersWithProfiles = await Promise.all(
         (data || []).map(async (watcher) => {
-          // Get user profile from user_profiles view - take first result if multiple exist
+          // Get user profile from profiles table
           const { data: profileData, error: profileError } = await supabase
-            .from('user_profiles')
-            .select('id, email, first_name, last_name, phone, address, city, state, zip_code')
-            .eq('id', watcher.user_id)
+            .from('profiles')
+            .select('user_id, first_name, last_name, phone, address, city, state, zip_code')
+            .eq('user_id', watcher.user_id)
             .limit(1)
             .single();
 
@@ -55,7 +55,17 @@ export const useHouseWatchers = () => {
           
           return {
             ...watcher,
-            user_profiles: profileData,
+            user_profiles: profileData ? {
+              id: profileData.user_id,
+              email: '', // Not available in profiles table
+              first_name: profileData.first_name || '',
+              last_name: profileData.last_name || '',
+              phone: profileData.phone || '',
+              address: profileData.address || '',
+              city: profileData.city || '',
+              state: profileData.state || '',
+              zip_code: profileData.zip_code || ''
+            } : null,
             assigned_properties: count || 0
           };
         })
