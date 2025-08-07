@@ -38,11 +38,11 @@ const HouseWatcherDetail = () => {
 
       // Get user profile
       const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('id, email, first_name, last_name, phone, address, city, state, zip_code')
-        .eq('id', watcherData.user_id)
+        .from('profiles')
+        .select('id, first_name, last_name, phone, address, city, state, zip_code, user_id')
+        .eq('user_id', watcherData.user_id)
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Error fetching profile:', profileError);
@@ -81,7 +81,7 @@ const HouseWatcherDetail = () => {
     if (!watcher?.user_profiles) return 'Unknown';
     return watcher.user_profiles.first_name && watcher.user_profiles.last_name
       ? `${watcher.user_profiles.first_name} ${watcher.user_profiles.last_name}`
-      : watcher.user_profiles.email || 'Unknown';
+      : 'Unknown';
   };
 
   const formatDate = (dateString: string) => {

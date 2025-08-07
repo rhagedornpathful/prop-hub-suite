@@ -191,9 +191,9 @@ const DevTools = () => {
       });
       
       const { data: existingUsers, error: checkError } = await supabase
-        .from('user_profiles')
-        .select('id, email')
-        .in('email', testEmails);
+        .from('profiles')
+        .select('user_id, first_name, last_name')
+        .limit(10);
       
       if (checkError) {
         console.error('❌ DevTools: Error checking existing users:', checkError);
@@ -1139,7 +1139,7 @@ Missing: ${missingEmails.join(', ')}`;
 
       try {
         // Try to access all user profiles (should be restricted)
-        const { data } = await supabase.from('user_profiles').select('*');
+        const { data } = await supabase.from('profiles').select('*');
         unauthorizedTests.canAccessAllUsers = data && data.length > 10; // Large number suggests unrestricted access
       } catch (e) { /* good - access blocked */ }
 
@@ -1208,7 +1208,7 @@ Missing: ${missingEmails.join(', ')}`;
         supabase.from('properties').select('*').limit(50),
         supabase.from('maintenance_requests').select('*').limit(50),
         supabase.from('documents').select('*').limit(50),
-        supabase.from('user_profiles').select('id, first_name, last_name').limit(20)
+        supabase.from('profiles').select('id, first_name, last_name').limit(20)
       ]);
 
       const endTime = performance.now();

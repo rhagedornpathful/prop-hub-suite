@@ -167,10 +167,10 @@ const UserManagement = () => {
       
       // Updated query to get comprehensive user data including profile information
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select(`
           id,
-          email,
+          user_id,
           first_name,
           last_name,
           role,
@@ -192,20 +192,8 @@ const UserManagement = () => {
       
       console.log('📊 UserManagement: Raw data fetched:', data?.length || 0, 'entries');
       
-      // Deduplicate users client-side, keeping the most recent role for each user
-      const deduplicatedUsers = data ? data.reduce((acc: UserProfile[], user) => {
-        const existingUser = acc.find(u => u.id === user.id);
-        if (!existingUser) {
-          acc.push(user);
-        } else {
-          // Keep the user with the most recent role_created_at
-          if (user.role_created_at && (!existingUser.role_created_at || user.role_created_at > existingUser.role_created_at)) {
-            const index = acc.findIndex(u => u.id === user.id);
-            acc[index] = user;
-          }
-        }
-        return acc;
-      }, []) : [];
+      // Use profiles data directly
+      const deduplicatedUsers = data || [];
       
       console.log('✅ UserManagement: Deduplicated users:', deduplicatedUsers.length, 'unique users');
       setUsers(deduplicatedUsers);
