@@ -200,23 +200,21 @@ const DevTools = () => {
         throw checkError;
       }
       
-      const existingEmails = (existingUsers || []).map(u => u.email);
-      const missingEmails = testEmails.filter(email => !existingEmails.includes(email));
+      // Since profiles table doesn't have email, we'll just check if we have users
+      const userCount = (existingUsers || []).length;
       
-      if (missingEmails.length > 0) {
-        const instructionMessage = `Test users need to be created manually in Supabase:
+      if (userCount === 0) {
+        const instructionMessage = `No users found in profiles table. Test users need to be created manually in Supabase:
 
 1. Go to Supabase Dashboard → Authentication → Users
-2. Create these missing users:
-${missingEmails.map(email => `   • ${email} (password: testpass123)`).join('\n')}
-3. Then click 'Smart Seed' again
+2. Create test users with appropriate roles
+3. Manual user creation is required for security
 
-Found: ${existingEmails.join(', ') || 'none'}
-Missing: ${missingEmails.join(', ')}`;
+No automated user creation available in production.`;
 
         toast({
-          title: "Missing Auth Users",
-          description: `${missingEmails.length} test users need to be created in Supabase Auth first`,
+          title: "No Users Found",
+          description: "Please create test users manually in Supabase Dashboard",
           variant: "destructive"
         });
         
@@ -230,15 +228,15 @@ Missing: ${missingEmails.join(', ')}`;
         description: "Creating user roles and profiles... 👤",
       });
       
-      const roles = ['admin', 'owner_investor', 'tenant', 'house_watcher'];
       const userRolePromises = existingUsers!.map((user, index) => {
-        const role = roles[testEmails.indexOf(user.email!)];
+        const roles = ['admin', 'property_manager', 'tenant', 'house_watcher'];
+        const role = roles[index % roles.length];
         return supabase
           .from('user_roles')
           .upsert({
             user_id: user.user_id,
             role: role as any,
-            assigned_by: user.id
+            assigned_by: user.user_id
           });
       });
       

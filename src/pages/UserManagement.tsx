@@ -165,7 +165,7 @@ const UserManagement = () => {
       
       console.log('📊 UserManagement: Querying user_profiles table with deduplication...');
       
-      // Updated query to get comprehensive user data including profile information
+      // Get user profiles with basic info (roles will be fetched separately)
       const { data, error } = await supabase
         .from('profiles')
         .select(`
@@ -173,9 +173,6 @@ const UserManagement = () => {
           user_id,
           first_name,
           last_name,
-          role,
-          user_created_at,
-          role_created_at,
           phone,
           address,
           city,
@@ -183,7 +180,7 @@ const UserManagement = () => {
           zip_code,
           company_name
         `)
-        .order('user_created_at', { ascending: false });
+        .order('first_name', { ascending: true });
 
       if (error) {
         console.error('❌ UserManagement: Fetch users error:', error);
@@ -192,11 +189,25 @@ const UserManagement = () => {
       
       console.log('📊 UserManagement: Raw data fetched:', data?.length || 0, 'entries');
       
-      // Use profiles data directly
-      const deduplicatedUsers = data || [];
+      // Transform data to match expected UserProfile interface
+      const transformedUsers = data?.map(profile => ({
+        id: profile.id,
+        email: `user_${profile.user_id.slice(0, 8)}@system.local`,
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        role: 'user' as any,
+        user_created_at: new Date().toISOString(),
+        role_created_at: new Date().toISOString(),
+        phone: profile.phone || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        state: profile.state || '',
+        zip_code: profile.zip_code || '',
+        company_name: profile.company_name || ''
+      })) || [];
       
-      console.log('✅ UserManagement: Deduplicated users:', deduplicatedUsers.length, 'unique users');
-      setUsers(deduplicatedUsers);
+      console.log('✅ UserManagement: Transformed users:', transformedUsers.length, 'users');
+      setUsers(transformedUsers);
     } catch (error) {
       console.error('❌ UserManagement: Error fetching users:', error);
       setError('Failed to fetch users: ' + (error as any).message);

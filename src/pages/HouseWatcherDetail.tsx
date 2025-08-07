@@ -180,11 +180,11 @@ const HouseWatcherDetail = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Contact Information */}
-                {watcher.user_profiles?.email && (
+                {watcher.user_profiles?.phone && (
                   <div className="flex items-center gap-3 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-muted-foreground break-all">
-                      {watcher.user_profiles.email}
+                    <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-muted-foreground">
+                      {watcher.user_profiles.phone}
                     </span>
                   </div>
                 )}
