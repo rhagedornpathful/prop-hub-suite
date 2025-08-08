@@ -12,7 +12,8 @@ import {
   User,
   Eye,
   Edit,
-  Calendar
+  Calendar,
+  Trash2
 } from 'lucide-react';
 
 interface Property {
@@ -44,6 +45,7 @@ interface PropertyMobileTableProps {
   onEdit?: (property: Property) => void;
   onView?: (property: Property) => void;
   onScheduleMaintenance?: (property: Property) => void;
+  onDelete?: (property: Property) => void;
   loading?: boolean;
   showOwner?: boolean;
 }
@@ -54,6 +56,7 @@ export function PropertyMobileTable({
   onEdit,
   onView,
   onScheduleMaintenance,
+  onDelete,
   loading = false,
   showOwner = true
 }: PropertyMobileTableProps) {
@@ -215,6 +218,13 @@ export function PropertyMobileTable({
       icon: <Calendar className="w-4 h-4" />,
       onClick: (property: Property) => onScheduleMaintenance(property),
       variant: 'default' as const,
+      mobileHidden: false
+    }] : []),
+    ...(onDelete ? [{
+      label: 'Delete',
+      icon: <Trash2 className="w-4 h-4" />,
+      onClick: (property: Property) => onDelete(property),
+      variant: 'destructive' as const,
       mobileHidden: false
     }] : [])
   ];

@@ -14,7 +14,18 @@ import {
   Map,
   Search
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useProperties } from "@/hooks/queries/useProperties";
+import { useDeleteProperty } from "@/hooks/useDeleteProperty";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
@@ -30,9 +41,12 @@ const Properties = () => {
   const [showAddProperty, setShowAddProperty] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [propertyToDelete, setPropertyToDelete] = useState<any>(null);
   
   const { data: propertyData, isLoading, error, refetch } = useProperties(1, 100);
   const properties = propertyData?.properties || [];
+  const deletePropertyMutation = useDeleteProperty();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -75,6 +89,23 @@ const Properties = () => {
   const handleScheduleMaintenance = (property: any) => {
     // TODO: Implement maintenance scheduling
     console.log('Schedule maintenance for:', property);
+  };
+
+  const handleDeleteProperty = (property: any) => {
+    setPropertyToDelete(property);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteProperty = async () => {
+    if (propertyToDelete) {
+      try {
+        await deletePropertyMutation.mutateAsync(propertyToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setPropertyToDelete(null);
+      } catch (error) {
+        console.error('Error deleting property:', error);
+      }
+    }
   };
 
 
@@ -246,6 +277,7 @@ const Properties = () => {
             onPropertyClick={handlePropertyClick}
             onEdit={handleEdit}
             onScheduleMaintenance={handleScheduleMaintenance}
+            onDelete={handleDeleteProperty}
             loading={isLoading}
           />
         ) : viewMode === 'map' ? (
@@ -375,6 +407,25 @@ const Properties = () => {
         open={showPropertyDetails}
         onOpenChange={setShowPropertyDetails}
       />
+
+      {/* Delete Property Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Property</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{propertyToDelete?.address}"? 
+              This will permanently remove all property data and cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDeleteProperty} className="bg-destructive hover:bg-destructive/90">
+              Delete Property
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </div>
   );

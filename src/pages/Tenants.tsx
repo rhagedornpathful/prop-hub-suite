@@ -17,15 +17,30 @@ import {
   Calendar,
   DollarSign,
   AlertCircle,
-  FileText
+  FileText,
+  Trash2
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useTenants } from "@/hooks/queries/useTenants";
+import { useDeleteTenant } from "@/hooks/useDeleteTenant";
 import { AddTenantDialog } from "@/components/AddTenantDialog";
 import { cn } from "@/lib/utils";
 
 const Tenants = () => {
   const { data: tenants = [], isLoading, error } = useTenants();
+  const deleteTenantMutation = useDeleteTenant();
   const [searchTerm, setSearchTerm] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [tenantToDelete, setTenantToDelete] = useState<any>(null);
 
   // Filter tenants based on search term
   const filteredTenants = tenants.filter(tenant =>
@@ -52,6 +67,23 @@ const Tenants = () => {
   const totalRentExpected = tenants.reduce((sum, tenant) => {
     return sum + (tenant.monthly_rent || 0);
   }, 0);
+
+  const handleDeleteTenant = (tenant: any) => {
+    setTenantToDelete(tenant);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteTenant = async () => {
+    if (tenantToDelete) {
+      try {
+        await deleteTenantMutation.mutateAsync(tenantToDelete.id);
+        setIsDeleteDialogOpen(false);
+        setTenantToDelete(null);
+      } catch (error) {
+        console.error('Error deleting tenant:', error);
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -333,6 +365,17 @@ const Tenants = () => {
                       >
                         <User className="h-4 w-4 mr-2" />
                         View
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTenant(tenant);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </CardContent>

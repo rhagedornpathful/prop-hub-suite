@@ -16,7 +16,9 @@ import {
   AlertCircle,
   RefreshCw,
   AlertTriangle,
-  Plus
+  Plus,
+  Trash2,
+  MoreHorizontal
 } from "lucide-react";
 import {
   Select,
@@ -25,6 +27,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,6 +78,8 @@ const UserManagement = () => {
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [userDetailsOpen, setUserDetailsOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -346,6 +366,54 @@ const UserManagement = () => {
     fetchUsers();
   };
 
+  const handleDeleteUser = (userProfile: UserProfile) => {
+    setUserToDelete(userProfile);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      // First, get the user_id from the profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', userToDelete.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Delete the user's roles first
+      await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', profile.user_id);
+
+      // Delete the profile
+      await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userToDelete.id);
+
+      toast({
+        title: "User Deleted",
+        description: `${userToDelete.first_name} ${userToDelete.last_name} has been removed from the system.`,
+        variant: "default"
+      });
+
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Delete Failed",
+        description: error.message || "Failed to delete user",
+        variant: "destructive"
+      });
+    }
+  };
+
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
       const { error } = await supabase
@@ -564,6 +632,7 @@ const UserManagement = () => {
           <UserMobileTable
             users={filteredUsers}
             onUserClick={handleUserClick}
+            onUserDelete={handleDeleteUser}
             loading={loading}
             formatRoleName={formatRoleName}
             getRoleBadgeColor={getRoleBadgeColor}
@@ -578,6 +647,25 @@ const UserManagement = () => {
           onOpenChange={setUserDetailsOpen}
           onUserUpdate={handleUserUpdate}
         />
+
+        {/* Delete User Dialog */}
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete User</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{userToDelete ? `${userToDelete.first_name} ${userToDelete.last_name}` : ""}"? 
+                This will permanently remove all user data and cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteUser} className="bg-destructive hover:bg-destructive/90">
+                Delete User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

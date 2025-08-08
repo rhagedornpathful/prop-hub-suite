@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Trash2 } from 'lucide-react';
 
 interface Column {
   key: string;
@@ -198,6 +198,7 @@ export function MobileTable({
 interface UserTableProps {
   users: any[];
   onUserClick: (user: any) => void;
+  onUserDelete?: (user: any) => void;
   loading?: boolean;
   formatRoleName: (role: string) => string;
   getRoleBadgeColor: (role: string) => string;
@@ -207,6 +208,7 @@ interface UserTableProps {
 export function UserMobileTable({
   users,
   onUserClick,
+  onUserDelete,
   loading,
   formatRoleName,
   getRoleBadgeColor,
@@ -281,9 +283,24 @@ export function UserMobileTable({
       }
       cardSubtitle={(user) => user.email}
       cardActions={(user) => (
-        <Badge className={getRoleBadgeColor(user.role)} variant="secondary">
-          {formatRoleName(user.role)}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge className={getRoleBadgeColor(user.role)} variant="secondary">
+            {formatRoleName(user.role)}
+          </Badge>
+          {onUserDelete && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onUserDelete(user);
+              }}
+              className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
       )}
     />
   );
