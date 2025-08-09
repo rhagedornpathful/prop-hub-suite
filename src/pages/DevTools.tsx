@@ -1704,6 +1704,37 @@ No automated user creation available in production.`;
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={load}>Refresh</Button>
             <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                const smokeRoutes = [
+                  '/', '/auth', '/setup', '/admin-emergency',
+                  '/properties', '/maintenance', '/messages', '/tenants', '/documents', '/settings', '/activity', '/user-management', '/admin-navigation',
+                  '/client-portal', '/client-portal/properties', '/client-portal/requests', '/client-portal/messages', '/client-portal/reports',
+                ];
+                const md = [
+                  '# Functional Audit Checklist',
+                  '',
+                  '## 404s observed (from session)',
+                  entries.length ? entries.map(e => `- [ ] Fix route: ${e.path} (seen ${new Date(e.ts).toLocaleString()})`).join('\n') : '- None recorded in this session',
+                  '',
+                  '## Smoke-tested routes (CI)',
+                  ...smokeRoutes.map(r => `- [ ] ${r} — status: pending (see CI Playwright results)`),
+                  '',
+                  '## Quick Actions',
+                  '- [ ] Messages opens /messages',
+                  '- [ ] Documents opens /documents',
+                  '- [ ] Add Property/Tenant/Maintenance open dialogs',
+                  '',
+                  '## Navigation',
+                  '- [ ] Reports menu -> /client-portal/reports',
+                ].join('\n');
+                navigator.clipboard.writeText(md);
+              }}
+            >
+              Copy Markdown Checklist
+            </Button>
+            <Button
               variant="destructive"
               size="sm"
               onClick={() => {
