@@ -45,6 +45,10 @@ import MobileMaintenanceView from "@/components/mobile/MobileMaintenanceView";
 import IntegrationHub from "@/components/IntegrationHub";
 import AutomationWorkflows from "@/components/AutomationWorkflows";
 import PerformanceMonitor from "@/components/PerformanceMonitor";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "@/hooks/use-toast";
 import type { MaintenanceRequest } from "@/hooks/queries/useMaintenanceRequests";
 
 const Maintenance = () => {
@@ -60,13 +64,19 @@ const Maintenance = () => {
   const { data: profiles = [] } = useProfiles();
   const updateMaintenanceRequest = useUpdateMaintenanceRequest();
 
-  // Auto-refresh every 30 seconds for real-time updates
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState(30);
+
+  // Auto-refresh for real-time updates (configurable)
   useEffect(() => {
+    if (!autoRefreshEnabled) return;
+    const seconds = Math.max(5, Number(autoRefreshInterval) || 30);
     const interval = setInterval(() => {
       refetch();
-    }, 30000);
+    }, seconds * 1000);
     return () => clearInterval(interval);
-  }, [refetch]);
+  }, [refetch, autoRefreshEnabled, autoRefreshInterval]);
 
   // Mobile detection
   useEffect(() => {
@@ -147,6 +157,35 @@ const Maintenance = () => {
         return <AlertTriangle className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  // Export current list to CSV
+  const handleExport = () => {
+    try {
+      const rows: string[][] = [];
+      rows.push(['ID', 'Title', 'Status', 'Priority', 'Property', 'Created At']);
+      basicFilteredRequests.forEach((r) => {
+        rows.push([
+          r.id,
+          r.title || '',
+          r.status || '',
+          r.priority || '',
+          formatPropertyAddress(r),
+          new Date(r.created_at).toISOString(),
+        ]);
+      });
+      const csv = rows.map((r) => r.map((v) => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `maintenance_export_${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: 'Export complete', description: `Exported ${basicFilteredRequests.length} requests` });
+    } catch (e) {
+      toast({ title: 'Export failed', description: 'Please try again.', variant: 'destructive' });
     }
   };
 
@@ -248,6 +287,7 @@ const Maintenance = () => {
             <Button 
               variant="outline" 
               size="sm"
+              onClick={handleExport}
               className="flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
@@ -256,6 +296,7 @@ const Maintenance = () => {
             <Button 
               variant="outline" 
               size="sm"
+              onClick={() => setShowSettingsDialog(true)}
               className="flex items-center gap-2"
             >
               <Settings className="w-4 h-4" />
@@ -600,6 +641,39 @@ const Maintenance = () => {
             <PerformanceMonitor />
           </TabsContent>
         </Tabs>
+
+        {/* Settings Dialog */}
+        <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Maintenance Settings</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Auto refresh</p>
+                  <p className="text-xs text-muted-foreground">Refresh requests periodically</p>
+                </div>
+                <Switch checked={autoRefreshEnabled} onCheckedChange={setAutoRefreshEnabled} />
+              </div>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="refresh-interval" className="text-sm">Interval (seconds)</Label>
+                <Input
+                  id="refresh-interval"
+                  type="number"
+                  min={5}
+                  max={300}
+                  value={autoRefreshInterval}
+                  onChange={(e) => setAutoRefreshInterval(Number(e.target.value) || 30)}
+                  className="w-24"
+                />
+              </div>
+              <div className="text-right">
+                <Button onClick={() => setShowSettingsDialog(false)}>Done</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Dialogs */}
         <ScheduleMaintenanceDialog 
