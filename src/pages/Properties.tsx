@@ -12,7 +12,12 @@ import {
   Grid3X3,
   List,
   Map,
-  Search
+  Search,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  Archive,
+  ArchiveRestore
 } from "lucide-react";
 import {
   AlertDialog,
@@ -24,7 +29,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useProperties } from "@/hooks/queries/useProperties";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { useProperties, useUpdateProperty } from "@/hooks/queries/useProperties";
 import { useDeleteProperty } from "@/hooks/useDeleteProperty";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
@@ -35,7 +43,6 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import PropertiesMap from "@/components/PropertiesMap";
-
 const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
@@ -44,10 +51,12 @@ const Properties = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<any>(null);
-  
+
+  const [showArchived, setShowArchived] = useState(false);
   const { data: propertyData, isLoading, error, refetch } = useProperties(1, 100);
   const properties = propertyData?.properties || [];
   const deletePropertyMutation = useDeleteProperty();
+  const updateProperty = useUpdateProperty();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -65,8 +74,9 @@ const Properties = () => {
     resistanceRatio: 0.5
   });
 
-  // Filter properties based on search
-  const filteredProperties = properties.filter(property => 
+  // Filter properties (status + search)
+  const statusFiltered = properties.filter(p => showArchived ? true : (p.status === 'active' || !p.status));
+  const filteredProperties = statusFiltered.filter(property => 
     property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
     property.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     property.state?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -88,7 +98,6 @@ const Properties = () => {
   };
 
   const handleScheduleMaintenance = (property: any) => {
-    // TODO: Implement maintenance scheduling
     console.log('Schedule maintenance for:', property);
   };
 
@@ -108,8 +117,21 @@ const Properties = () => {
       }
     }
   };
+  const handleArchiveProperty = async (property: any) => {
+    try {
+      await updateProperty.mutateAsync({ id: property.id, updates: { status: 'archived' } });
+    } catch (e) {
+      console.error('Error archiving property:', e);
+    }
+  };
 
-
+  const handleUnarchiveProperty = async (property: any) => {
+    try {
+      await updateProperty.mutateAsync({ id: property.id, updates: { status: 'active' } });
+    } catch (e) {
+      console.error('Error unarchiving property:', e);
+    }
+  };
   if (error) {
     return (
       <div className="flex-1 p-4 md:p-6 safe-area-inset">
@@ -261,6 +283,10 @@ const Properties = () => {
             <span className="text-base">Map</span>
           </Button>
         </div>
+        <div className="flex items-center justify-end gap-2">
+          <Label htmlFor="show-archived" className="text-sm">Show archived</Label>
+          <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
+        </div>
       </div>
 
       {/* Properties List */}
@@ -334,6 +360,42 @@ const Properties = () => {
                   onClick={() => handlePropertyClick(property)}
                 >
                   <div className="aspect-[4/3] bg-muted relative">
+                    {/* Card actions menu */}
+                    <div className="absolute top-2 left-2 z-10">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="secondary"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePropertyClick(property); }}>
+                            <Eye className="w-4 h-4 mr-2" /> View
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(property); }}>
+                            <Pencil className="w-4 h-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          {property.status === 'archived' ? (
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUnarchiveProperty(property); }}>
+                              <ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleArchiveProperty(property); }}>
+                              <Archive className="w-4 h-4 mr-2" /> Archive
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteProperty(property); }}>
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
                     {property.images && property.images.length > 0 ? (
                       <img 
                         src={property.images[0]} 
@@ -351,10 +413,12 @@ const Properties = () => {
                         className={
                           property.status === 'active' || !property.status
                             ? 'bg-green-500 hover:bg-green-600 text-xs'
+                            : property.status === 'archived'
+                            ? 'bg-yellow-500 hover:bg-yellow-600 text-xs'
                             : 'bg-red-500 hover:bg-red-600 text-xs'
                         }
                       >
-                        {property.status === 'active' || !property.status ? 'Active' : 'Inactive'}
+                        {property.status === 'active' || !property.status ? 'Active' : property.status === 'archived' ? 'Archived' : 'Inactive'}
                       </Badge>
                       {property.service_type === 'house_watching' && (
                         <Badge variant="secondary" className="text-xs">House Watching</Badge>
