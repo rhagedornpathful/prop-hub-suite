@@ -125,8 +125,10 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({
             <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
               <img 
                 src={capturedImage} 
-                alt="Captured" 
+                alt="Captured photo" 
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
               />
             </div>
             <div className="flex space-x-2">

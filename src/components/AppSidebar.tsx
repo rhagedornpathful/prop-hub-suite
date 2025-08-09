@@ -357,8 +357,10 @@ export function AppSidebar() {
                 <div className="flex items-center justify-center w-full">
                   <img 
                     src="/lovable-uploads/3102d2d8-1c41-484b-a873-0b9ae2b75918.png" 
-                    alt="Latitude Premier Properties" 
+                    alt="Latitude Premier Properties logo" 
                     className={`${isMobile ? "w-32 h-32" : "w-40 h-40"} object-contain`}
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               )}

@@ -125,8 +125,10 @@ const ClientDashboard = () => {
             <div className="flex items-center gap-4">
               <img 
                 src="/lovable-uploads/a1c36a6f-e37d-42f5-9f3c-f434a26e8627.png" 
-                alt="Latitude Premier Properties" 
+                alt="Latitude Premier Properties logo" 
                 className="w-12 h-12 object-contain"
+                loading="lazy"
+                decoding="async"
               />
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Client Portal</h1>

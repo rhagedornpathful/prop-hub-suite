@@ -189,7 +189,7 @@ export const MaintenanceMessaging = ({
                 <Avatar className="h-6 w-6">
                   <AvatarFallback className="text-xs">
                     {participant.avatar ? (
-                      <img src={participant.avatar} alt={participant.name} />
+                      <img src={participant.avatar} alt={participant.name} loading="lazy" decoding="async" />
                     ) : (
                       participant.name.split(' ').map(n => n[0]).join('')
                     )}
@@ -225,7 +225,7 @@ export const MaintenanceMessaging = ({
                 <Avatar className="h-8 w-8 flex-shrink-0">
                   <AvatarFallback className="text-xs">
                     {participant?.avatar ? (
-                      <img src={participant.avatar} alt={participant?.name} className="h-8 w-8 rounded-full" />
+                      <img src={participant.avatar} alt={participant?.name} className="h-8 w-8 rounded-full" loading="lazy" decoding="async" />
                     ) : (
                       message.senderName.split(' ').map(n => n[0]).join('')
                     )}
@@ -271,6 +271,8 @@ export const MaintenanceMessaging = ({
                                   src={attachment.url} 
                                   alt={attachment.name}
                                   className="h-16 w-16 object-cover rounded cursor-pointer"
+                                  loading="lazy"
+                                  decoding="async"
                                   onClick={() => {
                                     // Open image in full view
                                     toast({

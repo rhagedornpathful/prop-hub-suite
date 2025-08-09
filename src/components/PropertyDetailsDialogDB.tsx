@@ -171,11 +171,13 @@ export function PropertyDetailsDialogDB({ property, open, onOpenChange, onEdit, 
             <div className="space-y-4">
               <div className="relative rounded-lg overflow-hidden bg-gradient-subtle border">
                 {property.images && property.images.length > 0 ? (
-                  <img 
-                    src={property.images[0]} 
-                    alt={property.address}
-                    className="w-full h-64 object-cover"
-                  />
+                <img 
+                  src={property.images[0]} 
+                  alt={property.address}
+                  className="w-full h-64 object-cover"
+                  loading="lazy"
+                  decoding="async"
+                />
                 ) : (
                   <div className="w-full h-64 flex items-center justify-center">
                     <div className="text-center">

@@ -120,6 +120,8 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
                   src={property.image} 
                   alt={property.name}
                   className="w-full h-64 object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute top-3 right-3">
                   <Badge className={statusColors[property.status as keyof typeof statusColors]}>
