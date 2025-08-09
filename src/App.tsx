@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -52,7 +52,7 @@ import NotFound from "./pages/NotFound";
 import PropertyManagerView from "./pages/PropertyManagerView";
 import { ProfileSetup } from "./components/ProfileSetup";
 
-const queryClient = new QueryClient();
+
 
 const AppContent = () => {
   const { isMobile } = useMobileDetection();
@@ -77,7 +77,7 @@ const AppContent = () => {
       <AuthProvider>
         <DevAdminProvider>
           <ViewAsProvider>
-            <QueryClientProvider client={queryClient}>
+            
             <TooltipProvider>
               <Toaster />
               <Sonner />
@@ -268,7 +268,7 @@ const AppContent = () => {
           
         </BrowserRouter>
       </TooltipProvider>
-    </QueryClientProvider>
+    
   </ViewAsProvider>
 </DevAdminProvider>
 </AuthProvider>

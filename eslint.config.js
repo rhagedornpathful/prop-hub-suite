@@ -23,7 +23,14 @@ export default tseslint.config(
         "warn",
         { allowConstantExport: true },
       ],
-      "@typescript-eslint/no-unused-vars": "off",
+      // Stricter TypeScript safety without breaking builds
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/consistent-type-imports": "warn",
+      "@typescript-eslint/no-floating-promises": "warn",
+      "@typescript-eslint/no-misused-promises": ["warn", { checksVoidReturn: false }],
+      eqeqeq: ["warn", "smart"],
+      "prefer-const": "warn",
       "no-console": ["warn", { allow: ["warn", "error", "info"] }],
     },
   }
