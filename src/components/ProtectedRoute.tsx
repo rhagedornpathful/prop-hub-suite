@@ -28,6 +28,13 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Dev-only bypass to enable automated audits and e2e tests
+  if (import.meta.env.DEV) {
+    const emergency = sessionStorage.getItem('emergencyAdmin') === 'true' || (window as any).__EMERGENCY_ADMIN_MODE__;
+    if (emergency) {
+      return <>{children}</>;
+    }
+  }
 
   useEffect(() => {
     // Don't redirect if we're still loading
