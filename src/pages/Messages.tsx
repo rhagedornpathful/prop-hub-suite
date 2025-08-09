@@ -479,7 +479,7 @@ const Messages = () => {
             <DialogHeader>
               <DialogTitle>Send New Message</DialogTitle>
             </DialogHeader>
-            <CommunicationHub />
+            <CommunicationHub onSent={() => setShowNewConversation(false)} />
           </DialogContent>
         </Dialog>
 

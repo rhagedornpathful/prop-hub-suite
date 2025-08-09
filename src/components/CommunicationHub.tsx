@@ -40,7 +40,12 @@ interface QuickMessage {
   type: 'maintenance' | 'payment' | 'general';
 }
 
-export const CommunicationHub: React.FC = () => {
+interface CommunicationHubProps {
+  onSent?: () => void; // optional callback after successful send
+  autoCloseDelayMs?: number; // optionally delay before invoking onSent
+}
+
+export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, autoCloseDelayMs = 0 }) => {
   const [settings, setSettings] = useState<CommunicationSettings>({
     email_enabled: true,
     sms_enabled: false,
@@ -142,6 +147,12 @@ export const CommunicationHub: React.FC = () => {
       setMessageContent('');
       setMessageSubject('');
       setSelectedRecipients([]);
+
+      // Notify parent to close dialog or navigate away if provided
+      if (onSent) {
+        if (autoCloseDelayMs > 0) setTimeout(() => onSent(), autoCloseDelayMs);
+        else onSent();
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
