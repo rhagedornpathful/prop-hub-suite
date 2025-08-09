@@ -1,8 +1,11 @@
 import { test, expect } from '@playwright/test';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
+const BASE_ORIGIN = new URL(BASE_URL).origin;
 
-// Routes sourced from src/components/LazyRoutes.tsx (static paths only)
+let pageErrors: string[] = [];
+let failedResponses: string[] = [];
+// Routes sourced from App.tsx (static paths only)
 const routes = [
   '/',
   '/properties',
@@ -12,35 +15,50 @@ const routes = [
   '/property-owners',
   '/house-watching',
   '/property-check',
-  '/home-check',
+  '/leases',
+  '/finances',
+  '/documents',
+  '/settings',
   '/activity',
+  '/user-management',
+  '/admin-navigation',
+  '/property-manager-dashboard',
+  '/profile',
+  // Client portal
+  '/client-portal',
+  '/client-portal/properties',
+  '/client-portal/requests',
+  '/client-portal/messages',
+  '/client-portal/reports',
+  // Public routes
   '/auth',
   '/setup',
-  '/user-management',
-  '/settings',
-  '/finances',
-  '/property-manager',
-  '/dev-tools',
-  '/documents',
-  '/leases',
-  '/resident-portal',
-  '/admin-navigation',
-  // Dashboards
-  '/dashboard/admin',
-  '/dashboard/property-manager',
-  '/dashboard/property-owner',
-  '/dashboard/tenant',
-  '/dashboard/house-watcher',
-  // Client portal
-  '/client',
-  '/client/properties',
-  '/client/requests',
-  '/client/messages',
-  '/client/reports',
 ] as const;
 
-// Enable emergency admin bypass before each test
+// Enable emergency admin bypass and error listeners before each test
 test.beforeEach(async ({ page }) => {
+  pageErrors = [];
+  failedResponses = [];
+
+  page.on('pageerror', (err) => {
+    pageErrors.push(`pageerror: ${err?.message || String(err)}`);
+  });
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      pageErrors.push(`console.${msg.type()}: ${msg.text()}`);
+    }
+  });
+  page.on('response', (response) => {
+    try {
+      const url = new URL(response.url());
+      if (url.origin === BASE_ORIGIN && response.status() >= 500) {
+        failedResponses.push(`${response.status()} ${response.url()}`);
+      }
+    } catch {
+      // ignore invalid URLs
+    }
+  });
+
   await page.goto(new URL('/admin-emergency', BASE_URL).toString(), { waitUntil: 'load' });
 });
 
@@ -59,6 +77,8 @@ test('Route audit: all static routes render', async ({ page }) => {
     await page.goto(url, { waitUntil: 'load' });
     await expectNo404(page);
   }
+  expect(pageErrors, `Console/runtime errors detected:\n${pageErrors.join('\n')}`).toEqual([]);
+  expect(failedResponses, `Same-origin 5xx responses detected:\n${failedResponses.join('\n')}`).toEqual([]);
 });
 
 // 2) Link crawl audit: traverse internal links found on each page and ensure they don't 404
@@ -91,4 +111,7 @@ test('Link audit: internal links discovered on pages should not 404', async ({ p
       await expectNo404(page);
     }
   }
+
+  expect(pageErrors, `Console/runtime errors detected during link crawl:\n${pageErrors.join('\n')}`).toEqual([]);
+  expect(failedResponses, `Same-origin 5xx responses detected during link crawl:\n${failedResponses.join('\n')}`).toEqual([]);
 });
