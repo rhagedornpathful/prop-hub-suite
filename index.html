@@ -10,6 +10,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/icon-192x192.png" />
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https:; connect-src 'self' https://*.supabase.co https: wss://*.supabase.co; worker-src 'self' blob:; frame-ancestors 'self'; base-uri 'self';" />
+    <meta name="referrer" content="same-origin" />
+
     <title>PropHub Suite</title>
 
     <meta property="og:title" content="prop-hub-suite" />

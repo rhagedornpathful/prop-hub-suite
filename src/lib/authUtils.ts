@@ -2,11 +2,13 @@
  * Authentication utility functions for managing auth state and emergency mode
  */
 
+import { logger } from '@/lib/logger';
+
 /**
  * Completely clears emergency admin mode and all related flags
  */
 export function clearEmergencyMode(): void {
-  console.log('🧹 Clearing emergency admin mode...');
+  logger.info('🧹 Clearing emergency admin mode...');
   
   // Clear sessionStorage flags
   sessionStorage.removeItem('emergencyAdmin');
@@ -16,7 +18,7 @@ export function clearEmergencyMode(): void {
   delete (window as any).__EMERGENCY_ADMIN_MODE__;
   
   // Clear any other auth-related storage that might interfere
-  const keysToRemove = [];
+  const keysToRemove: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const key = localStorage.key(i);
     if (key && (key.startsWith('supabase.auth.') || key.includes('sb-'))) {
@@ -25,11 +27,38 @@ export function clearEmergencyMode(): void {
   }
   
   keysToRemove.forEach(key => {
-    console.log('🧹 Removing localStorage key:', key);
+    logger.info('🧹 Removing localStorage key:', key);
     localStorage.removeItem(key);
   });
   
-  console.log('✅ Emergency mode cleared');
+  logger.info('✅ Emergency mode cleared');
+}
+
+
+/**
+ * Thoroughly clears all Supabase auth state to prevent limbo states
+ */
+export function cleanupAuthState(): void {
+  try {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    // Remove all Supabase auth keys from sessionStorage
+    Object.keys(sessionStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  } catch (e) {
+    logger.warn('cleanupAuthState encountered an error', e);
+  }
 }
 
 /**
@@ -44,11 +73,10 @@ export function isEmergencyMode(): boolean {
  * Forces a complete auth reset and redirect to login
  */
 export function forceAuthReset(): void {
-  console.log('🔄 Forcing complete auth reset...');
-  
-  // Clear emergency mode
+  logger.info('🔄 Forcing complete auth reset...');
+  // Clear emergency mode and auth artifacts
   clearEmergencyMode();
-  
+  cleanupAuthState();
   // Force redirect to auth page
   window.location.href = '/auth';
 }
