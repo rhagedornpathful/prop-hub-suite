@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { format } from "date-fns";
+import { Link } from "react-router-dom";
 
 interface ApprovalRequest {
   id: string;
@@ -546,8 +547,8 @@ const OwnerPortalSystem = () => {
                 <p className="text-muted-foreground mb-4">
                   Detailed property information and management tools
                 </p>
-                <Button>
-                  View Property Details
+                <Button asChild aria-label="View property details">
+                  <Link to="/client-portal/properties">View Property Details</Link>
                 </Button>
               </div>
             </TabsContent>
@@ -560,8 +561,8 @@ const OwnerPortalSystem = () => {
                 <p className="text-muted-foreground mb-4">
                   Financial statements, tax reports, and performance analytics
                 </p>
-                <Button>
-                  Generate Reports
+                <Button asChild aria-label="Go to Reports">
+                  <Link to="/client-portal/reports">Generate Reports</Link>
                 </Button>
               </div>
             </TabsContent>
