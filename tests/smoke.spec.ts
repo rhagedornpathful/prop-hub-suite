@@ -14,11 +14,11 @@ const routes = [
   '/activity',
   '/user-management',
   '/admin-navigation',
-  '/client-portal',
-  '/client-portal/properties',
-  '/client-portal/requests',
-  '/client-portal/messages',
-  '/client-portal/reports',
+  '/client',
+  '/client/properties',
+  '/client/requests',
+  '/client/messages',
+  '/client/reports',
 ];
 
 test.beforeEach(async ({ page }) => {
