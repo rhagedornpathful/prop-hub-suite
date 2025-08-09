@@ -374,7 +374,10 @@ export function PropertyDetail() {
                     <img 
                       src={property.images[0]} 
                       alt={property.address}
-                      className="w-full h-48 object-cover"
+                      className="w-full h-auto max-h-96 lg:max-h-[560px] object-contain bg-muted"
+                      loading="lazy"
+                      decoding="async"
+                      sizes="(max-width: 768px) 100vw, 1024px"
                     />
                   ) : (
                     <div className="w-full h-48 flex items-center justify-center">
