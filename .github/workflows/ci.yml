@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc -noEmit
+
+      - name: Lint
+        run: npx eslint . --max-warnings=0
+
+      - name: Unit tests (Vitest)
+        run: npx vitest run --reporter=dot --silent
+
+      - name: Build
+        run: npm run build
+
+      - name: Audit dependencies
+        continue-on-error: true
+        run: npm audit --audit-level=moderate
