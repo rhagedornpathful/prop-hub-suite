@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCreateConversation, useSendMessage } from '@/hooks/queries/useConversations';
 import { 
   MessageSquare, 
   Send, 
@@ -92,6 +94,9 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
   const [allUsers, setAllUsers] = useState<any[]>([]);
   
   const { toast } = useToast();
+  const { user } = useAuth();
+  const createConversation = useCreateConversation();
+  const sendChatMessage = useSendMessage();
 
   useEffect(() => {
     loadCommunicationSettings();
@@ -143,6 +148,24 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
         title: 'Messages Sent',
         description: `Successfully sent messages via ${channels.join(', ')}`
       });
+
+      // Also log this communication to in-app Messages (chat) when sending to specific users
+      try {
+        if (recipientType === 'specific' && specificUsers.length > 0 && user?.id) {
+          const participantIds = Array.from(new Set([user.id, ...specificUsers]));
+          const conversation = await createConversation.mutateAsync({
+            title: subject || 'Message',
+            type: 'general',
+            participantIds
+          });
+          await sendChatMessage.mutateAsync({
+            conversationId: conversation.id,
+            content
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to log message to chat:', e);
+      }
 
       setMessageContent('');
       setMessageSubject('');
