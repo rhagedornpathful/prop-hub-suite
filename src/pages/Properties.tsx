@@ -34,6 +34,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import PropertiesMap from "@/components/PropertiesMap";
 
 const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -282,12 +283,8 @@ const Properties = () => {
           />
         ) : viewMode === 'map' ? (
           <Card>
-            <CardContent className="flex items-center justify-center py-12">
-              <div className="text-center">
-                <Map className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">Map View</h3>
-                <p className="text-muted-foreground">Map view coming soon</p>
-              </div>
+            <CardContent className="p-3">
+              <PropertiesMap properties={filteredProperties as any} />
             </CardContent>
           </Card>
         ) : (
