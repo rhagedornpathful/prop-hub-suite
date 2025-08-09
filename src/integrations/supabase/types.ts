@@ -966,6 +966,7 @@ export type Database = {
           preferred_payment_method: string | null
           spouse_partner_name: string | null
           state: string | null
+          status: string
           tax_id_number: string | null
           updated_at: string
           user_account_id: string | null
@@ -990,6 +991,7 @@ export type Database = {
           preferred_payment_method?: string | null
           spouse_partner_name?: string | null
           state?: string | null
+          status?: string
           tax_id_number?: string | null
           updated_at?: string
           user_account_id?: string | null
@@ -1014,6 +1016,7 @@ export type Database = {
           preferred_payment_method?: string | null
           spouse_partner_name?: string | null
           state?: string | null
+          status?: string
           tax_id_number?: string | null
           updated_at?: string
           user_account_id?: string | null

@@ -17,7 +17,9 @@ import {
   Eye,
   Trash2,
   MoreHorizontal,
-  UserPlus
+  UserPlus,
+  Archive,
+  ArchiveRestore
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,9 +39,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
-import { usePropertyOwners, useDeletePropertyOwner } from "@/hooks/queries/usePropertyOwners";
+import { usePropertyOwners, useDeletePropertyOwner, useUpdatePropertyOwner } from "@/hooks/queries/usePropertyOwners";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Tables } from "@/integrations/supabase/types";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 type PropertyOwner = Tables<'property_owners'> & {
   property_count?: number;
@@ -52,14 +56,17 @@ const PropertyOwners = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedOwner, setSelectedOwner] = useState<PropertyOwner | null>(null);
   const [ownerToDelete, setOwnerToDelete] = useState<PropertyOwner | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const { toast } = useToast();
 
   // Use hooks to fetch data
   const { data: owners = [], isLoading, error } = usePropertyOwners();
   const deleteOwnerMutation = useDeletePropertyOwner();
+  const updateOwner = useUpdatePropertyOwner();
   const queryClient = useQueryClient();
 
-  const filteredOwners = owners.filter(owner =>
+  const statusFiltered = owners.filter((owner: any) => (showArchived ? true : owner.status !== 'archived'));
+  const filteredOwners = statusFiltered.filter(owner =>
     `${owner.first_name} ${owner.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     owner.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     owner.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -93,6 +100,22 @@ const PropertyOwners = () => {
       } catch (error) {
         console.error('Error deleting owner:', error);
       }
+    }
+  };
+
+  const handleArchiveOwner = async (owner: PropertyOwner) => {
+    try {
+      await updateOwner.mutateAsync({ id: owner.id, updates: { status: 'archived' } as any });
+    } catch (e) {
+      console.error('Error archiving owner:', e);
+    }
+  };
+
+  const handleUnarchiveOwner = async (owner: PropertyOwner) => {
+    try {
+      await updateOwner.mutateAsync({ id: owner.id, updates: { status: 'active' } as any });
+    } catch (e) {
+      console.error('Error unarchiving owner:', e);
     }
   };
 
@@ -186,6 +209,11 @@ const PropertyOwners = () => {
           </div>
         </div>
 
+        <div className="flex items-center justify-end gap-2">
+          <Label htmlFor="show-archived" className="text-sm">Show archived</Label>
+          <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
+        </div>
+
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
           <Button 
@@ -270,6 +298,23 @@ const PropertyOwners = () => {
                                   <Edit className="h-4 w-4 mr-2" />
                                   Edit Owner
                                 </DropdownMenuItem>
+                                {((owner as any).status === 'archived') ? (
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUnarchiveOwner(owner);
+                                  }}>
+                                    <ArchiveRestore className="h-4 w-4 mr-2" />
+                                    Unarchive Owner
+                                  </DropdownMenuItem>
+                                ) : (
+                                  <DropdownMenuItem onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleArchiveOwner(owner);
+                                  }}>
+                                    <Archive className="h-4 w-4 mr-2" />
+                                    Archive Owner
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem 
                                   className="text-destructive" 
                                   onClick={(e) => {
