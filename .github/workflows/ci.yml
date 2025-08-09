@@ -33,6 +33,24 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Start preview server
+        run: |
+          npx vite preview --port 4173 &
+          for i in {1..30}; do
+            if curl -sSf http://localhost:4173 > /dev/null; then
+              echo "Preview server is up"; break;
+            fi
+            echo "Waiting for preview server..."; sleep 1;
+          done
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Playwright smoke tests
+        env:
+          BASE_URL: http://localhost:4173
+        run: npx playwright test -c .
+
       - name: Audit dependencies
         continue-on-error: true
         run: npm audit --audit-level=moderate

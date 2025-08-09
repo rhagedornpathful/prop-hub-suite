@@ -1671,6 +1671,66 @@ No automated user creation available in production.`;
     getCurrentRole();
   }, []);
 
+  // Nested component to display 404 route logs captured by NotFound page
+  const RouteAudit = () => {
+    const [entries, setEntries] = useState<Array<{ path: string; ts: number }>>([]);
+
+    const load = () => {
+      try {
+        const raw = sessionStorage.getItem('404_paths') || '[]';
+        const data = JSON.parse(raw) as Array<{ path: string; ts: number }>;
+        // Deduplicate by path, keep most recent
+        const byPath = new Map<string, { path: string; ts: number }>();
+        data.forEach(e => {
+          const existing = byPath.get(e.path);
+          if (!existing || e.ts > existing.ts) byPath.set(e.path, e);
+        });
+        setEntries(Array.from(byPath.values()).sort((a, b) => b.ts - a.ts));
+      } catch {
+        setEntries([]);
+      }
+    };
+
+    useEffect(() => {
+      load();
+    }, []);
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Recently encountered 404 routes (dev-only). Use this to fix bad links.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={load}>Refresh</Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                sessionStorage.setItem('404_paths', '[]');
+                setEntries([]);
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+        {entries.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No 404s recorded this session.</div>
+        ) : (
+          <ul className="space-y-2">
+            {entries.slice(0, 20).map((e, i) => (
+              <li key={`${e.path}-${i}`} className="flex items-center justify-between rounded-md border p-2">
+                <code className="text-xs">{e.path}</code>
+                <span className="text-xs text-muted-foreground">{new Date(e.ts).toLocaleString()}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center gap-3 mb-6">
@@ -1682,6 +1742,16 @@ No automated user creation available in production.`;
           </p>
         </div>
       </div>
+
+      {/* Route 404 Audit */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Route 404 Audit</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <RouteAudit />
+        </CardContent>
+      </Card>
 
       <Alert>
         <AlertTriangle className="h-4 w-4" />
