@@ -23,7 +23,7 @@ export class PerformanceMonitor {
     this.metrics.set(`render:${componentName}`, duration);
     
     // Log slow renders in development
-    if (process.env.NODE_ENV === 'development' && duration > 16) {
+    if (import.meta.env.DEV && duration > 16) {
       console.warn(`Slow render detected: ${componentName} took ${duration.toFixed(2)}ms`);
     }
   }

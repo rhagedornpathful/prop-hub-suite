@@ -252,7 +252,7 @@ const AppContent = () => {
                         <Route path="/client-portal/reports/:reportId" element={<PageTransition><ClientReports /></PageTransition>} />
                         <Route path="/client-portal/requests" element={<PageTransition><ClientRequests /></PageTransition>} />
                         <Route path="/client-portal/messages" element={<PageTransition><ClientMessages /></PageTransition>} />
-                        {process.env.NODE_ENV === 'development' && (
+                        {import.meta.env.DEV && (
                           <Route path="/dev-tools" element={<PageTransition><DevTools /></PageTransition>} />
                         )}
                         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />

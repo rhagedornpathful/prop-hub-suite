@@ -1,15 +1,15 @@
 // Production-ready environment configuration
 export const config = {
   // Environment
-  isDevelopment: process.env.NODE_ENV === 'development',
-  isProduction: process.env.NODE_ENV === 'production',
+  isDevelopment: import.meta.env.DEV,
+  isProduction: import.meta.env.PROD,
   
   // Feature flags
   features: {
-    debugMode: process.env.NODE_ENV === 'development',
-    errorReporting: process.env.NODE_ENV === 'production',
-    performanceMonitoring: process.env.NODE_ENV === 'production',
-    consoleLogging: process.env.NODE_ENV === 'development',
+    debugMode: import.meta.env.DEV,
+    errorReporting: import.meta.env.PROD,
+    performanceMonitoring: import.meta.env.PROD,
+    consoleLogging: import.meta.env.DEV,
   },
   
   // API Configuration

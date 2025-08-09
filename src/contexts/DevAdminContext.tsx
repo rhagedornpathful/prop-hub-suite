@@ -16,7 +16,7 @@ export function DevAdminProvider({ children }: DevAdminProviderProps) {
   const [isDevAdminActive, setIsDevAdminActive] = useState(false);
   
   // Check if we're in development mode and on localhost
-  const isDevelopment = process.env.NODE_ENV === 'development' && 
+  const isDevelopment = import.meta.env.DEV && 
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   // Load dev admin state from localStorage on mount

@@ -32,7 +32,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error in development
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.error('ErrorBoundary caught an error:', error, errorInfo);
     }
     
@@ -108,7 +108,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
             
-            {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
+            {import.meta.env.DEV && this.state.errorInfo && (
               <details className="bg-muted/50 p-4 rounded-lg">
                 <summary className="cursor-pointer text-sm font-medium mb-2">
                   Component Stack (Dev Only)

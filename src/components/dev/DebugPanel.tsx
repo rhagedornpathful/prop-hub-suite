@@ -328,7 +328,7 @@ export function DebugPanel() {
               </div>
 
               <div className="pt-2 border-t text-xs text-muted-foreground">
-                Environment: {process.env.NODE_ENV}<br />
+                Environment: {import.meta.env.MODE}<br />
                 Host: {window.location.hostname}
               </div>
             </CardContent>

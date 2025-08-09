@@ -20,7 +20,7 @@ const DevTools = () => {
   const [loadingStats, setLoadingStats] = useState(false);
 
   // Only show in development mode
-  if (process.env.NODE_ENV === 'production') {
+  if (import.meta.env.PROD) {
     return (
       <div className="container mx-auto p-6">
         <Alert>

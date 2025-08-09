@@ -1,6 +1,6 @@
 // Production-safe logging utility
 class Logger {
-  private isDevelopment = process.env.NODE_ENV === 'development';
+  private isDevelopment = import.meta.env.DEV;
 
   log(...args: unknown[]) {
     if (this.isDevelopment) {

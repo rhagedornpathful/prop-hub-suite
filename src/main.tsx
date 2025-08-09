@@ -19,7 +19,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // Disable console logging in production for security
-if (process.env.NODE_ENV === 'production') {
+if (import.meta.env.PROD) {
   console.log = () => {};
   console.warn = () => {};
   console.error = () => {};

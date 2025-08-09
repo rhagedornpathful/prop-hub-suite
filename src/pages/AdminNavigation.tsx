@@ -103,7 +103,7 @@ const AdminNavigation = () => {
       </div>
 
       {/* Development Tools Section - Only show in development */}
-      {process.env.NODE_ENV === 'development' && (
+      {import.meta.env.DEV && (
         <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20 dark:border-blue-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">

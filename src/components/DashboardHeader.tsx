@@ -176,7 +176,7 @@ export function DashboardHeader({
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
-                {process.env.NODE_ENV === 'development' && (
+                {import.meta.env.DEV && (
                   <DropdownMenuItem onClick={() => window.location.href = '/dev-tools'}>
                     <Menu className="mr-2 h-4 w-4" />
                     Dev Tools
@@ -314,7 +314,7 @@ export function DashboardHeader({
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </DropdownMenuItem>
-                {process.env.NODE_ENV === 'development' && (
+                {import.meta.env.DEV && (
                   <DropdownMenuItem onClick={() => window.location.href = '/dev-tools'}>
                     <Menu className="mr-2 h-4 w-4" />
                     Dev Tools
