@@ -1,4 +1,5 @@
 import { useState, useCallback, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,6 +42,8 @@ const IndexContent = () => {
   // Initialize real-time updates
   useRealtime();
 
+  const navigate = useNavigate();
+
   // Memoized dialog handlers for performance
   const handleAddProperty = useCallback(() => setAddPropertyOpen(true), []);
   const handleAddTenant = useCallback(() => setAddTenantOpen(true), []);
@@ -48,6 +51,9 @@ const IndexContent = () => {
   const handleClosePropertyDialog = useCallback(() => setAddPropertyOpen(false), []);
   const handleCloseTenantDialog = useCallback(() => setAddTenantOpen(false), []);
   const handleCloseMaintenanceDialog = useCallback(() => setScheduleMaintenanceOpen(false), []);
+
+  const openMessages = useCallback(() => navigate('/messages'), [navigate]);
+  const openDocuments = useCallback(() => navigate('/documents'), [navigate]);
 
   // Search and filter handlers
   const handleSearch = useCallback((query: string) => {
@@ -266,6 +272,8 @@ const IndexContent = () => {
         onAddProperty={handleAddProperty}
         onAddTenant={handleAddTenant}
         onScheduleMaintenance={handleScheduleMaintenance}
+        onOpenMessages={openMessages}
+        onOpenDocuments={openDocuments}
       />
     </ErrorBoundary>
   );

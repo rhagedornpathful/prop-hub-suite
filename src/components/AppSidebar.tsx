@@ -116,7 +116,7 @@ const adminMenuItems = [
   },
   {
     title: "Reports",
-    url: "/reports",
+    url: "/client-portal/reports",
     icon: BarChart3,
     description: "Analytics & insights"
   },
