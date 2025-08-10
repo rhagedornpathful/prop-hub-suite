@@ -1,0 +1,2 @@
+-- Generate Supabase types to include new tables
+-- This is a comment to trigger type generation

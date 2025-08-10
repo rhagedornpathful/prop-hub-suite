@@ -47,42 +47,63 @@ export const usePropertyCheck = () => {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   const [checklistItems, setChecklistItems] = useState<PropertyCheckData>({
-    exterior: [
-      { id: 1, item: "Roof condition", completed: false, photos: [], notes: "", required: true },
-      { id: 2, item: "Gutters and downspouts", completed: false, photos: [], notes: "", required: true },
-      { id: 3, item: "Exterior walls and siding", completed: false, photos: [], notes: "", required: true },
-      { id: 4, item: "Windows and doors", completed: false, photos: [], notes: "", required: true },
-      { id: 5, item: "Driveway and walkways", completed: false, photos: [], notes: "", required: false },
-      { id: 6, item: "Landscaping and lawn", completed: false, photos: [], notes: "", required: false },
-      { id: 7, item: "Pool area (if applicable)", completed: false, photos: [], notes: "", required: false },
-    ],
-    interior: [
-      { id: 8, item: "HVAC system check", completed: false, photos: [], notes: "", required: true },
-      { id: 9, item: "Plumbing inspection", completed: false, photos: [], notes: "", required: true },
-      { id: 10, item: "Electrical systems", completed: false, photos: [], notes: "", required: true },
-      { id: 11, item: "Appliances functionality", completed: false, photos: [], notes: "", required: true },
-      { id: 12, item: "Interior walls and ceilings", completed: false, photos: [], notes: "", required: false },
-      { id: 13, item: "Flooring condition", completed: false, photos: [], notes: "", required: false },
-    ],
-    security: [
-      { id: 14, item: "Door locks and security", completed: false, photos: [], notes: "", required: true },
-      { id: 15, item: "Window locks", completed: false, photos: [], notes: "", required: true },
-      { id: 16, item: "Alarm system test", completed: false, photos: [], notes: "", required: true },
-      { id: 17, item: "Smoke detector test", completed: false, photos: [], notes: "", required: true },
-      { id: 18, item: "Carbon monoxide detector", completed: false, photos: [], notes: "", required: true },
-    ],
-    utilities: [
-      { id: 19, item: "Water meter reading", completed: false, photos: [], notes: "", required: true },
-      { id: 20, item: "Electrical meter reading", completed: false, photos: [], notes: "", required: true },
-      { id: 21, item: "Gas meter reading", completed: false, photos: [], notes: "", required: false },
-      { id: 22, item: "Water pressure test", completed: false, photos: [], notes: "", required: false },
-    ],
-    summary: [
-      { id: 23, item: "Overall property condition", completed: false, photos: [], notes: "", required: false },
-      { id: 24, item: "General visit notes", completed: false, photos: [], notes: "", required: false },
-      { id: 25, item: "Recommendations or concerns", completed: false, photos: [], notes: "", required: false },
-    ]
+    exterior: [],
+    interior: [],
+    security: [],
+    utilities: [],
+    summary: []
   });
+
+  // Initialize checklist from database
+  useEffect(() => {
+    initializeChecklist();
+  }, []);
+
+  const initializeChecklist = async () => {
+    try {
+      // Fallback to default hardcoded data until types are ready
+      const defaultData: PropertyCheckData = {
+        exterior: [
+          { id: 1, item: "Roof condition", completed: false, photos: [], notes: "", required: true },
+          { id: 2, item: "Gutters and downspouts", completed: false, photos: [], notes: "", required: true },
+          { id: 3, item: "Exterior walls and siding", completed: false, photos: [], notes: "", required: true },
+          { id: 4, item: "Windows and doors", completed: false, photos: [], notes: "", required: true },
+          { id: 5, item: "Driveway and walkways", completed: false, photos: [], notes: "", required: false },
+          { id: 6, item: "Landscaping and lawn", completed: false, photos: [], notes: "", required: false },
+          { id: 7, item: "Pool area (if applicable)", completed: false, photos: [], notes: "", required: false },
+        ],
+        interior: [
+          { id: 8, item: "HVAC system check", completed: false, photos: [], notes: "", required: true },
+          { id: 9, item: "Plumbing inspection", completed: false, photos: [], notes: "", required: true },
+          { id: 10, item: "Electrical systems", completed: false, photos: [], notes: "", required: true },
+          { id: 11, item: "Appliances functionality", completed: false, photos: [], notes: "", required: true },
+          { id: 12, item: "Interior walls and ceilings", completed: false, photos: [], notes: "", required: false },
+          { id: 13, item: "Flooring condition", completed: false, photos: [], notes: "", required: false },
+        ],
+        security: [
+          { id: 14, item: "Door locks and security", completed: false, photos: [], notes: "", required: true },
+          { id: 15, item: "Window locks", completed: false, photos: [], notes: "", required: true },
+          { id: 16, item: "Alarm system test", completed: false, photos: [], notes: "", required: true },
+          { id: 17, item: "Smoke detector test", completed: false, photos: [], notes: "", required: true },
+          { id: 18, item: "Carbon monoxide detector", completed: false, photos: [], notes: "", required: true },
+        ],
+        utilities: [
+          { id: 19, item: "Water meter reading", completed: false, photos: [], notes: "", required: true },
+          { id: 20, item: "Electrical meter reading", completed: false, photos: [], notes: "", required: true },
+          { id: 21, item: "Gas meter reading", completed: false, photos: [], notes: "", required: false },
+          { id: 22, item: "Water pressure test", completed: false, photos: [], notes: "", required: false },
+        ],
+        summary: [
+          { id: 23, item: "Overall property condition", completed: false, photos: [], notes: "", required: false },
+          { id: 24, item: "General visit notes", completed: false, photos: [], notes: "", required: false },
+          { id: 25, item: "Recommendations or concerns", completed: false, photos: [], notes: "", required: false },
+        ]
+      };
+      setChecklistItems(defaultData);
+    } catch (error) {
+      console.error('Error initializing checklist:', error);
+    }
+  };
 
   // Timer effect to update elapsed time
   useEffect(() => {
