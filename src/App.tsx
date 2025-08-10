@@ -51,6 +51,7 @@ import DevTools from "./pages/DevTools";
 import Payments from "./pages/Payments";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancelled from "./pages/PaymentCancelled";
+import VendorPortalPage from "./pages/VendorPortal";
 import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientPortal/Dashboard";
 import ClientProperties from "./pages/ClientPortal/Properties";
@@ -226,8 +227,9 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
-                        <Route path="/payment-success" element={<PaymentSuccess />} />
-                        <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
+            <Route path="/payment-cancelled" element={<PaymentCancelled />} />
+            <Route path="/vendor-portal" element={<VendorPortalPage />} />
                          <Route path="/messages" element={
                            <PageTransition>
                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>

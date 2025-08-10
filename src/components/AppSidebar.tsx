@@ -127,6 +127,12 @@ const adminMenuItems = [
     description: "Manage users & roles"
   },
   {
+    title: "Vendor Portal",
+    url: "/vendor-portal",
+    icon: Users,
+    description: "Contractor management"
+  },
+  {
     title: "Check Templates",
     url: "/admin/check-templates",
     icon: FileText,

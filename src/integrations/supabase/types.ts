@@ -1840,6 +1840,334 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_invoices: {
+        Row: {
+          amount: number
+          created_at: string | null
+          due_date: string | null
+          id: string
+          invoice_number: string
+          issue_date: string | null
+          line_items: Json | null
+          notes: string | null
+          payment_date: string | null
+          payment_method: string | null
+          status: string | null
+          tax_amount: number | null
+          total_amount: number
+          updated_at: string | null
+          vendor_id: string
+          work_order_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          issue_date?: string | null
+          line_items?: Json | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string | null
+          tax_amount?: number | null
+          total_amount: number
+          updated_at?: string | null
+          vendor_id: string
+          work_order_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          issue_date?: string | null
+          line_items?: Json | null
+          notes?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          status?: string | null
+          tax_amount?: number | null
+          total_amount?: number
+          updated_at?: string | null
+          vendor_id?: string
+          work_order_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_invoices_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_invoices_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_reviews: {
+        Row: {
+          comment: string | null
+          communication_rating: number | null
+          created_at: string | null
+          id: string
+          quality_rating: number | null
+          rating: number
+          reviewer_id: string
+          timeliness_rating: number | null
+          title: string | null
+          updated_at: string | null
+          vendor_id: string
+          work_order_id: string | null
+          would_recommend: boolean | null
+        }
+        Insert: {
+          comment?: string | null
+          communication_rating?: number | null
+          created_at?: string | null
+          id?: string
+          quality_rating?: number | null
+          rating: number
+          reviewer_id: string
+          timeliness_rating?: number | null
+          title?: string | null
+          updated_at?: string | null
+          vendor_id: string
+          work_order_id?: string | null
+          would_recommend?: boolean | null
+        }
+        Update: {
+          comment?: string | null
+          communication_rating?: number | null
+          created_at?: string | null
+          id?: string
+          quality_rating?: number | null
+          rating?: number
+          reviewer_id?: string
+          timeliness_rating?: number | null
+          title?: string | null
+          updated_at?: string | null
+          vendor_id?: string
+          work_order_id?: string | null
+          would_recommend?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_reviews_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_reviews_work_order_id_fkey"
+            columns: ["work_order_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_work_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_work_orders: {
+        Row: {
+          actual_cost: number | null
+          actual_hours: number | null
+          assigned_at: string | null
+          assigned_by: string | null
+          category: string
+          completed_at: string | null
+          completion_notes: string | null
+          created_at: string | null
+          description: string | null
+          estimated_cost: number | null
+          estimated_hours: number | null
+          id: string
+          labor_cost: number | null
+          maintenance_request_id: string | null
+          materials_cost: number | null
+          notes: string | null
+          priority: string | null
+          property_id: string | null
+          scheduled_date: string | null
+          started_at: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+          vendor_id: string | null
+        }
+        Insert: {
+          actual_cost?: number | null
+          actual_hours?: number | null
+          assigned_at?: string | null
+          assigned_by?: string | null
+          category: string
+          completed_at?: string | null
+          completion_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          estimated_hours?: number | null
+          id?: string
+          labor_cost?: number | null
+          maintenance_request_id?: string | null
+          materials_cost?: number | null
+          notes?: string | null
+          priority?: string | null
+          property_id?: string | null
+          scheduled_date?: string | null
+          started_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          vendor_id?: string | null
+        }
+        Update: {
+          actual_cost?: number | null
+          actual_hours?: number | null
+          assigned_at?: string | null
+          assigned_by?: string | null
+          category?: string
+          completed_at?: string | null
+          completion_notes?: string | null
+          created_at?: string | null
+          description?: string | null
+          estimated_cost?: number | null
+          estimated_hours?: number | null
+          id?: string
+          labor_cost?: number | null
+          maintenance_request_id?: string | null
+          materials_cost?: number | null
+          notes?: string | null
+          priority?: string | null
+          property_id?: string | null
+          scheduled_date?: string | null
+          started_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          vendor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_work_orders_maintenance_request_id_fkey"
+            columns: ["maintenance_request_id"]
+            isOneToOne: false
+            referencedRelation: "maintenance_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_work_orders_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_work_orders_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          address: string | null
+          availability_status: string | null
+          average_response_time_hours: number | null
+          business_name: string
+          category: string
+          city: string | null
+          completed_jobs: number | null
+          contact_name: string
+          created_at: string | null
+          email: string
+          hourly_rate: number | null
+          id: string
+          insurance_expiry: string | null
+          is_active: boolean | null
+          joined_date: string | null
+          last_active_at: string | null
+          license_number: string | null
+          notes: string | null
+          phone: string
+          rating: number | null
+          service_areas: Json | null
+          specialties: Json | null
+          state: string | null
+          total_jobs: number | null
+          updated_at: string | null
+          user_id: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          availability_status?: string | null
+          average_response_time_hours?: number | null
+          business_name: string
+          category: string
+          city?: string | null
+          completed_jobs?: number | null
+          contact_name: string
+          created_at?: string | null
+          email: string
+          hourly_rate?: number | null
+          id?: string
+          insurance_expiry?: string | null
+          is_active?: boolean | null
+          joined_date?: string | null
+          last_active_at?: string | null
+          license_number?: string | null
+          notes?: string | null
+          phone: string
+          rating?: number | null
+          service_areas?: Json | null
+          specialties?: Json | null
+          state?: string | null
+          total_jobs?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          availability_status?: string | null
+          average_response_time_hours?: number | null
+          business_name?: string
+          category?: string
+          city?: string | null
+          completed_jobs?: number | null
+          contact_name?: string
+          created_at?: string | null
+          email?: string
+          hourly_rate?: number | null
+          id?: string
+          insurance_expiry?: string | null
+          is_active?: boolean | null
+          joined_date?: string | null
+          last_active_at?: string | null
+          license_number?: string | null
+          notes?: string | null
+          phone?: string
+          rating?: number | null
+          service_areas?: Json | null
+          specialties?: Json | null
+          state?: string | null
+          total_jobs?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
