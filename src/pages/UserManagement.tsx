@@ -53,6 +53,7 @@ import { UserMobileTable } from "@/components/MobileTable";
 
 interface UserProfile {
   id: string;
+  user_id: string;
   email: string;
   first_name: string | null;
   last_name: string | null;
@@ -212,6 +213,7 @@ const UserManagement = () => {
       // Transform data to match expected UserProfile interface
       const transformedUsers = data?.map(profile => ({
         id: profile.id,
+        user_id: profile.user_id,
         email: `user_${profile.user_id.slice(0, 8)}@system.local`,
         first_name: profile.first_name || '',
         last_name: profile.last_name || '',
@@ -250,6 +252,7 @@ const UserManagement = () => {
     const mockUsers: UserProfile[] = [
       {
         id: '1c376b70-c535-4ee4-8275-5d017704b3db',
+        user_id: '1c376b70-c535-4ee4-8275-5d017704b3db',
         email: 'rmh1122@hotmail.com',
         first_name: 'Emergency',
         last_name: 'Admin',
@@ -259,6 +262,7 @@ const UserManagement = () => {
       },
       {
         id: 'mock-user-1',
+        user_id: 'mock-user-1',
         email: 'admin@test.com',
         first_name: 'Test',
         last_name: 'Admin',
@@ -268,6 +272,7 @@ const UserManagement = () => {
       },
       {
         id: 'mock-user-2',
+        user_id: 'mock-user-2',
         email: 'owner@test.com',
         first_name: 'Property',
         last_name: 'Owner',
@@ -374,38 +379,28 @@ const UserManagement = () => {
   const confirmDeleteUser = async () => {
     if (!userToDelete) return;
 
-    console.log('🗑️ UserManagement: Confirming delete for user', userToDelete.id);
+    console.log('🗑️ UserManagement: Confirming delete for user', userToDelete.user_id || userToDelete.id);
 
-    // Optimistically remove from UI first
+    // Optimistically remove from UI first (by user_id)
     const prevUsers = users;
     const prevFiltered = filteredUsers;
-    setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
-    setFilteredUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+    setUsers((prev) => prev.filter((u) => u.user_id !== userToDelete.user_id));
+    setFilteredUsers((prev) => prev.filter((u) => u.user_id !== userToDelete.user_id));
 
     try {
-      // Get the user_id from the profile
-      const { data: profileRow, error: profileError } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('id', userToDelete.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      if (!profileRow) throw new Error('Profile not found');
-
       // Delete the user's roles first
       const { error: rolesError } = await supabase
         .from('user_roles')
         .delete()
-        .eq('user_id', profileRow.user_id);
+        .eq('user_id', userToDelete.user_id);
 
       if (rolesError) throw rolesError;
 
-      // Delete the profile
+      // Delete the profile by user_id to avoid PK ambiguity
       const { error: profilesError } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', userToDelete.id);
+        .eq('user_id', userToDelete.user_id);
 
       if (profilesError) throw profilesError;
 
