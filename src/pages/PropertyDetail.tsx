@@ -27,7 +27,8 @@ import {
   Camera,
   MoreHorizontal,
   ClipboardCheck,
-  Home
+  Home,
+  UserCircle2
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
@@ -39,6 +40,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { PropertyDetailsSkeleton } from "@/components/PropertyDetailsSkeleton";
+import { PropertyAssignees } from "@/components/PropertyAssignees";
 
 type Property = Tables<'properties'>;
 
@@ -447,6 +449,18 @@ export function PropertyDetail() {
                   )}
                 </div>
               </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="assignees" className="bg-white rounded-lg shadow-sm border-0 p-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <UserCircle2 className="h-5 w-5" />
+                <span className="font-semibold">Assignees</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4">
+              <PropertyAssignees propertyId={property.id} />
             </AccordionContent>
           </AccordionItem>
 
