@@ -81,7 +81,22 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
           query = query.eq('is_archived', true);
           break;
         case 'sent':
-          query = query.eq('created_by', user.id);
+          query = query.eq('created_by', user.id).eq('is_archived', false);
+          break;
+        case 'drafts':
+          // For drafts, we need to find conversations that have draft messages
+          const { data: draftConversations } = await supabase
+            .from('messages')
+            .select('conversation_id')
+            .eq('sender_id', user.id)
+            .eq('is_draft', true);
+          
+          const draftConvIds = draftConversations?.map(m => m.conversation_id) || [];
+          if (draftConvIds.length === 0) {
+            // Return empty if no drafts
+            return [];
+          }
+          query = query.in('id', draftConvIds);
           break;
         case 'maintenance':
           query = query.eq('type', 'maintenance');
@@ -113,12 +128,12 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
       // Get last message and unread count for each conversation
       const conversationsWithMessages = await Promise.all(
         (conversations || []).map(async (conv) => {
-          // Get last message
+          // Get last message - for drafts show draft messages, otherwise show non-draft
           const { data: lastMessage } = await supabase
             .from('messages')
             .select('id, content, subject, sender_id, created_at, attachments')
             .eq('conversation_id', conv.id)
-            .eq('is_draft', false)
+            .eq('is_draft', filter === 'drafts')
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
@@ -176,11 +191,11 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
   });
 };
 
-export const useInboxMessages = (conversationId: string) => {
+export const useInboxMessages = (conversationId: string, filter?: string) => {
   const { user } = useAuth();
 
   return useQuery({
-    queryKey: ['inbox-messages', conversationId, user?.id],
+    queryKey: ['inbox-messages', conversationId, user?.id, filter],
     queryFn: async (): Promise<InboxMessage[]> => {
       if (!conversationId || !user) return [];
 
@@ -188,7 +203,7 @@ export const useInboxMessages = (conversationId: string) => {
         .from('messages')
         .select('*')
         .eq('conversation_id', conversationId)
-        .eq('is_draft', false)
+        .eq('is_draft', filter === 'drafts')
         .order('created_at', { ascending: true });
 
       if (error) throw error;

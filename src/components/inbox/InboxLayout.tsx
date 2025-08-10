@@ -111,6 +111,7 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
               <MessageView
                 conversation={selectedConversation}
                 onClose={() => setSelectedConversationId(null)}
+                filter={selectedFilter}
               />
             ) : (
               <div className="h-full flex items-center justify-center text-muted-foreground">

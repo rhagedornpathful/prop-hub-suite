@@ -34,9 +34,10 @@ import { useAuth } from '@/contexts/AuthContext';
 interface MessageViewProps {
   conversation: InboxConversation;
   onClose: () => void;
+  filter?: string;
 }
 
-export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose }) => {
+export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose, filter }) => {
   const { user } = useAuth();
   const [replyContent, setReplyContent] = useState('');
   const [showReply, setShowReply] = useState(false);
@@ -46,7 +47,7 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose 
   const [forwardContent, setForwardContent] = useState('');
   const [forwardRecipients, setForwardRecipients] = useState<string[]>([]);
   
-  const { data: messages = [], isLoading } = useInboxMessages(conversation.id);
+  const { data: messages = [], isLoading } = useInboxMessages(conversation.id, filter);
   const sendMessage = useSendInboxMessage();
   const createConversation = useCreateInboxConversation();
 
