@@ -82,130 +82,146 @@ const ClientReports = () => {
           return;
         }
 
-        // Fetch sessions. RLS will return all for admins and only own sessions for others
-        const { data: sessions, error } = await supabase
-          .from('home_check_sessions')
-          .select('id, property_id, completed_at, started_at, checklist_data, total_issues_found, photos_taken, status, general_notes')
-          .order('completed_at', { ascending: false });
+        // Fetch both kinds of sessions in parallel (RLS will handle visibility)
+        const [homeRes, propRes] = await Promise.all([
+          supabase
+            .from('home_check_sessions')
+            .select('id, property_id, completed_at, started_at, checklist_data, total_issues_found, photos_taken, status, general_notes')
+            .order('completed_at', { ascending: false }),
+          supabase
+            .from('property_check_sessions')
+            .select('id, property_id, completed_at, started_at, checklist_data, status, general_notes')
+            .order('completed_at', { ascending: false })
+        ]);
 
-        if (error) throw error;
+        if (homeRes.error) throw homeRes.error;
+        if (propRes.error) throw propRes.error;
 
-        const propertyIds = Array.from(new Set((sessions || []).map((s: any) => s.property_id).filter(Boolean)));
+        const homeSessions = homeRes.data || [];
+        const propertySessions = propRes.data || [];
 
-        // Build property map (best-effort, fallback to id if RLS blocks)
+        // Build property map from both sets; only query properties table for UUID-like ids
+        const allPropertyIds = Array.from(
+          new Set(
+            [...homeSessions, ...propertySessions]
+              .map((s: any) => s.property_id)
+              .filter(Boolean)
+          )
+        );
+        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/;
+        const uuidPropertyIds = allPropertyIds.filter((id: string) => uuidRegex.test(id));
+
         const propsMap = new Map<string, string>();
-        if (propertyIds.length) {
-          const { data: props, error: propsErr } = await supabase
+        if (uuidPropertyIds.length) {
+          const { data: props } = await supabase
             .from('properties')
             .select('id, address, street_address, city, state')
-            .in('id', propertyIds as string[]);
-
-          if (!propsErr && props) {
-            setProperties(props.map((p: any) => ({
-              id: p.id,
-              address: [p.street_address || p.address, p.city, p.state].filter(Boolean).join(', ') || p.id
-            })));
+            .in('id', uuidPropertyIds as string[]);
+          if (props) {
             props.forEach((p: any) => {
-              const addr = [p.street_address || p.address, p.city, p.state].filter(Boolean).join(', ');
+              const addr = [p.street_address || p.address, p.city, p.state]
+                .filter(Boolean)
+                .join(', ');
               propsMap.set(p.id, addr || p.id);
             });
-          } else {
-            setProperties(propertyIds.map((pid: string) => ({ id: pid, address: pid })));
           }
         }
 
-        const mapped: Report[] = (sessions || []).map((s: any) => {
-          const dt = s.completed_at || s.started_at;
-          const d = dt ? new Date(dt) : new Date();
-          const date = d.toLocaleDateString();
-          const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const mapHome = (sessions: any[]): Report[] =>
+          (sessions || []).map((s: any) => {
+            const dt = s.completed_at || s.started_at;
+            const d = dt ? new Date(dt) : new Date();
+            const date = d.toLocaleDateString();
+            const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-          const photosCount = s.photos_taken || 0;
-          const photos = Array.from({ length: photosCount }, (_, i) => ({
-            id: `${s.id}-p${i + 1}`,
-            category: 'Photo',
-            filename: `photo_${i + 1}.jpg`,
-            description: 'Session photo'
-          }));
+            const photosCount = s.photos_taken || 0;
+            const photos = Array.from({ length: photosCount }, (_, i) => ({
+              id: `${s.id}-p${i + 1}`,
+              category: 'Photo',
+              filename: `photo_${i + 1}.jpg`,
+              description: 'Session photo'
+            }));
 
-          const checklistItems = Array.isArray(s.checklist_data)
-            ? (s.checklist_data as any[]).map((ci: any, idx: number) => ({
-                category: ci.category || 'Item',
-                item: ci.item || ci.title || `Item ${idx + 1}`,
-                status: ci.status || 'Checked',
-                notes: ci.notes || ''
-              }))
-            : [];
+            const checklistItems = Array.isArray(s.checklist_data)
+              ? (s.checklist_data as any[]).map((ci: any, idx: number) => ({
+                  category: ci.category || 'Item',
+                  item: ci.item || ci.title || `Item ${idx + 1}`,
+                  status: ci.status || 'Checked',
+                  notes: ci.notes || ''
+                }))
+              : [];
 
-          const issuesCount = s.total_issues_found || 0;
-          const issues = Array.from({ length: issuesCount }, (_, i) => ({
-            severity: 'Minor',
-            description: `Issue ${i + 1}`
-          }));
+            const issuesCount = s.total_issues_found || 0;
+            const issues = Array.from({ length: issuesCount }, (_, i) => ({
+              severity: 'Minor',
+              description: `Issue ${i + 1}`
+            }));
 
-          const propertyName = propsMap.get(s.property_id) || s.property_id;
-          const status = s.status === 'completed' ? 'Completed' : (s.status || 'In Progress');
-          const summary = s.general_notes || `${checklistItems.length} items checked${issuesCount ? `, ${issuesCount} issues found` : ''}.`;
+            const propertyName = propsMap.get(s.property_id) || s.property_id;
+            const status = s.status === 'completed' ? 'Completed' : (s.status || 'In Progress');
+            const summary = s.general_notes || `${checklistItems.length} items checked${issuesCount ? `, ${issuesCount} issues found` : ''}.`;
 
-          return {
-            id: s.id,
-            kind: "home",
-            propertyId: s.property_id,
-            property: propertyName,
-            date,
-            time,
-            specialist: 'Me',
-            status,
-            summary,
-            photos,
-            checklist: checklistItems,
-            issues,
-            recommendations: []
-          };
+            return {
+              id: s.id,
+              kind: 'home',
+              propertyId: s.property_id,
+              property: propertyName,
+              date,
+              time,
+              specialist: 'Me',
+              status,
+              summary,
+              photos,
+              checklist: checklistItems,
+              issues,
+              recommendations: []
+            };
+          });
+
+        const mapProperty = (sessions: any[]): Report[] =>
+          (sessions || []).map((s: any) => {
+            const dt = s.completed_at || s.started_at;
+            const d = dt ? new Date(dt) : new Date();
+            const date = d.toLocaleDateString();
+            const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const checklistItems = Array.isArray(s.checklist_data)
+              ? (s.checklist_data as any[]).map((ci: any, idx: number) => ({
+                  category: ci.category || 'Item',
+                  item: ci.item || ci.title || `Item ${idx + 1}`,
+                  status: ci.status || 'Checked',
+                  notes: ci.notes || ''
+                }))
+              : [];
+
+            const propertyName = propsMap.get(s.property_id) || s.property_id;
+
+            return {
+              id: s.id,
+              kind: 'property',
+              propertyId: s.property_id,
+              property: propertyName,
+              date,
+              time,
+              specialist: 'Inspector',
+              status: s.status === 'completed' ? 'Completed' : (s.status || 'In Progress'),
+              summary: s.general_notes || `${checklistItems.length} items checked.`,
+              photos: [],
+              checklist: checklistItems,
+              issues: [],
+              recommendations: []
+            };
+          });
+
+        const combined = [...mapHome(homeSessions), ...mapProperty(propertySessions)];
+        setReports(combined);
+
+        // Build filter dropdown from combined reports
+        const uniqueProps = new Map<string, string>();
+        combined.forEach((r) => {
+          if (!uniqueProps.has(r.propertyId)) uniqueProps.set(r.propertyId, r.property);
         });
-
-        // Also fetch property check sessions
-        const { data: pSessions, error: pError } = await supabase
-          .from('property_check_sessions')
-          .select('id, property_id, completed_at, started_at, checklist_data, status, general_notes')
-          .order('completed_at', { ascending: false });
-        if (pError) throw pError;
-
-        const mappedProperty: Report[] = (pSessions || []).map((s: any) => {
-          const dt = s.completed_at || s.started_at;
-          const d = dt ? new Date(dt) : new Date();
-          const date = d.toLocaleDateString();
-          const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-          const checklistItems = Array.isArray(s.checklist_data)
-            ? (s.checklist_data as any[]).map((ci: any, idx: number) => ({
-                category: ci.category || 'Item',
-                item: ci.item || ci.title || `Item ${idx + 1}`,
-                status: ci.status || 'Checked',
-                notes: ci.notes || ''
-              }))
-            : [];
-
-          const propertyName = propsMap.get(s.property_id) || s.property_id;
-
-          return {
-            id: s.id,
-            kind: "property",
-            propertyId: s.property_id,
-            property: propertyName,
-            date,
-            time,
-            specialist: 'Inspector',
-            status: s.status === 'completed' ? 'Completed' : (s.status || 'In Progress'),
-            summary: s.general_notes || `${checklistItems.length} items checked.`,
-            photos: [],
-            checklist: checklistItems,
-            issues: [],
-            recommendations: []
-          };
-        });
-
-        setReports([ ...mapped, ...mappedProperty ]);
+        setProperties(Array.from(uniqueProps.entries()).map(([id, address]) => ({ id, address })));
       } catch (e) {
         console.error('Failed to load reports', e);
         setReports([]);
