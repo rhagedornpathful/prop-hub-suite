@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -7,15 +8,19 @@ import { ServiceCard } from "@/components/ServiceCard";
 import { AssignServiceDialog } from "@/components/AssignServiceDialog";
 import { PropertyServiceAssignments } from "@/components/PropertyServiceAssignments";
 import { useServicesByCategory } from "@/hooks/queries/useServices";
-import { Home, Building, Plus, Settings } from "lucide-react";
+import { Home, Building, Plus, Settings, Package } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useUserRole } from "@/hooks/useUserRole";
 
 export default function Services() {
   const [selectedServices, setSelectedServices] = useState<Set<string>>(new Set());
+  const { userRole } = useUserRole();
   
   const { data: houseWatchingServices, isLoading: isLoadingHouseWatching } = useServicesByCategory('house_watching');
   const { data: propertyManagementServices, isLoading: isLoadingPropertyManagement } = useServicesByCategory('property_management');
   const { data: addOnServices, isLoading: isLoadingAddOns } = useServicesByCategory('add_on');
+
+  const canManageServices = userRole === 'admin' || userRole === 'property_manager';
 
   const handleServiceSelect = (serviceId: string) => {
     setSelectedServices(prev => {
@@ -35,9 +40,19 @@ export default function Services() {
 
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">Service Packages</h1>
-        <p className="text-muted-foreground">Choose from our comprehensive range of property services</p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold">Service Packages</h1>
+          <p className="text-muted-foreground">Choose from our comprehensive range of property services</p>
+        </div>
+        {canManageServices && (
+          <Button asChild>
+            <Link to="/service-management">
+              <Package className="h-4 w-4 mr-2" />
+              Manage Services
+            </Link>
+          </Button>
+        )}
       </div>
 
       <Tabs defaultValue="house_watching" className="space-y-6">

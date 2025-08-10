@@ -29,6 +29,7 @@ import Finances from "./pages/Finances";
 import Maintenance from "./pages/Maintenance";
 import Messages from "./pages/Messages";
 import Services from "./pages/Services";
+import ServiceManagement from "./pages/ServiceManagement";
 import HouseWatching from "./pages/HouseWatching";
 import HouseWatcherDetail from "./pages/HouseWatcherDetail";
 import PropertyCheck from "./pages/PropertyCheck";
@@ -210,13 +211,20 @@ const AppContent = () => {
                              </RoleBasedAccess>
                            </PageTransition>
                          } />
-                         <Route path="/services" element={
-                           <PageTransition>
-                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
-                               <Services />
-                             </RoleBasedAccess>
-                           </PageTransition>
-                         } />
+                          <Route path="/services" element={
+                            <PageTransition>
+                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
+                                <Services />
+                              </RoleBasedAccess>
+                            </PageTransition>
+                          } />
+                          <Route path="/service-management" element={
+                            <PageTransition>
+                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                                <ServiceManagement />
+                              </RoleBasedAccess>
+                            </PageTransition>
+                          } />
                         <Route path="/property-check/:id" element={
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>

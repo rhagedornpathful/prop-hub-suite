@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { MoreHorizontal, CreditCard, Edit, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { usePropertyServiceAssignments, useDeletePropertyServiceAssignment } from "@/hooks/queries/usePropertyServiceAssignments";
+import { usePropertyServiceAssignments, useDeletePropertyServiceAssignment, PropertyServiceAssignment } from "@/hooks/queries/usePropertyServiceAssignments";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { EditPropertyServiceAssignmentDialog } from "@/components/EditPropertyServiceAssignmentDialog";
 import { format } from "date-fns";
 
 interface PropertyServiceAssignmentsProps {
@@ -13,6 +15,8 @@ interface PropertyServiceAssignmentsProps {
 }
 
 export function PropertyServiceAssignments({ propertyId }: PropertyServiceAssignmentsProps) {
+  const [selectedAssignment, setSelectedAssignment] = useState<PropertyServiceAssignment | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { data: assignments, isLoading } = usePropertyServiceAssignments(propertyId);
   const deleteAssignmentMutation = useDeletePropertyServiceAssignment();
 
@@ -20,6 +24,11 @@ export function PropertyServiceAssignments({ propertyId }: PropertyServiceAssign
     if (confirm("Are you sure you want to remove this service assignment?")) {
       await deleteAssignmentMutation.mutateAsync(id);
     }
+  };
+
+  const handleEdit = (assignment: PropertyServiceAssignment) => {
+    setSelectedAssignment(assignment);
+    setEditDialogOpen(true);
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -53,6 +62,7 @@ export function PropertyServiceAssignments({ propertyId }: PropertyServiceAssign
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>Service Assignments</CardTitle>
@@ -112,7 +122,7 @@ export function PropertyServiceAssignments({ propertyId }: PropertyServiceAssign
                         <CreditCard className="mr-2 h-4 w-4" />
                         Setup Billing
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(assignment)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Edit
                       </DropdownMenuItem>
@@ -132,5 +142,14 @@ export function PropertyServiceAssignments({ propertyId }: PropertyServiceAssign
         </Table>
       </CardContent>
     </Card>
+
+    {selectedAssignment && (
+      <EditPropertyServiceAssignmentDialog
+        assignment={selectedAssignment}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+      />
+    )}
+  </>
   );
 }
