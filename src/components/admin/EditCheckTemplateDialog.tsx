@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useUpdateCheckTemplate } from '@/hooks/queries/useCheckTemplates';
+import { useUpdateCheckTemplate, useCheckTemplate } from '@/hooks/queries/useCheckTemplates';
 import { TemplateSectionEditor } from './TemplateSectionEditor';
 
 interface EditCheckTemplateDialogProps {
@@ -27,22 +27,23 @@ export const EditCheckTemplateDialog = ({
   });
 
   const updateTemplateMutation = useUpdateCheckTemplate();
+  const { data: fullTemplate, isLoading } = useCheckTemplate(template?.id || '');
 
   useEffect(() => {
-    if (template) {
+    if (fullTemplate) {
       setFormData({
-        name: template.name || '',
-        description: template.description || '',
-        is_active: template.is_active ?? true,
+        name: fullTemplate.name || '',
+        description: fullTemplate.description || '',
+        is_active: fullTemplate.is_active ?? true,
       });
     }
-  }, [template]);
+  }, [fullTemplate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     updateTemplateMutation.mutate({
-      id: template.id,
+      id: fullTemplate?.id || template.id,
       updates: formData,
     }, {
       onSuccess: () => {
@@ -116,7 +117,11 @@ export const EditCheckTemplateDialog = ({
           </TabsContent>
 
           <TabsContent value="sections">
-            <TemplateSectionEditor template={template} />
+            {isLoading ? (
+              <div className="flex justify-center p-8">Loading sections...</div>
+            ) : (
+              <TemplateSectionEditor template={fullTemplate} />
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>

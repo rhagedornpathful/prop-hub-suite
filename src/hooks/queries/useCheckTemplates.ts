@@ -92,25 +92,40 @@ export const useCheckTemplate = (id: string) => {
     queryFn: async () => {
       try {
         console.log('Fetching template with ID:', id);
-        const { data, error } = await supabase
-          .from('check_templates' as any)
-          .select(`
-            *,
-            sections:check_template_sections(
-              *,
-              items:check_template_items(*)
-            )
-          `)
+        
+        // First get the template
+        const { data: template, error: templateError } = await supabase
+          .from('check_templates')
+          .select('*')
           .eq('id', id)
           .single();
         
-        if (error) {
-          console.error('Error fetching check template:', error);
+        if (templateError) {
+          console.error('Error fetching template:', templateError);
           return null;
         }
         
-        console.log('Fetched template data:', data);
-        return data;
+        // Then get sections with items
+        const { data: sections, error: sectionsError } = await supabase
+          .from('check_template_sections')
+          .select(`
+            *,
+            items:check_template_items(*)
+          `)
+          .eq('template_id', id)
+          .order('sort_order');
+        
+        if (sectionsError) {
+          console.error('Error fetching sections:', sectionsError);
+        }
+        
+        const result = {
+          ...template,
+          sections: sections || []
+        };
+        
+        console.log('Fetched template data:', result);
+        return result;
       } catch (error) {
         console.error('Check template fetch error:', error);
         return null;
