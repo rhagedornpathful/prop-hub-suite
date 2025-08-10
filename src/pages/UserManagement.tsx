@@ -147,6 +147,25 @@ const UserManagement = () => {
     setFilteredUsers(filtered);
   };
 
+  // Selection handlers for bulk actions
+  const onToggleSelect = (row: UserProfile) => {
+    const id = row.user_id;
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const onToggleSelectAll = () => {
+    const allSelected = filteredUsers.length > 0 && filteredUsers.every(u => selectedIds.has(u.user_id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredUsers.map(u => u.user_id)));
+    }
+  };
+
   const checkAdminStatus = async () => {
     console.log('🔍 UserManagement: Checking admin status...');
     
@@ -406,6 +425,15 @@ const UserManagement = () => {
 
       if (profilesError) throw profilesError;
 
+      // Delete Supabase auth account via Edge Function (best-effort)
+      try {
+        await supabase.functions.invoke('delete-auth-user', {
+          body: { user_id: userToDelete.user_id }
+        });
+      } catch (fnErr) {
+        console.warn('⚠️ delete-auth-user function failed:', fnErr);
+      }
+
       toast({
         title: "User Deleted",
         description: `${userToDelete.first_name || ''} ${userToDelete.last_name || ''}`.trim() + ' has been removed from the system.',
@@ -429,6 +457,45 @@ const UserManagement = () => {
     }
   };
 
+  // Bulk delete selected users
+  const confirmBulkDeleteUsers = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    // Optimistic UI update
+    setUsers(prev => prev.filter(u => !ids.includes(u.user_id)));
+    setFilteredUsers(prev => prev.filter(u => !ids.includes(u.user_id)));
+
+    let success = 0;
+    for (const uid of ids) {
+      try {
+        const { error: rolesError } = await supabase.from('user_roles').delete().eq('user_id', uid);
+        if (rolesError) throw rolesError;
+
+        const { error: profilesError } = await supabase.from('profiles').delete().eq('user_id', uid);
+        if (profilesError) throw profilesError;
+
+        try {
+          await supabase.functions.invoke('delete-auth-user', { body: { user_id: uid } });
+        } catch (fnErr) {
+          console.warn('⚠️ delete-auth-user failed for', uid, fnErr);
+        }
+
+        success += 1;
+      } catch (err) {
+        console.error('❌ Bulk delete failed for', uid, err);
+      }
+    }
+
+    toast({
+      title: success === ids.length ? 'Users Deleted' : 'Users Partially Deleted',
+      description: `${success}/${ids.length} user(s) removed.`,
+    });
+
+    setIsBulkDeleteDialogOpen(false);
+    setSelectedIds(new Set());
+    fetchUsers();
+  };
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
       const { error } = await supabase
@@ -456,7 +523,6 @@ const UserManagement = () => {
       });
     }
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -582,6 +648,14 @@ const UserManagement = () => {
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
           <AddUserDialog onUserAdded={handleUserUpdate} />
+          <Button 
+            variant="destructive" 
+            disabled={selectedIds.size === 0}
+            onClick={() => setIsBulkDeleteDialogOpen(true)}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            Delete Selected{selectedIds.size ? ` (${selectedIds.size})` : ''}
+          </Button>
           
           {/* Emergency Controls */}
           {(error || loadingTimeout) && (
@@ -682,6 +756,24 @@ const UserManagement = () => {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction onClick={confirmDeleteUser} className="bg-destructive hover:bg-destructive/90">
                 Delete User
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Bulk Delete Dialog */}
+        <AlertDialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Selected Users</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete {selectedIds.size} selected user(s)? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmBulkDeleteUsers} className="bg-destructive hover:bg-destructive/90">
+                Delete {selectedIds.size} User{selectedIds.size === 1 ? '' : 's'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
