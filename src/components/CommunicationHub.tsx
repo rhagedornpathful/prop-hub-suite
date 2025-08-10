@@ -149,13 +149,14 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
         description: `Successfully sent messages via ${channels.join(', ')}`
       });
 
-      // Also log this communication to in-app Messages (chat) when sending to specific users
+      // Also log this communication to the in-app Messages inbox
       try {
-        if (recipientType === 'specific' && specificUsers.length > 0 && user?.id) {
-          const participantIds = Array.from(new Set([user.id, ...specificUsers]));
+        if (user?.id) {
+          const isDirect = recipientType === 'specific' && specificUsers.length > 0;
+          const participantIds = isDirect ? Array.from(new Set([user.id, ...specificUsers])) : [user.id];
           const conversation = await createConversation.mutateAsync({
-            title: subject || 'Message',
-            type: 'general',
+            title: messageSubject || subject || 'Message',
+            type: isDirect ? 'direct' : 'broadcast',
             participantIds
           });
           await sendChatMessage.mutateAsync({
@@ -164,8 +165,9 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
           });
         }
       } catch (e) {
-        console.warn('Failed to log message to chat:', e);
+        console.warn('Failed to log message to in-app inbox:', e);
       }
+
 
       setMessageContent('');
       setMessageSubject('');
