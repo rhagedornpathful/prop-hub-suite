@@ -220,16 +220,22 @@ const tenantMenuItems = [
 
 const propertyManagerMenuItems = [
   {
-    title: "Dashboard",
-    url: "/",
+    title: "Home",
+    url: "/property-manager-home",
     icon: Home,
-    description: "Operations dashboard"
+    description: "Property schedule"
   },
   {
-    title: "Properties",
+    title: "My Properties",
+    url: "/property-manager-properties",
+    icon: Building,
+    description: "Managed properties"
+  },
+  {
+    title: "All Properties",
     url: "/properties",
     icon: Building,
-    description: "Manage properties"
+    description: "Property database"
   },
   {
     title: "Tenants",
@@ -242,12 +248,6 @@ const propertyManagerMenuItems = [
     url: "/maintenance",
     icon: Wrench,
     description: "Work orders"
-  },
-  {
-    title: "House Watching",
-    url: "/house-watching",
-    icon: Eye,
-    description: "Property monitoring"
   },
   {
     title: "Messages",
@@ -268,10 +268,10 @@ const propertyManagerMenuItems = [
     description: "Activity dashboard"
   },
   {
-    title: "My Profile",
-    url: "/settings",
+    title: "Settings",
+    url: "/property-manager-settings",
     icon: Settings,
-    description: "Account settings"
+    description: "Profile & preferences"
   }
 ];
 
