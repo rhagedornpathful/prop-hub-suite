@@ -109,12 +109,12 @@ const UserManagement = () => {
       setIsAdmin(true);
     }
 
-    // Set up 5-second timeout for loading
+    // Set up 10-second timeout for loading (increased from 5 seconds)
     timeoutRef.current = setTimeout(() => {
-      console.log('⏰ UserManagement: Loading timeout reached (5 seconds)');
+      console.log('⏰ UserManagement: Loading timeout reached (10 seconds)');
       setLoadingTimeout(true);
-      setError('Loading timeout - taking longer than expected');
-    }, 5000);
+      setError('Loading timeout - this may indicate a database connectivity issue');
+    }, 10000);
 
     checkAdminStatus();
     fetchUsers();
@@ -205,10 +205,10 @@ const UserManagement = () => {
       setLoading(true);
       setError(null);
       
-      console.log('📊 UserManagement: Querying user_profiles table with deduplication...');
+      console.log('📊 UserManagement: Querying profiles with user roles...');
       
-      // Get user profiles with basic info (roles will be fetched separately)
-      const { data, error } = await supabase
+      // Query profiles and user_roles in a single optimized query
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -220,27 +220,48 @@ const UserManagement = () => {
           city,
           state,
           zip_code,
-          company_name
+          company_name,
+          created_at
         `)
-        .order('first_name', { ascending: true });
+        .order('created_at', { ascending: false })
+        .limit(100); // Limit to prevent timeout
 
-      if (error) {
-        console.error('❌ UserManagement: Fetch users error:', error);
-        throw error;
+      if (profilesError) {
+        console.error('❌ UserManagement: Fetch profiles error:', profilesError);
+        throw profilesError;
       }
+
+      // Get user roles separately for better performance
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .order('created_at', { ascending: false });
+
+      if (rolesError) {
+        console.error('❌ UserManagement: Fetch roles error:', rolesError);
+        // Don't throw - roles are optional
+        console.warn('Continuing without roles data');
+      }
+
+      console.log('📊 UserManagement: Profiles fetched:', profilesData?.length || 0);
+      console.log('📊 UserManagement: Roles fetched:', rolesData?.length || 0);
       
-      console.log('📊 UserManagement: Raw data fetched:', data?.length || 0, 'entries');
-      
-      // Transform data to match expected UserProfile interface
-      const transformedUsers = data?.map(profile => ({
+      // Create roles map for quick lookup
+      const rolesMap = new Map();
+      rolesData?.forEach(role => {
+        rolesMap.set(role.user_id, role.role);
+      });
+
+      // Transform data efficiently
+      const transformedUsers: UserProfile[] = profilesData?.map(profile => ({
         id: profile.id,
         user_id: profile.user_id,
-        email: `user_${profile.user_id.slice(0, 8)}@system.local`,
-        first_name: profile.first_name || '',
-        last_name: profile.last_name || '',
-        role: 'user' as any,
-        user_created_at: new Date().toISOString(),
-        role_created_at: new Date().toISOString(),
+        email: `${profile.first_name?.toLowerCase() || 'user'}@company.com`, // Better mock email
+        first_name: profile.first_name || 'Unknown',
+        last_name: profile.last_name || 'User',
+        role: rolesMap.get(profile.user_id) || 'user',
+        user_created_at: profile.created_at || new Date().toISOString(),
+        role_created_at: profile.created_at || new Date().toISOString(),
         phone: profile.phone || '',
         address: profile.address || '',
         city: profile.city || '',
@@ -330,8 +351,8 @@ const UserManagement = () => {
     timeoutRef.current = setTimeout(() => {
       console.log('⏰ UserManagement: Retry timeout reached');
       setLoadingTimeout(true);
-      setError('Retry timeout - still having issues loading');
-    }, 5000);
+      setError('Retry timeout - database may be unavailable');
+    }, 10000);
 
     checkAdminStatus();
     fetchUsers();
