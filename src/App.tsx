@@ -35,6 +35,9 @@ import HouseWatcherDetail from "./pages/HouseWatcherDetail";
 import HouseWatcherHome from "./pages/HouseWatcherHome";
 import HouseWatcherProperties from "./pages/HouseWatcherProperties";
 import HouseWatcherSettings from "./pages/HouseWatcherSettings";
+import PropertyManagerHome from "./pages/PropertyManagerHome";
+import PropertyManagerProperties from "./pages/PropertyManagerProperties";
+import PropertyManagerSettings from "./pages/PropertyManagerSettings";
 import PropertyCheck from "./pages/PropertyCheck";
 import HomeCheck from "./pages/HomeCheck";
 import Documents from "./pages/Documents";
@@ -261,6 +264,27 @@ const AppContent = () => {
                             <PageTransition>
                               <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
                                 <HouseWatcherSettings />
+                              </RoleBasedAccess>
+                            </PageTransition>
+                          } />
+                          <Route path="/property-manager-home" element={
+                            <PageTransition>
+                              <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
+                                <PropertyManagerHome />
+                              </RoleBasedAccess>
+                            </PageTransition>
+                          } />
+                          <Route path="/property-manager-properties" element={
+                            <PageTransition>
+                              <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
+                                <PropertyManagerProperties />
+                              </RoleBasedAccess>
+                            </PageTransition>
+                          } />
+                          <Route path="/property-manager-settings" element={
+                            <PageTransition>
+                              <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
+                                <PropertyManagerSettings />
                               </RoleBasedAccess>
                             </PageTransition>
                           } />
