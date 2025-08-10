@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_labels: {
+        Row: {
+          color: string | null
+          conversation_id: string
+          created_at: string
+          id: string
+          label: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          conversation_id: string
+          created_at?: string
+          id?: string
+          label: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_labels_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_participants: {
         Row: {
           conversation_id: string
@@ -57,10 +92,17 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          is_archived: boolean | null
+          is_starred: boolean | null
+          labels: string[] | null
           last_message_at: string | null
           maintenance_request_id: string | null
+          priority: string | null
           property_id: string | null
+          recipient_names: string[] | null
+          sender_name: string | null
           status: string
+          thread_count: number | null
           title: string | null
           type: string
           updated_at: string
@@ -69,10 +111,17 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          is_archived?: boolean | null
+          is_starred?: boolean | null
+          labels?: string[] | null
           last_message_at?: string | null
           maintenance_request_id?: string | null
+          priority?: string | null
           property_id?: string | null
+          recipient_names?: string[] | null
+          sender_name?: string | null
           status?: string
+          thread_count?: number | null
           title?: string | null
           type?: string
           updated_at?: string
@@ -81,10 +130,17 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          is_archived?: boolean | null
+          is_starred?: boolean | null
+          labels?: string[] | null
           last_message_at?: string | null
           maintenance_request_id?: string | null
+          priority?: string | null
           property_id?: string | null
+          recipient_names?: string[] | null
+          sender_name?: string | null
           status?: string
+          thread_count?: number | null
           title?: string | null
           type?: string
           updated_at?: string
@@ -565,41 +621,56 @@ export type Database = {
       messages: {
         Row: {
           attachments: Json | null
+          bcc_recipients: string[] | null
+          cc_recipients: string[] | null
           content: string
           conversation_id: string
           created_at: string
           deleted_at: string | null
           edited_at: string | null
           id: string
+          importance: string | null
+          is_draft: boolean | null
           message_type: string
           reply_to_id: string | null
           sender_id: string
+          subject: string | null
           updated_at: string
         }
         Insert: {
           attachments?: Json | null
+          bcc_recipients?: string[] | null
+          cc_recipients?: string[] | null
           content: string
           conversation_id: string
           created_at?: string
           deleted_at?: string | null
           edited_at?: string | null
           id?: string
+          importance?: string | null
+          is_draft?: boolean | null
           message_type?: string
           reply_to_id?: string | null
           sender_id: string
+          subject?: string | null
           updated_at?: string
         }
         Update: {
           attachments?: Json | null
+          bcc_recipients?: string[] | null
+          cc_recipients?: string[] | null
           content?: string
           conversation_id?: string
           created_at?: string
           deleted_at?: string | null
           edited_at?: string | null
           id?: string
+          importance?: string | null
+          is_draft?: boolean | null
           message_type?: string
           reply_to_id?: string | null
           sender_id?: string
+          subject?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1138,6 +1209,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_inbox_settings: {
+        Row: {
+          auto_archive_days: number | null
+          auto_respond_enabled: boolean | null
+          auto_respond_message: string | null
+          created_at: string
+          id: string
+          signature: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_archive_days?: number | null
+          auto_respond_enabled?: boolean | null
+          auto_respond_message?: string | null
+          created_at?: string
+          id?: string
+          signature?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_archive_days?: number | null
+          auto_respond_enabled?: boolean | null
+          auto_respond_message?: string | null
+          created_at?: string
+          id?: string
+          signature?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
