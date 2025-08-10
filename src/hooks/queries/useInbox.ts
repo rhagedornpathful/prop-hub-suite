@@ -107,9 +107,6 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
         case 'tenants':
           query = query.eq('type', 'tenant');
           break;
-        case 'urgent':
-          query = query.or('priority.eq.high,type.eq.urgent');
-          break;
         case 'inbox':
         default:
           query = query.eq('is_archived', false).neq('created_by', user.id);

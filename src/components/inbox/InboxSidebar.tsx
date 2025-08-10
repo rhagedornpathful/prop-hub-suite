@@ -93,12 +93,6 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
       label: 'Tenant Messages', 
       icon: Users,
       color: 'text-purple-600'
-    },
-    { 
-      id: 'urgent', 
-      label: 'Urgent', 
-      icon: AlertTriangle,
-      color: 'text-red-600'
     }
   ];
 
