@@ -489,6 +489,57 @@ export type Database = {
           },
         ]
       }
+      house_watcher_settings: {
+        Row: {
+          created_at: string
+          email_notifications: boolean
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
+          home_check_notifications: boolean
+          id: string
+          preferred_contact_method: string | null
+          preferred_contact_time: string | null
+          push_notifications: boolean
+          reminder_notifications: boolean
+          schedule_change_notifications: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_notifications?: boolean
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          home_check_notifications?: boolean
+          id?: string
+          preferred_contact_method?: string | null
+          preferred_contact_time?: string | null
+          push_notifications?: boolean
+          reminder_notifications?: boolean
+          schedule_change_notifications?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_notifications?: boolean
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          home_check_notifications?: boolean
+          id?: string
+          preferred_contact_method?: string | null
+          preferred_contact_time?: string | null
+          push_notifications?: boolean
+          reminder_notifications?: boolean
+          schedule_change_notifications?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       house_watchers: {
         Row: {
           assigned_by: string

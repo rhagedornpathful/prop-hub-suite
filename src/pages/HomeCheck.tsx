@@ -97,7 +97,6 @@ const HomeCheck = () => {
     getTotalPhotos,
     canCompleteCheck,
     saveHomeCheckData,
-    recoverFromLocalStorage,
     startSession,
     submitSession,
     formatElapsedTime
@@ -388,14 +387,6 @@ const HomeCheck = () => {
                     <div className="text-center py-8">
                       <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
                       <p className="text-sm text-muted-foreground">Loading home check...</p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={recoverFromLocalStorage}
-                        className="mt-4"
-                      >
-                        Try to recover from local backup
-                      </Button>
                     </div>
                   ) : currentSectionData.key === 'summary' ? (
                     <HomeCheckSummarySection

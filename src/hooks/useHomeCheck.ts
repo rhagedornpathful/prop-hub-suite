@@ -135,7 +135,32 @@ export const useHomeCheck = (propertyId?: string) => {
     };
   }, [sessionStarted, startTime]);
 
+  // Helper function to log activities
+  const logActivity = useCallback(async (activityType: string, activityData: any) => {
+    if (!sessionId) return;
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      await supabase
+        .from('home_check_activities')
+        .insert({
+          session_id: sessionId,
+          user_id: user.id,
+          activity_type: activityType,
+          activity_data: activityData
+        });
+    } catch (error) {
+      console.error('Error logging activity:', error);
+      // Don't show error to user as this is background logging
+    }
+  }, [sessionId]);
+
   const handleItemToggle = useCallback((itemId: number, section: keyof HomeCheckData) => {
+    const item = checklistItems[section].find(item => item.id === itemId);
+    const wasCompleted = item?.completed || false;
+    
     setChecklistItems(prev => ({
       ...prev,
       [section]: prev[section].map(item => 
@@ -143,7 +168,15 @@ export const useHomeCheck = (propertyId?: string) => {
       )
     }));
     setHasUnsavedChanges(true);
-  }, []);
+
+    // Log activity to database
+    logActivity('item_toggle', {
+      itemId,
+      section,
+      completed: !wasCompleted,
+      itemName: item?.item
+    });
+  }, [checklistItems, logActivity]);
 
   const handleNotesChange = useCallback((itemId: number, notes: string, section: keyof HomeCheckData) => {
     setChecklistItems(prev => ({
@@ -153,7 +186,15 @@ export const useHomeCheck = (propertyId?: string) => {
       )
     }));
     setHasUnsavedChanges(true);
-  }, []);
+
+    // Log activity to database
+    logActivity('notes_update', {
+      itemId,
+      section,
+      notesLength: notes.length,
+      hasIssues: notes.toLowerCase().includes('issue')
+    });
+  }, [logActivity]);
 
   const handlePhotosUpdate = useCallback((itemId: number, photos: string[], section: keyof HomeCheckData) => {
     setChecklistItems(prev => ({
@@ -163,7 +204,14 @@ export const useHomeCheck = (propertyId?: string) => {
       )
     }));
     setHasUnsavedChanges(true);
-  }, []);
+
+    // Log activity to database
+    logActivity('photos_update', {
+      itemId,
+      section,
+      photoCount: photos.length
+    });
+  }, [logActivity]);
 
   const getSectionProgress = useCallback((section: keyof HomeCheckData): string => {
     const items = checklistItems[section];
@@ -337,12 +385,16 @@ export const useHomeCheck = (propertyId?: string) => {
     }
   }, [sessionId, startTime, checklistItems, weather, overallCondition, weatherImpact, nextVisitDate, getTotalIssuesFound, getTotalPhotos, toast]);
 
-  const recoverFromLocalStorage = useCallback(() => {
-    toast({
-      title: "Recovery attempted",
-      description: "Attempted to recover from local backup"
-    });
-  }, [toast]);
+  // Auto-save every 30 seconds when changes are made
+  useEffect(() => {
+    if (hasUnsavedChanges && sessionId) {
+      const autoSaveTimer = setTimeout(() => {
+        saveHomeCheckData();
+      }, 30000); // 30 seconds
+
+      return () => clearTimeout(autoSaveTimer);
+    }
+  }, [hasUnsavedChanges, sessionId, saveHomeCheckData]);
 
   return {
     checklistItems,
@@ -373,7 +425,6 @@ export const useHomeCheck = (propertyId?: string) => {
     getTotalPhotos,
     canCompleteCheck,
     saveHomeCheckData,
-    recoverFromLocalStorage,
     startSession,
     submitSession,
     formatElapsedTime

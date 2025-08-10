@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,23 +16,163 @@ import {
   Mail
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface HouseWatcherSettingsData {
+  email_notifications: boolean;
+  push_notifications: boolean;
+  home_check_notifications: boolean;
+  schedule_change_notifications: boolean;
+  reminder_notifications: boolean;
+  preferred_contact_time?: string;
+  preferred_contact_method: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  emergency_contact_relationship?: string;
+}
+
+interface ProfileData {
+  first_name?: string;
+  last_name?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
+}
 
 const HouseWatcherSettings = () => {
   const { toast } = useToast();
-  const [notifications, setNotifications] = useState({
-    email: true,
-    push: false,
-    homeChecks: true,
-    scheduleChanges: true,
-    reminders: true,
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  const [settings, setSettings] = useState<HouseWatcherSettingsData>({
+    email_notifications: true,
+    push_notifications: false,
+    home_check_notifications: true,
+    schedule_change_notifications: true,
+    reminder_notifications: true,
+    preferred_contact_method: 'email',
   });
 
-  const handleSave = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your preferences have been updated successfully.",
-    });
+  const [profile, setProfile] = useState<ProfileData>({});
+
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+    }
+  }, [user]);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      if (profileData) {
+        setProfile(profileData);
+      }
+
+      // Load or create settings
+      const { data: settingsData, error: settingsError } = await supabase
+        .from('house_watcher_settings')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (settingsError && settingsError.code !== 'PGRST116') {
+        throw settingsError;
+      }
+
+      if (settingsData) {
+        setSettings({
+          email_notifications: settingsData.email_notifications,
+          push_notifications: settingsData.push_notifications,
+          home_check_notifications: settingsData.home_check_notifications,
+          schedule_change_notifications: settingsData.schedule_change_notifications,
+          reminder_notifications: settingsData.reminder_notifications,
+          preferred_contact_time: settingsData.preferred_contact_time || '',
+          preferred_contact_method: settingsData.preferred_contact_method || 'email',
+          emergency_contact_name: settingsData.emergency_contact_name || '',
+          emergency_contact_phone: settingsData.emergency_contact_phone || '',
+          emergency_contact_relationship: settingsData.emergency_contact_relationship || '',
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error Loading Settings",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      // Save profile data
+      await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user?.id,
+          ...profile,
+          updated_at: new Date().toISOString()
+        });
+
+      // Save settings data
+      await supabase
+        .from('house_watcher_settings')
+        .upsert({
+          user_id: user?.id,
+          ...settings,
+          updated_at: new Date().toISOString()
+        });
+
+      toast({
+        title: "Settings saved",
+        description: "Your preferences have been updated successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error Saving Settings",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex-1 p-6 overflow-auto">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-muted rounded w-1/3"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-muted rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 p-6 overflow-auto">
@@ -47,9 +187,9 @@ const HouseWatcherSettings = () => {
             <p className="text-muted-foreground">Manage your profile and notification preferences</p>
           </div>
           
-          <Button onClick={handleSave} className="bg-gradient-primary">
+          <Button onClick={handleSave} disabled={saving} className="bg-gradient-primary">
             <Save className="h-4 w-4 mr-2" />
-            Save Changes
+            {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </div>
 
@@ -79,31 +219,84 @@ const HouseWatcherSettings = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="firstName">First Name</Label>
-                      <Input id="firstName" placeholder="John" />
+                      <Input 
+                        id="firstName" 
+                        value={profile.first_name || ''} 
+                        onChange={(e) => setProfile({...profile, first_name: e.target.value})}
+                        placeholder="John" 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="lastName">Last Name</Label>
-                      <Input id="lastName" placeholder="Doe" />
+                      <Input 
+                        id="lastName" 
+                        value={profile.last_name || ''} 
+                        onChange={(e) => setProfile({...profile, last_name: e.target.value})}
+                        placeholder="Doe" 
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="john@example.com" />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      value={user?.email || ''} 
+                      disabled
+                      placeholder="john@example.com" 
+                    />
+                    <p className="text-xs text-muted-foreground">Email cannot be changed here. Contact your administrator.</p>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" placeholder="+1 (555) 123-4567" />
+                    <Input 
+                      id="phone" 
+                      value={profile.phone || ''} 
+                      onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                      placeholder="+1 (555) 123-4567" 
+                    />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="bio">About Me</Label>
-                    <Textarea 
-                      id="bio" 
-                      placeholder="Tell us about your house watching experience..."
-                      rows={3}
+                    <Label htmlFor="address">Address</Label>
+                    <Input 
+                      id="address" 
+                      value={profile.address || ''} 
+                      onChange={(e) => setProfile({...profile, address: e.target.value})}
+                      placeholder="123 Main St" 
                     />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="city">City</Label>
+                      <Input 
+                        id="city" 
+                        value={profile.city || ''} 
+                        onChange={(e) => setProfile({...profile, city: e.target.value})}
+                        placeholder="San Francisco" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="state">State</Label>
+                      <Input 
+                        id="state" 
+                        value={profile.state || ''} 
+                        onChange={(e) => setProfile({...profile, state: e.target.value})}
+                        placeholder="CA" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="zipCode">ZIP Code</Label>
+                      <Input 
+                        id="zipCode" 
+                        value={profile.zip_code || ''} 
+                        onChange={(e) => setProfile({...profile, zip_code: e.target.value})}
+                        placeholder="94102" 
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -119,17 +312,32 @@ const HouseWatcherSettings = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <Label htmlFor="emergencyName">Emergency Contact Name</Label>
-                      <Input id="emergencyName" placeholder="Jane Doe" />
+                      <Input 
+                        id="emergencyName" 
+                        value={settings.emergency_contact_name || ''} 
+                        onChange={(e) => setSettings({...settings, emergency_contact_name: e.target.value})}
+                        placeholder="Jane Doe" 
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="emergencyPhone">Emergency Contact Phone</Label>
-                      <Input id="emergencyPhone" placeholder="+1 (555) 987-6543" />
+                      <Input 
+                        id="emergencyPhone" 
+                        value={settings.emergency_contact_phone || ''} 
+                        onChange={(e) => setSettings({...settings, emergency_contact_phone: e.target.value})}
+                        placeholder="+1 (555) 987-6543" 
+                      />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="emergencyRelation">Relationship</Label>
-                    <Input id="emergencyRelation" placeholder="Spouse, Family Member, Friend" />
+                    <Input 
+                      id="emergencyRelation" 
+                      value={settings.emergency_contact_relationship || ''} 
+                      onChange={(e) => setSettings({...settings, emergency_contact_relationship: e.target.value})}
+                      placeholder="Spouse, Family Member, Friend" 
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -152,8 +360,8 @@ const HouseWatcherSettings = () => {
                         <p className="text-sm text-muted-foreground">Receive notifications via email</p>
                       </div>
                       <Switch 
-                        checked={notifications.email}
-                        onCheckedChange={(checked) => setNotifications({...notifications, email: checked})}
+                        checked={settings.email_notifications}
+                        onCheckedChange={(checked) => setSettings({...settings, email_notifications: checked})}
                       />
                     </div>
 
@@ -163,8 +371,8 @@ const HouseWatcherSettings = () => {
                         <p className="text-sm text-muted-foreground">Receive browser push notifications</p>
                       </div>
                       <Switch 
-                        checked={notifications.push}
-                        onCheckedChange={(checked) => setNotifications({...notifications, push: checked})}
+                        checked={settings.push_notifications}
+                        onCheckedChange={(checked) => setSettings({...settings, push_notifications: checked})}
                       />
                     </div>
 
@@ -176,8 +384,8 @@ const HouseWatcherSettings = () => {
                         <p className="text-sm text-muted-foreground">Get notified about new home check assignments</p>
                       </div>
                       <Switch 
-                        checked={notifications.homeChecks}
-                        onCheckedChange={(checked) => setNotifications({...notifications, homeChecks: checked})}
+                        checked={settings.home_check_notifications}
+                        onCheckedChange={(checked) => setSettings({...settings, home_check_notifications: checked})}
                       />
                     </div>
 
@@ -187,8 +395,8 @@ const HouseWatcherSettings = () => {
                         <p className="text-sm text-muted-foreground">Notifications when your schedule is updated</p>
                       </div>
                       <Switch 
-                        checked={notifications.scheduleChanges}
-                        onCheckedChange={(checked) => setNotifications({...notifications, scheduleChanges: checked})}
+                        checked={settings.schedule_change_notifications}
+                        onCheckedChange={(checked) => setSettings({...settings, schedule_change_notifications: checked})}
                       />
                     </div>
 
@@ -198,8 +406,8 @@ const HouseWatcherSettings = () => {
                         <p className="text-sm text-muted-foreground">Reminders for upcoming property checks</p>
                       </div>
                       <Switch 
-                        checked={notifications.reminders}
-                        onCheckedChange={(checked) => setNotifications({...notifications, reminders: checked})}
+                        checked={settings.reminder_notifications}
+                        onCheckedChange={(checked) => setSettings({...settings, reminder_notifications: checked})}
                       />
                     </div>
                   </div>
@@ -216,13 +424,20 @@ const HouseWatcherSettings = () => {
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="preferredTime">Preferred Contact Time</Label>
-                    <Input id="preferredTime" placeholder="9:00 AM - 5:00 PM" />
+                    <Input 
+                      id="preferredTime" 
+                      value={settings.preferred_contact_time || ''} 
+                      onChange={(e) => setSettings({...settings, preferred_contact_time: e.target.value})}
+                      placeholder="9:00 AM - 5:00 PM" 
+                    />
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="contactMethod">Preferred Contact Method</Label>
                     <select 
                       id="contactMethod" 
+                      value={settings.preferred_contact_method}
+                      onChange={(e) => setSettings({...settings, preferred_contact_method: e.target.value})}
                       className="w-full p-2 border border-input bg-background rounded-md"
                     >
                       <option value="email">Email</option>
