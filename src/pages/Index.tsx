@@ -171,12 +171,12 @@ const IndexContent = () => {
       case 'tenant':
         return <TenantDashboard />;
       case 'house_watcher':
-        // Redirect house watchers to their dedicated home page
-        navigate('/house-watcher-home');
+        // Redirect house watchers to their mobile dashboard
+        navigate('/house-watcher/dashboard');
         return null;
       case 'property_manager':
-        // Redirect property managers to their dedicated home page
-        navigate('/property-manager-home');
+        // Redirect property managers to their mobile dashboard
+        navigate('/property-manager/dashboard');
         return null;
       case 'client':
         return <TenantDashboard />; // Clients see tenant view

@@ -40,6 +40,11 @@ import PropertyManagerProperties from "./pages/PropertyManagerProperties";
 import PropertyManagerSettings from "./pages/PropertyManagerSettings";
 import PropertyCheck from "./pages/PropertyCheck";
 import HomeCheck from "./pages/HomeCheck";
+import HouseWatcherMobileDashboard from "./pages/dashboards/HouseWatcherMobileDashboard";
+import PropertyManagerMobileDashboard from "./pages/dashboards/PropertyManagerMobileDashboard";
+import HouseWatcherMobileChecks from "./pages/HouseWatcherMobileChecks";
+import PropertyManagerMobileMaintenance from "./pages/PropertyManagerMobileMaintenance";
+import MobileBottomNavigation from "./components/mobile/MobileBottomNavigation";
 import Documents from "./pages/Documents";
 import UserManagement from "./pages/UserManagement";
 import DevTools from "./pages/DevTools";
@@ -260,13 +265,27 @@ const AppContent = () => {
                              </RoleBasedAccess>
                             </PageTransition>
                           } />
-                          <Route path="/house-watcher-settings" element={
-                            <PageTransition>
-                              <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
-                                <HouseWatcherSettings />
-                              </RoleBasedAccess>
-                            </PageTransition>
-                          } />
+                           <Route path="/house-watcher-settings" element={
+                             <PageTransition>
+                               <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
+                                 <HouseWatcherSettings />
+                               </RoleBasedAccess>
+                             </PageTransition>
+                           } />
+                           <Route path="/house-watcher/dashboard" element={
+                             <PageTransition>
+                               <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
+                                 <HouseWatcherMobileDashboard />
+                               </RoleBasedAccess>
+                             </PageTransition>
+                           } />
+                           <Route path="/house-watcher/checks" element={
+                             <PageTransition>
+                               <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
+                                 <HouseWatcherMobileChecks />
+                               </RoleBasedAccess>
+                             </PageTransition>
+                           } />
                           <Route path="/property-manager-home" element={
                             <PageTransition>
                               <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
@@ -281,13 +300,27 @@ const AppContent = () => {
                               </RoleBasedAccess>
                             </PageTransition>
                           } />
-                          <Route path="/property-manager-settings" element={
-                            <PageTransition>
-                              <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
-                                <PropertyManagerSettings />
-                              </RoleBasedAccess>
-                            </PageTransition>
-                          } />
+                           <Route path="/property-manager-settings" element={
+                             <PageTransition>
+                               <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
+                                 <PropertyManagerSettings />
+                               </RoleBasedAccess>
+                             </PageTransition>
+                           } />
+                           <Route path="/property-manager/dashboard" element={
+                             <PageTransition>
+                               <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
+                                 <PropertyManagerMobileDashboard />
+                               </RoleBasedAccess>
+                             </PageTransition>
+                           } />
+                           <Route path="/property-manager/maintenance" element={
+                             <PageTransition>
+                               <RoleBasedAccess allowedRoles={['admin', 'property_manager']}>
+                                 <PropertyManagerMobileMaintenance />
+                               </RoleBasedAccess>
+                             </PageTransition>
+                           } />
                          <Route path="/property-owners/:ownerId" element={
                            <PageTransition>
                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
@@ -332,6 +365,7 @@ const AppContent = () => {
                     </main>
                   </div>
                   <MobileNavigation />
+                  <MobileBottomNavigation />
                   {config.isDevelopment && <SimplePerformanceMonitor />}
                 </SidebarProvider>
               </ProtectedRoute>
