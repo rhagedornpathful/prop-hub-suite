@@ -220,41 +220,49 @@ const HomeCheck = () => {
 
       {/* Section Navigation Progress Bar */}
       <div className="bg-card border-b border-border">
-        <div className="container-responsive py-6">
+        <div className="container-responsive py-8">
           {/* Progress Steps */}
-          <div className="relative">
-            {/* Progress Line */}
-            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-muted -translate-y-1/2 z-0"></div>
-            <div 
-              className="absolute top-1/2 left-0 h-0.5 bg-gradient-primary -translate-y-1/2 z-0 transition-all duration-300"
-              style={{ width: `${(currentSection / (sections.length - 1)) * 100}%` }}
-            ></div>
+          <div className="relative max-w-4xl mx-auto">
+            {/* Progress Line Container */}
+            <div className="absolute top-6 left-0 right-0 flex items-center px-6">
+              <div className="flex-1 h-0.5 bg-muted"></div>
+              <div 
+                className="h-0.5 bg-gradient-primary transition-all duration-500 ease-in-out"
+                style={{ 
+                  width: `${Math.max(0, (currentSection / Math.max(1, sections.length - 1)) * 100)}%`,
+                  position: 'absolute',
+                  left: '24px',
+                  right: '24px'
+                }}
+              ></div>
+            </div>
             
-            {/* Steps */}
-            <div className="relative flex justify-between items-center z-10">
+            {/* Steps Container */}
+            <div className="relative flex justify-between items-start px-0">
               {sections.map((section, index) => {
                 const Icon = section.icon;
                 const progress = section.key === 'summary' 
-                  ? getOverallProgress() >= 100 ? '✓' : '0'
-                  : getSectionProgress(section.key as keyof typeof checklistItems);
+                  ? getOverallProgress() >= 100 ? 100 : getOverallProgress()
+                  : parseInt(getSectionProgress(section.key as keyof typeof checklistItems).toString().replace('%', '')) || 0;
                 const isActive = currentSection === index;
-                const isCompleted = index < currentSection || (section.key !== 'summary' && progress === '100%');
+                const isCompleted = index < currentSection || progress === 100;
                 const isAccessible = index <= currentSection || isCompleted;
                 
                 return (
-                  <div key={section.key} className="flex flex-col items-center">
+                  <div key={section.key} className="flex flex-col items-center min-w-0 flex-1">
+                    {/* Step Circle */}
                     <button
                       onClick={() => isAccessible && setCurrentSection(index)}
                       disabled={!isAccessible}
                       className={`
-                        w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 mb-2
+                        relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 mb-4 z-10
                         ${isActive 
-                          ? 'bg-gradient-primary text-white shadow-lg scale-110' 
+                          ? 'bg-gradient-primary text-white shadow-lg scale-110 ring-4 ring-primary/20' 
                           : isCompleted 
-                            ? 'bg-success text-white' 
+                            ? 'bg-success text-white shadow-md' 
                             : isAccessible
-                              ? 'bg-muted text-foreground hover:bg-primary hover:text-white'
-                              : 'bg-muted/50 text-muted-foreground cursor-not-allowed'
+                              ? 'bg-background border-2 border-muted text-foreground hover:border-primary hover:text-primary hover:shadow-md'
+                              : 'bg-muted/50 text-muted-foreground cursor-not-allowed border-2 border-muted/50'
                         }
                         ${isAccessible ? 'cursor-pointer' : ''}
                       `}
@@ -267,12 +275,12 @@ const HomeCheck = () => {
                     </button>
                     
                     {/* Step Label */}
-                    <div className="text-center">
-                      <p className={`text-xs font-medium mb-1 ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                    <div className="text-center px-2">
+                      <h3 className={`text-sm font-semibold mb-2 ${isActive ? 'text-primary' : 'text-foreground'}`}>
                         {section.name}
-                      </p>
+                      </h3>
                       <div className={`
-                        text-xs px-2 py-1 rounded-full min-w-[2rem] 
+                        inline-flex items-center justify-center text-xs font-medium px-3 py-1 rounded-full min-w-[3rem] 
                         ${isActive 
                           ? 'bg-primary text-white' 
                           : isCompleted 
@@ -281,9 +289,9 @@ const HomeCheck = () => {
                         }
                       `}>
                         {section.key === 'summary' ? (
-                          getOverallProgress() >= 100 ? '✓' : `${getOverallProgress()}%`
+                          `${Math.round(progress)}%`
                         ) : (
-                          typeof progress === 'string' && progress.includes('%') ? progress : `${progress}%`
+                          `${progress}%`
                         )}
                       </div>
                     </div>
