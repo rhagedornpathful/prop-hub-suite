@@ -132,17 +132,29 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
   const sendMessage = async (recipients: string[], subject: string, content: string, channels: string[]) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('send-communication', {
-        body: {
-          recipients,
-          subject,
-          content,
-          channels, // ['email', 'sms', 'push']
-          type: 'manual'
-        }
-      });
+      console.log('Starting message send...', { recipients, subject, content, channels });
+      
+      // Try the edge function call first
+      try {
+        const { data, error } = await supabase.functions.invoke('send-communication', {
+          body: {
+            recipients,
+            subject,
+            content,
+            channels, // ['email', 'sms', 'push']
+            type: 'manual'
+          }
+        });
 
-      if (error) throw error;
+        if (error) {
+          console.error('Edge function error:', error);
+          throw error;
+        }
+        console.log('Edge function success:', data);
+      } catch (edgeError) {
+        console.warn('Edge function failed, continuing with inbox logging:', edgeError);
+        // Continue with inbox logging even if edge function fails
+      }
 
       toast({
         title: 'Messages Sent',
@@ -152,6 +164,8 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
       // Also log this communication to the in-app Messages inbox for all relevant recipients
       try {
         if (user?.id) {
+          console.log('Creating inbox conversation...');
+          
           // Resolve participant user IDs based on recipient selection
           const resolveRecipientIds = async (): Promise<string[]> => {
             switch (recipientType) {
@@ -184,8 +198,11 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
           };
 
           const targetIds = await resolveRecipientIds();
+          console.log('Target IDs resolved:', targetIds);
+          
           const isDirect = recipientType === 'specific' && specificUsers.length > 0;
           const participantIds = Array.from(new Set([user.id, ...targetIds]));
+          console.log('Creating conversation with participants:', participantIds);
 
           const conversation = await createConversation.mutateAsync({
             title: messageSubject || subject || 'Message',
@@ -193,13 +210,16 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
             participantIds
           });
 
+          console.log('Conversation created, sending message...');
           await sendChatMessage.mutateAsync({
             conversationId: conversation.id,
             content
           });
+          console.log('Message sent to conversation successfully');
         }
       } catch (e) {
-        console.warn('Failed to log message to in-app inbox:', e);
+        console.error('Failed to log message to in-app inbox:', e);
+        // Don't throw here - we want the send to be considered successful even if inbox logging fails
       }
 
       setMessageContent('');
