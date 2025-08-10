@@ -206,10 +206,15 @@ export function PropertyAssignees({ propertyId }: PropertyAssigneesProps) {
       };
       if (user?.id) payload.assigned_by = user.id;
 
-      // Upsert (unique on property_id)
+      // Ensure only one manager per property, then insert
+      await supabase
+        .from("property_manager_assignments")
+        .delete()
+        .eq("property_id", propertyId);
+
       const { error } = await supabase
         .from("property_manager_assignments")
-        .upsert(payload, { onConflict: "property_id" });
+        .insert(payload);
       if (error) throw error;
       toast({ title: "Saved", description: "Property manager assigned." });
       setManagerDialogOpen(false);
