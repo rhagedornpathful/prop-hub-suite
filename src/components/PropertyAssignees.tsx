@@ -317,9 +317,9 @@ export function PropertyAssignees({ propertyId }: PropertyAssigneesProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a property manager" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50 bg-popover">
                   {managerOptions.length === 0 && (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-managers" disabled>
                       No managers available
                     </SelectItem>
                   )}
@@ -350,9 +350,9 @@ export function PropertyAssignees({ propertyId }: PropertyAssigneesProps) {
                 <SelectTrigger>
                   <SelectValue placeholder="Choose a house watcher" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50 bg-popover">
                   {watcherOptions.length === 0 && (
-                    <SelectItem value="" disabled>
+                    <SelectItem value="no-watchers" disabled>
                       No house watchers available
                     </SelectItem>
                   )}
