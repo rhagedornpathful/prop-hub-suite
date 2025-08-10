@@ -360,7 +360,7 @@ export function PropertyDetail() {
 
       <div className={`${isMobile ? 'px-4' : 'container mx-auto px-6'} space-y-4`}>
         {/* Main Content */}
-        <Accordion type="multiple" className="space-y-4">
+        <Accordion type="multiple" defaultValue={["overview","assignees","activity","maintenance"]} className="space-y-4">
           <AccordionItem value="overview" className="bg-white rounded-lg shadow-sm border-0 p-4">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-2">
@@ -376,7 +376,7 @@ export function PropertyDetail() {
                     <img 
                       src={property.images[0]} 
                       alt={property.address}
-                      className="w-full h-auto max-h-96 lg:max-h-[560px] object-contain bg-muted"
+                      className="w-full h-auto max-h-64 lg:max-h-80 object-contain bg-muted"
                       loading="lazy"
                       decoding="async"
                       sizes="(max-width: 768px) 100vw, 1024px"
