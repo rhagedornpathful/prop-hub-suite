@@ -40,6 +40,13 @@ const AdminNavigation = () => {
       ]
     },
     {
+      title: "System Configuration",
+      description: "Configure system-wide settings and templates",
+      pages: [
+        { title: "Check Templates", url: "/admin/check-templates", icon: CheckSquare, description: "Manage property and home check templates" },
+      ]
+    },
+    {
       title: "Property Management",
       description: "Advanced property management features",
       pages: [

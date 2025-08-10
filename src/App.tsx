@@ -52,6 +52,7 @@ import AdminNavigation from "./pages/AdminNavigation";
 import Activity from "./pages/Activity";
 import NotFound from "./pages/NotFound";
 import PropertyManagerView from "./pages/PropertyManagerView";
+import CheckTemplates from "./pages/admin/CheckTemplates";
 import { ProfileSetup } from "./components/ProfileSetup";
 
 
@@ -260,8 +261,15 @@ const AppContent = () => {
                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
                                <AdminNavigation />
                              </RoleBasedAccess>
-                           </PageTransition>
-                         } />
+                            </PageTransition>
+                          } />
+                          <Route path="/admin/check-templates" element={
+                            <PageTransition>
+                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                                <CheckTemplates />
+                              </RoleBasedAccess>
+                            </PageTransition>
+                          } />
                         <Route path="/client-portal" element={<PageTransition><ClientDashboard /></PageTransition>} />
                         <Route path="/client-portal/properties" element={<PageTransition><ClientProperties /></PageTransition>} />
                         <Route path="/client-portal/reports" element={<PageTransition><ClientReports /></PageTransition>} />

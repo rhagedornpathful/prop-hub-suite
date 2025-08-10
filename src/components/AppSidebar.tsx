@@ -127,6 +127,12 @@ const adminMenuItems = [
     description: "Manage users & roles"
   },
   {
+    title: "Check Templates",
+    url: "/admin/check-templates",
+    icon: FileText,
+    description: "Configure inspection templates"
+  },
+  {
     title: "Service Packages",
     url: "/services",
     icon: Settings,
