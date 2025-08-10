@@ -376,25 +376,34 @@ const UserManagement = () => {
 
     try {
       // First, get the user_id from the profile
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileRow, error: profileError } = await supabase
         .from('profiles')
         .select('user_id')
         .eq('id', userToDelete.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
+      if (!profileRow) throw new Error('Profile not found');
 
       // Delete the user's roles first
-      await supabase
+      const { error: rolesError } = await supabase
         .from('user_roles')
         .delete()
-        .eq('user_id', profile.user_id);
+        .eq('user_id', profileRow.user_id);
+
+      if (rolesError) throw rolesError;
 
       // Delete the profile
-      await supabase
+      const { error: profilesError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', userToDelete.id);
+
+      if (profilesError) throw profilesError;
+
+      // Optimistically remove from UI
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+      setFilteredUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
 
       toast({
         title: "User Deleted",
@@ -404,6 +413,7 @@ const UserManagement = () => {
 
       setIsDeleteDialogOpen(false);
       setUserToDelete(null);
+      // Sync with server state
       fetchUsers();
     } catch (error: any) {
       toast({
