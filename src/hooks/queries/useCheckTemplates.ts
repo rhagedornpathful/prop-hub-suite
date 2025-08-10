@@ -278,3 +278,137 @@ export const useCreateCheckTemplateItem = () => {
     },
   });
 };
+
+// Update section
+export const useUpdateCheckTemplateSection = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<CheckTemplateSectionInsert> }) => {
+      const { data, error } = await supabase
+        .from('check_template_sections' as any)
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      toast({
+        title: "Section Updated",
+        description: "Template section has been updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating section:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update section",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+// Delete section
+export const useDeleteCheckTemplateSection = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('check_template_sections' as any)
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      toast({
+        title: "Section Deleted",
+        description: "Template section has been deleted successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting section:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete section",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+// Update item
+export const useUpdateCheckTemplateItem = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<CheckTemplateItemInsert> }) => {
+      const { data, error } = await supabase
+        .from('check_template_items' as any)
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      toast({
+        title: "Item Updated",
+        description: "Check item has been updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error updating item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update item",
+        variant: "destructive",
+      });
+    },
+  });
+};
+
+// Delete item
+export const useDeleteCheckTemplateItem = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('check_template_items' as any)
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      toast({
+        title: "Item Deleted",
+        description: "Check item has been deleted successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Error deleting item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete item",
+        variant: "destructive",
+      });
+    },
+  });
+};
