@@ -19,8 +19,8 @@ export const CheckTemplateManager = () => {
   const { data: templates, isLoading } = useCheckTemplates();
   const deleteTemplateMutation = useDeleteCheckTemplate();
 
-  const homeCheckTemplates = templates?.filter(t => t.type === 'home_check') || [];
-  const propertyCheckTemplates = templates?.filter(t => t.type === 'property_check') || [];
+  const homeCheckTemplates = templates?.filter((t: any) => t.type === 'home_check') || [];
+  const propertyCheckTemplates = templates?.filter((t: any) => t.type === 'property_check') || [];
 
   const handleEdit = (template: any) => {
     setSelectedTemplate(template);

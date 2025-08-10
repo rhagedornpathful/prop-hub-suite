@@ -51,16 +51,37 @@ export interface CheckTemplateItemInsert {
   sort_order: number;
 }
 
-// Temporarily disable until types are generated
 export const useCheckTemplates = (type?: 'home_check' | 'property_check') => {
   return useQuery({
     queryKey: ['check-templates', type],
     queryFn: async () => {
-      // Return empty array until types are ready
-      console.log('Check templates query - types not ready yet');
-      return [] as CheckTemplate[];
+      try {
+        // Try a simple direct query first
+        const { data: templates, error: templatesError } = await supabase
+          .from('check_templates' as any)
+          .select('*')
+          .eq('is_active', true);
+
+        if (templatesError) {
+          console.error('Templates query error:', templatesError);
+          return [];
+        }
+
+        console.log('Found templates:', templates);
+        
+        // Filter by type if specified
+        let filteredTemplates = templates || [];
+        if (type && filteredTemplates.length > 0) {
+          filteredTemplates = filteredTemplates.filter((t: any) => t.type === type);
+        }
+        
+        return filteredTemplates;
+      } catch (error) {
+        console.error('Error fetching check templates:', error);
+        return [];
+      }
     },
-    enabled: false, // Disable until types are ready
+    enabled: true,
     staleTime: 30000,
   });
 };
@@ -69,10 +90,24 @@ export const useCheckTemplate = (id: string) => {
   return useQuery({
     queryKey: ['check-template', id],
     queryFn: async () => {
-      // Return null until types are ready
-      return null as CheckTemplate | null;
+      try {
+        const { data, error } = await supabase
+          .from('check_templates' as any)
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (error) {
+          console.error('Error fetching check template:', error);
+          return null;
+        }
+        return data;
+      } catch (error) {
+        console.error('Check template fetch error:', error);
+        return null;
+      }
     },
-    enabled: false, // Disable until types are ready
+    enabled: !!id,
   });
 };
 
@@ -82,9 +117,19 @@ export const useCreateCheckTemplate = () => {
 
   return useMutation({
     mutationFn: async (template: CheckTemplateInsert) => {
-      // Mock response until types are ready
-      console.log('Create template requested:', template);
-      return { id: 'mock-id', ...template };
+      try {
+        const { data, error } = await supabase
+          .from('check_templates' as any)
+          .insert(template)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Create template error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
@@ -115,9 +160,20 @@ export const useUpdateCheckTemplate = () => {
       id: string; 
       updates: Partial<CheckTemplateInsert> 
     }) => {
-      // Mock response until types are ready
-      console.log('Update template requested:', { id, updates });
-      return { id, ...updates };
+      try {
+        const { data, error } = await supabase
+          .from('check_templates' as any)
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Update template error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
@@ -135,9 +191,17 @@ export const useDeleteCheckTemplate = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      // Mock response until types are ready
-      console.log('Delete template requested:', id);
-      return id;
+      try {
+        const { error } = await supabase
+          .from('check_templates' as any)
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+      } catch (error) {
+        console.error('Delete template error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
@@ -155,9 +219,19 @@ export const useCreateCheckTemplateSection = () => {
 
   return useMutation({
     mutationFn: async (section: CheckTemplateSectionInsert) => {
-      // Mock response until types are ready
-      console.log('Create section requested:', section);
-      return { id: 'mock-section-id', ...section };
+      try {
+        const { data, error } = await supabase
+          .from('check_template_sections' as any)
+          .insert(section)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Create section error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
@@ -175,9 +249,19 @@ export const useCreateCheckTemplateItem = () => {
 
   return useMutation({
     mutationFn: async (item: CheckTemplateItemInsert) => {
-      // Mock response until types are ready
-      console.log('Create item requested:', item);
-      return { id: 'mock-item-id', ...item };
+      try {
+        const { data, error } = await supabase
+          .from('check_template_items' as any)
+          .insert(item)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Create item error:', error);
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
