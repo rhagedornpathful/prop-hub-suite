@@ -266,6 +266,29 @@ export function UserMobileTable({
       width: '15%',
       mobile: false, // Hide on mobile to save space
       render: (date) => formatDate(date)
+    },
+    {
+      key: 'actions',
+      label: '',
+      width: '10%',
+      mobile: false, // Use cardActions on mobile; hide column
+      render: (_value, user) => (
+        onUserDelete ? (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onUserDelete(user);
+            }}
+            className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+            aria-label={`Delete ${user.first_name || ''} ${user.last_name || ''}`.trim()}
+            title="Delete user"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ) : null
+      )
     }
   ];
 
