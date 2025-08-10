@@ -9,6 +9,11 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
 import { format, isToday, isTomorrow, isPast, differenceInDays, addDays, startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { useHouseWatcherSchedule } from '@/hooks/useHouseWatcherSchedule';
+import { useHouseWatcherNotifications } from '@/hooks/useHouseWatcherNotifications';
+import { HouseWatcherMobileNavigation } from '@/components/HouseWatcherMobileNavigation';
+import { DashboardSkeleton } from '@/components/HouseWatcherLoadingStates';
+import { useMobileDetection } from '@/hooks/useMobileDetection';
 
 interface ScheduledCheck {
   id: string;
@@ -26,79 +31,22 @@ const HouseWatcherHome = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isViewingAs } = useUserRole();
-  const [weeklySchedule, setWeeklySchedule] = useState<ScheduledCheck[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isMobile } = useMobileDetection();
   const [currentWeek, setCurrentWeek] = useState(new Date());
+  
+  const { schedule: weeklySchedule, loading, updateNextCheckDate } = useHouseWatcherSchedule(currentWeek);
+  const { sendCheckReminder, notifyCheckCompleted } = useHouseWatcherNotifications();
 
+  // Check for due reminders
   useEffect(() => {
-    if (user) {
-      loadWeeklySchedule();
-    }
-  }, [user, currentWeek]);
-
-  const loadWeeklySchedule = async () => {
-    try {
-      setLoading(true);
-      const weekStart = startOfWeek(currentWeek);
-      const weekEnd = endOfWeek(currentWeek);
-
-      // Get house watcher record
-      const { data: houseWatcher } = await supabase
-        .from('house_watchers')
-        .select('id')
-        .eq('user_id', user?.id)
-        .single();
-
-      if (!houseWatcher && !isViewingAs) {
-        toast({
-          title: "Not a House Watcher",
-          description: "You don't have house watcher permissions assigned.",
-          variant: "destructive"
-        });
-        return;
+    weeklySchedule.forEach(check => {
+      if (isPast(new Date(check.next_check_date)) || isToday(new Date(check.next_check_date))) {
+        sendCheckReminder(check.property_address, check.next_check_date);
       }
+    });
+  }, [weeklySchedule]);
 
-      // For View As mode or real house watchers
-      if (isViewingAs && !houseWatcher) {
-        // Load sample schedule for View As mode
-        const { data: sampleWatching, error: sampleError } = await supabase
-          .from('house_watching')
-          .select('*')
-          .limit(5);
-
-        if (sampleError) throw sampleError;
-        setWeeklySchedule(sampleWatching || []);
-      } else if (houseWatcher) {
-        // Load real schedule for authenticated house watchers
-        const { data: watchingData, error: watchingError } = await supabase
-          .from('house_watching')
-          .select('*')
-          .eq('user_id', user?.id);
-
-        if (watchingError) throw watchingError;
-        
-        // Filter for current week
-        const weeklyData = watchingData?.filter(item => {
-          if (!item.next_check_date) return false;
-          const checkDate = parseISO(item.next_check_date);
-          return isWithinInterval(checkDate, { start: weekStart, end: weekEnd });
-        }) || [];
-
-        setWeeklySchedule(weeklyData);
-      }
-
-    } catch (error: any) {
-      toast({
-        title: "Error Loading Schedule",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const startHomeCheck = async (watchingId: string) => {
+  const startHomeCheck = async (watchingId: string, propertyAddress: string) => {
     try {
       const { data, error } = await supabase
         .from('home_check_sessions')
@@ -122,6 +70,19 @@ const HouseWatcherHome = () => {
     } catch (error: any) {
       toast({
         title: "Error Starting Check",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const completeCheck = async (watchingId: string, propertyAddress: string) => {
+    try {
+      await updateNextCheckDate(watchingId, new Date());
+      await notifyCheckCompleted(propertyAddress, watchingId);
+    } catch (error: any) {
+      toast({
+        title: "Error Completing Check",
         description: error.message,
         variant: "destructive"
       });
@@ -168,21 +129,15 @@ const HouseWatcherHome = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-64 bg-muted rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <>
+        <DashboardSkeleton />
+        {isMobile && <HouseWatcherMobileNavigation />}
+      </>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className={`space-y-8 ${isMobile ? 'pb-20' : ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -334,7 +289,7 @@ const HouseWatcherHome = () => {
                             <Badge variant={priority.color as any}>{priority.label}</Badge>
                             <Button 
                               size="sm"
-                              onClick={() => startHomeCheck(check.id)}
+                              onClick={() => startHomeCheck(check.id, check.property_address)}
                             >
                               <Camera className="h-4 w-4 mr-2" />
                               Start Check
@@ -350,6 +305,7 @@ const HouseWatcherHome = () => {
           );
         })}
       </div>
+      {isMobile && <HouseWatcherMobileNavigation />}
     </div>
   );
 };
