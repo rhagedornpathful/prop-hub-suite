@@ -218,33 +218,79 @@ const HomeCheck = () => {
         </div>
       </header>
 
-      {/* Section Navigation */}
-      <div className="bg-card border-b border-border section-padding">
-        <div className="container-responsive">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {sections.map((section, index) => {
-              const Icon = section.icon;
-              const progress = section.key === 'summary' 
-                ? '✓' 
-                : getSectionProgress(section.key as keyof typeof checklistItems);
-              const isActive = currentSection === index;
-              
-              return (
-                <Button
-                  key={section.key}
-                  variant={isActive ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentSection(index)}
-                  className={`flex items-center gap-2 min-w-fit touch-target ${isActive ? section.color : ""}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{section.name}</span>
-                  <Badge variant="secondary" className="text-xs ml-1">
-                    {progress}
-                  </Badge>
-                </Button>
-              );
-            })}
+      {/* Section Navigation Progress Bar */}
+      <div className="bg-card border-b border-border">
+        <div className="container-responsive py-6">
+          {/* Progress Steps */}
+          <div className="relative">
+            {/* Progress Line */}
+            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-muted -translate-y-1/2 z-0"></div>
+            <div 
+              className="absolute top-1/2 left-0 h-0.5 bg-gradient-primary -translate-y-1/2 z-0 transition-all duration-300"
+              style={{ width: `${(currentSection / (sections.length - 1)) * 100}%` }}
+            ></div>
+            
+            {/* Steps */}
+            <div className="relative flex justify-between items-center z-10">
+              {sections.map((section, index) => {
+                const Icon = section.icon;
+                const progress = section.key === 'summary' 
+                  ? getOverallProgress() >= 100 ? '✓' : '0'
+                  : getSectionProgress(section.key as keyof typeof checklistItems);
+                const isActive = currentSection === index;
+                const isCompleted = index < currentSection || (section.key !== 'summary' && progress === '100%');
+                const isAccessible = index <= currentSection || isCompleted;
+                
+                return (
+                  <div key={section.key} className="flex flex-col items-center">
+                    <button
+                      onClick={() => isAccessible && setCurrentSection(index)}
+                      disabled={!isAccessible}
+                      className={`
+                        w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 mb-2
+                        ${isActive 
+                          ? 'bg-gradient-primary text-white shadow-lg scale-110' 
+                          : isCompleted 
+                            ? 'bg-success text-white' 
+                            : isAccessible
+                              ? 'bg-muted text-foreground hover:bg-primary hover:text-white'
+                              : 'bg-muted/50 text-muted-foreground cursor-not-allowed'
+                        }
+                        ${isAccessible ? 'cursor-pointer' : ''}
+                      `}
+                    >
+                      {isCompleted && section.key !== 'summary' ? (
+                        <CheckCircle className="h-5 w-5" />
+                      ) : (
+                        <Icon className="h-5 w-5" />
+                      )}
+                    </button>
+                    
+                    {/* Step Label */}
+                    <div className="text-center">
+                      <p className={`text-xs font-medium mb-1 ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                        {section.name}
+                      </p>
+                      <div className={`
+                        text-xs px-2 py-1 rounded-full min-w-[2rem] 
+                        ${isActive 
+                          ? 'bg-primary text-white' 
+                          : isCompleted 
+                            ? 'bg-success text-white'
+                            : 'bg-muted text-muted-foreground'
+                        }
+                      `}>
+                        {section.key === 'summary' ? (
+                          getOverallProgress() >= 100 ? '✓' : `${getOverallProgress()}%`
+                        ) : (
+                          typeof progress === 'string' && progress.includes('%') ? progress : `${progress}%`
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -254,31 +300,32 @@ const HomeCheck = () => {
         <div className="container-responsive max-w-2xl space-y-4">
           {/* Start Session Card */}
           {!sessionStarted && (
-            <Card className="shadow-md border-0 bg-gradient-primary">
-              <CardContent className="section-padding text-center">
-                <div className="space-y-4">
+            <Card className="shadow-xl border-0 overflow-hidden">
+              <div className="bg-gradient-primary p-8 text-center">
+                <div className="space-y-6">
                   <div className="flex items-center justify-center">
-                    <div className="bg-white/20 p-3 rounded-full">
-                      <Play className="h-8 w-8 text-white" />
+                    <div className="bg-white/20 p-4 rounded-full backdrop-blur-sm">
+                      <Play className="h-12 w-12 text-white" />
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-responsive-lg font-semibold text-white mb-2">
+                    <h3 className="text-2xl font-bold text-white mb-3">
                       Ready to Start Home Check?
                     </h3>
-                    <p className="text-white/80 text-sm mb-4">
+                    <p className="text-white/90 text-base mb-6 max-w-md mx-auto">
                       Click start to begin timing your home inspection session
                     </p>
                     <Button
                       onClick={handleStartSession}
-                      className="bg-white text-primary hover:bg-white/90 touch-target"
+                      size="lg"
+                      className="bg-white text-primary hover:bg-white/95 font-semibold px-8 py-3 text-base shadow-lg hover:shadow-xl transition-all duration-200"
                     >
-                      <Play className="h-4 w-4 mr-2" />
+                      <Play className="h-5 w-5 mr-3" />
                       Start Home Check
                     </Button>
                   </div>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           )}
 
