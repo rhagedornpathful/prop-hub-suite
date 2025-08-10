@@ -16,7 +16,7 @@ export const PropertyListingManager = () => {
   const filteredListings = listings?.filter(listing => {
     const matchesSearch = 
       listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      listing.properties?.street_address?.toLowerCase().includes(searchTerm.toLowerCase());
+      listing.description?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = statusFilter === 'all' || 
       (statusFilter === 'active' ? listing.is_active : !listing.is_active);
@@ -158,26 +158,21 @@ export const PropertyListingManager = () => {
                         )}
                       </div>
                       
-                      {listing.properties && (
-                        <div className="flex items-center gap-1 text-muted-foreground">
-                          <MapPin className="h-3 w-3" />
-                          <span className="text-sm">
-                            {listing.properties.street_address}, {listing.properties.city}, {listing.properties.state}
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1 text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        <span className="text-sm">
+                          Property Location Available
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="text-right">
                       <div className="text-lg font-semibold">
                         ${listing.rent_amount?.toLocaleString()}/mo
                       </div>
-                      {listing.properties && (
-                        <div className="text-sm text-muted-foreground">
-                          {listing.properties.bedrooms}bd • {listing.properties.bathrooms}ba
-                          {listing.properties.square_feet && ` • ${listing.properties.square_feet} sqft`}
-                        </div>
-                      )}
+                      <div className="text-sm text-muted-foreground">
+                        Available for rent
+                      </div>
                     </div>
                   </div>
                   

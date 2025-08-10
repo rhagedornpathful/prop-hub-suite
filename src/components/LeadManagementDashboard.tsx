@@ -197,10 +197,10 @@ export const LeadManagementDashboard = () => {
                         {lead.phone}
                       </div>
                     )}
-                    {lead.properties && (
+                    {lead.notes && (
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        {lead.properties.street_address}, {lead.properties.city}
+                        <span className="text-xs">{lead.notes.substring(0, 50)}...</span>
                       </div>
                     )}
                   </div>

@@ -265,7 +265,7 @@ const MarketingLeasing = () => {
                     <div>
                       <h3 className="font-medium">{campaign.name}</h3>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {campaign.campaign_type} • {campaign.target_audience}
+                        {campaign.campaign_type} • {String(campaign.target_audience || 'General audience')}
                       </p>
                       {campaign.budget && (
                         <p className="text-sm font-medium mt-2">
