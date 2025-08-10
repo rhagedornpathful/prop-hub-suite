@@ -28,6 +28,7 @@ const ClientReports = () => {
   const { reportId } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterProperty, setFilterProperty] = useState("all");
+  const [reportKind, setReportKind] = useState<'home' | 'property'>('home');
   const [selectedReport, setSelectedReport] = useState<string | null>(
     reportId ?? null
   );
@@ -35,6 +36,7 @@ const ClientReports = () => {
   // Report type
   type Report = {
     id: string;
+    kind: "home" | "property";
     propertyId: string;
     property: string;
     date: string;
@@ -131,6 +133,7 @@ const ClientReports = () => {
 
           return {
             id: s.id,
+            kind: "home",
             propertyId: s.property_id,
             property: propertyName,
             date,
@@ -145,7 +148,48 @@ const ClientReports = () => {
           };
         });
 
-        setReports(mapped);
+        // Also fetch property check sessions
+        const { data: pSessions, error: pError } = await supabase
+          .from('property_check_sessions')
+          .select('id, property_id, completed_at, started_at, checklist_data, status, general_notes')
+          .order('completed_at', { ascending: false });
+        if (pError) throw pError;
+
+        const mappedProperty: Report[] = (pSessions || []).map((s: any) => {
+          const dt = s.completed_at || s.started_at;
+          const d = dt ? new Date(dt) : new Date();
+          const date = d.toLocaleDateString();
+          const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          const checklistItems = Array.isArray(s.checklist_data)
+            ? (s.checklist_data as any[]).map((ci: any, idx: number) => ({
+                category: ci.category || 'Item',
+                item: ci.item || ci.title || `Item ${idx + 1}`,
+                status: ci.status || 'Checked',
+                notes: ci.notes || ''
+              }))
+            : [];
+
+          const propertyName = propsMap.get(s.property_id) || s.property_id;
+
+          return {
+            id: s.id,
+            kind: "property",
+            propertyId: s.property_id,
+            property: propertyName,
+            date,
+            time,
+            specialist: 'Inspector',
+            status: s.status === 'completed' ? 'Completed' : (s.status || 'In Progress'),
+            summary: s.general_notes || `${checklistItems.length} items checked.`,
+            photos: [],
+            checklist: checklistItems,
+            issues: [],
+            recommendations: []
+          };
+        });
+
+        setReports([ ...mapped, ...mappedProperty ]);
       } catch (e) {
         console.error('Failed to load reports', e);
         setReports([]);
@@ -159,12 +203,14 @@ const ClientReports = () => {
   }, []);
 
 
-  const filteredReports = reports.filter(report => {
-    const matchesSearch = report.property.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.specialist.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesProperty = filterProperty === "all" || report.propertyId === filterProperty;
-    return matchesSearch && matchesProperty;
-  });
+  const filteredReports = reports
+    .filter(r => r.kind === reportKind)
+    .filter(report => {
+      const matchesSearch = report.property.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           report.specialist.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesProperty = filterProperty === "all" || report.propertyId === filterProperty;
+      return matchesSearch && matchesProperty;
+    });
 
   const selectedReportData = selectedReport ? reports.find(r => r.id === selectedReport) : null;
 
@@ -439,29 +485,37 @@ const ClientReports = () => {
             {/* Search and Filters */}
             <Card className="shadow-md border-0">
               <CardContent className="p-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search reports..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
+                <div className="space-y-4">
+                  <Tabs value={reportKind} onValueChange={(v) => setReportKind(v as 'home' | 'property')}>
+                    <TabsList className="w-full md:w-auto">
+                      <TabsTrigger value="home">Home Checks</TabsTrigger>
+                      <TabsTrigger value="property">Property Checks</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search reports..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Select value={filterProperty} onValueChange={setFilterProperty}>
+                      <SelectTrigger className="w-full md:w-48">
+                        <SelectValue placeholder="Filter by property" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Properties</SelectItem>
+                        {properties.map(property => (
+                          <SelectItem key={property.id} value={property.id.toString()}>
+                            {property.address}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Select value={filterProperty} onValueChange={setFilterProperty}>
-                    <SelectTrigger className="w-full md:w-48">
-                      <SelectValue placeholder="Filter by property" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Properties</SelectItem>
-                      {properties.map(property => (
-                        <SelectItem key={property.id} value={property.id.toString()}>
-                          {property.address}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </CardContent>
             </Card>
