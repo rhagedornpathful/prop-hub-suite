@@ -226,16 +226,10 @@ const propertyManagerMenuItems = [
     description: "Property schedule"
   },
   {
-    title: "My Properties",
+    title: "Properties",
     url: "/property-manager-properties",
     icon: Building,
     description: "Managed properties"
-  },
-  {
-    title: "All Properties",
-    url: "/properties",
-    icon: Building,
-    description: "Property database"
   },
   {
     title: "Tenants",
