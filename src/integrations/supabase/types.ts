@@ -904,6 +904,165 @@ export type Database = {
           },
         ]
       }
+      owner_statements: {
+        Row: {
+          created_at: string
+          generated_at: string | null
+          id: string
+          management_fees: number | null
+          net_amount: number | null
+          owner_id: string
+          paid_at: string | null
+          property_id: string | null
+          sent_at: string | null
+          statement_data: Json | null
+          statement_period_end: string
+          statement_period_start: string
+          status: string | null
+          total_expenses: number | null
+          total_rent_collected: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          management_fees?: number | null
+          net_amount?: number | null
+          owner_id: string
+          paid_at?: string | null
+          property_id?: string | null
+          sent_at?: string | null
+          statement_data?: Json | null
+          statement_period_end: string
+          statement_period_start: string
+          status?: string | null
+          total_expenses?: number | null
+          total_rent_collected?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          management_fees?: number | null
+          net_amount?: number | null
+          owner_id?: string
+          paid_at?: string | null
+          property_id?: string | null
+          sent_at?: string | null
+          statement_data?: Json | null
+          statement_period_end?: string
+          statement_period_start?: string
+          status?: string | null
+          total_expenses?: number | null
+          total_rent_collected?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payment_methods: {
+        Row: {
+          brand: string | null
+          created_at: string
+          expires_month: number | null
+          expires_year: number | null
+          id: string
+          is_default: boolean | null
+          last_four: string | null
+          stripe_payment_method_id: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          expires_month?: number | null
+          expires_year?: number | null
+          id?: string
+          is_default?: boolean | null
+          last_four?: string | null
+          stripe_payment_method_id: string
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          expires_month?: number | null
+          expires_year?: number | null
+          id?: string
+          is_default?: boolean | null
+          last_four?: string | null
+          stripe_payment_method_id?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          metadata: Json | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_type: string
+          property_id: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_subscription_id: string | null
+          tenant_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_type: string
+          property_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_type?: string
+          property_id?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           address: string | null
@@ -1355,6 +1514,54 @@ export type Database = {
           },
         ]
       }
+      rent_rolls: {
+        Row: {
+          amount_collected: number | null
+          created_at: string
+          due_date: string | null
+          id: string
+          late_fees: number | null
+          month_year: string
+          other_charges: number | null
+          paid_date: string | null
+          property_id: string
+          rent_amount: number
+          status: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_collected?: number | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          late_fees?: number | null
+          month_year: string
+          other_charges?: number | null
+          paid_date?: string | null
+          property_id: string
+          rent_amount: number
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_collected?: number | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          late_fees?: number | null
+          month_year?: string
+          other_charges?: number | null
+          paid_date?: string | null
+          property_id?: string
+          rent_amount?: number
+          status?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           base_price: number
@@ -1436,6 +1643,69 @@ export type Database = {
           subscription_tier?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          amount: number
+          cancelled_at: string | null
+          created_at: string
+          currency: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          interval_type: string
+          metadata: Json | null
+          plan_type: string
+          property_id: string | null
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          tenant_id: string | null
+          trial_end: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          interval_type?: string
+          metadata?: Json | null
+          plan_type: string
+          property_id?: string | null
+          status?: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          tenant_id?: string | null
+          trial_end?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          interval_type?: string
+          metadata?: Json | null
+          plan_type?: string
+          property_id?: string | null
+          status?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
+          tenant_id?: string | null
+          trial_end?: string | null
+          updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }

@@ -48,6 +48,9 @@ import MobileBottomNavigation from "./components/mobile/MobileBottomNavigation";
 import Documents from "./pages/Documents";
 import UserManagement from "./pages/UserManagement";
 import DevTools from "./pages/DevTools";
+import Payments from "./pages/Payments";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancelled from "./pages/PaymentCancelled";
 import Settings from "./pages/Settings";
 import ClientDashboard from "./pages/ClientPortal/Dashboard";
 import ClientProperties from "./pages/ClientPortal/Properties";
@@ -216,6 +219,15 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
+                        <Route path="/payments" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
+                              <Payments />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/payment-success" element={<PaymentSuccess />} />
+                        <Route path="/payment-cancelled" element={<PaymentCancelled />} />
                          <Route path="/messages" element={
                            <PageTransition>
                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
