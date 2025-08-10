@@ -231,10 +231,14 @@ export const useCreateConversation = () => {
         .select()
         .single();
 
-      if (convError) throw convError;
+      if (convError) {
+        console.error('Conversation insert failed:', convError);
+        throw convError;
+      }
 
-      // Add participants
-      const participants = participantIds.map(userId => ({
+      // Add participants (ensure creator is included at least once)
+      const uniqueIds = Array.from(new Set([user.id, ...participantIds]));
+      const participants = uniqueIds.map(userId => ({
         conversation_id: conversation.id,
         user_id: userId,
         role: userId === user.id ? 'admin' : 'participant'
@@ -244,7 +248,10 @@ export const useCreateConversation = () => {
         .from('conversation_participants')
         .insert(participants);
 
-      if (participantsError) throw participantsError;
+      if (participantsError) {
+        console.error('Participants insert failed:', participantsError);
+        throw participantsError;
+      }
 
       return conversation;
     },
