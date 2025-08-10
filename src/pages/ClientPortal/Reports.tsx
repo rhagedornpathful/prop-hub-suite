@@ -20,9 +20,23 @@ import {
   Eye,
   Filter,
   FileText,
-  Share
+  Share,
+  Archive,
+  Trash2
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 const ClientReports = () => {
   const navigate = useNavigate();
   const { reportId } = useParams();
@@ -53,6 +67,8 @@ const ClientReports = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [properties, setProperties] = useState<{ id: string; address: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadReports = async () => {
@@ -231,6 +247,43 @@ const ClientReports = () => {
       default: return "bg-muted text-muted-foreground";
     }
   };
+  const tableForKind = (kind: 'home' | 'property') =>
+    kind === 'home' ? 'home_check_sessions' : 'property_check_sessions';
+
+  const handleArchive = async (report: Report) => {
+    try {
+      setActionLoading(report.id);
+      const { error } = await supabase
+        .from(tableForKind(report.kind))
+        .update({ status: 'archived' })
+        .eq('id', report.id);
+      if (error) throw error;
+      setReports((prev) => prev.map(r => r.id === report.id ? { ...r, status: 'Archived' } : r));
+      toast({ title: "Report archived", description: "The report was archived successfully." });
+    } catch (e: any) {
+      toast({ title: "Archive failed", description: e.message || "Unable to archive report", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (report: Report) => {
+    try {
+      setActionLoading(report.id);
+      const { error } = await supabase
+        .from(tableForKind(report.kind))
+        .delete()
+        .eq('id', report.id);
+      if (error) throw error;
+      setReports((prev) => prev.filter(r => r.id !== report.id));
+      toast({ title: "Report deleted", description: "The report was removed." });
+      if (selectedReport === report.id) setSelectedReport(null);
+    } catch (e: any) {
+      toast({ title: "Delete failed", description: e.message || "Unable to delete report", variant: "destructive" });
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-subtle">
@@ -269,6 +322,50 @@ const ClientReports = () => {
                   <Share className="h-4 w-4 mr-2" />
                   Share
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" disabled={actionLoading === selectedReportData.id}>
+                      <Archive className="h-4 w-4 mr-2" />
+                      Archive
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Archive this report?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will mark the report as archived. You can still access it later, but it will be flagged as archived.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleArchive(selectedReportData as Report)} disabled={actionLoading === selectedReportData.id}>
+                        Archive
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={actionLoading === selectedReportData.id}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete this report?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the report and remove its data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => handleDelete(selectedReportData as Report)} disabled={actionLoading === selectedReportData.id}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </>
             )}
           </div>
@@ -576,14 +673,60 @@ const ClientReports = () => {
                           </Badge>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        onClick={() => setSelectedReport(report.id)}
-                        className="bg-gradient-primary hover:bg-primary-dark"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Report
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" disabled={actionLoading === report.id}>
+                              <Archive className="h-4 w-4 mr-2" />
+                              Archive
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Archive this report?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will mark the report as archived. You can still access it later, but it will be flagged as archived.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleArchive(report)} disabled={actionLoading === report.id}>
+                                Archive
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" disabled={actionLoading === report.id}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this report?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the report and remove its data from our servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(report)} disabled={actionLoading === report.id}>
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        <Button
+                          size="sm"
+                          onClick={() => setSelectedReport(report.id)}
+                          className="bg-gradient-primary hover:bg-primary-dark"
+                        >
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Report
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
