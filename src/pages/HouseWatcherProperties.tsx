@@ -10,6 +10,9 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { HouseWatcherMobileNavigation } from '@/components/HouseWatcherMobileNavigation';
+import { PropertiesGridSkeleton } from '@/components/HouseWatcherLoadingStates';
+import { useMobileDetection } from '@/hooks/useMobileDetection';
 
 interface AssignedProperty {
   id: string;
@@ -43,6 +46,7 @@ const HouseWatcherProperties = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isViewingAs } = useUserRole();
+  const { isMobile } = useMobileDetection();
   const [assignedProperties, setAssignedProperties] = useState<AssignedProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -216,21 +220,15 @@ const HouseWatcherProperties = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-muted rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-64 bg-muted rounded"></div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <>
+        <PropertiesGridSkeleton />
+        {isMobile && <HouseWatcherMobileNavigation />}
+      </>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className={`space-y-8 ${isMobile ? 'pb-20' : ''}`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -419,6 +417,7 @@ const HouseWatcherProperties = () => {
           ))}
         </div>
       )}
+      {isMobile && <HouseWatcherMobileNavigation />}
     </div>
   );
 };
