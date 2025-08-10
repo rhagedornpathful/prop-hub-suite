@@ -18,7 +18,8 @@ import {
   Shield,
   X,
   Navigation,
-  Activity
+  Activity,
+  TrendingUp
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
@@ -131,6 +132,12 @@ const adminMenuItems = [
     url: "/vendor-portal",
     icon: Users,
     description: "Contractor management"
+  },
+  {
+    title: "Marketing & Leasing",
+    url: "/marketing-leasing",
+    icon: TrendingUp,
+    description: "Leads & property marketing"
   },
   {
     title: "Check Templates",

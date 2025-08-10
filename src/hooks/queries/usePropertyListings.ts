@@ -1,96 +1,32 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
-type PropertyListing = Database['public']['Tables']['property_listings']['Row'];
-type PropertyListingInsert = Database['public']['Tables']['property_listings']['Insert'];
-type PropertyListingUpdate = Database['public']['Tables']['property_listings']['Update'];
+type PropertyListing = Database["public"]["Tables"]["property_listings"]["Row"];
+type PropertyListingInsert = Database["public"]["Tables"]["property_listings"]["Insert"];
+type PropertyListingUpdate = Database["public"]["Tables"]["property_listings"]["Update"];
 
 export const usePropertyListings = () => {
   return useQuery({
-    queryKey: ['property-listings'],
+    queryKey: ["property_listings"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('property_listings')
+        .from("property_listings")
         .select(`
           *,
-          properties (
+          properties:property_id (
             address,
             street_address,
             city,
             state,
-            zip_code,
-            bedrooms,
-            bathrooms,
-            square_feet,
-            images
+            zip_code
           )
         `)
-        .order('created_at', { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
-    },
-  });
-};
-
-export const usePropertyListing = (id: string) => {
-  return useQuery({
-    queryKey: ['property-listings', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('property_listings')
-        .select(`
-          *,
-          properties (
-            address,
-            street_address,
-            city,
-            state,
-            zip_code,
-            bedrooms,
-            bathrooms,
-            square_feet,
-            images
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-};
-
-export const useActiveListings = () => {
-  return useQuery({
-    queryKey: ['property-listings', 'active'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('property_listings')
-        .select(`
-          *,
-          properties (
-            address,
-            street_address,
-            city,
-            state,
-            zip_code,
-            bedrooms,
-            bathrooms,
-            square_feet,
-            images
-          )
-        `)
-        .eq('is_active', true)
-        .order('is_featured', { ascending: false })
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
+      return data as PropertyListing[];
     },
   });
 };
@@ -99,10 +35,10 @@ export const useCreatePropertyListing = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (listingData: PropertyListingInsert) => {
+    mutationFn: async (listing: PropertyListingInsert) => {
       const { data, error } = await supabase
-        .from('property_listings')
-        .insert(listingData)
+        .from("property_listings")
+        .insert([listing])
         .select()
         .single();
 
@@ -110,11 +46,12 @@ export const useCreatePropertyListing = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['property-listings'] });
-      toast.success('Property listing created successfully');
+      queryClient.invalidateQueries({ queryKey: ["property_listings"] });
+      toast.success("Property listing created successfully");
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to create listing: ${error.message}`);
+    onError: (error) => {
+      console.error("Error creating property listing:", error);
+      toast.error("Failed to create property listing");
     },
   });
 };
@@ -125,9 +62,9 @@ export const useUpdatePropertyListing = () => {
   return useMutation({
     mutationFn: async ({ id, ...updates }: PropertyListingUpdate & { id: string }) => {
       const { data, error } = await supabase
-        .from('property_listings')
+        .from("property_listings")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
 
@@ -135,33 +72,12 @@ export const useUpdatePropertyListing = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['property-listings'] });
-      toast.success('Listing updated successfully');
+      queryClient.invalidateQueries({ queryKey: ["property_listings"] });
+      toast.success("Property listing updated successfully");
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to update listing: ${error.message}`);
-    },
-  });
-};
-
-export const useDeletePropertyListing = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('property_listings')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['property-listings'] });
-      toast.success('Listing deleted successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete listing: ${error.message}`);
+    onError: (error) => {
+      console.error("Error updating property listing:", error);
+      toast.error("Failed to update property listing");
     },
   });
 };

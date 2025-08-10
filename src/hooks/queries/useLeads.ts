@@ -1,59 +1,24 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
-type Lead = Database['public']['Tables']['leads']['Row'];
-type LeadInsert = Database['public']['Tables']['leads']['Insert'];
-type LeadUpdate = Database['public']['Tables']['leads']['Update'];
+type Lead = Database["public"]["Tables"]["leads"]["Row"];
+type LeadInsert = Database["public"]["Tables"]["leads"]["Insert"];
+type LeadUpdate = Database["public"]["Tables"]["leads"]["Update"];
 
 export const useLeads = () => {
   return useQuery({
-    queryKey: ['leads'],
+    queryKey: ["leads"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('leads')
-        .select(`
-          *,
-          properties (
-            address,
-            street_address,
-            city,
-            state,
-            zip_code
-          )
-        `)
-        .order('created_at', { ascending: false });
+        .from("leads")
+        .select("*")
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as Lead[];
     },
-  });
-};
-
-export const useLead = (id: string) => {
-  return useQuery({
-    queryKey: ['leads', id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('leads')
-        .select(`
-          *,
-          properties (
-            address,
-            street_address,
-            city,
-            state,
-            zip_code
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
   });
 };
 
@@ -61,10 +26,10 @@ export const useCreateLead = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (leadData: LeadInsert) => {
+    mutationFn: async (lead: LeadInsert) => {
       const { data, error } = await supabase
-        .from('leads')
-        .insert(leadData)
+        .from("leads")
+        .insert([lead])
         .select()
         .single();
 
@@ -72,11 +37,12 @@ export const useCreateLead = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead created successfully');
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      toast.success("Lead created successfully");
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to create lead: ${error.message}`);
+    onError: (error) => {
+      console.error("Error creating lead:", error);
+      toast.error("Failed to create lead");
     },
   });
 };
@@ -87,9 +53,9 @@ export const useUpdateLead = () => {
   return useMutation({
     mutationFn: async ({ id, ...updates }: LeadUpdate & { id: string }) => {
       const { data, error } = await supabase
-        .from('leads')
+        .from("leads")
         .update(updates)
-        .eq('id', id)
+        .eq("id", id)
         .select()
         .single();
 
@@ -97,11 +63,12 @@ export const useUpdateLead = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead updated successfully');
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      toast.success("Lead updated successfully");
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to update lead: ${error.message}`);
+    onError: (error) => {
+      console.error("Error updating lead:", error);
+      toast.error("Failed to update lead");
     },
   });
 };
@@ -112,18 +79,19 @@ export const useDeleteLead = () => {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from('leads')
+        .from("leads")
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ["leads"] });
+      toast.success("Lead deleted successfully");
     },
-    onError: (error: Error) => {
-      toast.error(`Failed to delete lead: ${error.message}`);
+    onError: (error) => {
+      console.error("Error deleting lead:", error);
+      toast.error("Failed to delete lead");
     },
   });
 };
