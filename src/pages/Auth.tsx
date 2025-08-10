@@ -1,39 +1,31 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Mail, Lock, UserPlus, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { clearEmergencyMode, getAuthRedirectUrl } from '@/lib/authUtils';
-import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
+import { clearEmergencyMode } from '@/lib/authUtils';
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { FormFieldError } from '@/components/FormFieldError';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('signin');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [passwordStrength, setPasswordStrength] = useState(0);
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [rememberMe, setRememberMe] = useState(false);
   
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Check if user is already logged in and handle password reset
+  // Check if user is already logged in
   useEffect(() => {
     const checkExistingSession = async () => {
       try {
@@ -42,16 +34,6 @@ const Auth = () => {
         // Clear emergency mode on auth page visit
         clearEmergencyMode();
         
-        // Check for password reset flow
-        const isReset = searchParams.get('reset');
-        if (isReset === 'true') {
-          setActiveTab('reset-password');
-          toast({
-            title: "Password Reset",
-            description: "Please enter your new password below.",
-          });
-        }
-        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         console.log('🔍 Auth page: Session check result:', {
@@ -59,7 +41,7 @@ const Auth = () => {
           error: error
         });
         
-        if (session && !error && !isReset) {
+        if (session && !error) {
           console.log('✅ Auth page: User already logged in, redirecting to dashboard');
           
           // Force page refresh to ensure clean state
@@ -92,13 +74,6 @@ const Auth = () => {
       case 'password':
         if (!value) {
           errors.password = 'Password is required';
-        } else if (activeTab === 'signup' && value.length < 6) {
-          errors.password = 'Password must be at least 6 characters';
-        }
-        break;
-      case 'confirmPassword':
-        if (activeTab === 'signup' && value !== password) {
-          errors.confirmPassword = 'Passwords do not match';
         }
         break;
     }
@@ -119,9 +94,6 @@ const Auth = () => {
         break;
       case 'password':
         setPassword(value);
-        break;
-      case 'confirmPassword':
-        setConfirmPassword(value);
         break;
     }
   };
@@ -209,94 +181,6 @@ const Auth = () => {
     }
   };
 
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setFieldErrors({});
-    
-    // Validate form
-    const emailValid = validateField('email', email);
-    const passwordValid = validateField('password', password);
-    const confirmPasswordValid = validateField('confirmPassword', confirmPassword);
-    
-    if (!emailValid || !passwordValid || !confirmPasswordValid) {
-      setLoading(false);
-      return;
-    }
-    
-    // Check password strength
-    if (passwordStrength < 60) {
-      setError('Please choose a stronger password');
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      console.log('🔐 Auth: Starting sign up process...');
-      
-      // Clear any existing state
-      clearEmergencyMode();
-      
-      const redirectUrl = getAuthRedirectUrl();
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
-      });
-      
-      if (error) {
-        console.error('❌ Sign up error:', error);
-        throw error;
-      }
-      
-      if (data.user) {
-        if (data.user.email_confirmed_at) {
-          // User is immediately confirmed
-          toast({
-            title: "Account Created!",
-            description: "Welcome! You can now sign in.",
-          });
-          setActiveTab('signin');
-          // Clear form
-          setPassword('');
-          setConfirmPassword('');
-        } else {
-          // User needs to confirm email
-          toast({
-            title: "Check Your Email",
-            description: "We've sent you a confirmation link. Please check your email and click the link to activate your account.",
-          });
-        }
-      }
-      
-    } catch (error: any) {
-      console.error('💥 Sign up failed:', error);
-      
-      let errorMessage = error.message || 'Failed to create account';
-      
-      if (error.message?.includes('User already registered')) {
-        errorMessage = 'An account with this email already exists. Please sign in instead.';
-      } else if (error.message?.includes('Password should be')) {
-        errorMessage = 'Password does not meet requirements. Please choose a stronger password.';
-      }
-      
-      setError(errorMessage);
-      toast({
-        title: "Sign Up Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Emergency admin bypass removed for production security
-
   if (checkingAuth) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
@@ -318,229 +202,113 @@ const Auth = () => {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
           <p className="text-muted-foreground">
-            Sign in to your account or create a new one
+            Please sign in to your account
           </p>
         </CardHeader>
         
         <CardContent>
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
-            </TabsList>
+          <form onSubmit={handleSignIn} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => handleFieldChange('email', e.target.value)}
+                  className="pl-9"
+                  required
+                />
+              </div>
+              <FormFieldError error={fieldErrors.email} />
+            </div>
             
-            <TabsContent value="signin" className="space-y-4">
-              <form onSubmit={handleSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => handleFieldChange('email', e.target.value)}
-                      className="pl-9"
-                      required
-                    />
-                  </div>
-                  <FormFieldError error={fieldErrors.email} />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => handleFieldChange('password', e.target.value)}
-                      className="pl-9 pr-10"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                  <FormFieldError error={fieldErrors.password} />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => handleFieldChange('password', e.target.value)}
+                  className="pl-9 pr-10"
+                  required
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+              <FormFieldError error={fieldErrors.password} />
+            </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="remember-me"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <Label htmlFor="remember-me" className="text-sm">
-                      Remember me
-                    </Label>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="p-0 h-auto text-sm"
-                    onClick={() => setForgotPasswordOpen(true)}
-                  >
-                    Forgot password?
-                  </Button>
-                </div>
-                
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="mr-2 h-4 w-4" />
-                      Sign In
-                    </>
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="remember-me"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+                <Label htmlFor="remember-me" className="text-sm">
+                  Remember me
+                </Label>
+              </div>
+              <Button
+                type="button"
+                variant="link"
+                className="p-0 h-auto text-sm"
+                onClick={() => setForgotPasswordOpen(true)}
+              >
+                Forgot password?
+              </Button>
+            </div>
             
-            <TabsContent value="signup" className="space-y-4">
-              <form onSubmit={handleSignUp} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => handleFieldChange('email', e.target.value)}
-                      className="pl-9"
-                      required
-                    />
-                  </div>
-                  <FormFieldError error={fieldErrors.email} />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="signup-password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Create a password"
-                      value={password}
-                      onChange={(e) => handleFieldChange('password', e.target.value)}
-                      className="pl-9 pr-10"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                  <FormFieldError error={fieldErrors.password} />
-                  
-                  {password && (
-                    <PasswordStrengthIndicator 
-                      password={password} 
-                      onStrengthChange={setPasswordStrength}
-                    />
-                  )}
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="confirm-password"
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="Confirm your password"
-                      value={confirmPassword}
-                      onChange={(e) => handleFieldChange('confirmPassword', e.target.value)}
-                      className="pl-9 pr-10"
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
-                  </div>
-                  <FormFieldError error={fieldErrors.confirmPassword} />
-                </div>
-                
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-                
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loading || (activeTab === 'signup' && passwordStrength < 60)}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating account...
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Create Account
-                    </>
-                  )}
-                </Button>
-              </form>
-            </TabsContent>
-          </Tabs>
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Sign In
+                </>
+              )}
+            </Button>
+          </form>
+          
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground">
+              Need access? Contact your administrator to create an account.
+            </p>
+          </div>
         </CardContent>
       </Card>
 
