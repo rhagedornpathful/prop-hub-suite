@@ -166,12 +166,12 @@ const HouseWatcherDashboard = () => {
     }
   };
 
-  const startPropertyCheck = async (propertyId: string) => {
+  const startHomeCheck = async (watchingId: string) => {
     try {
       const { data, error } = await supabase
-        .from('property_check_sessions')
+        .from('home_check_sessions')
         .insert({
-          property_id: propertyId,
+          property_id: watchingId,
           user_id: user?.id,
           status: 'in_progress',
           started_at: new Date().toISOString()
@@ -182,12 +182,12 @@ const HouseWatcherDashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "Property Check Started",
-        description: "You can now begin documenting your property inspection.",
+        title: "Home Check Started",
+        description: "You can now begin documenting your home inspection.",
       });
 
-      // Navigate to the property check page
-      navigate(`/property-check/${data.id}`);
+      // Navigate to the home check page
+      navigate(`/home-check/${data.id}`);
     } catch (error: any) {
       toast({
         title: "Error Starting Check",
@@ -261,7 +261,7 @@ const HouseWatcherDashboard = () => {
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <CheckCircle className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Property Checks To-Do</h2>
+          <h2 className="text-xl font-semibold">Home Checks To-Do</h2>
           <Badge variant="secondary">{sortedChecks.length}</Badge>
         </div>
 
@@ -269,8 +269,8 @@ const HouseWatcherDashboard = () => {
           <Card>
             <CardContent className="p-8 text-center">
               <Calendar className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No property checks scheduled</p>
-              <p className="text-sm text-muted-foreground mt-2">Check with your administrator to get property watch assignments.</p>
+              <p className="text-muted-foreground">No home checks scheduled</p>
+              <p className="text-sm text-muted-foreground mt-2">Check with your administrator to get house watching assignments.</p>
             </CardContent>
           </Card>
         ) : (
@@ -316,11 +316,11 @@ const HouseWatcherDashboard = () => {
                       <div className="flex flex-col gap-2">
                         <Button 
                           size="sm" 
-                          onClick={() => startPropertyCheck(check.id)}
+                          onClick={() => startHomeCheck(check.id)}
                           className="w-full"
                         >
                           <Camera className="h-4 w-4 mr-2" />
-                          Start Check
+                          Start Home Check
                         </Button>
                         <Button 
                           size="sm" 
@@ -419,10 +419,10 @@ const HouseWatcherDashboard = () => {
                       size="sm" 
                       variant="outline" 
                       className="flex-1"
-                      onClick={() => startPropertyCheck(property.id)}
+                      onClick={() => startHomeCheck(property.id)}
                     >
                       <Camera className="h-4 w-4 mr-2" />
-                      Check
+                      Home Check
                     </Button>
                   </div>
                 </CardContent>

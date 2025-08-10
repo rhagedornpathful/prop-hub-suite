@@ -73,7 +73,9 @@ export const LazyRoutes: React.FC = () => (
       <Route path="/house-watching" element={<HouseWatching />} />
       <Route path="/house-watcher/:id" element={<HouseWatcherDetail />} />
       <Route path="/property-check" element={<PropertyCheck />} />
+      <Route path="/property-check/:id" element={<PropertyCheck />} />
       <Route path="/home-check" element={<HomeCheck />} />
+      <Route path="/home-check/:id" element={<HomeCheck />} />
       <Route path="/activity" element={<Activity />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/setup" element={<Setup />} />
