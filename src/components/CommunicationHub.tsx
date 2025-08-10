@@ -149,16 +149,50 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
         description: `Successfully sent messages via ${channels.join(', ')}`
       });
 
-      // Also log this communication to the in-app Messages inbox
+      // Also log this communication to the in-app Messages inbox for all relevant recipients
       try {
         if (user?.id) {
+          // Resolve participant user IDs based on recipient selection
+          const resolveRecipientIds = async (): Promise<string[]> => {
+            switch (recipientType) {
+              case 'specific':
+                return specificUsers;
+              case 'all-tenants': {
+                const { data: t } = await supabase
+                  .from('tenants')
+                  .select('user_account_id')
+                  .not('user_account_id', 'is', null);
+                return (t || []).map((row: any) => row.user_account_id).filter(Boolean);
+              }
+              case 'all-owners': {
+                const { data: o } = await supabase
+                  .from('property_owners')
+                  .select('user_account_id')
+                  .not('user_account_id', 'is', null);
+                return (o || []).map((row: any) => row.user_account_id).filter(Boolean);
+              }
+              case 'maintenance-team': {
+                const { data: r } = await supabase
+                  .from('user_roles')
+                  .select('user_id')
+                  .in('role', ['property_manager', 'admin']);
+                return (r || []).map((row: any) => row.user_id).filter(Boolean);
+              }
+              default:
+                return [];
+            }
+          };
+
+          const targetIds = await resolveRecipientIds();
           const isDirect = recipientType === 'specific' && specificUsers.length > 0;
-          const participantIds = isDirect ? Array.from(new Set([user.id, ...specificUsers])) : [user.id];
+          const participantIds = Array.from(new Set([user.id, ...targetIds]));
+
           const conversation = await createConversation.mutateAsync({
             title: messageSubject || subject || 'Message',
             type: isDirect ? 'direct' : 'broadcast',
             participantIds
           });
+
           await sendChatMessage.mutateAsync({
             conversationId: conversation.id,
             content
@@ -167,7 +201,6 @@ export const CommunicationHub: React.FC<CommunicationHubProps> = ({ onSent, auto
       } catch (e) {
         console.warn('Failed to log message to in-app inbox:', e);
       }
-
 
       setMessageContent('');
       setMessageSubject('');
