@@ -1174,10 +1174,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      can_manage_conversation: {
-        Args: { _conversation_id: string; _user_id: string }
-        Returns: boolean
-      }
       force_make_me_admin: {
         Args: Record<PropertyKey, never>
         Returns: Json
