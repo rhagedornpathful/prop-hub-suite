@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const roles = data?.map(row => row.role) || [];
       
       if (roles.length === 0) {
-        console.log('⚠️ AuthContext: No roles found for user');
+        console.log('⚠️ AuthContext: No roles found for user - this is normal for new users');
         setUserRole(null);
         return;
       }
@@ -84,6 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
     } catch (error) {
       console.error('💥 AuthContext: Exception in fetchUserRole:', error);
+      // Don't block the app - set role to null and let user continue
       setUserRole(null);
     }
   };
