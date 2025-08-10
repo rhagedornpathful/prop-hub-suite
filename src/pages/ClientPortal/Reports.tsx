@@ -64,11 +64,10 @@ const ClientReports = () => {
           return;
         }
 
-        // Fetch sessions created by this user (reports they performed)
+        // Fetch sessions. RLS will return all for admins and only own sessions for others
         const { data: sessions, error } = await supabase
           .from('home_check_sessions')
           .select('id, property_id, completed_at, started_at, checklist_data, total_issues_found, photos_taken, status, general_notes')
-          .eq('user_id', user.id)
           .order('completed_at', { ascending: false });
 
         if (error) throw error;
