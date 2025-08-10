@@ -91,6 +91,7 @@ export const useCheckTemplate = (id: string) => {
     queryKey: ['check-template', id],
     queryFn: async () => {
       try {
+        console.log('Fetching template with ID:', id);
         const { data, error } = await supabase
           .from('check_templates' as any)
           .select(`
@@ -107,6 +108,8 @@ export const useCheckTemplate = (id: string) => {
           console.error('Error fetching check template:', error);
           return null;
         }
+        
+        console.log('Fetched template data:', data);
         return data;
       } catch (error) {
         console.error('Check template fetch error:', error);

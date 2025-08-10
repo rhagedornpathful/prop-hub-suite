@@ -123,6 +123,9 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
     }
   };
 
+  console.log('Template in TemplateSectionEditor:', template);
+  console.log('Template sections:', template?.sections);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
