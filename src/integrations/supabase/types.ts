@@ -2640,6 +2640,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_admin_exists: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       force_make_me_admin: {
         Args: Record<PropertyKey, never>
         Returns: Json
