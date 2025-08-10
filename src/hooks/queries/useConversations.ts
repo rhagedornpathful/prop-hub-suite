@@ -168,6 +168,8 @@ export const useSendMessage = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
+      console.log('Sending message:', { conversationId, content, userId: user.id });
+
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -180,18 +182,25 @@ export const useSendMessage = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Message insert error:', error);
+        throw error;
+      }
+      
+      console.log('Message sent successfully:', data);
       return data;
     },
     onSuccess: (data) => {
+      console.log('Message mutation success, invalidating queries');
       // Invalidate conversations and messages queries
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
       queryClient.invalidateQueries({ queryKey: ['conversation-messages', data.conversation_id] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('useSendMessage error:', error);
       toast({
         title: "Error",
-        description: "Failed to send message. Please try again.",
+        description: error.message || "Failed to send message. Please try again.",
         variant: "destructive"
       });
     }
