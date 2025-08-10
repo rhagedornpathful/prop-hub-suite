@@ -80,7 +80,9 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [userDetailsOpen, setUserDetailsOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<UserProfile | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const { toast } = useToast();
   const { user } = useAuth();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -650,6 +652,11 @@ const UserManagement = () => {
             formatRoleName={formatRoleName}
             getRoleBadgeColor={getRoleBadgeColor}
             formatDate={formatDate}
+            selectedIds={selectedIds}
+            getRowId={(row) => row.user_id}
+            onToggleSelect={onToggleSelect}
+            onToggleSelectAll={onToggleSelectAll}
+            isAllSelected={filteredUsers.length > 0 && filteredUsers.every(u => selectedIds.has(u.user_id))}
           />
         )}
 

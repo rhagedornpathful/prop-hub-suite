@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronRight, Trash2 } from 'lucide-react';
 
 interface Column {
@@ -23,6 +24,12 @@ interface MobileTableProps {
   cardTitle?: (row: any) => React.ReactNode;
   cardSubtitle?: (row: any) => React.ReactNode;
   cardActions?: (row: any) => React.ReactNode;
+  // Optional selection controls
+  selectedIds?: Set<string>;
+  getRowId?: (row: any) => string;
+  onToggleSelect?: (row: any) => void;
+  onToggleSelectAll?: () => void;
+  isAllSelected?: boolean;
 }
 
 export function MobileTable({
@@ -33,7 +40,12 @@ export function MobileTable({
   emptyMessage = "No data available",
   cardTitle,
   cardSubtitle,
-  cardActions
+  cardActions,
+  selectedIds,
+  getRowId,
+  onToggleSelect,
+  onToggleSelectAll,
+  isAllSelected
 }: MobileTableProps) {
   // Mobile card layout
   const MobileCard = ({ row, index }: { row: any; index: number }) => (
@@ -63,9 +75,20 @@ export function MobileTable({
               )}
             </div>
             
-            {onRowClick && (
-              <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
-            )}
+            {/* Right-side controls */}
+            <div className="flex items-center gap-2">
+              {typeof onToggleSelect === 'function' && (
+                <Checkbox
+                  checked={selectedIds?.has(getRowId ? getRowId(row) : row.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  onCheckedChange={() => onToggleSelect?.(row)}
+                  aria-label="Select row"
+                />
+              )}
+              {onRowClick && (
+                <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 ml-2" />
+              )}
+            </div>
           </div>
 
           {/* Mobile-friendly data display */}
@@ -102,6 +125,15 @@ export function MobileTable({
           <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-border">
+                {typeof onToggleSelectAll === 'function' && (
+                  <th className="p-3 w-10">
+                    <Checkbox
+                      checked={!!isAllSelected}
+                      onCheckedChange={() => onToggleSelectAll?.()}
+                      aria-label="Select all"
+                    />
+                  </th>
+                )}
                 {columns.map((column) => (
                   <th
                     key={column.key}
@@ -122,6 +154,15 @@ export function MobileTable({
                   }`}
                   onClick={() => onRowClick?.(row)}
                 >
+                  {typeof onToggleSelect === 'function' && (
+                    <td className="p-3 w-10" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={selectedIds?.has(getRowId ? getRowId(row) : row.id)}
+                        onCheckedChange={() => onToggleSelect?.(row)}
+                        aria-label="Select row"
+                      />
+                    </td>
+                  )}
                   {columns.map((column) => (
                     <td key={column.key} className="p-3">
                       {column.render ? column.render(row[column.key], row) : row[column.key]}
@@ -203,6 +244,12 @@ interface UserTableProps {
   formatRoleName: (role: string) => string;
   getRoleBadgeColor: (role: string) => string;
   formatDate: (date: string) => string;
+  // Selection controls
+  selectedIds?: Set<string>;
+  getRowId?: (row: any) => string;
+  onToggleSelect?: (row: any) => void;
+  onToggleSelectAll?: () => void;
+  isAllSelected?: boolean;
 }
 
 export function UserMobileTable({
@@ -212,7 +259,12 @@ export function UserMobileTable({
   loading,
   formatRoleName,
   getRoleBadgeColor,
-  formatDate
+  formatDate,
+  selectedIds,
+  getRowId,
+  onToggleSelect,
+  onToggleSelectAll,
+  isAllSelected
 }: UserTableProps) {
   const columns: Column[] = [
     {
@@ -325,6 +377,11 @@ export function UserMobileTable({
           )}
         </div>
       )}
+      selectedIds={selectedIds}
+      getRowId={getRowId}
+      onToggleSelect={onToggleSelect}
+      onToggleSelectAll={onToggleSelectAll}
+      isAllSelected={isAllSelected}
     />
   );
 }
