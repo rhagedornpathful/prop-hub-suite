@@ -266,6 +266,27 @@ const HouseWatcherHome = () => {
         </Card>
       </div>
 
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="flex gap-4">
+          <Button onClick={() => navigate('/house-watcher-properties')} variant="outline">
+            <Home className="h-4 w-4 mr-2" />
+            View My Properties
+          </Button>
+          <Button onClick={() => navigate('/house-watching')} variant="outline">
+            <FileText className="h-4 w-4 mr-2" />
+            View All Assignments
+          </Button>
+          <Button onClick={() => navigate('/activity')} variant="outline">
+            <Eye className="h-4 w-4 mr-2" />
+            Recent Activity
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Daily Schedule */}
       <div className="space-y-4">
         <h2 className="text-xl font-semibold">Daily Schedule</h2>
@@ -329,27 +350,6 @@ const HouseWatcherHome = () => {
           );
         })}
       </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent className="flex gap-4">
-          <Button onClick={() => navigate('/house-watcher-properties')} variant="outline">
-            <Home className="h-4 w-4 mr-2" />
-            View My Properties
-          </Button>
-          <Button onClick={() => navigate('/house-watching')} variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            View All Assignments
-          </Button>
-          <Button onClick={() => navigate('/activity')} variant="outline">
-            <Eye className="h-4 w-4 mr-2" />
-            Recent Activity
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 };
