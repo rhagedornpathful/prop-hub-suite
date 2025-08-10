@@ -112,7 +112,7 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
           break;
         case 'inbox':
         default:
-          query = query.eq('is_archived', false);
+          query = query.eq('is_archived', false).neq('created_by', user.id);
           break;
       }
 
