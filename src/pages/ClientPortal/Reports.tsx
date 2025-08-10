@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,111 +22,148 @@ import {
   FileText,
   Share
 } from "lucide-react";
-
+import { supabase } from "@/integrations/supabase/client";
 const ClientReports = () => {
   const navigate = useNavigate();
   const { reportId } = useParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterProperty, setFilterProperty] = useState("all");
-  const [selectedReport, setSelectedReport] = useState<number | null>(
-    reportId ? parseInt(reportId) : null
+  const [selectedReport, setSelectedReport] = useState<string | null>(
+    reportId ?? null
   );
 
-  const [reports] = useState([
-    {
-      id: 1,
-      propertyId: 1,
-      property: "456 Oak Street",
-      date: "2024-01-08",
-      time: "10:30 AM",
-      specialist: "Mike Rodriguez",
-      status: "Completed",
-      summary: "Comprehensive weekly check completed successfully. All systems functioning normally.",
-      photos: [
-        { id: 1, category: "Exterior", filename: "front_entrance.jpg", description: "Front entrance and walkway" },
-        { id: 2, category: "Exterior", filename: "roof_condition.jpg", description: "Roof condition check" },
-        { id: 3, category: "Interior", filename: "hvac_system.jpg", description: "HVAC system inspection" },
-        { id: 4, category: "Interior", filename: "kitchen_appliances.jpg", description: "Kitchen appliances check" },
-        { id: 5, category: "Security", filename: "door_locks.jpg", description: "Door lock verification" },
-        { id: 6, category: "Utilities", filename: "water_meter.jpg", description: "Water meter reading" }
-      ],
-      checklist: [
-        { category: "Exterior", item: "Roof condition", status: "Good", notes: "No visible damage" },
-        { category: "Exterior", item: "Gutters and downspouts", status: "Good", notes: "Clear and functional" },
-        { category: "Interior", item: "HVAC system check", status: "Good", notes: "Running efficiently" },
-        { category: "Interior", item: "Plumbing inspection", status: "Good", notes: "No leaks detected" },
-        { category: "Security", item: "Door locks", status: "Good", notes: "All locks secure" },
-        { category: "Utilities", item: "Water meter reading", status: "Good", notes: "145,678 gallons" }
-      ],
-      issues: [],
-      recommendations: [
-        "Consider pool maintenance this week",
-        "Garden sprinklers scheduled for Tuesday"
-      ]
-    },
-    {
-      id: 2,
-      propertyId: 2,
-      property: "123 Pine Avenue",
-      date: "2024-01-07",
-      time: "2:15 PM",
-      specialist: "Sarah Chen",
-      status: "Completed",
-      summary: "Bi-weekly property inspection completed. Minor sprinkler system adjustment needed.",
-      photos: [
-        { id: 7, category: "Exterior", filename: "sprinkler_system.jpg", description: "Sprinkler system issue" },
-        { id: 8, category: "Exterior", filename: "front_yard.jpg", description: "Front yard condition" },
-        { id: 9, category: "Interior", filename: "electrical_panel.jpg", description: "Electrical panel check" },
-        { id: 10, category: "Security", filename: "alarm_system.jpg", description: "Alarm system test" }
-      ],
-      checklist: [
-        { category: "Exterior", item: "Landscaping", status: "Good", notes: "Well maintained" },
-        { category: "Exterior", item: "Sprinkler system", status: "Attention", notes: "Needs minor adjustment" },
-        { category: "Interior", item: "Electrical systems", status: "Good", notes: "All systems normal" },
-        { category: "Security", item: "Alarm system", status: "Good", notes: "Test successful" }
-      ],
-      issues: [
-        { severity: "Minor", description: "Sprinkler head #4 needs adjustment", location: "Front yard" }
-      ],
-      recommendations: [
-        "Schedule sprinkler adjustment within 7 days",
-        "Monitor for proper watering coverage"
-      ]
-    },
-    {
-      id: 3,
-      propertyId: 1,
-      property: "456 Oak Street",
-      date: "2024-01-01",
-      time: "11:00 AM",
-      specialist: "Mike Rodriguez",
-      status: "Completed",
-      summary: "Holiday property check completed. All secure for extended absence.",
-      photos: [
-        { id: 11, category: "Exterior", filename: "holiday_exterior.jpg", description: "Property exterior during holiday" },
-        { id: 12, category: "Interior", filename: "holiday_interior.jpg", description: "Interior security check" }
-      ],
-      checklist: [
-        { category: "Security", item: "All entry points", status: "Good", notes: "Secure and locked" },
-        { category: "Utilities", item: "System checks", status: "Good", notes: "All operational" }
-      ],
-      issues: [],
-      recommendations: [
-        "Property secure for extended absence",
-        "Next check scheduled as planned"
-      ]
-    }
-  ]);
+  // Report type
+  type Report = {
+    id: string;
+    propertyId: string;
+    property: string;
+    date: string;
+    time: string;
+    specialist: string;
+    status: string;
+    summary: string;
+    photos: { id: string; category: string; filename: string; description: string }[];
+    checklist: { category: string; item: string; status: string; notes?: string }[];
+    issues: { severity: string; description: string; location?: string }[];
+    recommendations: string[];
+  };
 
-  const properties = [
-    { id: 1, address: "456 Oak Street" },
-    { id: 2, address: "123 Pine Avenue" }
-  ];
+  const [reports, setReports] = useState<Report[]>([]);
+  const [properties, setProperties] = useState<{ id: string; address: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadReports = async () => {
+      try {
+        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setReports([]);
+          setProperties([]);
+          setLoading(false);
+          return;
+        }
+
+        // Fetch sessions created by this user (reports they performed)
+        const { data: sessions, error } = await supabase
+          .from('home_check_sessions')
+          .select('id, property_id, completed_at, started_at, checklist_data, total_issues_found, photos_taken, status, general_notes')
+          .eq('user_id', user.id)
+          .order('completed_at', { ascending: false });
+
+        if (error) throw error;
+
+        const propertyIds = Array.from(new Set((sessions || []).map((s: any) => s.property_id).filter(Boolean)));
+
+        // Build property map (best-effort, fallback to id if RLS blocks)
+        const propsMap = new Map<string, string>();
+        if (propertyIds.length) {
+          const { data: props, error: propsErr } = await supabase
+            .from('properties')
+            .select('id, address, street_address, city, state')
+            .in('id', propertyIds as string[]);
+
+          if (!propsErr && props) {
+            setProperties(props.map((p: any) => ({
+              id: p.id,
+              address: [p.street_address || p.address, p.city, p.state].filter(Boolean).join(', ') || p.id
+            })));
+            props.forEach((p: any) => {
+              const addr = [p.street_address || p.address, p.city, p.state].filter(Boolean).join(', ');
+              propsMap.set(p.id, addr || p.id);
+            });
+          } else {
+            setProperties(propertyIds.map((pid: string) => ({ id: pid, address: pid })));
+          }
+        }
+
+        const mapped: Report[] = (sessions || []).map((s: any) => {
+          const dt = s.completed_at || s.started_at;
+          const d = dt ? new Date(dt) : new Date();
+          const date = d.toLocaleDateString();
+          const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          const photosCount = s.photos_taken || 0;
+          const photos = Array.from({ length: photosCount }, (_, i) => ({
+            id: `${s.id}-p${i + 1}`,
+            category: 'Photo',
+            filename: `photo_${i + 1}.jpg`,
+            description: 'Session photo'
+          }));
+
+          const checklistItems = Array.isArray(s.checklist_data)
+            ? (s.checklist_data as any[]).map((ci: any, idx: number) => ({
+                category: ci.category || 'Item',
+                item: ci.item || ci.title || `Item ${idx + 1}`,
+                status: ci.status || 'Checked',
+                notes: ci.notes || ''
+              }))
+            : [];
+
+          const issuesCount = s.total_issues_found || 0;
+          const issues = Array.from({ length: issuesCount }, (_, i) => ({
+            severity: 'Minor',
+            description: `Issue ${i + 1}`
+          }));
+
+          const propertyName = propsMap.get(s.property_id) || s.property_id;
+          const status = s.status === 'completed' ? 'Completed' : (s.status || 'In Progress');
+          const summary = s.general_notes || `${checklistItems.length} items checked${issuesCount ? `, ${issuesCount} issues found` : ''}.`;
+
+          return {
+            id: s.id,
+            propertyId: s.property_id,
+            property: propertyName,
+            date,
+            time,
+            specialist: 'Me',
+            status,
+            summary,
+            photos,
+            checklist: checklistItems,
+            issues,
+            recommendations: []
+          };
+        });
+
+        setReports(mapped);
+      } catch (e) {
+        console.error('Failed to load reports', e);
+        setReports([]);
+        setProperties([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadReports();
+  }, []);
+
 
   const filteredReports = reports.filter(report => {
     const matchesSearch = report.property.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          report.specialist.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesProperty = filterProperty === "all" || report.propertyId.toString() === filterProperty;
+    const matchesProperty = filterProperty === "all" || report.propertyId === filterProperty;
     return matchesSearch && matchesProperty;
   });
 
