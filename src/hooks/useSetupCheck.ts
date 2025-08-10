@@ -28,16 +28,17 @@ export function useSetupCheck() {
     try {
       setChecking(true);
       
-      // Check if any admin exists in the system
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('id')
-        .eq('role', 'admin')
-        .limit(1);
+      // Use a function call that can bypass RLS to check if any admin exists
+      const { data, error } = await supabase.rpc('check_admin_exists');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Setup check error:', error);
+        // If function doesn't exist or fails, assume setup is not needed to avoid blocking
+        setNeedsSetup(false);
+        return;
+      }
       
-      const hasAdmin = (data || []).length > 0;
+      const hasAdmin = data === true;
       
       // If no admin exists, setup is needed
       if (!hasAdmin) {
@@ -51,6 +52,8 @@ export function useSetupCheck() {
       }
       
     } catch (error) {
+      console.error('Setup check failed:', error);
+      // On any error, assume setup is not needed to avoid blocking the app
       setNeedsSetup(false);
     } finally {
       setChecking(false);
