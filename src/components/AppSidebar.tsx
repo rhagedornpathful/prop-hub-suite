@@ -289,6 +289,12 @@ const houseWatcherMenuItems = [
     description: "Assigned properties"
   },
   {
+    title: "Messages",
+    url: "/messages",
+    icon: MessageCircle,
+    description: "Communication hub"
+  },
+  {
     title: "Maintenance Tasks",
     url: "/maintenance",
     icon: Wrench,
