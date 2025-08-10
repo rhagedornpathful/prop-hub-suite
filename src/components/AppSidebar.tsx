@@ -277,8 +277,14 @@ const propertyManagerMenuItems = [
 
 const houseWatcherMenuItems = [
   {
-    title: "Properties",
-    url: "/house-watching",
+    title: "Home",
+    url: "/house-watcher-home",
+    icon: Home,
+    description: "Weekly schedule"
+  },
+  {
+    title: "My Properties",
+    url: "/house-watcher-properties",
     icon: Building,
     description: "Assigned properties"
   },
@@ -287,12 +293,6 @@ const houseWatcherMenuItems = [
     url: "/maintenance",
     icon: Wrench,
     description: "Maintenance work"
-  },
-  {
-    title: "Check-in Reports",
-    url: "/property-check",
-    icon: Eye,
-    description: "Property reports"
   },
   {
     title: "My Profile",

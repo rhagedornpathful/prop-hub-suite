@@ -25,6 +25,8 @@ const breadcrumbConfig: Record<string, BreadcrumbConfig> = {
   '/house-watcher': { path: '/house-watcher', label: 'House Watcher' },
   '/maintenance': { path: '/maintenance', label: 'Maintenance' },
   '/home-check': { path: '/home-check', label: 'Home Check' },
+  '/house-watcher-home': { path: '/house-watcher-home', label: 'House Watcher Home' },
+  '/house-watcher-properties': { path: '/house-watcher-properties', label: 'My Properties' },
   '/property-check': { path: '/property-check', label: 'Property Check' },
   '/messages': { path: '/messages', label: 'Messages' },
   '/finances': { path: '/finances', label: 'Finances' },

@@ -1,4 +1,4 @@
-import { useState, useCallback, lazy, Suspense } from "react";
+import { useState, useCallback, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -14,7 +14,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { AdminDashboard } from "@/pages/dashboards/AdminDashboard";
 import PropertyOwnerDashboard from "@/pages/dashboards/PropertyOwnerDashboard";
 import { TenantDashboard } from "@/pages/dashboards/TenantDashboard";
-import HouseWatcherDashboard from "@/pages/dashboards/HouseWatcherDashboard";
+
 import { PropertyManagerDashboard } from "@/pages/dashboards/PropertyManagerDashboard";
 import { MakeAdminButton } from "@/components/dev/MakeAdminButton";
 import { SearchProvider, useSearchContext } from "@/contexts/SearchContext";
@@ -171,7 +171,9 @@ const IndexContent = () => {
       case 'tenant':
         return <TenantDashboard />;
       case 'house_watcher':
-        return <HouseWatcherDashboard />;
+        // Redirect house watchers to their dedicated home page
+        navigate('/house-watcher-home');
+        return null;
       case 'property_manager':
         return <PropertyManagerDashboard />;
       case 'client':
@@ -280,6 +282,7 @@ const IndexContent = () => {
 };
 
 const Index = () => {
+  const navigate = useNavigate();
   return (
     <SearchProvider>
       <IndexContent />
