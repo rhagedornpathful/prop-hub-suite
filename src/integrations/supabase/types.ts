@@ -1142,6 +1142,54 @@ export type Database = {
         }
         Relationships: []
       }
+      services: {
+        Row: {
+          base_price: number
+          billing_type: string
+          category: string
+          created_at: string
+          description: string | null
+          features: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          package_tier: string | null
+          rent_percentage: number | null
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          base_price?: number
+          billing_type?: string
+          category: string
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          package_tier?: string | null
+          rent_percentage?: number | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          base_price?: number
+          billing_type?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          package_tier?: string | null
+          rent_percentage?: number | null
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string

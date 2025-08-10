@@ -125,6 +125,12 @@ const adminMenuItems = [
     url: "/user-management",
     icon: UserCog,
     description: "Manage users & roles"
+  },
+  {
+    title: "Service Packages",
+    url: "/services",
+    icon: Settings,
+    description: "Manage service offerings"
   }
 ];
 
