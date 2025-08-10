@@ -93,7 +93,13 @@ export const useCheckTemplate = (id: string) => {
       try {
         const { data, error } = await supabase
           .from('check_templates' as any)
-          .select('*')
+          .select(`
+            *,
+            sections:check_template_sections(
+              *,
+              items:check_template_items(*)
+            )
+          `)
           .eq('id', id)
           .single();
         
