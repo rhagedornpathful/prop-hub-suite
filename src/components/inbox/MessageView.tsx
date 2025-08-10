@@ -28,7 +28,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { InboxConversation } from '@/hooks/queries/useInbox';
-import { useInboxMessages, useSendInboxMessage } from '@/hooks/queries/useInbox';
+import { useInboxMessages, useSendInboxMessage, useCreateInboxConversation } from '@/hooks/queries/useInbox';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface MessageViewProps {
   conversation: InboxConversation;
@@ -36,11 +37,18 @@ interface MessageViewProps {
 }
 
 export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose }) => {
+  const { user } = useAuth();
   const [replyContent, setReplyContent] = useState('');
   const [showReply, setShowReply] = useState(false);
+  const [showReplyAll, setShowReplyAll] = useState(false);
+  const [showForward, setShowForward] = useState(false);
+  const [replyAllContent, setReplyAllContent] = useState('');
+  const [forwardContent, setForwardContent] = useState('');
+  const [forwardRecipients, setForwardRecipients] = useState<string[]>([]);
   
   const { data: messages = [], isLoading } = useInboxMessages(conversation.id);
   const sendMessage = useSendInboxMessage();
+  const createConversation = useCreateInboxConversation();
 
   const handleReply = async () => {
     if (!replyContent.trim()) return;
@@ -55,6 +63,42 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose 
       setShowReply(false);
     } catch (error) {
       console.error('Failed to send reply:', error);
+    }
+  };
+
+  const handleReplyAll = async () => {
+    if (!replyAllContent.trim()) return;
+
+    try {
+      await sendMessage.mutateAsync({
+        conversationId: conversation.id,
+        content: replyAllContent,
+        subject: `Re: ${conversation.title || 'No subject'}`
+      });
+      setReplyAllContent('');
+      setShowReplyAll(false);
+    } catch (error) {
+      console.error('Failed to send reply all:', error);
+    }
+  };
+
+  const handleForward = async () => {
+    if (!forwardContent.trim() || forwardRecipients.length === 0) return;
+
+    try {
+      // Create a new conversation for forwarding
+      await createConversation.mutateAsync({
+        title: `Fwd: ${conversation.title || 'No subject'}`,
+        type: conversation.type,
+        priority: conversation.priority as any,
+        content: forwardContent,
+        participantIds: forwardRecipients
+      });
+      setForwardContent('');
+      setForwardRecipients([]);
+      setShowForward(false);
+    } catch (error) {
+      console.error('Failed to forward message:', error);
     }
   };
 
@@ -152,16 +196,41 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose 
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => setShowReply(!showReply)}
+            onClick={() => {
+              setShowReply(!showReply);
+              setShowReplyAll(false);
+              setShowForward(false);
+            }}
           >
             <Reply className="h-4 w-4 mr-2" />
             Reply
           </Button>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              setShowReplyAll(!showReplyAll);
+              setShowReply(false);
+              setShowForward(false);
+            }}
+          >
             <ReplyAll className="h-4 w-4 mr-2" />
             Reply All
           </Button>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              setShowForward(!showForward);
+              setShowReply(false);
+              setShowReplyAll(false);
+              // Pre-populate forward content with the last message
+              if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                setForwardContent(`\n\n--- Forwarded Message ---\nFrom: ${lastMessage.sender_name}\nSubject: ${conversation.title}\n\n${lastMessage.content}`);
+              }
+            }}
+          >
             <Forward className="h-4 w-4 mr-2" />
             Forward
           </Button>
@@ -277,6 +346,112 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose 
           </div>
         </div>
       )}
+
+      {/* Reply All Area */}
+      {showReplyAll && (
+        <div className="border-t border-border bg-card p-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ReplyAll className="h-4 w-4" />
+              <span>Reply to all participants in this conversation</span>
+            </div>
+            
+            <Textarea
+              placeholder="Type your reply to all participants..."
+              value={replyAllContent}
+              onChange={(e) => setReplyAllContent(e.target.value)}
+              className="min-h-24 resize-none"
+            />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  <Paperclip className="h-4 w-4 mr-2" />
+                  Attach
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowReplyAll(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleReplyAll}
+                  disabled={!replyAllContent.trim() || sendMessage.isPending}
+                >
+                  {sendMessage.isPending ? 'Sending...' : 'Reply to All'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forward Area */}
+      {showForward && (
+        <div className="border-t border-border bg-card p-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Forward className="h-4 w-4" />
+              <span>Forward this conversation to new recipients</span>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Recipients</label>
+              <div className="text-sm text-muted-foreground">
+                Note: Forwarding will create a new conversation with selected recipients
+              </div>
+              {/* For now, simplified recipient selection - you could enhance this with a proper user selector */}
+              <input
+                type="text"
+                placeholder="Enter recipient email addresses (comma-separated)"
+                className="w-full p-2 border border-border rounded"
+                onChange={(e) => {
+                  const emails = e.target.value.split(',').map(email => email.trim()).filter(Boolean);
+                  setForwardRecipients(emails);
+                }}
+              />
+            </div>
+            
+            <Textarea
+              placeholder="Add a message to forward..."
+              value={forwardContent}
+              onChange={(e) => setForwardContent(e.target.value)}
+              className="min-h-32 resize-none"
+            />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm">
+                  <Paperclip className="h-4 w-4 mr-2" />
+                  Attach
+                </Button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowForward(false)}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleForward}
+                  disabled={!forwardContent.trim() || forwardRecipients.length === 0 || createConversation.isPending}
+                >
+                  {createConversation.isPending ? 'Forwarding...' : 'Forward Message'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Original Reply Area - now only shows when showReply is true */}
+      {/* Original reply area removed - replaced with the conditional ones above */}
     </div>
   );
 };
