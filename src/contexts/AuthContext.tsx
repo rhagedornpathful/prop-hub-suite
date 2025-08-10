@@ -34,6 +34,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Emergency admin mode removed for production security
 
   const fetchUserRole = async (userId: string) => {
+    console.log('🔍 AuthContext: Fetching user role for:', userId);
     
     try {
       // Use direct user ID query to get all user roles
@@ -43,13 +44,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .eq('user_id', userId);
 
       if (error) {
+        console.error('❌ AuthContext: Error fetching user role:', error);
         setUserRole(null);
         return;
       }
 
+      console.log('📊 AuthContext: User roles data:', data);
       const roles = data?.map(row => row.role) || [];
       
       if (roles.length === 0) {
+        console.log('⚠️ AuthContext: No roles found for user');
         setUserRole(null);
         return;
       }
@@ -57,6 +61,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Check for preferred role in localStorage first
       const preferredRole = localStorage.getItem('preferred_role');
       if (preferredRole && roles.includes(preferredRole as any)) {
+        console.log('✅ AuthContext: Using preferred role:', preferredRole);
         setUserRole(preferredRole as any);
         return;
       }
@@ -66,6 +71,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       for (const hierarchyRole of roleHierarchy) {
         if (roles.includes(hierarchyRole as any)) {
+          console.log('✅ AuthContext: Using hierarchy role:', hierarchyRole);
           setUserRole(hierarchyRole as any);
           return;
         }
@@ -73,19 +79,24 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       // Fallback to first role if no hierarchy match
       const primaryRole = roles[0];
+      console.log('✅ AuthContext: Using fallback role:', primaryRole);
       setUserRole(primaryRole);
       
     } catch (error) {
+      console.error('💥 AuthContext: Exception in fetchUserRole:', error);
       setUserRole(null);
     }
   };
 
   useEffect(() => {
+    console.log('🚀 AuthContext: Initializing auth listener');
     let isSubscriptionActive = true;
 
     // Listen for auth changes FIRST to avoid missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('🔄 AuthContext: Auth state change:', event, session?.user?.id);
+        
         // Skip if subscription is no longer active
         if (!isSubscriptionActive) return;
 
@@ -101,6 +112,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
              }
            }, 0);
          } else if (!session) {
+           console.log('🔄 AuthContext: No session, clearing role');
            setUserRole(null);
          }
         
@@ -111,14 +123,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Get initial session AFTER setting up listener
     const getInitialSession = async () => {
       try {
+        console.log('🔍 AuthContext: Getting initial session');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!isSubscriptionActive) return;
         
         if (error) {
+          console.error('❌ AuthContext: Error getting initial session:', error);
           setLoading(false);
           return;
         }
+        
+        console.log('📊 AuthContext: Initial session:', session?.user?.id);
         
         // Only update if no session is already set (avoid duplicates)
         if (!session || session.access_token !== user?.id) {
@@ -136,6 +152,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         
         setLoading(false);
       } catch (error) {
+        console.error('💥 AuthContext: Exception getting initial session:', error);
         setLoading(false);
       }
     };
@@ -143,6 +160,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     getInitialSession();
 
     return () => {
+      console.log('🧹 AuthContext: Cleaning up auth listener');
       isSubscriptionActive = false;
       subscription.unsubscribe();
     };
