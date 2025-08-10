@@ -1,11 +1,13 @@
 import { useState } from "react";
-// Remove DashboardHeader import as it doesn't accept title/subtitle props
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ServiceCard } from "@/components/ServiceCard";
+import { AssignServiceDialog } from "@/components/AssignServiceDialog";
+import { PropertyServiceAssignments } from "@/components/PropertyServiceAssignments";
 import { useServicesByCategory } from "@/hooks/queries/useServices";
-import { Home, Building, Plus } from "lucide-react";
+import { Home, Building, Plus, Settings } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export default function Services() {
@@ -133,7 +135,22 @@ export default function Services() {
       {selectedServices.size > 0 && (
         <Card className="border-primary">
           <CardHeader>
-            <CardTitle>Selected Services</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Selected Services
+              <AssignServiceDialog 
+                services={[
+                  ...(houseWatchingServices || []),
+                  ...(propertyManagementServices || []),
+                  ...(addOnServices || [])
+                ].filter(s => selectedServices.has(s.id))}
+                trigger={
+                  <Button>
+                    <Settings className="h-4 w-4 mr-2" />
+                    Assign to Property
+                  </Button>
+                }
+              />
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
@@ -154,6 +171,9 @@ export default function Services() {
           </CardContent>
         </Card>
       )}
+
+      {/* Service Assignments Table */}
+      <PropertyServiceAssignments />
     </div>
   );
 }
