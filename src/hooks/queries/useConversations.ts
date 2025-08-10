@@ -218,6 +218,8 @@ export const useCreateConversation = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
+      console.log('Creating conversation with:', { title, type, propertyId, maintenanceRequestId, participantIds });
+
       // Create conversation
       const { data: conversation, error: convError } = await supabase
         .from('conversations')
@@ -236,8 +238,12 @@ export const useCreateConversation = () => {
         throw convError;
       }
 
-      // Add participants (ensure creator is included at least once)
+      console.log('Conversation created:', conversation);
+
+      // Add participants - ensure creator is always included and no duplicates
       const uniqueIds = Array.from(new Set([user.id, ...participantIds]));
+      console.log('Adding participants:', uniqueIds);
+      
       const participants = uniqueIds.map(userId => ({
         conversation_id: conversation.id,
         user_id: userId,
@@ -253,6 +259,7 @@ export const useCreateConversation = () => {
         throw participantsError;
       }
 
+      console.log('Participants added successfully');
       return conversation;
     },
     onSuccess: () => {
@@ -262,10 +269,11 @@ export const useCreateConversation = () => {
         description: "Conversation created successfully"
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error('useCreateConversation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create conversation. Please try again.",
+        description: error.message || "Failed to create conversation. Please try again.",
         variant: "destructive"
       });
     }
