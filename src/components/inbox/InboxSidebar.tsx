@@ -37,9 +37,9 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
   onCompose,
   unreadCount
 }) => {
-  const { roles } = useUserRole();
-  const isAdmin = roles.includes('admin');
-  const isPropertyManager = roles.includes('property_manager');
+  const { isAdmin, isPropertyManager } = useUserRole();
+  const isAdminUser = isAdmin();
+  const isPropertyManagerUser = isPropertyManager();
 
   const primaryFilters = [
     { 
@@ -187,7 +187,7 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
         </div>
 
         {/* Admin/Manager Only */}
-        {(isAdmin || isPropertyManager) && (
+        {(isAdminUser || isPropertyManagerUser) && (
           <>
             <Separator className="my-3" />
             <div className="space-y-1">

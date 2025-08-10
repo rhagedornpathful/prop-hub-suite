@@ -8,6 +8,7 @@ import { InboxSidebar } from './InboxSidebar';
 import { MessageList } from './MessageList';
 import { MessageView } from './MessageView';
 import { ComposeDialog } from './ComposeDialog';
+import { InboxStats } from './InboxStats';
 import { useInboxConversations } from '@/hooks/queries/useInbox';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -30,6 +31,7 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
   const unreadCount = conversations.filter(c => c.unread_count > 0).length;
+  const priorityCount = conversations.filter(c => c.priority === 'high').length;
 
   return (
     <div className={`flex h-screen bg-background ${className}`}>
@@ -81,6 +83,14 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
             )}
           </div>
         </div>
+
+        {/* Stats Dashboard */}
+        <InboxStats
+          totalConversations={conversations.length}
+          unreadCount={unreadCount}
+          priorityCount={priorityCount}
+          responseTime="2.1h"
+        />
 
         {/* Content Area */}
         <div className="flex-1 flex min-h-0">

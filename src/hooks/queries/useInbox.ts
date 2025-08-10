@@ -261,10 +261,16 @@ export const useSendInboxMessage = () => {
       if (error) throw error;
 
       // Update conversation thread count and last message time
+      const { data: currentConv } = await supabase
+        .from('conversations')
+        .select('thread_count')
+        .eq('id', conversationId)
+        .single();
+
       await supabase
         .from('conversations')
         .update({
-          thread_count: supabase.raw('thread_count + 1'),
+          thread_count: (currentConv?.thread_count || 0) + 1,
           last_message_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })

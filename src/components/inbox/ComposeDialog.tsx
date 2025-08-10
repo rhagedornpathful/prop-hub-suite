@@ -29,9 +29,9 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
   replyTo
 }) => {
   const { user } = useAuth();
-  const { roles } = useUserRole();
+  const { isAdmin, isPropertyManager } = useUserRole();
   const { data: profiles = [] } = useProfiles();
-  const { data: properties = [] } = useProperties();
+  const { data: propertiesData } = useProperties();
   
   const [recipients, setRecipients] = useState<string[]>([]);
   const [subject, setSubject] = useState('');
@@ -64,8 +64,9 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
     }
   }, [open]);
 
-  const isAdmin = roles.includes('admin');
-  const isPropertyManager = roles.includes('property_manager');
+  const isAdminUser = isAdmin();
+  const isPropertyManagerUser = isPropertyManager();
+  const properties = Array.isArray(propertiesData) ? propertiesData : (propertiesData?.properties || []);
 
   const groupOptions = [
     { value: 'all-tenants', label: 'All Tenants', icon: Users },
@@ -181,7 +182,7 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
                 />
                 <Label htmlFor="individual">Individual</Label>
               </div>
-              {(isAdmin || isPropertyManager) && (
+              {(isAdminUser || isPropertyManagerUser) && (
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="group"
