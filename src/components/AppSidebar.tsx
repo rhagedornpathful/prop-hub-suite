@@ -295,10 +295,10 @@ const houseWatcherMenuItems = [
     description: "Maintenance work"
   },
   {
-    title: "My Profile",
-    url: "/settings",
+    title: "Settings",
+    url: "/house-watcher-settings",
     icon: Settings,
-    description: "Account settings"
+    description: "Profile & preferences"
   }
 ];
 
@@ -468,9 +468,9 @@ export function AppSidebar() {
           <div className="mt-auto p-4 border-t border-sidebar-border">
             <SidebarMenuButton asChild>
               <NavLink 
-                to={basePath + "/settings"}
+                to={basePath + (userRole === 'house_watcher' ? "/house-watcher-settings" : "/settings")}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive("/settings") 
+                  isActive(userRole === 'house_watcher' ? "/house-watcher-settings" : "/settings") 
                     ? "bg-sidebar-primary text-sidebar-primary-foreground" 
                     : "text-sidebar-foreground hover:bg-sidebar-accent"
                 }`}

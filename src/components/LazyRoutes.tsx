@@ -20,8 +20,8 @@ const Settings = lazy(() => import('@/pages/Settings'));
 const Finances = lazy(() => import('@/pages/Finances'));
 const PropertyDetail = lazy(() => import('@/pages/PropertyDetail'));
 const PropertyOwnerDetail = lazy(() => import('@/pages/PropertyOwnerDetail'));
-const HouseWatcherDetail = lazy(() => import('@/pages/HouseWatcherDetail'));
 const HouseWatcherHome = lazy(() => import('@/pages/HouseWatcherHome'));
+const HouseWatcherSettings = lazy(() => import('@/pages/HouseWatcherSettings'));
 const HouseWatcherProperties = lazy(() => import('@/pages/HouseWatcherProperties'));
 const PropertyManagerView = lazy(() => import('@/pages/PropertyManagerView'));
 const DevTools = lazy(() => import('@/pages/DevTools'));
@@ -73,13 +73,14 @@ export const LazyRoutes: React.FC = () => (
       <Route path="/property-owners" element={<PropertyOwners />} />
       <Route path="/property-owners/:id" element={<PropertyOwnerDetail />} />
       <Route path="/house-watching" element={<HouseWatching />} />
-      <Route path="/house-watcher/:id" element={<HouseWatcherDetail />} />
+      
       <Route path="/property-check" element={<PropertyCheck />} />
       <Route path="/property-check/:id" element={<PropertyCheck />} />
       <Route path="/home-check" element={<HomeCheck />} />
       <Route path="/home-check/:id" element={<HomeCheck />} />
       <Route path="/house-watcher-home" element={<HouseWatcherHome />} />
       <Route path="/house-watcher-properties" element={<HouseWatcherProperties />} />
+      <Route path="/house-watcher-settings" element={<HouseWatcherSettings />} />
       <Route path="/activity" element={<Activity />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/setup" element={<Setup />} />
