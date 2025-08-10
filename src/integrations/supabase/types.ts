@@ -1301,6 +1301,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      user_can_access_conversation: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_created_conversation: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
