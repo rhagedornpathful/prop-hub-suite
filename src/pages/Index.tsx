@@ -175,7 +175,9 @@ const IndexContent = () => {
         navigate('/house-watcher-home');
         return null;
       case 'property_manager':
-        return <PropertyManagerDashboard />;
+        // Redirect property managers to their dedicated home page
+        navigate('/property-manager-home');
+        return null;
       case 'client':
         return <TenantDashboard />; // Clients see tenant view
       case 'contractor':
