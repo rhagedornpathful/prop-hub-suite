@@ -374,8 +374,16 @@ const UserManagement = () => {
   const confirmDeleteUser = async () => {
     if (!userToDelete) return;
 
+    console.log('🗑️ UserManagement: Confirming delete for user', userToDelete.id);
+
+    // Optimistically remove from UI first
+    const prevUsers = users;
+    const prevFiltered = filteredUsers;
+    setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+    setFilteredUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+
     try {
-      // First, get the user_id from the profile
+      // Get the user_id from the profile
       const { data: profileRow, error: profileError } = await supabase
         .from('profiles')
         .select('user_id')
@@ -401,26 +409,26 @@ const UserManagement = () => {
 
       if (profilesError) throw profilesError;
 
-      // Optimistically remove from UI
-      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
-      setFilteredUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
-
       toast({
         title: "User Deleted",
-        description: `${userToDelete.first_name} ${userToDelete.last_name} has been removed from the system.`,
+        description: `${userToDelete.first_name || ''} ${userToDelete.last_name || ''}`.trim() + ' has been removed from the system.',
         variant: "default"
       });
-
-      setIsDeleteDialogOpen(false);
-      setUserToDelete(null);
-      // Sync with server state
-      fetchUsers();
     } catch (error: any) {
+      console.error('❌ UserManagement: Delete failed', error);
+      // Rollback UI if server operation failed
+      setUsers(prevUsers);
+      setFilteredUsers(prevFiltered);
       toast({
         title: "Delete Failed",
         description: error.message || "Failed to delete user",
         variant: "destructive"
       });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      // Sync with server to ensure consistency
+      fetchUsers();
     }
   };
 
