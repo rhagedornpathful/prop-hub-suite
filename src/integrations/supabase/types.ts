@@ -624,6 +624,77 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          budget_max: number | null
+          budget_min: number | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_contacted_at: string | null
+          last_name: string
+          move_in_date: string | null
+          notes: string | null
+          phone: string | null
+          preferred_contact_method: string | null
+          priority: string | null
+          property_id: string | null
+          source: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_contacted_at?: string | null
+          last_name: string
+          move_in_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          priority?: string | null
+          property_id?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          budget_max?: number | null
+          budget_min?: number | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_contacted_at?: string | null
+          last_name?: string
+          move_in_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          preferred_contact_method?: string | null
+          priority?: string | null
+          property_id?: string | null
+          source?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_requests: {
         Row: {
           actual_cost: number | null
@@ -745,6 +816,74 @@ export type Database = {
           old_status?: string | null
         }
         Relationships: []
+      }
+      marketing_campaigns: {
+        Row: {
+          budget: number | null
+          campaign_type: string
+          created_at: string
+          created_by: string | null
+          creative_assets: Json | null
+          description: string | null
+          end_date: string | null
+          id: string
+          metrics: Json | null
+          name: string
+          platforms: string[] | null
+          property_id: string | null
+          start_date: string | null
+          status: string | null
+          target_audience: Json | null
+          tracking_links: Json | null
+          updated_at: string
+        }
+        Insert: {
+          budget?: number | null
+          campaign_type: string
+          created_at?: string
+          created_by?: string | null
+          creative_assets?: Json | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          metrics?: Json | null
+          name: string
+          platforms?: string[] | null
+          property_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: Json | null
+          tracking_links?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          budget?: number | null
+          campaign_type?: string
+          created_at?: string
+          created_by?: string | null
+          creative_assets?: Json | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          metrics?: Json | null
+          name?: string
+          platforms?: string[] | null
+          property_id?: string | null
+          start_date?: string | null
+          status?: string | null
+          target_audience?: Json | null
+          tracking_links?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketing_campaigns_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_deliveries: {
         Row: {
@@ -1292,6 +1431,98 @@ export type Database = {
         }
         Relationships: []
       }
+      property_listings: {
+        Row: {
+          amenities: string[] | null
+          application_count: number | null
+          application_fee: number | null
+          available_date: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          lead_count: number | null
+          lease_term_months: number | null
+          listed_by: string | null
+          listing_platforms: string[] | null
+          parking_available: boolean | null
+          pet_policy: string | null
+          property_id: string
+          rent_amount: number
+          security_deposit: number | null
+          seo_description: string | null
+          seo_title: string | null
+          title: string
+          updated_at: string
+          utilities_included: string[] | null
+          view_count: number | null
+          virtual_tour_url: string | null
+        }
+        Insert: {
+          amenities?: string[] | null
+          application_count?: number | null
+          application_fee?: number | null
+          available_date: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          lead_count?: number | null
+          lease_term_months?: number | null
+          listed_by?: string | null
+          listing_platforms?: string[] | null
+          parking_available?: boolean | null
+          pet_policy?: string | null
+          property_id: string
+          rent_amount: number
+          security_deposit?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          title: string
+          updated_at?: string
+          utilities_included?: string[] | null
+          view_count?: number | null
+          virtual_tour_url?: string | null
+        }
+        Update: {
+          amenities?: string[] | null
+          application_count?: number | null
+          application_fee?: number | null
+          available_date?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          lead_count?: number | null
+          lease_term_months?: number | null
+          listed_by?: string | null
+          listing_platforms?: string[] | null
+          parking_available?: boolean | null
+          pet_policy?: string | null
+          property_id?: string
+          rent_amount?: number
+          security_deposit?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          title?: string
+          updated_at?: string
+          utilities_included?: string[] | null
+          view_count?: number | null
+          virtual_tour_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_listings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_manager_assignments: {
         Row: {
           assigned_at: string
@@ -1514,6 +1745,106 @@ export type Database = {
           },
         ]
       }
+      property_tours: {
+        Row: {
+          confirmation_sent: boolean | null
+          created_at: string
+          duration_minutes: number | null
+          feedback: string | null
+          follow_up_notes: string | null
+          id: string
+          lead_id: string | null
+          listing_id: string | null
+          property_id: string
+          rating: number | null
+          reminder_sent: boolean | null
+          scheduled_by: string | null
+          scheduled_date: string
+          scheduled_time: string
+          special_requests: string | null
+          status: string | null
+          tour_guide_id: string | null
+          tour_type: string | null
+          updated_at: string
+          visitor_count: number | null
+          visitor_email: string
+          visitor_name: string
+          visitor_phone: string | null
+        }
+        Insert: {
+          confirmation_sent?: boolean | null
+          created_at?: string
+          duration_minutes?: number | null
+          feedback?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          property_id: string
+          rating?: number | null
+          reminder_sent?: boolean | null
+          scheduled_by?: string | null
+          scheduled_date: string
+          scheduled_time: string
+          special_requests?: string | null
+          status?: string | null
+          tour_guide_id?: string | null
+          tour_type?: string | null
+          updated_at?: string
+          visitor_count?: number | null
+          visitor_email: string
+          visitor_name: string
+          visitor_phone?: string | null
+        }
+        Update: {
+          confirmation_sent?: boolean | null
+          created_at?: string
+          duration_minutes?: number | null
+          feedback?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          property_id?: string
+          rating?: number | null
+          reminder_sent?: boolean | null
+          scheduled_by?: string | null
+          scheduled_date?: string
+          scheduled_time?: string
+          special_requests?: string | null
+          status?: string | null
+          tour_guide_id?: string | null
+          tour_type?: string | null
+          updated_at?: string
+          visitor_count?: number | null
+          visitor_email?: string
+          visitor_name?: string
+          visitor_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_tours_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_tours_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "property_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_tours_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rent_rolls: {
         Row: {
           amount_collected: number | null
@@ -1561,6 +1892,142 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      rental_applications: {
+        Row: {
+          additional_occupants: Json | null
+          applicant_email: string
+          applicant_first_name: string
+          applicant_last_name: string
+          applicant_phone: string | null
+          application_fee_amount: number | null
+          application_fee_paid: boolean | null
+          background_check_status: string | null
+          created_at: string
+          credit_check_status: string | null
+          current_address: string | null
+          date_of_birth: string | null
+          desired_move_in_date: string | null
+          documents: Json | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
+          employer_name: string | null
+          employment_status: string | null
+          id: string
+          lead_id: string | null
+          listing_id: string | null
+          monthly_income: number | null
+          notes: string | null
+          personal_references: Json | null
+          pets: Json | null
+          previous_landlord_name: string | null
+          previous_landlord_phone: string | null
+          property_id: string
+          rental_history: Json | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          social_security_number: string | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          additional_occupants?: Json | null
+          applicant_email: string
+          applicant_first_name: string
+          applicant_last_name: string
+          applicant_phone?: string | null
+          application_fee_amount?: number | null
+          application_fee_paid?: boolean | null
+          background_check_status?: string | null
+          created_at?: string
+          credit_check_status?: string | null
+          current_address?: string | null
+          date_of_birth?: string | null
+          desired_move_in_date?: string | null
+          documents?: Json | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          employer_name?: string | null
+          employment_status?: string | null
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          monthly_income?: number | null
+          notes?: string | null
+          personal_references?: Json | null
+          pets?: Json | null
+          previous_landlord_name?: string | null
+          previous_landlord_phone?: string | null
+          property_id: string
+          rental_history?: Json | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_security_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          additional_occupants?: Json | null
+          applicant_email?: string
+          applicant_first_name?: string
+          applicant_last_name?: string
+          applicant_phone?: string | null
+          application_fee_amount?: number | null
+          application_fee_paid?: boolean | null
+          background_check_status?: string | null
+          created_at?: string
+          credit_check_status?: string | null
+          current_address?: string | null
+          date_of_birth?: string | null
+          desired_move_in_date?: string | null
+          documents?: Json | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          employer_name?: string | null
+          employment_status?: string | null
+          id?: string
+          lead_id?: string | null
+          listing_id?: string | null
+          monthly_income?: number | null
+          notes?: string | null
+          personal_references?: Json | null
+          pets?: Json | null
+          previous_landlord_name?: string | null
+          previous_landlord_phone?: string | null
+          property_id?: string
+          rental_history?: Json | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          social_security_number?: string | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rental_applications_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_applications_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "property_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rental_applications_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       services: {
         Row: {
