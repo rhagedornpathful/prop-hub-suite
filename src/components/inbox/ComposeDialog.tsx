@@ -36,8 +36,8 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
   const [recipients, setRecipients] = useState<string[]>([]);
   const [subject, setSubject] = useState('');
   const [content, setContent] = useState('');
-  const [priority, setPriority] = useState<'normal' | 'high'>('normal');
-  const [messageType, setMessageType] = useState<'general' | 'maintenance' | 'property' | 'urgent'>('general');
+  const [priority, setPriority] = useState<'normal' | 'high' | 'urgent'>('normal');
+  const [messageType, setMessageType] = useState<'general' | 'maintenance' | 'property'>('general');
   const [relatedProperty, setRelatedProperty] = useState<string>('');
   const [recipientType, setRecipientType] = useState<'individual' | 'group'>('individual');
   const [selectedGroup, setSelectedGroup] = useState<string>('');
@@ -151,7 +151,6 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
                   <SelectItem value="general">General</SelectItem>
                   <SelectItem value="maintenance">Maintenance</SelectItem>
                   <SelectItem value="property">Property Related</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -165,6 +164,7 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
                 <SelectContent>
                   <SelectItem value="normal">Normal</SelectItem>
                   <SelectItem value="high">High Priority</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -297,8 +297,10 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
             <Badge variant="outline" className={getTypeColor(messageType)}>
               {messageType}
             </Badge>
-            {priority === 'high' && (
-              <Badge variant="destructive">High Priority</Badge>
+            {(priority === 'high' || priority === 'urgent') && (
+              <Badge variant="destructive">
+                {priority === 'urgent' ? 'Urgent' : 'High Priority'}
+              </Badge>
             )}
           </div>
         </div>
