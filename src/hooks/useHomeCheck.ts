@@ -80,45 +80,72 @@ export const useHomeCheck = (propertyId?: string) => {
 
   const initializeChecklist = async () => {
     try {
-      // Fallback to default hardcoded data until types are ready
-      const fallbackData: HomeCheckData = {
-        exterior: [
-          { id: 1, item: "Take photo of front of house upon arrival", completed: false, photos: [], notes: "", required: true, category: 'exterior' },
-          { id: 2, item: "Walk around front of property, check doors/windows secure", completed: false, photos: [], notes: "", required: true, category: 'exterior' },
-          { id: 3, item: "Complete perimeter walk, check all exterior access points", completed: false, photos: [], notes: "", required: true, category: 'exterior' },
-          { id: 4, item: "Look up at roof, gutters, downspouts from ground level", completed: false, photos: [], notes: "", required: true, category: 'exterior' },
-          { id: 5, item: "Test front porch light and any motion sensors", completed: false, photos: [], notes: "", required: true, category: 'exterior' },
-          { id: 6, item: "Collect mail, packages, newspapers, flyers", completed: false, photos: [], notes: "", required: true, category: 'exterior' },
-          { id: 7, item: "Note condition of lawn, plants, sprinklers", completed: false, photos: [], notes: "", required: false, category: 'exterior' },
-          { id: 8, item: "Check trash collection status, move bins if needed", completed: false, photos: [], notes: "", required: false, category: 'exterior' }
-        ],
-        entry_security: [
-          { id: 9, item: "Unlock and enter property, handle alarm system", completed: false, photos: [], notes: "", required: true, category: 'entry_security' },
-          { id: 10, item: "Quick walk-through to check for obvious issues", completed: false, photos: [], notes: "", required: true, category: 'entry_security' },
-          { id: 11, item: "Verify all windows/doors show secure on alarm panel", completed: false, photos: [], notes: "", required: true, category: 'entry_security' }
-        ],
-        interior: [
-          { id: 12, item: "Check main living room, family room, dining room", completed: false, photos: [], notes: "", required: true, category: 'interior' },
-          { id: 13, item: "Run water at sink, check appliances, look for leaks", completed: false, photos: [], notes: "", required: true, category: 'interior' },
-          { id: 14, item: "Run water at all sinks, flush toilets, check for leaks", completed: false, photos: [], notes: "", required: true, category: 'interior' },
-          { id: 15, item: "Enter all bedrooms, check windows, general condition", completed: false, photos: [], notes: "", required: true, category: 'interior' },
-          { id: 16, item: "Check basement, utility room, water heater, HVAC", completed: false, photos: [], notes: "", required: true, category: 'interior' },
-          { id: 17, item: "Test 3-4 light switches, check smoke detector lights", completed: false, photos: [], notes: "", required: true, category: 'interior' },
-          { id: 18, item: "Check thermostat, note temperature, adjust if needed", completed: false, photos: [], notes: "", required: true, category: 'interior' },
-          { id: 19, item: "Water plants per owner instructions", completed: false, photos: [], notes: "", required: false, category: 'interior' },
-          { id: 20, item: "Open/close different curtains, move items for lived-in look", completed: false, photos: [], notes: "", required: false, category: 'interior' }
-        ],
-        final_steps: [
-          { id: 21, item: "Take one final photo of main living area before leaving", completed: false, photos: [], notes: "", required: true, category: 'final_steps' },
-          { id: 22, item: "Turn off unnecessary lights, rearm alarm system", completed: false, photos: [], notes: "", required: true, category: 'final_steps' },
-          { id: 23, item: "Ensure all doors locked, test locks from outside", completed: false, photos: [], notes: "", required: true, category: 'final_steps' },
-          { id: 24, item: "Take final exterior photo showing property secured", completed: false, photos: [], notes: "", required: true, category: 'final_steps' }
-        ]
-      };
-      setChecklistItems(fallbackData);
+      setIsLoading(true);
+      
+      // Fetch active home check template from database
+      const { data: templates, error } = await supabase
+        .from('check_templates')
+        .select(`
+          *,
+          sections:check_template_sections(
+            *,
+            items:check_template_items(*)
+          )
+        `)
+        .eq('type', 'home_check')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (templates && templates.length > 0) {
+        const template = templates[0];
+        const dynamicData: HomeCheckData = {
+          exterior: [],
+          entry_security: [],
+          interior: [],
+          final_steps: []
+        };
+
+        // Map database sections to our structure
+        const sectionMapping: { [key: string]: keyof HomeCheckData } = {
+          'exterior': 'exterior',
+          'entry & security': 'entry_security',
+          'interior': 'interior', 
+          'final steps': 'final_steps'
+        };
+
+        template.sections?.forEach((section: any) => {
+          const sectionKey = sectionMapping[section.name.toLowerCase()] || 'exterior';
+          
+          section.items?.forEach((item: any, index: number) => {
+            dynamicData[sectionKey].push({
+              id: parseInt(item.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number for compatibility
+              item: item.item_text,
+              completed: false,
+              photos: [],
+              notes: "",
+              required: item.is_required,
+              category: sectionKey,
+              issuesFound: false
+            });
+          });
+        });
+
+        console.log('Loaded dynamic template data:', dynamicData);
+        setChecklistItems(dynamicData);
+      } else {
+        // Fallback to default data if no template found
+        console.log('No template found, using fallback data');
+        setChecklistItems(DEFAULT_CHECKLIST_DATA);
+      }
     } catch (error) {
-      console.error('Error initializing checklist:', error);
+      console.error('Error loading template:', error);
+      // Use default fallback data on error
       setChecklistItems(DEFAULT_CHECKLIST_DATA);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -385,16 +412,22 @@ export const useHomeCheck = (propertyId?: string) => {
     }
   }, [sessionId, startTime, checklistItems, weather, overallCondition, weatherImpact, nextVisitDate, getTotalIssuesFound, getTotalPhotos, toast]);
 
-  // Auto-save every 30 seconds when changes are made
-  useEffect(() => {
-    if (hasUnsavedChanges && sessionId) {
-      const autoSaveTimer = setTimeout(() => {
-        saveHomeCheckData();
-      }, 30000); // 30 seconds
 
-      return () => clearTimeout(autoSaveTimer);
+  // Auto-save effect - save every 30 seconds if there are unsaved changes
+  useEffect(() => {
+    let autoSaveInterval: NodeJS.Timeout;
+    
+    if (sessionStarted && hasUnsavedChanges && sessionId) {
+      autoSaveInterval = setInterval(async () => {
+        console.log('Auto-saving home check data...');
+        await saveHomeCheckData();
+      }, 30000); // Save every 30 seconds
     }
-  }, [hasUnsavedChanges, sessionId, saveHomeCheckData]);
+    
+    return () => {
+      if (autoSaveInterval) clearInterval(autoSaveInterval);
+    };
+  }, [sessionStarted, hasUnsavedChanges, sessionId, saveHomeCheckData]);
 
   return {
     checklistItems,
