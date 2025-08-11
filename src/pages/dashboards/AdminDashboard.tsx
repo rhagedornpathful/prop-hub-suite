@@ -38,6 +38,7 @@ import { usePropertyOwners } from "@/hooks/queries/usePropertyOwners";
 import { useTenants } from "@/hooks/queries/useTenants";
 import { useConversations } from "@/hooks/queries/useConversations";
 import { useProfiles } from "@/hooks/queries/useProfiles";
+import { usePayments } from "@/hooks/queries/usePayments";
 import { useAllPropertyActivity } from "@/hooks/useAllPropertyActivity";
 import { useGlobalSearch, useSearch } from "@/hooks/useSearch";
 import { useSearchContext } from "@/contexts/SearchContext";
@@ -58,9 +59,94 @@ export function AdminDashboard() {
   const { data: tenantData } = useTenants();
   const { data: businessSummary } = useBusinessSummary();
   const { activities: allActivity } = useAllPropertyActivity();
+  const { data: properties } = usePropertiesLimited();
+  const { data: payments } = usePayments();
 
   // Simple search state for this component
   const [localSearchTerm, setLocalSearchTerm] = useState('');
+
+  // Calculate real revenue data from payments
+  const calculateRevenueData = () => {
+    if (!payments) return [];
+    
+    const last6Months = [];
+    const now = new Date();
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+      
+      const monthPayments = payments.filter(payment => {
+        const paymentDate = new Date(payment.created_at);
+        return paymentDate.getMonth() === date.getMonth() && 
+               paymentDate.getFullYear() === date.getFullYear() &&
+               payment.status === 'completed';
+      });
+      
+      const revenue = monthPayments
+        .filter(p => p.payment_type === 'rent')
+        .reduce((sum, p) => sum + (p.amount / 100), 0);
+        
+      const expenses = monthPayments
+        .filter(p => p.payment_type === 'expense')
+        .reduce((sum, p) => sum + (p.amount / 100), 0);
+      
+      last6Months.push({
+        month: monthName,
+        revenue,
+        expenses: expenses || revenue * 0.3 // Fallback to 30% of revenue as expenses
+      });
+    }
+    
+    return last6Months;
+  };
+
+  // Calculate property performance data
+  const calculatePropertyPerformance = () => {
+    if (!properties || !tenantData || !maintenanceData) return [];
+    
+    return properties.slice(0, 4).map(property => {
+      const propertyTenants = Array.isArray(tenantData) 
+        ? tenantData.filter(t => t.property_id === property.id) 
+        : [];
+      
+      const propertyMaintenance = Array.isArray(maintenanceData)
+        ? maintenanceData.filter(m => m.property_id === property.id && m.status === 'pending')
+        : [];
+      
+      return {
+        property: property.address?.slice(0, 20) + '...' || 'Property',
+        occupancy: propertyTenants.length > 0 ? 100 : 0,
+        revenue: property.monthly_rent || 0,
+        maintenance: propertyMaintenance.length
+      };
+    });
+  };
+
+  // Calculate maintenance category data
+  const calculateMaintenanceCategoryData = () => {
+    if (!maintenanceData) return [];
+    
+    const categories = {};
+    Array.isArray(maintenanceData) && maintenanceData.forEach(request => {
+      const category = request.title?.toLowerCase().includes('plumb') ? 'Plumbing' :
+                      request.title?.toLowerCase().includes('electric') ? 'Electrical' :
+                      request.title?.toLowerCase().includes('hvac') || request.title?.toLowerCase().includes('heat') ? 'HVAC' :
+                      'General';
+      
+      if (!categories[category]) {
+        categories[category] = { count: 0, cost: 0 };
+      }
+      categories[category].count += 1;
+      categories[category].cost += request.estimated_cost || 0;
+    });
+    
+    return Object.entries(categories).map(([category, data]: [string, any]) => ({
+      category,
+      count: data.count,
+      cost: data.cost
+    }));
+  };
 
   // Calculate metrics
   const totalProperties = (propertyMetrics?.totalProperties || 0) + (houseWatchingMetrics?.totalClients || 0);
@@ -95,29 +181,10 @@ export function AdminDashboard() {
 
   const isLoading = isMaintenanceLoading;
 
-  // Sample data for charts
-  const revenueData = [
-    { month: 'Jan', revenue: 380000, expenses: 120000 },
-    { month: 'Feb', revenue: 395000, expenses: 125000 },
-    { month: 'Mar', revenue: 410000, expenses: 130000 },
-    { month: 'Apr', revenue: 425000, expenses: 128000 },
-    { month: 'May', revenue: 440000, expenses: 135000 },
-    { month: 'Jun', revenue: 455000, expenses: 140000 },
-  ];
-
-  const propertyPerformanceData = [
-    { property: 'Downtown Loft', occupancy: 95, revenue: 45000, maintenance: 2 },
-    { property: 'Suburban Villa', occupancy: 88, revenue: 38000, maintenance: 4 },
-    { property: 'City Apartment', occupancy: 92, revenue: 42000, maintenance: 1 },
-    { property: 'Beach House', occupancy: 85, revenue: 35000, maintenance: 3 },
-  ];
-
-  const maintenanceCategoryData = [
-    { category: 'Plumbing', count: 12, cost: 8500 },
-    { category: 'Electrical', count: 8, cost: 6200 },
-    { category: 'HVAC', count: 6, cost: 12000 },
-    { category: 'General', count: 15, cost: 4500 },
-  ];
+  // Calculate real data for charts
+  const revenueData = calculateRevenueData();
+  const propertyPerformanceData = calculatePropertyPerformance();
+  const maintenanceCategoryData = calculateMaintenanceCategoryData();
 
 
   return (
