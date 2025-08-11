@@ -5,6 +5,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,7 +33,9 @@ import {
   Edit3,
   Save,
   X,
-  Loader2
+  Loader2,
+  KeyRound,
+  AlertTriangle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -66,6 +78,9 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
   });
   const [propertyCount, setPropertyCount] = useState(0);
   const [tenantInfo, setTenantInfo] = useState<any>(null);
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -275,6 +290,52 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const handlePasswordReset = async (resetType: 'reset_link' | 'set_password') => {
+    if (!user) return;
+
+    setPasswordResetLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('reset-user-password', {
+        body: {
+          userId: resetType === 'reset_link' ? user.email : user.id,
+          resetType,
+          newPassword: resetType === 'set_password' ? newPassword : undefined
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: resetType === 'reset_link' ? "Reset Link Sent" : "Password Updated",
+        description: resetType === 'reset_link' 
+          ? "Password reset link has been sent to the user's email" 
+          : "User password has been successfully updated",
+      });
+
+      setShowPasswordResetDialog(false);
+      setNewPassword('');
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Reset Failed",
+        description: error.message || "Failed to reset password",
+        variant: "destructive"
+      });
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
+
+  const generateRandomPassword = () => {
+    const length = 12;
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    setNewPassword(password);
   };
 
   if (!user) return null;
@@ -553,9 +614,107 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
                 )}
               </CardContent>
             </Card>
+
+            {/* Password Management Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <KeyRound className="h-5 w-5" />
+                  Password Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Reset or change the user's password
+                </p>
+                <div className="space-y-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => handlePasswordReset('reset_link')}
+                    disabled={passwordResetLoading}
+                  >
+                    {passwordResetLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Mail className="h-4 w-4 mr-2" />
+                    )}
+                    Send Reset Link
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => setShowPasswordResetDialog(true)}
+                    disabled={passwordResetLoading}
+                  >
+                    <AlertTriangle className="h-4 w-4 mr-2" />
+                    Set New Password
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </DialogContent>
+
+      {/* Password Reset Dialog */}
+      <AlertDialog open={showPasswordResetDialog} onOpenChange={setShowPasswordResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              Set New Password
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Set a new password for {user?.first_name} {user?.last_name}. 
+              The user will be able to sign in immediately with this new password.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <Label htmlFor="new-password">New Password</Label>
+            <div className="flex gap-2 mt-2">
+              <Input
+                id="new-password"
+                type="text"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter new password"
+                className="flex-1"
+              />
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={generateRandomPassword}
+                title="Generate random password"
+              >
+                <KeyRound className="h-4 w-4" />
+              </Button>
+            </div>
+            {newPassword && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Password length: {newPassword.length} characters
+              </p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => handlePasswordReset('set_password')}
+              disabled={!newPassword.trim() || passwordResetLoading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {passwordResetLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <KeyRound className="h-4 w-4 mr-2" />
+              )}
+              Set Password
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
