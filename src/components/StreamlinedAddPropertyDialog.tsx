@@ -178,12 +178,13 @@ export function StreamlinedAddPropertyDialog({
       if (data?.success && data?.propertyData) {
         console.log('Property data found, updating state:', data.propertyData);
         
-        // Map Zillow fields to our database fields
+        // Map Zillow fields to our database fields - exclude price field
+        const { price, ...zillowDataWithoutPrice } = data.propertyData;
         const mappedData = {
           ...propertyData,
-          ...data.propertyData,
+          ...zillowDataWithoutPrice,
           address: data.propertyData.address || propertyData.address,
-          estimated_value: data.propertyData.price || data.propertyData.estimated_value, // Map price to estimated_value
+          estimated_value: price || data.propertyData.estimated_value, // Map price to estimated_value
           monthly_rent: data.propertyData.rent_estimate || data.propertyData.monthly_rent,
         };
         
@@ -241,7 +242,7 @@ export function StreamlinedAddPropertyDialog({
 
       console.log('Saving property with data:', propertyData);
 
-      // Extract owner_id before sending to database
+      // Extract owner_id and any extra fields before sending to database
       const { owner_id, ...propertyDataWithoutOwnerId } = propertyData;
 
       console.log('Property data without owner_id:', propertyDataWithoutOwnerId);
