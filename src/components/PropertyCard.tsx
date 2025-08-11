@@ -233,7 +233,14 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
             </CardTitle>
             <div className="flex items-center gap-1 mt-1">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-gray-600">{property.displayAddress}</span>
+              <span className="text-sm text-gray-600">
+                {property.displayAddress || 
+                 (isPropertyManagement && propertyManagementData ? 
+                   [propertyManagementData.city, propertyManagementData.state, propertyManagementData.zip_code]
+                     .filter(Boolean).join(', ') :
+                   property.displayAddress
+                 )}
+              </span>
             </div>
             <div className="flex items-center gap-1 mt-1 text-muted-foreground hover:text-primary transition-colors">
               <UserCheck className="h-3 w-3" />
