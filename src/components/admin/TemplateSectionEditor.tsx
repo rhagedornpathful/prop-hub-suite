@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, GripVertical } from 'lucide-react';
 import { useCreateCheckTemplateSection, useCreateCheckTemplateItem, useUpdateCheckTemplateSection, useDeleteCheckTemplateSection, useUpdateCheckTemplateItem, useDeleteCheckTemplateItem } from '@/hooks/queries/useCheckTemplates';
-import { useDrag } from '@use-gesture/react';
 
 interface TemplateSectionEditorProps {
   template: any;
@@ -177,51 +176,40 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
     });
   };
 
-  const getSectionDragProps = (section: any, index: number) => {
-    return useDrag(
-      ({ active, movement: [, my], memo = index }) => {
-        console.log('Section drag:', { active, my, memo, index });
-        if (active && Math.abs(my) > 30) {
-          const newIndex = Math.max(0, Math.min(template.sections.length - 1, 
-            memo + Math.round(my / 80)));
-          console.log('Calculated new index:', newIndex, 'current:', index);
-          if (newIndex !== index) {
-            reorderSections(index, newIndex);
-            return newIndex;
-          }
-        }
-        return memo;
-      },
-      {
-        from: () => [0, 0],
-        bounds: { top: -index * 80, bottom: (template.sections.length - index - 1) * 80 }
-      }
-    )();
+  // Simple drag handlers
+  const handleDragStart = (e: React.DragEvent, type: 'section' | 'item', id: string, index: number) => {
+    console.log('Drag start:', { type, id, index });
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type, id, index }));
+    e.dataTransfer.effectAllowed = 'move';
   };
 
-  const getItemDragProps = (item: any, sectionId: string, index: number) => {
-    const section = template.sections?.find((s: any) => s.id === sectionId);
-    const itemCount = section?.items?.length || 0;
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, type: 'section' | 'item', targetIndex: number, sectionId?: string) => {
+    e.preventDefault();
+    console.log('Drop event:', { type, targetIndex, sectionId });
     
-    return useDrag(
-      ({ active, movement: [, my], memo = index }) => {
-        console.log('Item drag:', { active, my, memo, index, itemId: item.id });
-        if (active && Math.abs(my) > 30) {
-          const newIndex = Math.max(0, Math.min(itemCount - 1, 
-            memo + Math.round(my / 60)));
-          console.log('Calculated new item index:', newIndex, 'current:', index);
-          if (newIndex !== index) {
-            reorderItems(sectionId, index, newIndex);
-            return newIndex;
-          }
+    try {
+      const dragData = JSON.parse(e.dataTransfer.getData('text/plain'));
+      console.log('Drag data:', dragData);
+      
+      if (dragData.type === 'item' && type === 'item' && sectionId) {
+        if (dragData.index !== targetIndex) {
+          console.log('Reordering items from', dragData.index, 'to', targetIndex);
+          reorderItems(sectionId, dragData.index, targetIndex);
         }
-        return memo;
-      },
-      {
-        from: () => [0, 0],
-        bounds: { top: -index * 60, bottom: (itemCount - index - 1) * 60 }
+      } else if (dragData.type === 'section' && type === 'section') {
+        if (dragData.index !== targetIndex) {
+          console.log('Reordering sections from', dragData.index, 'to', targetIndex);
+          reorderSections(dragData.index, targetIndex);
+        }
       }
-    )();
+    } catch (error) {
+      console.error('Error parsing drag data:', error);
+    }
   };
 
   console.log('Template in TemplateSectionEditor:', template);
@@ -274,7 +262,6 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
 
       <div className="space-y-4">
         {template.sections?.map((section: any, sectionIndex: number) => {
-          const sectionDragProps = getSectionDragProps(section, sectionIndex);
           return (
             <Card key={section.id} className="touch-none">
               <CardHeader className="pb-3">
@@ -297,8 +284,14 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2">
-                    <div {...sectionDragProps} className="cursor-grab active:cursor-grabbing">
+                  <div 
+                    className="flex items-center gap-2"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, 'section', section.id, sectionIndex)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, 'section', sectionIndex)}
+                  >
+                    <div className="cursor-grab active:cursor-grabbing">
                       <GripVertical className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div className="flex-1">
@@ -319,9 +312,15 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
               </CardHeader>
             <CardContent className="space-y-3">
               {section.items?.sort((a: any, b: any) => a.sort_order - b.sort_order).map((item: any, itemIndex: number) => {
-                const itemDragProps = getItemDragProps(item, section.id, itemIndex);
                 return (
-                  <div key={item.id} className="border rounded p-2 touch-none">
+                  <div 
+                    key={item.id} 
+                    className="border rounded p-2 touch-none"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, 'item', item.id, itemIndex)}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, 'item', itemIndex, section.id)}
+                  >
                     {editingItem === item.id ? (
                       <div className="space-y-2">
                         <Input
@@ -343,7 +342,7 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
-                        <div {...itemDragProps} className="cursor-grab active:cursor-grabbing">
+                        <div className="cursor-grab active:cursor-grabbing">
                           <GripVertical className="h-4 w-4 text-muted-foreground" />
                         </div>
                         <span className="flex-1">{item.item_text}</span>
