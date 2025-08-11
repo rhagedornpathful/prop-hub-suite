@@ -96,8 +96,8 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
         >
           {/* Sidebar Panel */}
           <ResizablePanel
-            defaultSize={sidebarCollapsed ? 5 : 20}
-            minSize={5}
+            defaultSize={sidebarCollapsed ? 3 : 20}
+            minSize={3}
             maxSize={30}
             className="min-w-0"
           >
