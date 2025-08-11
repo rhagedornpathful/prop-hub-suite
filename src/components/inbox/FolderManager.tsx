@@ -46,13 +46,7 @@ export const FolderManager: React.FC<FolderManagerProps> = ({
   onFolderSelect,
 }) => {
   const { toast } = useToast();
-  const [folders, setFolders] = useState<CustomFolder[]>([
-    { id: 'urgent', name: 'Urgent', color: 'text-red-600', count: 3 },
-    { id: 'clients', name: 'Client Communications', color: 'text-blue-600', count: 12 },
-    { id: 'vendors', name: 'Vendor Relations', color: 'text-green-600', count: 5 },
-    { id: 'legal', name: 'Legal Documents', color: 'text-purple-600', count: 2 },
-    { id: 'finance', name: 'Financial', color: 'text-yellow-600', count: 7 },
-  ]);
+  const [folders, setFolders] = useState<CustomFolder[]>([]);
   
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editingFolder, setEditingFolder] = useState<string | null>(null);
