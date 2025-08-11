@@ -95,15 +95,34 @@ export function MobileTable({
           <div className="grid grid-cols-1 gap-2">
             {columns
               .filter(col => col.mobile !== false && col.key !== (columns.find(c => c.essential)?.key))
-              .slice(0, 3) // Limit to 3 additional fields on mobile
+              .slice(0, 4) // Increased to 4 additional fields on mobile
               .map((column) => (
                 <div key={column.key} className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">{column.label}:</span>
-                  <div className="text-sm font-medium">
+                  <span className="text-sm text-muted-foreground font-medium">
+                    {column.label}:
+                  </span>
+                  <div className="text-sm">
                     {column.render ? column.render(row[column.key], row) : row[column.key]}
                   </div>
                 </div>
               ))}
+            
+            {/* Additional contact info for users */}
+            {row.address && (
+              <div className="flex justify-between items-start">
+                <span className="text-sm text-muted-foreground font-medium">
+                  Address:
+                </span>
+                <div className="text-sm text-right max-w-48">
+                  {row.address}
+                  {row.city && row.state && (
+                    <div className="text-xs text-muted-foreground">
+                      {row.city}, {row.state} {row.zip_code}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Card Actions */}
@@ -285,11 +304,18 @@ export function UserMobileTable({
                 : 'No Name Set'
               }
             </div>
-            {user.phone && (
-              <div className="text-sm text-muted-foreground">
-                {user.phone}
-              </div>
-            )}
+            <div className="space-y-1">
+              {user.phone && (
+                <div className="text-sm text-muted-foreground flex items-center gap-1">
+                  📞 {user.phone}
+                </div>
+              )}
+              {user.company_name && (
+                <div className="text-sm text-muted-foreground">
+                  🏢 {user.company_name}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )
@@ -316,7 +342,7 @@ export function UserMobileTable({
       key: 'user_created_at',
       label: 'Joined',
       width: '15%',
-      mobile: false, // Hide on mobile to save space
+      mobile: true, // Show on mobile to help identify users
       render: (date) => formatDate(date)
     },
     {

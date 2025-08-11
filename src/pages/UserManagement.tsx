@@ -66,6 +66,8 @@ interface UserProfile {
   state?: string | null;
   zip_code?: string | null;
   company_name?: string | null;
+  email_confirmed_at?: string | null;
+  last_sign_in_at?: string | null;
 }
 
 const UserManagement = () => {
@@ -205,9 +207,9 @@ const UserManagement = () => {
       setLoading(true);
       setError(null);
       
-      console.log('📊 UserManagement: Querying profiles with user roles...');
+      console.log('📊 UserManagement: Querying profiles with auth users...');
       
-      // Query profiles and user_roles in a single optimized query
+      // Query profiles with a join to get real email from auth.users via admin query
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -224,53 +226,86 @@ const UserManagement = () => {
           created_at
         `)
         .order('created_at', { ascending: false })
-        .limit(100); // Limit to prevent timeout
+        .limit(100);
 
       if (profilesError) {
         console.error('❌ UserManagement: Fetch profiles error:', profilesError);
         throw profilesError;
       }
 
-      // Get user roles separately for better performance
+      // Get user roles separately
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id, role')
+        .select('user_id, role, created_at')
         .order('created_at', { ascending: false });
 
       if (rolesError) {
         console.error('❌ UserManagement: Fetch roles error:', rolesError);
-        // Don't throw - roles are optional
         console.warn('Continuing without roles data');
+      }
+
+      // Get actual user emails from edge function (for admin users)
+      let authUsersData: any[] = [];
+      if (isAdmin || isEmergencyMode) {
+        try {
+          const { data: authData, error: authError } = await supabase.functions.invoke('get-users-with-emails');
+          if (authError) {
+            console.error('❌ UserManagement: Error fetching auth users:', authError);
+          } else {
+            authUsersData = authData?.users || [];
+          }
+        } catch (authErr) {
+          console.warn('⚠️ UserManagement: Could not fetch auth users, showing without emails');
+        }
       }
 
       console.log('📊 UserManagement: Profiles fetched:', profilesData?.length || 0);
       console.log('📊 UserManagement: Roles fetched:', rolesData?.length || 0);
+      console.log('📊 UserManagement: Auth users fetched:', authUsersData.length);
       
-      // Create roles map for quick lookup
+      // Create lookup maps
       const rolesMap = new Map();
       rolesData?.forEach(role => {
-        rolesMap.set(role.user_id, role.role);
+        rolesMap.set(role.user_id, { role: role.role, created_at: role.created_at });
       });
 
-      // Transform data efficiently
-      const transformedUsers: UserProfile[] = profilesData?.map(profile => ({
-        id: profile.id,
-        user_id: profile.user_id,
-        email: `${profile.first_name?.toLowerCase() || 'user'}@company.com`, // Better mock email
-        first_name: profile.first_name || 'Unknown',
-        last_name: profile.last_name || 'User',
-        role: rolesMap.get(profile.user_id) || 'user',
-        user_created_at: profile.created_at || new Date().toISOString(),
-        role_created_at: profile.created_at || new Date().toISOString(),
-        phone: profile.phone || '',
-        address: profile.address || '',
-        city: profile.city || '',
-        state: profile.state || '',
-        zip_code: profile.zip_code || '',
-        company_name: profile.company_name || ''
-      })) || [];
+      const authUsersMap = new Map();
+      authUsersData.forEach(authUser => {
+        authUsersMap.set(authUser.id, { 
+          email: authUser.email, 
+          created_at: authUser.created_at,
+          email_confirmed_at: authUser.email_confirmed_at,
+          last_sign_in_at: authUser.last_sign_in_at
+        });
+      });
+
+      // Transform data with real information
+      const transformedUsers: UserProfile[] = profilesData?.map(profile => {
+        const roleInfo = rolesMap.get(profile.user_id);
+        const authInfo = authUsersMap.get(profile.user_id);
+        
+        return {
+          id: profile.id,
+          user_id: profile.user_id,
+          email: authInfo?.email || `${profile.first_name?.toLowerCase() || 'user'}.${profile.last_name?.toLowerCase() || 'user'}@system.local`,
+          first_name: profile.first_name || 'Unknown',
+          last_name: profile.last_name || 'User',
+          role: roleInfo?.role || null,
+          user_created_at: authInfo?.created_at || profile.created_at || new Date().toISOString(),
+          role_created_at: roleInfo?.created_at || null,
+          phone: profile.phone || null,
+          address: profile.address || null,
+          city: profile.city || null,
+          state: profile.state || null,
+          zip_code: profile.zip_code || null,
+          company_name: profile.company_name || null,
+          email_confirmed_at: authInfo?.email_confirmed_at,
+          last_sign_in_at: authInfo?.last_sign_in_at
+        };
+      }) || [];
       
       console.log('✅ UserManagement: Transformed users:', transformedUsers.length, 'users');
+      console.log('📊 Sample user data:', transformedUsers[0]);
       setUsers(transformedUsers);
     } catch (error) {
       console.error('❌ UserManagement: Error fetching users:', error);
