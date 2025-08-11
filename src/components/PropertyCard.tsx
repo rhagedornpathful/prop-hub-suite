@@ -48,6 +48,9 @@ interface UnifiedPropertyData {
   displayAddress?: string;
   status: string | null;
   images?: string[] | null;
+  city?: string;
+  state?: string;
+  zip_code?: string;
   
   // Property Management specific
   propertyData?: PropertyWithRelations;
@@ -230,25 +233,45 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
               {(() => {
-                // Clean the address to show only street address (remove city if present)
-                const address = property.address;
-                if (isPropertyManagement && propertyManagementData?.city) {
-                  const city = propertyManagementData.city;
-                  // Remove city from the end of address if present
-                  return address.replace(new RegExp(`,?\\s*${city}\\s*$`, 'i'), '').trim();
-                }
-                return address;
+                console.log('PropertyCard Debug:', {
+                  address: property.address,
+                  isPropertyManagement,
+                  propertyData: isPropertyManagement ? propertyManagementData : null,
+                  city: isPropertyManagement ? propertyManagementData?.city : 'N/A'
+                });
+                
+                // Always clean the address to show only street address
+                let cleanAddress = property.address;
+                
+                // Try to remove city from various possible sources
+                const possibleCities = [
+                  isPropertyManagement ? propertyManagementData?.city : null,
+                  property.city, // Direct city field
+                  // Extract city from address pattern like "Street, City"
+                  property.address.includes(',') ? property.address.split(',').pop()?.trim() : null
+                ].filter(Boolean);
+                
+                // Remove any of these cities from the end of the address
+                possibleCities.forEach(city => {
+                  if (city) {
+                    cleanAddress = cleanAddress.replace(new RegExp(`,?\\s*${city}\\s*$`, 'i'), '').trim();
+                  }
+                });
+                
+                return cleanAddress;
               })()}
             </CardTitle>
             <div className="flex items-center gap-1 mt-1">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-gray-600">
-                {property.displayAddress || 
-                 (isPropertyManagement && propertyManagementData ? 
-                   [propertyManagementData.city, propertyManagementData.state, propertyManagementData.zip_code]
-                     .filter(Boolean).join(', ') :
-                   property.displayAddress
-                 )}
+                {(() => {
+                  // Always show full city, state, zip format
+                  const city = isPropertyManagement ? propertyManagementData?.city : property.city;
+                  const state = isPropertyManagement ? propertyManagementData?.state : property.state;
+                  const zip = isPropertyManagement ? propertyManagementData?.zip_code : property.zip_code;
+                  
+                  return [city, state, zip].filter(Boolean).join(', ') || property.displayAddress || '';
+                })()}
               </span>
             </div>
             <div className="flex items-center gap-1 mt-1 text-muted-foreground hover:text-primary transition-colors">
