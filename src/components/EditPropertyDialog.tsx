@@ -148,14 +148,38 @@ export function EditPropertyDialog({ open, onOpenChange, property, onPropertyUpd
       return;
     }
 
-    console.log('Updating property with data:', propertyData);
+    // Clean the data - remove empty strings and convert to null where appropriate
+    const cleanedData = {
+      address: propertyData.address.trim(),
+      street_address: propertyData.street_address?.trim() || null,
+      city: propertyData.city?.trim() || null,
+      state: propertyData.state?.trim() || null,
+      zip_code: propertyData.zip_code?.trim() || null,
+      property_type: propertyData.property_type || null,
+      service_type: propertyData.service_type || 'property_management',
+      bedrooms: propertyData.bedrooms || null,
+      bathrooms: propertyData.bathrooms || null,
+      square_feet: propertyData.square_feet || null,
+      lot_size: propertyData.lot_size?.trim() || null,
+      year_built: propertyData.year_built || null,
+      estimated_value: propertyData.estimated_value || null,
+      monthly_rent: propertyData.monthly_rent || null,
+      home_value_estimate: propertyData.home_value_estimate || null,
+      rent_estimate: propertyData.rent_estimate || null,
+      description: propertyData.description?.trim() || null,
+      gate_code: propertyData.gate_code?.trim() || null,
+      images: propertyData.images || null,
+      amenities: propertyData.amenities || null,
+    };
+
+    console.log('Updating property with cleaned data:', cleanedData);
     console.log('Property ID:', property.id);
 
     setIsSaving(true);
     try {
       updateProperty.mutate({
         id: property.id,
-        updates: propertyData
+        updates: cleanedData
       }, {
         onSuccess: () => {
           toast({
