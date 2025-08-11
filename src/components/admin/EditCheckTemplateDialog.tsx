@@ -92,17 +92,17 @@ export const EditCheckTemplateDialog = ({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Template Name</Label>
-                 <Input
-                   id="name"
-                   value={formData.name}
-                   onChange={(e) => handleChange('name', e.target.value)}
-                   placeholder="Enter template name"
-                   required
-                   className={!formData.name.trim() && formData.name.length > 0 ? 'border-destructive' : ''}
-                 />
-                 {!formData.name.trim() && formData.name.length > 0 && (
-                   <p className="text-sm text-destructive">Template name is required</p>
-                 )}
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleChange('name', e.target.value)}
+                  placeholder="Enter template name"
+                  required
+                  className={!formData.name.trim() && formData.name.length > 0 ? 'border-destructive' : ''}
+                />
+                {!formData.name.trim() && formData.name.length > 0 && (
+                  <p className="text-sm text-destructive">Template name is required</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -129,21 +129,34 @@ export const EditCheckTemplateDialog = ({
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
-                 <Button 
-                   type="submit" 
-                   disabled={updateTemplateMutation.isPending || !formData.name.trim()}
-                 >
-                   {updateTemplateMutation.isPending ? 'Updating...' : 'Update Template'}
-                 </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateTemplateMutation.isPending || !formData.name.trim()}
+                >
+                  {updateTemplateMutation.isPending ? 'Updating...' : 'Update Template'}
+                </Button>
               </div>
             </form>
           </TabsContent>
 
-          <TabsContent value="sections">
+          <TabsContent value="sections" className="space-y-4">
             {isLoading ? (
               <div className="flex justify-center p-8">Loading sections...</div>
             ) : (
-              <TemplateSectionEditor template={fullTemplate} />
+              <>
+                <TemplateSectionEditor template={fullTemplate} />
+                <div className="flex gap-2 pt-4 border-t bg-muted/30 p-4 rounded-lg">
+                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={() => onOpenChange(false)}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    Save Changes
+                  </Button>
+                </div>
+              </>
             )}
           </TabsContent>
         </Tabs>
