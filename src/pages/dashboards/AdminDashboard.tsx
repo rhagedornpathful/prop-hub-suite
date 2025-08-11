@@ -51,19 +51,27 @@ import { AdminOverviewCards, AdminAlertCenter, AdminRecentActivity } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 
+import { AdminDashboardSkeleton } from "@/components/admin/AdminDashboardSkeleton";
+import { AdminErrorBoundary, DashboardSectionErrorBoundary } from "@/components/admin/AdminErrorBoundary";
+
 export function AdminDashboard() {
   // Fetch real data from all sources
-  const { data: propertyMetrics } = usePropertyMetrics();
-  const { data: houseWatchingMetrics } = useHouseWatchingMetrics();
+  const { data: propertyMetrics, isLoading: isPropertyMetricsLoading } = usePropertyMetrics();
+  const { data: houseWatchingMetrics, isLoading: isHouseWatchingLoading } = useHouseWatchingMetrics();
   const { data: maintenanceData, isLoading: isMaintenanceLoading } = useMaintenanceRequests();
-  const { data: tenantData } = useTenants();
-  const { data: businessSummary } = useBusinessSummary();
+  const { data: tenantData, isLoading: isTenantsLoading } = useTenants();
+  const { data: businessSummary, isLoading: isBusinessSummaryLoading } = useBusinessSummary();
   const { activities: allActivity } = useAllPropertyActivity();
-  const { data: properties } = usePropertiesLimited();
-  const { data: payments } = usePayments();
+  const { data: properties, isLoading: isPropertiesLoading } = usePropertiesLimited();
+  const { data: payments, isLoading: isPaymentsLoading } = usePayments();
 
   // Simple search state for this component
   const [localSearchTerm, setLocalSearchTerm] = useState('');
+
+  // Check if any critical data is still loading
+  const isLoading = isPropertyMetricsLoading || isHouseWatchingLoading || 
+                   isMaintenanceLoading || isTenantsLoading || 
+                   isBusinessSummaryLoading || isPropertiesLoading || isPaymentsLoading;
 
   // Calculate real revenue data from payments
   const calculateRevenueData = () => {
@@ -179,7 +187,10 @@ export function AdminDashboard() {
     ? allActivity.slice(0, 10)
     : [];
 
-  const isLoading = isMaintenanceLoading;
+  // Show loading skeleton while data is being fetched
+  if (isLoading) {
+    return <AdminDashboardSkeleton />;
+  }
 
   // Calculate real data for charts
   const revenueData = calculateRevenueData();
@@ -188,7 +199,8 @@ export function AdminDashboard() {
 
 
   return (
-    <div className="flex-1 space-y-8 p-6 bg-gradient-to-br from-background to-muted/20">
+    <AdminErrorBoundary>
+      <div className="flex-1 space-y-8 p-6 bg-gradient-to-br from-background to-muted/20">
       {/* Command Center Header */}
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
@@ -200,7 +212,9 @@ export function AdminDashboard() {
       </div>
 
       {/* Executive Overview */}
-      <AdminOverviewCards />
+      <DashboardSectionErrorBoundary sectionName="Overview Cards">
+        <AdminOverviewCards />
+      </DashboardSectionErrorBoundary>
 
       {/* Real-time Operations Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -353,10 +367,14 @@ export function AdminDashboard() {
 
         {/* Right Sidebar - Recent Activity, System Alerts & System Status */}
         <div className="space-y-6">
-          <AdminRecentActivity />
+          <DashboardSectionErrorBoundary sectionName="Recent Activity">
+            <AdminRecentActivity />
+          </DashboardSectionErrorBoundary>
           
           {/* System Alerts - Moved from main content to sidebar */}
-          <AdminAlertCenter />
+          <DashboardSectionErrorBoundary sectionName="System Alerts">
+            <AdminAlertCenter />
+          </DashboardSectionErrorBoundary>
           
           {/* System Status */}
           <Card>
@@ -400,5 +418,6 @@ export function AdminDashboard() {
         </div>
       </div>
     </div>
+    </AdminErrorBoundary>
   );
 }
