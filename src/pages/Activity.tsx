@@ -187,16 +187,16 @@ export default function Activity() {
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="w-5 h-5" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Filter className="w-4 h-4" />
             Filters
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-4 mb-4">
+        <CardContent className="pt-0">
+          <div className="grid gap-3 md:grid-cols-4 mb-3">
             <Select value={filters.activityType} onValueChange={(value) => handleFilterChange('activityType', value)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-9">
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border z-50">
@@ -209,7 +209,7 @@ export default function Activity() {
             </Select>
             
             <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-9">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border z-50">
@@ -223,7 +223,7 @@ export default function Activity() {
             </Select>
             
             <Select value={filters.propertyType} onValueChange={(value) => handleFilterChange('propertyType', value)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-9">
                 <SelectValue placeholder="All Properties" />
               </SelectTrigger>
               <SelectContent className="bg-background border border-border z-50">
@@ -235,49 +235,51 @@ export default function Activity() {
               </SelectContent>
             </Select>
             
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="justify-start">
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  {filters.dateRange.from ? (
-                    filters.dateRange.to ? (
-                      <>
-                        {format(filters.dateRange.from, "LLL dd")} - {format(filters.dateRange.to, "LLL dd")}
-                      </>
+            <div className="flex gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="h-9 justify-start flex-1">
+                    <CalendarIcon className="w-4 h-4 mr-2" />
+                    {filters.dateRange.from ? (
+                      filters.dateRange.to ? (
+                        <>
+                          {format(filters.dateRange.from, "MMM dd")} - {format(filters.dateRange.to, "MMM dd")}
+                        </>
+                      ) : (
+                        format(filters.dateRange.from, "MMM dd, y")
+                      )
                     ) : (
-                      format(filters.dateRange.from, "LLL dd, y")
-                    )
-                  ) : (
-                    "Date Range"
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-background border border-border z-50" align="start">
-                <Calendar
-                  mode="range"
-                  selected={filters.dateRange}
-                  onSelect={(range) => handleFilterChange('dateRange', range || { from: undefined, to: undefined })}
-                  className={cn("p-3 pointer-events-auto")}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              onClick={() => setFilters({
-                search: '',
-                activityType: 'all',
-                status: 'all',
-                propertyType: 'all',
-                dateRange: { from: undefined, to: undefined },
-                assignedUser: 'all'
-              })}
-            >
-              Clear Filters
-            </Button>
+                      "Date Range"
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0 bg-background border border-border z-50" align="start">
+                  <Calendar
+                    mode="range"
+                    selected={filters.dateRange}
+                    onSelect={(range) => handleFilterChange('dateRange', range || { from: undefined, to: undefined })}
+                    className={cn("p-3 pointer-events-auto")}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9"
+                onClick={() => setFilters({
+                  search: '',
+                  activityType: 'all',
+                  status: 'all',
+                  propertyType: 'all',
+                  dateRange: { from: undefined, to: undefined },
+                  assignedUser: 'all'
+                })}
+              >
+                Clear
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
