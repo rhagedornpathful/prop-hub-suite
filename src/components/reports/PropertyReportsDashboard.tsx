@@ -38,7 +38,7 @@ export const PropertyReportsDashboard: React.FC<PropertyReportsDashboardProps> =
   const [reportType, setReportType] = useState<string>('financial');
   const [selectedProperty, setSelectedProperty] = useState<string>('all');
   
-  const { data: propertyData } = useProperties(1, 100);
+  const { data: propertyData } = useProperties(1, 50); // Reduced from 100 to 50 for performance
   const properties = propertyData?.properties || [];
   const { toast } = useToast();
 

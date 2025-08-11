@@ -19,7 +19,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useProperties } from '@/hooks/queries/useProperties';
-import { PropertyAnalyticsDashboard } from '@/components/PropertyAnalyticsDashboard';
+// Removed PropertyAnalyticsDashboard import as it's replaced with placeholder
 
 interface MobilePropertyDashboardProps {
   onPropertyClick?: (property: any) => void;
@@ -30,7 +30,7 @@ export const MobilePropertyDashboard: React.FC<MobilePropertyDashboardProps> = (
   onPropertyClick,
   onAddProperty
 }) => {
-  const { data: propertyData, isLoading } = useProperties(1, 100);
+  const { data: propertyData, isLoading } = useProperties(1, 50); // Reduced from 100 to 50 for performance
   const properties = propertyData?.properties || [];
   
   // Calculate quick stats

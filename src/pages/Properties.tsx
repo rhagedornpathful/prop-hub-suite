@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,7 +44,8 @@ import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { BulkManagementTools } from "@/components/BulkManagementTools";
 import { AdvancedSearchFilters } from "@/components/AdvancedSearchFilters";
 import { MobilePropertyDashboard } from "@/components/mobile/MobilePropertyDashboard";
-import { PropertyReportsDashboard } from "@/components/reports/PropertyReportsDashboard";
+// Lazy load heavy components for better performance
+const PropertyReportsDashboard = lazy(() => import("@/components/reports/PropertyReportsDashboard").then(module => ({default: module.PropertyReportsDashboard})));
 import { MobilePropertyActions } from "@/components/mobile/MobilePropertyActions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -65,7 +66,7 @@ const Properties = () => {
   const [showArchived, setShowArchived] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'reports'>('overview');
   
-  const { data: propertyData, isLoading, error, refetch } = useProperties(1, 100);
+  const { data: propertyData, isLoading, error, refetch } = useProperties(1, 50); // Reduced from 100 to 50 for performance
   const properties = propertyData?.properties || [];
   const deletePropertyMutation = useDeleteProperty();
   const updateProperty = useUpdateProperty();
@@ -227,7 +228,9 @@ const Properties = () => {
             onAddProperty={() => setShowAddProperty(true)}
           />
         ) : (
-          <PropertyReportsDashboard />
+          <Suspense fallback={<div className="flex items-center justify-center p-8">Loading reports...</div>}>
+            <PropertyReportsDashboard />
+          </Suspense>
         )}
 
         {/* Dialogs */}
@@ -307,7 +310,9 @@ const Properties = () => {
 
       {/* Desktop Content Tabs */}
       {activeTab === 'reports' ? (
-        <PropertyReportsDashboard />
+        <Suspense fallback={<div className="flex items-center justify-center p-8">Loading reports...</div>}>
+          <PropertyReportsDashboard />
+        </Suspense>
       ) : (
         <>
           {/* Summary Cards */}
