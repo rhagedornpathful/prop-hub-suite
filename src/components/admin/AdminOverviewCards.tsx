@@ -4,6 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { AlertTriangle, TrendingUp, Users, Building, Wrench, DollarSign, Activity, Clock } from 'lucide-react';
+import { usePropertyMetrics } from "@/hooks/queries/useProperties";
+import { useHouseWatchingMetrics } from "@/hooks/queries/useHouseWatching";
+import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
+import { useTenants } from "@/hooks/queries/useTenants";
+import { useBusinessSummary } from "@/hooks/queries/useBusinessSummary";
 
 interface QuickStat {
   label: string;
@@ -14,33 +19,48 @@ interface QuickStat {
 }
 
 export function AdminOverviewCards() {
+  // Fetch real data
+  const { data: propertyMetrics } = usePropertyMetrics();
+  const { data: houseWatchingMetrics } = useHouseWatchingMetrics();
+  const { data: maintenanceData } = useMaintenanceRequests();
+  const { data: tenantData } = useTenants();
+  const { data: businessSummary } = useBusinessSummary();
+
+  // Calculate real metrics
+  const totalProperties = (propertyMetrics?.totalProperties || 0) + (houseWatchingMetrics?.totalClients || 0);
+  const totalTenants = Array.isArray(tenantData) ? tenantData.length : 0;
+  const monthlyRevenue = ((propertyMetrics?.totalRent || 0) + (houseWatchingMetrics?.totalRevenue || 0));
+  const openRequests = Array.isArray(maintenanceData) 
+    ? maintenanceData.filter(m => m.status === 'pending' || m.status === 'in-progress').length 
+    : 0;
+
   const quickStats: QuickStat[] = [
     {
       label: 'Active Properties',
-      value: '1,247',
-      change: '+12%',
+      value: totalProperties.toString(),
+      change: businessSummary?.newRentalProperties ? `+${businessSummary.newRentalProperties}` : '+0',
       trend: 'up',
       icon: Building
     },
     {
       label: 'Total Tenants',
-      value: '2,891',
+      value: totalTenants.toString(),
       change: '+8%',
       trend: 'up',
       icon: Users
     },
     {
       label: 'Monthly Revenue',
-      value: '$425,000',
-      change: '+15%',
+      value: `$${monthlyRevenue.toLocaleString()}`,
+      change: businessSummary?.combinedRevenue ? `+$${businessSummary.combinedRevenue.toLocaleString()}` : '+0',
       trend: 'up',
       icon: DollarSign
     },
     {
       label: 'Open Requests',
-      value: '47',
-      change: '-23%',
-      trend: 'down',
+      value: openRequests.toString(),
+      change: openRequests > 0 ? `${openRequests} pending` : 'All clear',
+      trend: openRequests > 10 ? 'up' : 'down',
       icon: Wrench
     }
   ];
