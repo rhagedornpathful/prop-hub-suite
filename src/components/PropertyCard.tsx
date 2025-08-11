@@ -233,13 +233,6 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
               {(() => {
-                console.log('PropertyCard Debug:', {
-                  address: property.address,
-                  isPropertyManagement,
-                  propertyData: isPropertyManagement ? propertyManagementData : null,
-                  city: isPropertyManagement ? propertyManagementData?.city : 'N/A'
-                });
-                
                 // Always clean the address to show only street address
                 let cleanAddress = property.address;
                 
@@ -264,14 +257,7 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
             <div className="flex items-center gap-1 mt-1">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-gray-600">
-                {(() => {
-                  // Always show full city, state, zip format
-                  const city = isPropertyManagement ? propertyManagementData?.city : property.city;
-                  const state = isPropertyManagement ? propertyManagementData?.state : property.state;
-                  const zip = isPropertyManagement ? propertyManagementData?.zip_code : property.zip_code;
-                  
-                  return [city, state, zip].filter(Boolean).join(', ') || property.displayAddress || '';
-                })()}
+                {property.displayAddress || ''}
               </span>
             </div>
             <div className="flex items-center gap-1 mt-1 text-muted-foreground hover:text-primary transition-colors">

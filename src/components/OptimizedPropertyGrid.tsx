@@ -15,6 +15,9 @@ interface UnifiedPropertyData {
   displayAddress?: string;
   status: string | null;
   images?: string[] | null;
+  city?: string;
+  state?: string;
+  zip_code?: string;
   propertyData?: PropertyWithRelations;
   houseWatchingData?: HouseWatchingProperty;
 }
@@ -63,9 +66,12 @@ export function OptimizedPropertyGrid({
         id: property.id,
         type: determinedType,
         address: property.address,
-        displayAddress: `${property.city}, ${property.state}`,
+        displayAddress: [property.city, property.state, property.zip_code].filter(Boolean).join(', '),
         status: property.status,
         images: property.images,
+        city: property.city,
+        state: property.state,
+        zip_code: property.zip_code,
         propertyData: property.service_type !== 'house_watching' ? property : undefined,
         houseWatchingData: property.service_type === 'house_watching' ? {
           id: property.id,
