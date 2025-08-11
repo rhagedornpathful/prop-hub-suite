@@ -45,6 +45,8 @@ import { useToast } from "@/hooks/use-toast";
 import { BulkManagementTools } from "@/components/BulkManagementTools";
 import { AdvancedSearchFilters } from "@/components/AdvancedSearchFilters";
 import { MobilePropertyDashboard } from "@/components/mobile/MobilePropertyDashboard";
+import { EnterprisePropertyAudit } from "@/components/enterprise/EnterprisePropertyAudit";
+// Lazy load heavy components for better performance
 // Lazy load heavy components for better performance
 const PropertyReportsDashboard = lazy(() => import("@/components/reports/PropertyReportsDashboard").then(module => ({default: module.PropertyReportsDashboard})));
 import { MobilePropertyActions } from "@/components/mobile/MobilePropertyActions";
@@ -641,6 +643,9 @@ const Properties = () => {
               </div>
             )}
           </div>
+          
+          {/* Enterprise Security Audit */}
+          <EnterprisePropertyAudit />
         </>
       )}
 
