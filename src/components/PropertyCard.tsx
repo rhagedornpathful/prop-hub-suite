@@ -139,7 +139,8 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
     navigate(`/properties/${property.id}`);
   };
 
-  const handleEditProperty = () => {
+  const handleEditProperty = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isPropertyManagement) {
       setIsEditDialogOpen(true);
     } else {
@@ -150,7 +151,8 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
     }
   };
 
-  const handleDeleteProperty = () => {
+  const handleDeleteProperty = (e: React.MouseEvent) => {
+    e.stopPropagation();
     const title = isPropertyManagement ? "Delete Property" : "End Service";
     const description = isPropertyManagement 
       ? "Property deletion functionality coming soon!" 
@@ -263,11 +265,11 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule Property Check
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleEditProperty}>
+              <DropdownMenuItem onClick={(e) => handleEditProperty(e)}>
                 <Edit className="h-4 w-4 mr-2" />
                 {isPropertyManagement ? "Edit Property" : "Edit Service"}
               </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={handleDeleteProperty}>
+              <DropdownMenuItem className="text-destructive" onClick={(e) => handleDeleteProperty(e)}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 {isPropertyManagement ? "Delete Property" : "End Service"}
               </DropdownMenuItem>

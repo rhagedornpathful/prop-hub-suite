@@ -41,6 +41,7 @@ import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { StreamlinedAddPropertyDialog } from "@/components/StreamlinedAddPropertyDialog";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { useToast } from "@/hooks/use-toast";
 import { BulkManagementTools } from "@/components/BulkManagementTools";
 import { AdvancedSearchFilters } from "@/components/AdvancedSearchFilters";
 import { MobilePropertyDashboard } from "@/components/mobile/MobilePropertyDashboard";
@@ -73,12 +74,22 @@ const Properties = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Pull to refresh functionality
+  // Pull to refresh functionality with error handling
   const handleRefresh = async () => {
-    await refetch();
-    // Also invalidate related queries
-    queryClient.invalidateQueries({ queryKey: ['properties'] });
+    try {
+      await refetch();
+      // Also invalidate related queries
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+    } catch (error) {
+      console.error('Error refreshing properties:', error);
+      toast({
+        title: "Refresh Failed",
+        description: "Unable to refresh properties. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const pullToRefresh = usePullToRefresh({
@@ -143,24 +154,51 @@ const Properties = () => {
         await deletePropertyMutation.mutateAsync(propertyToDelete.id);
         setIsDeleteDialogOpen(false);
         setPropertyToDelete(null);
+        toast({
+          title: "Property Deleted",
+          description: "Property has been successfully deleted.",
+        });
       } catch (error) {
         console.error('Error deleting property:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete property. Please try again.",
+          variant: "destructive",
+        });
       }
     }
   };
   const handleArchiveProperty = async (property: any) => {
     try {
       await updateProperty.mutateAsync({ id: property.id, updates: { status: 'archived' } });
+      toast({
+        title: "Property Archived",
+        description: "Property has been successfully archived.",
+      });
     } catch (e) {
       console.error('Error archiving property:', e);
+      toast({
+        title: "Error",
+        description: "Failed to archive property. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleUnarchiveProperty = async (property: any) => {
     try {
       await updateProperty.mutateAsync({ id: property.id, updates: { status: 'active' } });
+      toast({
+        title: "Property Restored",
+        description: "Property has been successfully restored.",
+      });
     } catch (e) {
       console.error('Error unarchiving property:', e);
+      toast({
+        title: "Error",
+        description: "Failed to restore property. Please try again.",
+        variant: "destructive",
+      });
     }
   };
   if (error) {
@@ -171,7 +209,10 @@ const Properties = () => {
             <div className="text-center">
               <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-medium mb-2">Unable to Load Properties</h3>
-              <p className="text-muted-foreground">There was an error loading your properties.</p>
+              <p className="text-muted-foreground mb-4">There was an error loading your properties.</p>
+              <Button onClick={() => refetch()} variant="outline">
+                Try Again
+              </Button>
             </div>
           </CardContent>
         </Card>
