@@ -502,11 +502,12 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
                         <SelectContent>
                           <SelectItem value="admin">Admin</SelectItem>
                           <SelectItem value="property_manager">Property Manager</SelectItem>
-                          <SelectItem value="property_owner">Property Owner</SelectItem>
+                          <SelectItem value="owner_investor">Property Owner/Investor</SelectItem>
                           <SelectItem value="tenant">Tenant</SelectItem>
                           <SelectItem value="house_watcher">House Watcher</SelectItem>
                           <SelectItem value="contractor">Contractor</SelectItem>
-                          <SelectItem value="vendor">Vendor</SelectItem>
+                          <SelectItem value="leasing_agent">Leasing Agent</SelectItem>
+                          <SelectItem value="client">Client</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : (
