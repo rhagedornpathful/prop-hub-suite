@@ -352,56 +352,66 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
             </>
           ) : (
             <>
-              {/* House Watching Details */}
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Clock className="h-4 w-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <div className="text-lg font-semibold capitalize text-foreground">{houseWatchingData?.check_frequency}</div>
-                    <div className="text-sm text-muted-foreground">check frequency</div>
-                  </div>
-                </div>
-                {houseWatchingData?.monthly_fee && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <DollarSign className="h-4 w-4 text-green-600" />
-                    </div>
+              {/* House Watching Details - Consistent with Property Management Layout */}
+              <div className="grid grid-cols-2 gap-4">
+                {houseWatchingData?.check_frequency && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-primary" />
                     <div>
-                      <div className="text-lg font-semibold text-foreground">${houseWatchingData.monthly_fee}</div>
+                      <div className="text-base font-medium capitalize">{houseWatchingData.check_frequency}</div>
+                      <div className="text-sm text-muted-foreground">Check frequency</div>
+                    </div>
+                  </div>
+                )}
+                {houseWatchingData?.monthly_fee && (
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-success" />
+                    <div>
+                      <div className="text-base font-medium">${houseWatchingData.monthly_fee}</div>
                       <div className="text-sm text-muted-foreground">per month</div>
                     </div>
                   </div>
                 )}
               </div>
-              
-              {/* Check Status */}
-              <div className="bg-muted/30 rounded-lg p-4 space-y-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground">Last Check:</div>
-                    <div className="text-base font-semibold text-foreground">
+
+              {/* Check Schedule Information */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <div className="text-sm font-medium">
                       {houseWatchingData?.last_check_date ? new Date(houseWatchingData.last_check_date).toLocaleDateString() : "Not checked"}
                     </div>
+                    <div className="text-xs text-muted-foreground">Last check</div>
                   </div>
-                  <div className="space-y-1">
-                    <div className="text-sm font-medium text-muted-foreground">Next Check:</div>
-                    <div className={`text-base font-semibold ${
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <div className={`text-sm font-medium ${
                       houseWatchingData?.next_check_date && new Date(houseWatchingData.next_check_date) < new Date() 
                         ? 'text-destructive' 
                         : 'text-foreground'
                     }`}>
                       {houseWatchingData?.next_check_date ? new Date(houseWatchingData.next_check_date).toLocaleDateString() : "Not scheduled"}
-                      {houseWatchingData?.next_check_date && new Date(houseWatchingData.next_check_date) < new Date() && (
-                        <span className="block text-xs font-medium text-destructive mt-1">
-                          Overdue
-                        </span>
-                      )}
                     </div>
+                    <div className="text-xs text-muted-foreground">Next check</div>
                   </div>
                 </div>
               </div>
+
+              {/* Check Status Alert */}
+              {houseWatchingData?.next_check_date && new Date(houseWatchingData.next_check_date) < new Date() && (
+                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                  <AlertTriangle className="h-4 w-4 text-destructive" />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-destructive">Check Overdue</div>
+                    <div className="text-xs text-muted-foreground">
+                      Scheduled check is past due
+                    </div>
+                  </div>
+                </div>
+              )}
             </>
           )}
           
