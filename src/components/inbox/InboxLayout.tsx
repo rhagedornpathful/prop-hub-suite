@@ -74,6 +74,7 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
             size="sm"
             className="h-8 w-8 p-0"
             onClick={() => setLayoutDensity(layoutDensity === 'comfortable' ? 'compact' : 'comfortable')}
+            title={`Switch to ${layoutDensity === 'comfortable' ? 'compact' : 'comfortable'} layout`}
           >
             <SplitSquareHorizontal className="h-4 w-4" />
           </Button>
@@ -82,6 +83,11 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0"
+            onClick={() => {
+              // Toggle sidebar or open settings - for now let's make it toggle sidebar
+              setSidebarCollapsed(!sidebarCollapsed);
+            }}
+            title="Toggle sidebar"
           >
             <Settings className="h-4 w-4" />
           </Button>
