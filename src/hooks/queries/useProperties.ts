@@ -252,6 +252,9 @@ export const useUpdateProperty = () => {
 
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: PropertyUpdate }) => {
+      console.log('useUpdateProperty - Starting update for id:', id);
+      console.log('useUpdateProperty - Updates being sent:', updates);
+      
       const { data, error } = await supabase
         .from('properties')
         .update({ ...updates, updated_at: new Date().toISOString() })
@@ -259,7 +262,11 @@ export const useUpdateProperty = () => {
         .select()
         .single();
 
+      console.log('useUpdateProperty - Supabase response data:', data);
+      console.log('useUpdateProperty - Supabase response error:', error);
+
       if (error) {
+        console.error('useUpdateProperty - Throwing error:', error);
         throw error;
       }
       

@@ -148,6 +148,9 @@ export function EditPropertyDialog({ open, onOpenChange, property, onPropertyUpd
       return;
     }
 
+    console.log('Updating property with data:', propertyData);
+    console.log('Property ID:', property.id);
+
     setIsSaving(true);
     try {
       updateProperty.mutate({
