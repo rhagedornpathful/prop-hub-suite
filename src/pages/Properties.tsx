@@ -40,6 +40,7 @@ import { useDeleteProperty } from "@/hooks/useDeleteProperty";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { StreamlinedAddPropertyDialog } from "@/components/StreamlinedAddPropertyDialog";
 import { PropertyDetailsDialogDB } from "@/components/PropertyDetailsDialogDB";
+import { EditPropertyDialog } from "@/components/EditPropertyDialog";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { useToast } from "@/hooks/use-toast";
 import { BulkManagementTools } from "@/components/BulkManagementTools";
@@ -59,6 +60,7 @@ import type { PropertyWithRelations } from "@/hooks/queries/useProperties";
 const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
+  const [showEditProperty, setShowEditProperty] = useState(false);
   const [showAddProperty, setShowAddProperty] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const [searchTerm, setSearchTerm] = useState("");
@@ -291,7 +293,7 @@ const Properties = () => {
           onEdit={(property) => {
             setSelectedProperty(property);
             setShowPropertyDetails(false);
-            setShowAddProperty(true);
+            setShowEditProperty(true);
           }}
           onDelete={(property) => {
             setPropertyToDelete(property);
@@ -672,11 +674,21 @@ const Properties = () => {
         onEdit={(property) => {
           setSelectedProperty(property);
           setShowPropertyDetails(false);
-          setShowAddProperty(true);
+          setShowEditProperty(true);
         }}
         onDelete={(property) => {
           setPropertyToDelete(property);
           setIsDeleteDialogOpen(true);
+        }}
+      />
+
+      {/* Edit Property Dialog */}
+      <EditPropertyDialog
+        open={showEditProperty}
+        onOpenChange={setShowEditProperty}
+        property={selectedProperty}
+        onPropertyUpdated={() => {
+          refetch();
         }}
       />
 
