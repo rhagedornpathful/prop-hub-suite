@@ -205,7 +205,7 @@ export function AdminDashboard() {
       {/* Real-time Operations Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Mission Control - Now prominently positioned first */}
+          {/* Mission Control - Prominently positioned first */}
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-primary">
@@ -263,10 +263,7 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* System Health & Alerts - Now moved to second position */}
-          <AdminAlertCenter />
-          
-          {/* Advanced Analytics */}
+          {/* Performance Analytics - Moved up to second position */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -354,9 +351,12 @@ export function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Right Sidebar - Recent Activity & System Status */}
+        {/* Right Sidebar - Recent Activity, System Alerts & System Status */}
         <div className="space-y-6">
           <AdminRecentActivity />
+          
+          {/* System Alerts - Moved from main content to sidebar */}
+          <AdminAlertCenter />
           
           {/* System Status */}
           <Card>
