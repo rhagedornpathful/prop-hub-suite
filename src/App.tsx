@@ -17,7 +17,7 @@ import { EmergencyAdminBanner } from "@/components/EmergencyAdminBanner";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppWrapper } from "@/components/AppWrapper";
-import { SimplePerformanceMonitor } from "@/components/SimplePerformanceMonitor";
+
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { MobileNavigation } from "@/components/MobileNavigation";
@@ -383,7 +383,7 @@ const AppContent = () => {
                   </div>
                   <MobileNavigation />
                   <MobileBottomNavigation />
-                  {config.isDevelopment && <SimplePerformanceMonitor />}
+                  
                 </SidebarProvider>
               </ProtectedRoute>
             } />
