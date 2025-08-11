@@ -43,6 +43,9 @@ import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { BulkManagementTools } from "@/components/BulkManagementTools";
 import { AdvancedSearchFilters } from "@/components/AdvancedSearchFilters";
+import { MobilePropertyDashboard } from "@/components/mobile/MobilePropertyDashboard";
+import { PropertyReportsDashboard } from "@/components/reports/PropertyReportsDashboard";
+import { MobilePropertyActions } from "@/components/mobile/MobilePropertyActions";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useNavigate } from "react-router-dom";
@@ -60,6 +63,7 @@ const Properties = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<any>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [activeTab, setActiveTab] = useState<'overview' | 'reports'>('overview');
   
   const { data: propertyData, isLoading, error, refetch } = useProperties(1, 100);
   const properties = propertyData?.properties || [];
@@ -174,6 +178,91 @@ const Properties = () => {
     );
   }
 
+  // Mobile-first responsive design
+  if (isMobile) {
+    return (
+      <div 
+        className="flex-1 p-4 safe-area-inset space-y-4 relative overflow-hidden"
+        ref={pullToRefresh.bindToContainer}
+        style={{ touchAction: 'pan-y' }}
+      >
+        {/* Pull to Refresh Indicator */}
+        <PullToRefreshIndicator
+          isPulling={pullToRefresh.isPulling}
+          isRefreshing={pullToRefresh.isRefreshing}
+          pullDistance={pullToRefresh.pullDistance}
+          canRelease={pullToRefresh.canRelease}
+          threshold={80}
+        />
+
+        {/* Mobile Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold">Properties</h1>
+            <p className="text-sm text-muted-foreground">{totalProperties} properties</p>
+          </div>
+          
+          <div className="flex gap-2">
+            <Button
+              variant={activeTab === 'overview' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTab('overview')}
+            >
+              Overview
+            </Button>
+            <Button
+              variant={activeTab === 'reports' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setActiveTab('reports')}
+            >
+              Reports
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile Content */}
+        {activeTab === 'overview' ? (
+          <MobilePropertyDashboard 
+            onPropertyClick={handlePropertyClick}
+            onAddProperty={() => setShowAddProperty(true)}
+          />
+        ) : (
+          <PropertyReportsDashboard />
+        )}
+
+        {/* Dialogs */}
+        <AddPropertyDialog
+          open={showAddProperty}
+          onOpenChange={setShowAddProperty}
+          editProperty={selectedProperty}
+        />
+
+        <PropertyDetailsDialog
+          property={selectedProperty}
+          open={showPropertyDetails}
+          onOpenChange={setShowPropertyDetails}
+        />
+
+        <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Property</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this property? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDeleteProperty}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="flex-1 p-4 md:p-6 safe-area-inset space-y-6 relative overflow-hidden"
@@ -198,333 +287,321 @@ const Properties = () => {
           </p>
         </div>
         
-        <Button 
-          onClick={() => setShowAddProperty(true)}
-          size={isMobile ? "default" : "sm"}
-          className="w-full sm:w-auto"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Property
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={() => setActiveTab(activeTab === 'overview' ? 'reports' : 'overview')}
+          >
+            {activeTab === 'overview' ? 'View Reports' : 'View Overview'}
+          </Button>
+          <Button 
+            onClick={() => setShowAddProperty(true)}
+            size={isMobile ? "default" : "sm"}
+            className="w-full sm:w-auto"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Property
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="min-h-[80px]">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg shrink-0">
-                <Home className="h-4 w-4 text-green-600 dark:text-green-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xl font-bold text-green-600 dark:text-green-400">{activeProperties}</p>
-                <p className="text-xs text-muted-foreground">Active</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Desktop Content Tabs */}
+      {activeTab === 'reports' ? (
+        <PropertyReportsDashboard />
+      ) : (
+        <>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <Card className="min-h-[80px]">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg shrink-0">
+                    <Home className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xl font-bold text-green-600 dark:text-green-400">{activeProperties}</p>
+                    <p className="text-xs text-muted-foreground">Active</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="min-h-[80px]">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg shrink-0">
-                <Eye className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{houseWatchingProperties}</p>
-                <p className="text-xs text-muted-foreground">House Watching</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="min-h-[80px]">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg shrink-0">
+                    <Eye className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{houseWatchingProperties}</p>
+                    <p className="text-xs text-muted-foreground">House Watching</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="min-h-[80px]">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg shrink-0">
-                <Settings className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{propertyManagementProperties}</p>
-                <p className="text-xs text-muted-foreground">Property Management</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <Card className="min-h-[80px]">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg shrink-0">
+                    <Settings className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{propertyManagementProperties}</p>
+                    <p className="text-xs text-muted-foreground">Property Management</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-        <Card className="min-h-[80px]">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
-                <Building className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xl font-bold">{totalProperties}</p>
-                <p className="text-xs text-muted-foreground">Total Properties</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Advanced Search and Filters */}
-      <AdvancedSearchFilters 
-        properties={properties}
-        onFilterChange={setFilteredProperties}
-        onSearchChange={setSearchTerm}
-      />
-
-      {/* Bulk Management Tools */}
-      <BulkManagementTools 
-        properties={displayProperties}
-        selectedProperties={selectedProperties}
-        onSelectionChange={setSelectedProperties}
-        onRefresh={refetch}
-      />
-
-      {/* View Mode Toggle */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex bg-muted rounded-lg p-1">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="flex-1"
-            >
-              <Grid3X3 className="h-4 w-4 mr-1" />
-              Grid
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="flex-1"
-            >
-              <List className="h-4 w-4 mr-1" />
-              List
-            </Button>
-            <Button
-              variant={viewMode === 'map' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('map')}
-              className="flex-1"
-            >
-              <Map className="h-4 w-4 mr-1" />
-              Map
-            </Button>
+            <Card className="min-h-[80px]">
+              <CardContent className="p-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
+                    <Building className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xl font-bold">{totalProperties}</p>
+                    <p className="text-xs text-muted-foreground">Total Properties</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          
-          {displayProperties.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={selectedProperties.length === displayProperties.length && displayProperties.length > 0}
-                onCheckedChange={handleSelectAll}
-              />
-              <span className="text-sm text-muted-foreground">
-                Select All ({displayProperties.length})
-              </span>
-            </div>
-          )}
-        </div>
 
-        <div className="flex items-center gap-2">
-          <Label htmlFor="show-archived" className="text-sm">Show archived</Label>
-          <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
-        </div>
-      </div>
-
-      {/* Properties List */}
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold">Properties</h2>
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              {displayProperties.length} properties shown
-            </p>
-            {selectedProperties.length > 0 && (
-              <Badge variant="secondary">
-                {selectedProperties.length} selected
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {viewMode === 'list' ? (
-          <PropertyMobileTable
-            properties={displayProperties}
-            onPropertyClick={handlePropertyClick}
-            onEdit={handleEdit}
-            onScheduleMaintenance={handleScheduleMaintenance}
-            onDelete={handleDeleteProperty}
-            loading={isLoading}
+          {/* Advanced Search and Filters */}
+          <AdvancedSearchFilters 
+            properties={properties}
+            onFilterChange={setFilteredProperties}
+            onSearchChange={setSearchTerm}
           />
-        ) : viewMode === 'map' ? (
-          <Card>
-            <CardContent className="p-3">
-              <PropertiesMap properties={displayProperties as any} />
-            </CardContent>
-          </Card>
-        ) : (
-          // Grid View (mobile-optimized)
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {isLoading ? (
-              Array.from({ length: 8 }).map((_, i) => (
-                <Card key={i} className="overflow-hidden">
-                  <div className="aspect-video bg-muted animate-pulse rounded-t-lg" />
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <div className="h-4 bg-muted rounded animate-pulse" />
-                      <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
-                      <div className="flex justify-between items-center">
-                        <div className="h-3 bg-muted rounded w-1/3 animate-pulse" />
-                        <div className="h-3 bg-muted rounded w-1/4 animate-pulse" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : displayProperties.length === 0 ? (
-              <div className="col-span-full">
-                <Card>
-                  <CardContent className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-medium mb-2">No Properties Found</h3>
-                      <p className="text-muted-foreground mb-4">
-                        {searchTerm ? 'No properties match your search criteria.' : 'Get started by adding your first property.'}
-                      </p>
-                      {!searchTerm && (
-                        <Button onClick={() => setShowAddProperty(true)}>
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Property
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : (
-              displayProperties.map((property) => (
-                <Card 
-                  key={property.id} 
-                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow min-h-[44px] relative"
-                  onClick={() => handlePropertyClick(property)}
+
+          {/* Bulk Management Tools */}
+          <BulkManagementTools 
+            properties={displayProperties}
+            selectedProperties={selectedProperties}
+            onSelectionChange={setSelectedProperties}
+            onRefresh={refetch}
+          />
+
+          {/* View Mode Toggle */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex bg-muted rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="flex-1"
                 >
-                  {/* Selection checkbox */}
-                  <div className="absolute top-2 left-2 z-10">
-                    <Checkbox
-                      checked={selectedProperties.includes(property.id)}
-                      onCheckedChange={(checked) => handlePropertySelection(property.id, checked as boolean)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="bg-white shadow-sm"
-                    />
-                  </div>
+                  <Grid3X3 className="h-4 w-4 mr-1" />
+                  Grid
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="flex-1"
+                >
+                  <List className="h-4 w-4 mr-1" />
+                  List
+                </Button>
+                <Button
+                  variant={viewMode === 'map' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('map')}
+                  className="flex-1"
+                >
+                  <Map className="h-4 w-4 mr-1" />
+                  Map
+                </Button>
+              </div>
+              
+              {displayProperties.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={selectedProperties.length === displayProperties.length && displayProperties.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    Select All ({displayProperties.length})
+                  </span>
+                </div>
+              )}
+            </div>
 
-                  <div className="aspect-[4/3] bg-muted relative">
-                    {/* Card actions menu */}
-                    <div className="absolute top-2 right-2 z-10">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="secondary"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handlePropertyClick(property); }}>
-                            <Eye className="w-4 h-4 mr-2" /> View
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEdit(property); }}>
-                            <Pencil className="w-4 h-4 mr-2" /> Edit
-                          </DropdownMenuItem>
-                          {property.status === 'archived' ? (
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleUnarchiveProperty(property); }}>
-                              <ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleArchiveProperty(property); }}>
-                              <Archive className="w-4 h-4 mr-2" /> Archive
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); handleDeleteProperty(property); }}>
-                            <Trash2 className="w-4 h-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="show-archived" className="text-sm">Show archived</Label>
+              <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
+            </div>
+          </div>
 
-                    {property.images && property.images.length > 0 ? (
-                      <img 
-                        src={property.images[0]} 
-                        alt={property.address}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Building className="h-8 w-8 text-muted-foreground" />
-                      </div>
-                    )}
-                    
-                    <div className="absolute bottom-2 right-2 flex flex-col gap-1">
-                      <Badge 
-                        className={
-                          property.status === 'active' || !property.status
-                            ? 'bg-green-500 hover:bg-green-600 text-xs'
-                            : property.status === 'archived'
-                            ? 'bg-yellow-500 hover:bg-yellow-600 text-xs'
-                            : 'bg-red-500 hover:bg-red-600 text-xs'
-                        }
-                      >
-                        {property.status === 'active' || !property.status ? 'Active' : property.status === 'archived' ? 'Archived' : 'Inactive'}
-                      </Badge>
-                      {property.service_type === 'house_watching' && (
-                        <Badge variant="secondary" className="text-xs">House Watching</Badge>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-3">
-                    <div className="space-y-1">
-                      <h3 className="font-medium leading-tight text-sm line-clamp-1">{property.address}</h3>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {[property.city, property.state].filter(Boolean).join(', ')}
-                        {property.zip_code && ` ${property.zip_code}`}
-                      </p>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-muted-foreground">
-                          {property.bedrooms && property.bathrooms && (
-                            <span>{property.bedrooms}br • {property.bathrooms}ba</span>
+          {/* Properties List */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Properties</h2>
+              <div className="flex items-center gap-4">
+                <p className="text-sm text-muted-foreground">
+                  {displayProperties.length} properties shown
+                </p>
+                {selectedProperties.length > 0 && (
+                  <Badge variant="secondary">
+                    {selectedProperties.length} selected
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            {viewMode === 'list' ? (
+              <PropertyMobileTable
+                properties={displayProperties}
+                onPropertyClick={handlePropertyClick}
+                onEdit={handleEdit}
+                onScheduleMaintenance={handleScheduleMaintenance}
+                onDelete={handleDeleteProperty}
+                loading={isLoading}
+              />
+            ) : viewMode === 'map' ? (
+              <Card>
+                <CardContent className="p-3">
+                  <PropertiesMap properties={displayProperties as any} />
+                </CardContent>
+              </Card>
+            ) : (
+              // Grid View (mobile-optimized)
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {isLoading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <Card key={i} className="overflow-hidden">
+                      <div className="aspect-video bg-muted animate-pulse rounded-t-lg" />
+                      <CardContent className="p-4">
+                        <div className="space-y-3">
+                          <div className="h-4 bg-muted rounded animate-pulse" />
+                          <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
+                          <div className="flex justify-between items-center">
+                            <div className="h-3 bg-muted rounded w-1/3 animate-pulse" />
+                            <div className="h-3 bg-muted rounded w-1/4 animate-pulse" />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : displayProperties.length === 0 ? (
+                  <div className="col-span-full">
+                    <Card>
+                      <CardContent className="flex items-center justify-center py-12">
+                        <div className="text-center">
+                          <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                          <h3 className="text-lg font-medium mb-2">No Properties Found</h3>
+                          <p className="text-muted-foreground mb-4">
+                            {searchTerm ? 'No properties match your search criteria.' : 'Get started by adding your first property.'}
+                          </p>
+                          {!searchTerm && (
+                            <Button onClick={() => setShowAddProperty(true)}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add Property
+                            </Button>
                           )}
                         </div>
-                        {property.monthly_rent && (
-                          <div className="font-medium text-xs text-right">
-                            ${property.monthly_rent.toLocaleString()}/mo
+                      </CardContent>
+                    </Card>
+                  </div>
+                ) : (
+                  displayProperties.map((property) => (
+                    <Card 
+                      key={property.id} 
+                      className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow min-h-[44px] relative"
+                      onClick={() => handlePropertyClick(property)}
+                    >
+                      {/* Selection checkbox */}
+                      <div className="absolute top-2 left-2 z-10">
+                        <Checkbox
+                          checked={selectedProperties.includes(property.id)}
+                          onCheckedChange={(checked) => handlePropertySelection(property.id, checked as boolean)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="bg-white shadow-sm"
+                        />
+                      </div>
+
+                      <div className="aspect-[4/3] bg-muted relative">
+                        {/* Mobile actions menu */}
+                        <div className="absolute top-2 right-2 z-10">
+                          <MobilePropertyActions
+                            property={property}
+                            onView={() => handlePropertyClick(property)}
+                            onEdit={() => handleEdit(property)}
+                            onScheduleMaintenance={() => handleScheduleMaintenance(property)}
+                            onArchive={() => handleArchiveProperty(property)}
+                            onDelete={() => handleDeleteProperty(property)}
+                          />
+                        </div>
+
+                        {property.images && property.images.length > 0 ? (
+                          <img 
+                            src={property.images[0]} 
+                            alt={property.address}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Building className="h-8 w-8 text-muted-foreground" />
                           </div>
                         )}
+                        
+                        <div className="absolute bottom-2 right-2 flex flex-col gap-1">
+                          <Badge 
+                            className={
+                              property.status === 'active' || !property.status
+                                ? 'bg-green-500 hover:bg-green-600 text-xs'
+                                : property.status === 'archived'
+                                ? 'bg-yellow-500 hover:bg-yellow-600 text-xs'
+                                : 'bg-red-500 hover:bg-red-600 text-xs'
+                            }
+                          >
+                            {property.status === 'active' || !property.status ? 'Active' : property.status === 'archived' ? 'Archived' : 'Inactive'}
+                          </Badge>
+                          {property.service_type === 'house_watching' && (
+                            <Badge variant="secondary" className="text-xs">House Watching</Badge>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+                      
+                      <CardContent className="p-3">
+                        <div className="space-y-1">
+                          <h3 className="font-medium leading-tight text-sm line-clamp-1">{property.address}</h3>
+                          <p className="text-xs text-muted-foreground line-clamp-1">
+                            {[property.city, property.state].filter(Boolean).join(', ')}
+                            {property.zip_code && ` ${property.zip_code}`}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <div className="text-xs text-muted-foreground">
+                              {property.bedrooms && property.bathrooms && (
+                                <span>{property.bedrooms}br • {property.bathrooms}ba</span>
+                              )}
+                            </div>
+                            {property.monthly_rent && (
+                              <div className="font-medium text-xs text-right">
+                                ${property.monthly_rent.toLocaleString()}/mo
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
             )}
           </div>
-        )}
-      </div>
+        </>
+      )}
 
       {/* Dialogs */}
       <AddPropertyDialog 
         open={showAddProperty}
         onOpenChange={setShowAddProperty}
-        onPropertyAdded={() => {
-          setShowAddProperty(false);
-          setSelectedProperty(null);
-        }}
+        editProperty={selectedProperty}
       />
 
       <PropertyDetailsDialog
