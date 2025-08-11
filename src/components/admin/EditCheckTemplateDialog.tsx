@@ -144,16 +144,15 @@ export const EditCheckTemplateDialog = ({
               <div className="flex justify-center p-8">Loading sections...</div>
             ) : (
               <>
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>Tip:</strong> Changes to sections and items are saved individually when you click the "Save" button next to each item you edit.
+                  </p>
+                </div>
                 <TemplateSectionEditor template={fullTemplate} />
-                <div className="flex gap-2 pt-4 border-t bg-muted/30 p-4 rounded-lg">
+                <div className="flex justify-end pt-4 border-t">
                   <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                    Cancel
-                  </Button>
-                  <Button 
-                    onClick={() => onOpenChange(false)}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    Save Changes
+                    Close
                   </Button>
                 </div>
               </>
