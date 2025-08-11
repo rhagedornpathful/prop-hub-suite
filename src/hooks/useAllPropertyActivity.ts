@@ -120,91 +120,91 @@ export function useAllPropertyActivity() {
           }));
       }
 
-      // Fetch owner distributions without inner join
-      const { data: distributionData, error: distributionError } = await supabase
-        .from('owner_distributions')
+      // Fetch payments (instead of owner_distributions)
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payments')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (distributionError) {
-        console.error('Error fetching owner distributions:', distributionError);
-        throw distributionError;
+      if (paymentsError) {
+        console.error('Error fetching payments:', paymentsError);
+        throw paymentsError;
       }
 
-      console.log('Owner distributions found:', distributionData?.length || 0);
+      console.log('Payments found:', paymentsData?.length || 0);
 
       // Add payment activities with property info
-      if (distributionData) {
-        activities.push(...distributionData
+      if (paymentsData) {
+        activities.push(...paymentsData
           .filter(item => propertyMap.has(item.property_id)) // Only include if user has access to property
           .map(item => {
             const property = propertyMap.get(item.property_id);
             return {
               id: item.id,
               type: 'payment' as const,
-              title: 'Owner Distribution',
-              description: item.notes || undefined,
+              title: `Payment - ${item.payment_type}`,
+              description: item.description || undefined,
               date: item.created_at,
-              amount: Number(item.amount),
+              status: item.status,
+              amount: item.amount ? item.amount / 100 : undefined, // Convert cents to dollars
               metadata: {
                 property_address: property?.address,
                 property_city: property?.city,
                 property_state: property?.state,
                 property_type: property?.property_type,
-                distribution_date: item.distribution_date,
+                payment_type: item.payment_type,
                 payment_method: item.payment_method,
-                reference_number: item.reference_number,
+                stripe_payment_intent_id: item.stripe_payment_intent_id,
+                due_date: item.due_date,
+                paid_at: item.paid_at,
                 property_id: item.property_id
               }
             };
           }));
       }
 
-      // Fetch maintenance status history without problematic inner joins
-      const { data: statusData, error: statusError } = await supabase
-        .from('maintenance_status_history')
+      // Fetch home check sessions
+      const { data: homeCheckData, error: homeCheckError } = await supabase
+        .from('home_check_sessions')
         .select('*')
-        .order('changed_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
-      if (statusError) {
-        console.error('Error fetching maintenance status history:', statusError);
-        throw statusError;
+      if (homeCheckError) {
+        console.error('Error fetching home check sessions:', homeCheckError);
+        throw homeCheckError;
       }
 
-      console.log('Maintenance status history found:', statusData?.length || 0);
+      console.log('Home check sessions found:', homeCheckData?.length || 0);
 
-      // Add status change activities with property info
-      if (statusData && maintenanceData) {
-        // Create a map of maintenance request IDs to titles and property IDs
-        const maintenanceRequestMap = new Map(
-          maintenanceData.map(req => [req.id, { title: req.title, property_id: req.property_id }])
-        );
-
-        activities.push(...statusData
-          .filter(item => {
-            const maintenanceRequest = maintenanceRequestMap.get(item.maintenance_request_id);
-            return maintenanceRequest && propertyMap.has(maintenanceRequest.property_id);
-          })
+      // Add home check activities with property info
+      if (homeCheckData) {
+        activities.push(...homeCheckData
+          .filter(item => propertyMap.has(item.property_id)) // Only include if user has access to property
           .map(item => {
-            const maintenanceRequest = maintenanceRequestMap.get(item.maintenance_request_id);
-            const property = maintenanceRequest ? propertyMap.get(maintenanceRequest.property_id) : null;
-            
+            const property = propertyMap.get(item.property_id);
             return {
               id: item.id,
-              type: 'status_change' as const,
-              title: `Status Changed: ${maintenanceRequest?.title || 'Maintenance Request'}`,
-              description: item.notes || `Status changed from ${item.old_status} to ${item.new_status}`,
-              date: item.changed_at,
-              status: item.new_status,
+              type: 'home_check' as const,
+              title: `Home Check - ${item.status}`,
+              description: item.general_notes || undefined,
+              date: item.created_at,
+              status: item.status,
               metadata: {
                 property_address: property?.address,
                 property_city: property?.city,
                 property_state: property?.state,
                 property_type: property?.property_type,
-                old_status: item.old_status,
-                new_status: item.new_status,
-                maintenance_request_id: item.maintenance_request_id,
-                property_id: maintenanceRequest?.property_id
+                scheduled_date: item.scheduled_date,
+                scheduled_time: item.scheduled_time,
+                started_at: item.started_at,
+                completed_at: item.completed_at,
+                duration_minutes: item.duration_minutes,
+                weather: item.weather,
+                overall_condition: item.overall_condition,
+                total_issues_found: item.total_issues_found,
+                photos_taken: item.photos_taken,
+                checklist_data: item.checklist_data,
+                property_id: item.property_id
               }
             };
           }));

@@ -38,14 +38,14 @@ const activityTypeColors = {
   maintenance: "bg-orange-100 text-orange-800 border-orange-200",
   property_check: "bg-blue-100 text-blue-800 border-blue-200", 
   payment: "bg-green-100 text-green-800 border-green-200",
-  status_change: "bg-purple-100 text-purple-800 border-purple-200"
+  home_check: "bg-purple-100 text-purple-800 border-purple-200"
 };
 
 const activityTypeIcons = {
   maintenance: Wrench,
   property_check: CheckCircle,
   payment: DollarSign,
-  status_change: AlertCircle
+  home_check: Eye
 };
 
 const statusColors = {
@@ -204,7 +204,7 @@ export default function Activity() {
                 <SelectItem value="maintenance">Maintenance</SelectItem>
                 <SelectItem value="property_check">Property Check</SelectItem>
                 <SelectItem value="payment">Payment</SelectItem>
-                <SelectItem value="status_change">Status Change</SelectItem>
+                <SelectItem value="home_check">Home Check</SelectItem>
               </SelectContent>
             </Select>
             

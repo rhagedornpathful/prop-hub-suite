@@ -4,7 +4,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 export interface PropertyActivity {
   id: string;
-  type: 'maintenance' | 'property_check' | 'payment' | 'status_change';
+  type: 'maintenance' | 'property_check' | 'payment' | 'home_check';
   title: string;
   description?: string;
   date: string;
@@ -89,66 +89,66 @@ export function usePropertyActivity(propertyId: string | undefined) {
         })));
       }
 
-      // Fetch owner distributions (payments)
-      const { data: distributionData, error: distributionError } = await supabase
-        .from('owner_distributions')
+      // Fetch payments (instead of owner_distributions)
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from('payments')
         .select('*')
         .eq('property_id', propertyId)
         .order('created_at', { ascending: false });
 
-      if (distributionError) throw distributionError;
+      if (paymentsError) throw paymentsError;
 
       // Add payment activities
-      if (distributionData) {
-        activities.push(...distributionData.map(item => ({
+      if (paymentsData) {
+        activities.push(...paymentsData.map(item => ({
           id: item.id,
           type: 'payment' as const,
-          title: 'Owner Distribution',
-          description: item.notes || undefined,
+          title: `Payment - ${item.payment_type}`,
+          description: item.description || undefined,
           date: item.created_at,
-          amount: Number(item.amount),
+          status: item.status,
+          amount: item.amount ? item.amount / 100 : undefined, // Convert cents to dollars
           metadata: {
-            distribution_date: item.distribution_date,
+            payment_type: item.payment_type,
             payment_method: item.payment_method,
-            reference_number: item.reference_number
+            stripe_payment_intent_id: item.stripe_payment_intent_id,
+            due_date: item.due_date,
+            paid_at: item.paid_at
           }
         })));
       }
 
-      // Fetch maintenance status history
-      // First get maintenance request IDs for this property
-      const maintenanceRequestIds = maintenanceData?.map(req => req.id) || [];
-      
-      if (maintenanceRequestIds.length > 0) {
-        const { data: statusData, error: statusError } = await supabase
-          .from('maintenance_status_history')
-          .select('*')
-          .in('maintenance_request_id', maintenanceRequestIds)
-          .order('changed_at', { ascending: false });
+      // Fetch home check sessions for this property
+      const { data: homeCheckData, error: homeCheckError } = await supabase
+        .from('home_check_sessions')
+        .select('*')
+        .eq('property_id', propertyId)
+        .order('created_at', { ascending: false });
 
-        if (statusError) throw statusError;
+      if (homeCheckError) throw homeCheckError;
 
-        // Add status change activities
-        if (statusData) {
-          // Create a map of maintenance request IDs to titles for quick lookup
-          const maintenanceRequestMap = new Map(
-            maintenanceData?.map(req => [req.id, req.title]) || []
-          );
-
-          activities.push(...statusData.map(item => ({
-            id: item.id,
-            type: 'status_change' as const,
-            title: `Status Changed: ${maintenanceRequestMap.get(item.maintenance_request_id) || 'Maintenance Request'}`,
-            description: item.notes || `Status changed from ${item.old_status} to ${item.new_status}`,
-            date: item.changed_at,
-            status: item.new_status,
-            metadata: {
-              old_status: item.old_status,
-              new_status: item.new_status,
-              maintenance_request_id: item.maintenance_request_id
-            }
-          })));
-        }
+      // Add home check activities
+      if (homeCheckData) {
+        activities.push(...homeCheckData.map(item => ({
+          id: item.id,
+          type: 'home_check' as const,
+          title: `Home Check - ${item.status}`,
+          description: item.general_notes || undefined,
+          date: item.created_at,
+          status: item.status,
+          metadata: {
+            scheduled_date: item.scheduled_date,
+            scheduled_time: item.scheduled_time,
+            started_at: item.started_at,
+            completed_at: item.completed_at,
+            duration_minutes: item.duration_minutes,
+            weather: item.weather,
+            overall_condition: item.overall_condition,
+            total_issues_found: item.total_issues_found,
+            photos_taken: item.photos_taken,
+            checklist_data: item.checklist_data
+          }
+        })));
       }
 
       // Sort all activities by date (most recent first)
