@@ -285,7 +285,13 @@ export const useUpdateProperty = () => {
       
       const previousData = queryClient.getQueryData(['properties']);
       
-      queryClient.setQueriesData({ queryKey: ['properties'] }, (old: Property[] = []) => {
+      queryClient.setQueriesData({ queryKey: ['properties'] }, (old: any) => {
+        // Ensure old is an array before trying to map
+        if (!Array.isArray(old)) {
+          console.warn('useUpdateProperty: old data is not an array:', old);
+          return old; // Return unchanged if not an array
+        }
+        
         const updated = old.map(property => 
           property.id === id 
             ? { ...property, ...updates, updated_at: new Date().toISOString() }
