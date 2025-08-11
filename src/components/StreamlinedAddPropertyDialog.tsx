@@ -163,6 +163,8 @@ export function StreamlinedAddPropertyDialog({
 
       clearInterval(progressInterval);
       setSearchProgress(100);
+      
+      console.log('Function invoke completed. Error:', error, 'Data:', data);
 
       if (error) throw error;
 
