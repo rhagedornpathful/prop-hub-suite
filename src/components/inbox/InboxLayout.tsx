@@ -38,7 +38,7 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
   const unreadCount = conversations.filter(c => c.unread_count > 0).length;
 
   return (
-    <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300 h-[calc(100vh-200px)] overflow-hidden">
+    <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300 h-full overflow-hidden">
       {/* Enhanced Header */}
       <div className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-sm px-4 flex items-center gap-3">
         <Button
