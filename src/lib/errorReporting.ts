@@ -20,6 +20,7 @@ export interface ErrorReport {
 class ErrorReporter {
   private errors: ErrorReport[] = [];
   private maxErrors = 100;
+  private listeners: ((report: ErrorReport) => void)[] = [];
 
   report(error: Error | string, context: ErrorContext = {}, severity: ErrorReport['severity'] = 'medium') {
     const errorMessage = typeof error === 'string' ? error : error.message;
@@ -43,6 +44,15 @@ class ErrorReporter {
       this.errors = this.errors.slice(0, this.maxErrors);
     }
 
+    // Notify listeners
+    this.listeners.forEach(listener => {
+      try {
+        listener(report);
+      } catch (err) {
+        safeLog.error('Error in error reporter listener:', err);
+      }
+    });
+
     // Log to console in development
     safeLog.error('Error reported:', report);
 
@@ -50,6 +60,13 @@ class ErrorReporter {
     if (config.isProduction && config.features.errorReporting) {
       this.sendToErrorService(report);
     }
+  }
+
+  subscribe(listener: (report: ErrorReport) => void) {
+    this.listeners.push(listener);
+    return () => {
+      this.listeners = this.listeners.filter(l => l !== listener);
+    };
   }
 
   private generateFingerprint(message: string, stack?: string): string {

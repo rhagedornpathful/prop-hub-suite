@@ -45,6 +45,9 @@ import { useSearchContext } from "@/contexts/SearchContext";
 import { useBusinessSummary } from "@/hooks/queries/useBusinessSummary";
 import { useRealTimeAdminDashboard } from "@/hooks/useRealTimeAdminDashboard";
 import { useOptimizedQueries } from "@/hooks/useOptimizedQueries";
+import { SecurityMonitor } from '@/components/admin/SecurityMonitor';
+import { AuditLog } from '@/components/admin/AuditLog';
+import { ErrorReportingDashboard } from '@/components/admin/ErrorReportingDashboard';
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
@@ -480,7 +483,53 @@ export function AdminDashboard() {
           </Card>
         </div>
       </div>
-    </div>
+        
+        {/* Tabbed Dashboard Sections */}
+        <Tabs defaultValue="overview" className="w-full">
+          <TabsList className="grid w-full grid-cols-8">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="navigation">Navigation</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="performance">Performance</TabsTrigger>
+            <TabsTrigger value="search">Search</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="audit">Audit</TabsTrigger>
+            <TabsTrigger value="errors">Errors</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview" className="space-y-6">
+            <p className="text-muted-foreground">This overview section shows the current dashboard above.</p>
+          </TabsContent>
+          
+          <TabsContent value="navigation" className="space-y-6">
+            <NavigationHub showRecent={true} showBookmarks={true} maxShortcuts={8} />
+          </TabsContent>
+          
+          <TabsContent value="analytics" className="space-y-6">
+            <p className="text-muted-foreground">Advanced analytics would be displayed here.</p>
+          </TabsContent>
+          
+          <TabsContent value="performance" className="space-y-6">
+            <p className="text-muted-foreground">Performance monitoring would be displayed here.</p>
+          </TabsContent>
+
+          <TabsContent value="search" className="space-y-6">
+            <AdvancedSearch />
+          </TabsContent>
+
+          <TabsContent value="security" className="space-y-6">
+            <SecurityMonitor />
+          </TabsContent>
+
+          <TabsContent value="audit" className="space-y-6">
+            <AuditLog />
+          </TabsContent>
+
+          <TabsContent value="errors" className="space-y-6">
+            <ErrorReportingDashboard />
+          </TabsContent>
+        </Tabs>
+      </div>
     </AdminErrorBoundary>
   );
 }
