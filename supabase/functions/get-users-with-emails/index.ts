@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🔄 Starting get-users-with-emails function...')
+
     // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -28,8 +30,11 @@ serve(async (req) => {
     // Get the Authorization header from the request
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
+      console.error('❌ No authorization header provided')
       throw new Error('No authorization header')
     }
+
+    console.log('🔐 Authorization header found, verifying user...')
 
     // Create a client with the user's token to verify they are authenticated
     const supabaseClient = createClient(
@@ -51,23 +56,37 @@ serve(async (req) => {
     // Verify the user is authenticated and is an admin
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
     if (userError || !user) {
+      console.error('❌ User authentication failed:', userError)
       throw new Error('Unauthorized')
     }
+
+    console.log('✅ User authenticated:', user.id)
 
     // Check if user has admin role
     const { data: hasAdminRole, error: roleError } = await supabaseAdmin
       .rpc('has_role', { _user_id: user.id, _role: 'admin' })
 
-    if (roleError || !hasAdminRole) {
+    if (roleError) {
+      console.error('❌ Role check failed:', roleError)
+      throw new Error('Failed to verify admin role')
+    }
+
+    if (!hasAdminRole) {
+      console.error('❌ User does not have admin role')
       throw new Error('Insufficient permissions - admin role required')
     }
+
+    console.log('✅ Admin role verified, fetching users...')
 
     // Get all users with their emails (admin only)
     const { data: authUsers, error: authError } = await supabaseAdmin.auth.admin.listUsers()
 
     if (authError) {
+      console.error('❌ Failed to fetch users:', authError)
       throw authError
     }
+
+    console.log(`✅ Successfully fetched ${authUsers.users.length} users`)
 
     // Return only necessary user data
     const users = authUsers.users.map(user => ({
@@ -91,7 +110,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in get-users-with-emails:', error)
+    console.error('❌ Error in get-users-with-emails:', error)
     return new Response(
       JSON.stringify({ 
         error: error.message,

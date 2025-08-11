@@ -284,10 +284,19 @@ const UserManagement = () => {
         const roleInfo = rolesMap.get(profile.user_id);
         const authInfo = authUsersMap.get(profile.user_id);
         
+        // Use the current user's real email if this is their profile
+        let userEmail = authInfo?.email;
+        if (!userEmail && user && profile.user_id === user.id) {
+          userEmail = user.email; // Use the logged-in user's email
+        }
+        if (!userEmail) {
+          userEmail = `${profile.first_name?.toLowerCase() || 'user'}.${profile.last_name?.toLowerCase() || 'user'}@system.local`;
+        }
+        
         return {
           id: profile.id,
           user_id: profile.user_id,
-          email: authInfo?.email || `${profile.first_name?.toLowerCase() || 'user'}.${profile.last_name?.toLowerCase() || 'user'}@system.local`,
+          email: userEmail,
           first_name: profile.first_name || 'Unknown',
           last_name: profile.last_name || 'User',
           role: roleInfo?.role || null,
