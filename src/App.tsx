@@ -16,6 +16,8 @@ import { ViewAsBanner } from "@/components/ViewAsBanner";
 import { EmergencyAdminBanner } from "@/components/EmergencyAdminBanner";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AppWrapper } from "@/components/AppWrapper";
+import { ProductionMonitor } from "@/components/ProductionMonitor";
 import { SimplePerformanceMonitor } from "@/components/SimplePerformanceMonitor";
 import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
