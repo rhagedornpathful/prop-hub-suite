@@ -92,9 +92,36 @@ serve(async (req) => {
         resetUrl: data.properties?.action_link 
       }
     } else if (resetType === 'set_password' && newPassword) {
-      // Directly set new password
+      // First, find the user by email to get their ID
+      const { data: authUsers, error: getUserError } = await supabaseAdmin.auth.admin.listUsers()
+      
+      if (getUserError) {
+        console.error('Error listing users:', getUserError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to find user' }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      const targetUser = authUsers.users.find(u => u.email === userId)
+      
+      if (!targetUser) {
+        console.error('User not found with email:', userId)
+        return new Response(
+          JSON.stringify({ error: 'User not found' }),
+          { 
+            status: 404, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+
+      // Directly set new password using the actual user ID
       const { data, error } = await supabaseAdmin.auth.admin.updateUserById(
-        userId,
+        targetUser.id,
         { password: newPassword }
       )
 
