@@ -114,38 +114,33 @@ export const CheckTemplateManager = () => {
               </div>
             </div>
             
-            <div className="space-y-2">
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => handlePreview(template)} className="flex-1">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Preview
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => handleEdit(template)} className="flex-1">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit
-                </Button>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={() => handleInteractivePreview(template)}
-                  className="flex-1"
-                >
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  Test Template
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => handleDelete(template)}
-                  disabled={deleteTemplateMutation.isPending}
-                  className="flex-1 hover:bg-destructive hover:text-destructive-foreground"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  {deleteTemplateMutation.isPending ? 'Deleting...' : 'Delete'}
-                </Button>
-              </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => handlePreview(template)} className="flex-1">
+                <Eye className="h-4 w-4 mr-1" />
+                Preview
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => handleEdit(template)} className="flex-1">
+                <Edit className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleInteractivePreview(template)}
+                className="flex-1"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" />
+                Test
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDelete(template)}
+                disabled={deleteTemplateMutation.isPending}
+                className="hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
           </CardContent>
         </Card>
