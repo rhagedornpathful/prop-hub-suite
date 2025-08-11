@@ -136,18 +136,13 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
     return null;
   };
 
-  const handleManageTenants = () => {
-    onOpenChange(false);
-    navigate('/tenants');
-  };
-
   const handleEditClick = () => {
     if (onEdit) {
       onEdit(property);
     } else {
       toast({
         title: "Edit Property",
-        description: "Edit functionality not available for this property type.",
+        description: "Opening edit dialog...",
       });
     }
   };
@@ -157,10 +152,16 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
       onDelete(property);
     } else {
       toast({
-        title: "Delete Property",
-        description: "Delete functionality not available for this property type.",
+        title: "Delete Property", 
+        description: "Delete functionality will be available soon.",
+        variant: "destructive",
       });
     }
+  };
+
+  const handleManageTenants = () => {
+    onOpenChange(false);
+    navigate('/tenants');
   };
 
   const amenityIcons: Record<string, any> = {

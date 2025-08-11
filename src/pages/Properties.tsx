@@ -288,6 +288,15 @@ const Properties = () => {
           property={selectedProperty}
           open={showPropertyDetails}
           onOpenChange={setShowPropertyDetails}
+          onEdit={(property) => {
+            setSelectedProperty(property);
+            setShowPropertyDetails(false);
+            setShowAddProperty(true);
+          }}
+          onDelete={(property) => {
+            setPropertyToDelete(property);
+            setIsDeleteDialogOpen(true);
+          }}
         />
 
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -660,6 +669,15 @@ const Properties = () => {
         property={selectedProperty}
         open={showPropertyDetails}
         onOpenChange={setShowPropertyDetails}
+        onEdit={(property) => {
+          setSelectedProperty(property);
+          setShowPropertyDetails(false);
+          setShowAddProperty(true);
+        }}
+        onDelete={(property) => {
+          setPropertyToDelete(property);
+          setIsDeleteDialogOpen(true);
+        }}
       />
 
       {/* Delete Property Dialog */}
