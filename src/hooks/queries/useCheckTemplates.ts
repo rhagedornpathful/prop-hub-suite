@@ -56,18 +56,27 @@ export const useCheckTemplates = (type?: 'home_check' | 'property_check') => {
     queryKey: ['check-templates', type],
     queryFn: async () => {
       try {
-        // Try a simple direct query first
+        console.log('Fetching templates with sections and items...');
+        
+        // Get templates with their sections and items
         const { data: templates, error: templatesError } = await supabase
           .from('check_templates' as any)
-          .select('*')
-          .eq('is_active', true);
+          .select(`
+            *,
+            sections:check_template_sections(
+              *,
+              items:check_template_items(*)
+            )
+          `)
+          .eq('is_active', true)
+          .order('created_at', { ascending: false });
 
         if (templatesError) {
           console.error('Templates query error:', templatesError);
           return [];
         }
 
-        console.log('Found templates:', templates);
+        console.log('Found templates with sections:', templates);
         
         // Filter by type if specified
         let filteredTemplates = templates || [];

@@ -114,22 +114,22 @@ export const CheckTemplateManager = () => {
               </div>
             </div>
             
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handlePreview(template)} className="flex-1">
-                <Eye className="h-4 w-4 mr-1" />
+            <div className="flex gap-1">
+              <Button variant="outline" size="sm" onClick={() => handlePreview(template)} className="flex-1 text-xs">
+                <Eye className="h-3 w-3 mr-1" />
                 Preview
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleEdit(template)} className="flex-1">
-                <Edit className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={() => handleEdit(template)} className="flex-1 text-xs">
+                <Edit className="h-3 w-3 mr-1" />
                 Edit
               </Button>
               <Button 
-                variant="outline" 
+                variant="default" 
                 size="sm" 
                 onClick={() => handleInteractivePreview(template)}
-                className="flex-1"
+                className="flex-1 text-xs"
               >
-                <CheckCircle2 className="h-4 w-4 mr-1" />
+                <CheckCircle2 className="h-3 w-3 mr-1" />
                 Test
               </Button>
               <Button 
@@ -137,9 +137,9 @@ export const CheckTemplateManager = () => {
                 size="sm" 
                 onClick={() => handleDelete(template)}
                 disabled={deleteTemplateMutation.isPending}
-                className="hover:bg-destructive hover:text-destructive-foreground"
+                className="px-2 hover:bg-destructive hover:text-destructive-foreground"
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3 w-3" />
               </Button>
             </div>
           </CardContent>
