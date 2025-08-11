@@ -177,11 +177,17 @@ export function StreamlinedAddPropertyDialog({
 
       if (data?.success && data?.propertyData) {
         console.log('Property data found, updating state:', data.propertyData);
-        setPropertyData({
+        
+        // Map Zillow fields to our database fields
+        const mappedData = {
           ...propertyData,
           ...data.propertyData,
           address: data.propertyData.address || propertyData.address,
-        });
+          estimated_value: data.propertyData.price || data.propertyData.estimated_value, // Map price to estimated_value
+          monthly_rent: data.propertyData.rent_estimate || data.propertyData.monthly_rent,
+        };
+        
+        setPropertyData(mappedData);
         
         toast({
           title: "Property Found! 🎉",
@@ -464,11 +470,17 @@ export function StreamlinedAddPropertyDialog({
               <SelectValue placeholder="Select an owner" />
             </SelectTrigger>
             <SelectContent>
-              {propertyOwners.map((owner) => (
-                <SelectItem key={owner.id} value={owner.id}>
-                  {getOwnerDisplayName(owner)}
-                </SelectItem>
-              ))}
+              {isLoadingOwners ? (
+                <SelectItem value="" disabled>Loading owners...</SelectItem>
+              ) : propertyOwners.length === 0 ? (
+                <SelectItem value="" disabled>No owners found</SelectItem>
+              ) : (
+                propertyOwners.map((owner) => (
+                  <SelectItem key={owner.id} value={owner.id}>
+                    {getOwnerDisplayName(owner)}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
