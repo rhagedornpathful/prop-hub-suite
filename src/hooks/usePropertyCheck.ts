@@ -61,49 +61,118 @@ export const usePropertyCheck = () => {
 
   const initializeChecklist = async () => {
     try {
-      // Fallback to default hardcoded data until types are ready
-      const defaultData: PropertyCheckData = {
-        exterior: [
-          { id: 1, item: "Roof condition", completed: false, photos: [], notes: "", required: true },
-          { id: 2, item: "Gutters and downspouts", completed: false, photos: [], notes: "", required: true },
-          { id: 3, item: "Exterior walls and siding", completed: false, photos: [], notes: "", required: true },
-          { id: 4, item: "Windows and doors", completed: false, photos: [], notes: "", required: true },
-          { id: 5, item: "Driveway and walkways", completed: false, photos: [], notes: "", required: false },
-          { id: 6, item: "Landscaping and lawn", completed: false, photos: [], notes: "", required: false },
-          { id: 7, item: "Pool area (if applicable)", completed: false, photos: [], notes: "", required: false },
-        ],
-        interior: [
-          { id: 8, item: "HVAC system check", completed: false, photos: [], notes: "", required: true },
-          { id: 9, item: "Plumbing inspection", completed: false, photos: [], notes: "", required: true },
-          { id: 10, item: "Electrical systems", completed: false, photos: [], notes: "", required: true },
-          { id: 11, item: "Appliances functionality", completed: false, photos: [], notes: "", required: true },
-          { id: 12, item: "Interior walls and ceilings", completed: false, photos: [], notes: "", required: false },
-          { id: 13, item: "Flooring condition", completed: false, photos: [], notes: "", required: false },
-        ],
-        security: [
-          { id: 14, item: "Door locks and security", completed: false, photos: [], notes: "", required: true },
-          { id: 15, item: "Window locks", completed: false, photos: [], notes: "", required: true },
-          { id: 16, item: "Alarm system test", completed: false, photos: [], notes: "", required: true },
-          { id: 17, item: "Smoke detector test", completed: false, photos: [], notes: "", required: true },
-          { id: 18, item: "Carbon monoxide detector", completed: false, photos: [], notes: "", required: true },
-        ],
-        utilities: [
-          { id: 19, item: "Water meter reading", completed: false, photos: [], notes: "", required: true },
-          { id: 20, item: "Electrical meter reading", completed: false, photos: [], notes: "", required: true },
-          { id: 21, item: "Gas meter reading", completed: false, photos: [], notes: "", required: false },
-          { id: 22, item: "Water pressure test", completed: false, photos: [], notes: "", required: false },
-        ],
-        summary: [
-          { id: 23, item: "Overall property condition", completed: false, photos: [], notes: "", required: false },
-          { id: 24, item: "General visit notes", completed: false, photos: [], notes: "", required: false },
-          { id: 25, item: "Recommendations or concerns", completed: false, photos: [], notes: "", required: false },
-        ]
-      };
-      setChecklistItems(defaultData);
+      setIsLoading(true);
+      
+      // Fetch active property check template from database
+      const { data: templates, error } = await supabase
+        .from('check_templates')
+        .select(`
+          *,
+          sections:check_template_sections(
+            *,
+            items:check_template_items(*)
+          )
+        `)
+        .eq('type', 'property_check')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (templates && templates.length > 0) {
+        const template = templates[0];
+        const dynamicData: PropertyCheckData = {
+          exterior: [],
+          interior: [],
+          security: [],
+          utilities: [],
+          summary: []
+        };
+
+        // Map database sections to our structure
+        const sectionMapping: { [key: string]: keyof PropertyCheckData } = {
+          'exterior': 'exterior',
+          'interior': 'interior',
+          'security': 'security', 
+          'utilities': 'utilities'
+        };
+
+        template.sections?.forEach((section: any) => {
+          const sectionKey = sectionMapping[section.name.toLowerCase()] || 'exterior';
+          
+          section.items?.forEach((item: any, index: number) => {
+            dynamicData[sectionKey].push({
+              id: parseInt(item.id.replace(/-/g, '').substring(0, 8), 16), // Convert UUID to number for compatibility
+              item: item.item_text,
+              completed: false,
+              photos: [],
+              notes: "",
+              required: item.is_required
+            });
+          });
+        });
+
+        // Add summary items (these are not in template but needed for UI)
+        dynamicData.summary = [
+          { id: 1001, item: "Overall property condition", completed: false, photos: [], notes: "", required: false },
+          { id: 1002, item: "General visit notes", completed: false, photos: [], notes: "", required: false },
+          { id: 1003, item: "Recommendations or concerns", completed: false, photos: [], notes: "", required: false },
+        ];
+
+        console.log('Loaded dynamic property check template data:', dynamicData);
+        setChecklistItems(dynamicData);
+      } else {
+        // Fallback to default data if no template found
+        console.log('No property check template found, using fallback data');
+        setChecklistItems(getDefaultPropertyCheckData());
+      }
     } catch (error) {
-      console.error('Error initializing checklist:', error);
+      console.error('Error loading property check template:', error);
+      // Use default fallback data on error
+      setChecklistItems(getDefaultPropertyCheckData());
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const getDefaultPropertyCheckData = (): PropertyCheckData => ({
+    exterior: [
+      { id: 1, item: "Roof condition", completed: false, photos: [], notes: "", required: true },
+      { id: 2, item: "Gutters and downspouts", completed: false, photos: [], notes: "", required: true },
+      { id: 3, item: "Exterior walls and siding", completed: false, photos: [], notes: "", required: true },
+      { id: 4, item: "Windows and doors", completed: false, photos: [], notes: "", required: true },
+      { id: 5, item: "Driveway and walkways", completed: false, photos: [], notes: "", required: false },
+      { id: 6, item: "Landscaping and lawn", completed: false, photos: [], notes: "", required: false },
+      { id: 7, item: "Pool area (if applicable)", completed: false, photos: [], notes: "", required: false },
+    ],
+    interior: [
+      { id: 8, item: "HVAC system check", completed: false, photos: [], notes: "", required: true },
+      { id: 9, item: "Plumbing inspection", completed: false, photos: [], notes: "", required: true },
+      { id: 10, item: "Electrical systems", completed: false, photos: [], notes: "", required: true },
+      { id: 11, item: "Appliances functionality", completed: false, photos: [], notes: "", required: true },
+      { id: 12, item: "Interior walls and ceilings", completed: false, photos: [], notes: "", required: false },
+      { id: 13, item: "Flooring condition", completed: false, photos: [], notes: "", required: false },
+    ],
+    security: [
+      { id: 14, item: "Door locks and security", completed: false, photos: [], notes: "", required: true },
+      { id: 15, item: "Window locks", completed: false, photos: [], notes: "", required: true },
+      { id: 16, item: "Alarm system test", completed: false, photos: [], notes: "", required: true },
+      { id: 17, item: "Smoke detector test", completed: false, photos: [], notes: "", required: true },
+      { id: 18, item: "Carbon monoxide detector", completed: false, photos: [], notes: "", required: true },
+    ],
+    utilities: [
+      { id: 19, item: "Water meter reading", completed: false, photos: [], notes: "", required: true },
+      { id: 20, item: "Electrical meter reading", completed: false, photos: [], notes: "", required: true },
+      { id: 21, item: "Gas meter reading", completed: false, photos: [], notes: "", required: false },
+      { id: 22, item: "Water pressure test", completed: false, photos: [], notes: "", required: false },
+    ],
+    summary: [
+      { id: 23, item: "Overall property condition", completed: false, photos: [], notes: "", required: false },
+      { id: 24, item: "General visit notes", completed: false, photos: [], notes: "", required: false },
+      { id: 25, item: "Recommendations or concerns", completed: false, photos: [], notes: "", required: false },
+    ]
+  });
 
   // Timer effect to update elapsed time
   useEffect(() => {
@@ -152,6 +221,7 @@ export const usePropertyCheck = () => {
       }
     };
   }, [hasUnsavedChanges]);
+
 
   // Load existing check data if available
   useEffect(() => {
@@ -252,6 +322,22 @@ export const usePropertyCheck = () => {
       setIsSaving(false);
     }
   }, [checklistItems, propertyId, urlId, sessionId, sessionStarted, toast]);
+
+  // Auto-save effect - save every 30 seconds if there are unsaved changes
+  useEffect(() => {
+    let autoSaveInterval: NodeJS.Timeout;
+    
+    if (sessionStarted && hasUnsavedChanges && sessionId) {
+      autoSaveInterval = setInterval(async () => {
+        console.log('Auto-saving property check data...');
+        await savePropertyCheckData(false);
+      }, 30000); // Save every 30 seconds
+    }
+    
+    return () => {
+      if (autoSaveInterval) clearInterval(autoSaveInterval);
+    };
+  }, [sessionStarted, hasUnsavedChanges, sessionId, savePropertyCheckData]);
 
   // Debounced auto-save function
   const debouncedSave = useCallback(() => {
