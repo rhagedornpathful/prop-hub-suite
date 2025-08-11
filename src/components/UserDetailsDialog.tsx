@@ -48,7 +48,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface UserProfile {
-  id: string;
+  id: string; // This is the profile.id
+  user_id: string; // This is the auth.users.id - we need to use this for foreign key
   email: string;
   first_name: string | null;
   last_name: string | null;
@@ -61,6 +62,8 @@ interface UserProfile {
   state?: string | null;
   zip_code?: string | null;
   company_name?: string | null;
+  email_confirmed_at?: string | null;
+  last_sign_in_at?: string | null;
 }
 
 interface UserDetailsDialogProps {
@@ -113,7 +116,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.user_id) // Use user.user_id instead of user.id
         .single();
 
       console.log('UserDetailsDialog: Profile query result:', { profile, error });
@@ -145,7 +148,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
         await supabase
           .from('profiles')
           .insert({
-            user_id: user.id,
+            user_id: user.user_id, // Use user.user_id instead of user.id
             first_name: user.first_name,
             last_name: user.last_name,
             created_at: new Date().toISOString(),
@@ -237,7 +240,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
       const { data: profileUpdateData, error: profileError } = await supabase
         .from('profiles')
         .upsert({
-          user_id: user.id,
+          user_id: user.user_id, // Use user.user_id instead of user.id
           first_name: profileData.first_name || null,
           last_name: profileData.last_name || null,
           phone: profileData.phone || null,
@@ -267,7 +270,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
           const { error: deleteRoleError } = await supabase
             .from('user_roles')
             .delete()
-            .eq('user_id', user.id);
+            .eq('user_id', user.user_id); // Use user.user_id instead of user.id
           
           if (deleteRoleError) {
             console.error('Error deleting old role:', deleteRoleError);
@@ -279,7 +282,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
         const { error: roleError } = await supabase
           .from('user_roles')
           .insert({
-            user_id: user.id,
+            user_id: user.user_id, // Use user.user_id instead of user.id
             role: selectedRole as any, // Type assertion to handle enum conversion
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -298,7 +301,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
         try {
           const { error: emailError } = await supabase.functions.invoke('update-user-email', {
             body: {
-              userId: user.id,
+              userId: user.user_id, // Use user.user_id instead of user.id
               newEmail: profileData.email
             }
           });
@@ -429,7 +432,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
                   : 'No Name Set'
                 }
               </h2>
-              <p className="text-sm text-muted-foreground">ID: {user.id.slice(0, 8)}...</p>
+              <p className="text-sm text-muted-foreground">ID: {user.user_id.slice(0, 8)}...</p>
             </div>
           </DialogTitle>
         </DialogHeader>
