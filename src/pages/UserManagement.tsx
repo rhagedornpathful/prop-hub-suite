@@ -244,19 +244,21 @@ const UserManagement = () => {
         console.warn('Continuing without roles data');
       }
 
-      // Get actual user emails from edge function (for admin users)
+      // Get actual user emails from edge function
       let authUsersData: any[] = [];
-      if (isAdmin || isEmergencyMode) {
-        try {
-          const { data: authData, error: authError } = await supabase.functions.invoke('get-users-with-emails');
-          if (authError) {
-            console.error('❌ UserManagement: Error fetching auth users:', authError);
-          } else {
-            authUsersData = authData?.users || [];
-          }
-        } catch (authErr) {
-          console.warn('⚠️ UserManagement: Could not fetch auth users, showing without emails');
+      try {
+        console.log('📧 UserManagement: Attempting to fetch real user emails...');
+        const { data: authData, error: authError } = await supabase.functions.invoke('get-users-with-emails');
+        if (authError) {
+          console.error('❌ UserManagement: Edge function error:', authError);
+          console.warn('⚠️ UserManagement: Falling back to profile data only');
+        } else {
+          authUsersData = authData?.users || [];
+          console.log('✅ UserManagement: Successfully fetched real emails for', authUsersData.length, 'users');
         }
+      } catch (authErr) {
+        console.error('❌ UserManagement: Failed to call edge function:', authErr);
+        console.warn('⚠️ UserManagement: Will use fallback email generation');
       }
 
       console.log('📊 UserManagement: Profiles fetched:', profilesData?.length || 0);
