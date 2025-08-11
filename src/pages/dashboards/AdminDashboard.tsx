@@ -205,7 +205,65 @@ export function AdminDashboard() {
       {/* Real-time Operations Dashboard */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* System Health & Alerts */}
+          {/* Mission Control - Now prominently positioned first */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-primary">
+                <Zap className="h-5 w-5" />
+                Mission Control
+              </CardTitle>
+              <CardDescription>
+                Execute critical operations instantly
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <Link to="/properties/add">
+                  <Button className="w-full justify-start h-12" variant="outline">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Property
+                  </Button>
+                </Link>
+                
+                <Link to="/maintenance">
+                  <Button className="w-full justify-start h-12" variant="outline">
+                    <Wrench className="h-4 w-4 mr-2" />
+                    Schedule Maintenance
+                  </Button>
+                </Link>
+                
+                <Link to="/tenants/add">
+                  <Button className="w-full justify-start h-12" variant="outline">
+                    <Users className="h-4 w-4 mr-2" />
+                    Add Tenant
+                  </Button>
+                </Link>
+                
+                <Link to="/reports">
+                  <Button className="w-full justify-start h-12" variant="outline">
+                    <FileText className="h-4 w-4 mr-2" />
+                    Generate Report
+                  </Button>
+                </Link>
+                
+                <Link to="/messages">
+                  <Button className="w-full justify-start h-12" variant="outline">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Send Communication
+                  </Button>
+                </Link>
+
+                <Link to="/house-watching">
+                  <Button className="w-full justify-start h-12" variant="outline">
+                    <Eye className="h-4 w-4 mr-2" />
+                    House Watching
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* System Health & Alerts - Now moved to second position */}
           <AdminAlertCenter />
           
           {/* Advanced Analytics */}
@@ -296,61 +354,10 @@ export function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Right Sidebar - Recent Activity & Quick Actions */}
+        {/* Right Sidebar - Recent Activity & System Status */}
         <div className="space-y-6">
           <AdminRecentActivity />
           
-          {/* Mission Control - Quick Actions */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-primary">
-                <Zap className="h-5 w-5" />
-                Mission Control
-              </CardTitle>
-              <CardDescription>
-                Execute critical operations instantly
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="grid grid-cols-1 gap-2">
-                <Link to="/properties/add">
-                  <Button className="w-full justify-start" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Property
-                  </Button>
-                </Link>
-                
-                <Link to="/maintenance">
-                  <Button className="w-full justify-start" variant="outline">
-                    <Wrench className="h-4 w-4 mr-2" />
-                    Schedule Maintenance
-                  </Button>
-                </Link>
-                
-                <Link to="/tenants/add">
-                  <Button className="w-full justify-start" variant="outline">
-                    <Users className="h-4 w-4 mr-2" />
-                    Add Tenant
-                  </Button>
-                </Link>
-                
-                <Link to="/reports">
-                  <Button className="w-full justify-start" variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Generate Report
-                  </Button>
-                </Link>
-                
-                <Link to="/messages">
-                  <Button className="w-full justify-start" variant="outline">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Send Communication
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* System Status */}
           <Card>
             <CardHeader>
