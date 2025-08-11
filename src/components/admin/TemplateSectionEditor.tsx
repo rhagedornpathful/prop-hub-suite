@@ -239,7 +239,7 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
                         <Label className="text-xs">Required</Label>
                       </div>
                       <div className="flex gap-2">
-                        <Button onClick={handleUpdateItem} size="sm">Save</Button>
+                        <Button onClick={() => { console.log('Save button clicked!'); handleUpdateItem(); }} size="sm">Save</Button>
                         <Button onClick={() => setEditingItem(null)} variant="outline" size="sm">Cancel</Button>
                       </div>
                     </div>
