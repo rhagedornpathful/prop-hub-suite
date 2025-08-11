@@ -38,7 +38,7 @@ import { Label } from "@/components/ui/label";
 import { useProperties, useUpdateProperty } from "@/hooks/queries/useProperties";
 import { useDeleteProperty } from "@/hooks/useDeleteProperty";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
-import { AddPropertyDialog } from "@/components/AddPropertyDialog";
+import { StreamlinedAddPropertyDialog } from "@/components/StreamlinedAddPropertyDialog";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { BulkManagementTools } from "@/components/BulkManagementTools";
@@ -234,7 +234,7 @@ const Properties = () => {
         )}
 
         {/* Dialogs */}
-        <AddPropertyDialog
+        <StreamlinedAddPropertyDialog
           open={showAddProperty}
           onOpenChange={setShowAddProperty}
           editProperty={selectedProperty}
@@ -603,7 +603,7 @@ const Properties = () => {
       )}
 
       {/* Dialogs */}
-      <AddPropertyDialog 
+      <StreamlinedAddPropertyDialog 
         open={showAddProperty}
         onOpenChange={setShowAddProperty}
         editProperty={selectedProperty}
