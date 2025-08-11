@@ -59,6 +59,7 @@ import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
 import { AdvancedSearch } from "@/components/admin/AdvancedSearch";
 import { QuickActions } from "@/components/admin/QuickActions";
 import { NavigationHub } from "@/components/admin/NavigationHub";
+import { cn } from "@/lib/utils";
 
 export function AdminDashboard() {
   // Real-time connection management
@@ -209,7 +210,7 @@ export function AdminDashboard() {
 
   return (
     <AdminErrorBoundary>
-      <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-to-br from-background to-muted/20">
+      <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-subtle min-h-screen">
         
         {/* Breadcrumb Navigation */}
         <AdminBreadcrumbs />
@@ -221,19 +222,19 @@ export function AdminDashboard() {
         </div>
 
         {/* Command Center Header with Real-time Status */}
-        <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+        <div className="text-center space-y-3 py-6">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <h1 className="text-2xl md:text-5xl font-display font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               Command Center
             </h1>
-            <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+            <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-success shadow-glow animate-pulse' : 'bg-destructive'}`} />
           </div>
-          <p className="text-muted-foreground text-sm md:text-lg">
+          <p className="text-muted-foreground text-sm md:text-lg font-medium">
             Complete oversight and control of your property management operations
           </p>
           <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-            <span>Last Update: {realTimeMetrics.lastUpdateTime.toLocaleTimeString()}</span>
-            <Button variant="ghost" size="sm" onClick={refreshAllData} className="h-6 px-2">
+            <span className="font-mono">Last Update: {realTimeMetrics.lastUpdateTime.toLocaleTimeString()}</span>
+            <Button variant="ghost" size="sm" onClick={refreshAllData} className="h-7 px-3 hover:bg-primary/10 transition-colors">
               <Activity className="h-3 w-3 mr-1" />
               Refresh
             </Button>
@@ -249,56 +250,70 @@ export function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
         <div className="lg:col-span-2 space-y-3 md:space-y-6">
           {/* Mission Control - Prominently positioned first */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-primary">
-                <Zap className="h-5 w-5" />
+          <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-primary font-display text-xl">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <Zap className="h-5 w-5" />
+                </div>
                 Mission Control
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-muted-foreground">
                 Execute critical operations instantly
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Link to="/properties/add">
-                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
-                    <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <Button className="w-full justify-start h-11 md:h-12 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                    <div className="p-1.5 rounded-md bg-success/10 mr-3">
+                      <Plus className="h-4 w-4 text-success" />
+                    </div>
                     Add Property
                   </Button>
                 </Link>
                 
                 <Link to="/maintenance">
-                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
-                    <Wrench className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <Button className="w-full justify-start h-11 md:h-12 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                    <div className="p-1.5 rounded-md bg-warning/10 mr-3">
+                      <Wrench className="h-4 w-4 text-warning" />
+                    </div>
                     <span className="hidden sm:inline">Schedule </span>Maintenance
                   </Button>
                 </Link>
                 
                 <Link to="/tenants/add">
-                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
-                    <Users className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <Button className="w-full justify-start h-11 md:h-12 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                    <div className="p-1.5 rounded-md bg-info/10 mr-3">
+                      <Users className="h-4 w-4 text-info" />
+                    </div>
                     Add Tenant
                   </Button>
                 </Link>
                 
                 <Link to="/reports">
-                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
-                    <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <Button className="w-full justify-start h-11 md:h-12 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                    <div className="p-1.5 rounded-md bg-secondary/10 mr-3">
+                      <FileText className="h-4 w-4 text-secondary" />
+                    </div>
                     <span className="hidden sm:inline">Generate </span>Report
                   </Button>
                 </Link>
                 
                 <Link to="/messages">
-                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
-                    <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <Button className="w-full justify-start h-11 md:h-12 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                    <div className="p-1.5 rounded-md bg-accent/10 mr-3">
+                      <MessageSquare className="h-4 w-4 text-accent" />
+                    </div>
                     <span className="hidden sm:inline">Send </span>Communication
                   </Button>
                 </Link>
 
                 <Link to="/house-watching">
-                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
-                    <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                  <Button className="w-full justify-start h-11 md:h-12 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]" variant="outline">
+                    <div className="p-1.5 rounded-md bg-primary/10 mr-3">
+                      <Eye className="h-4 w-4 text-primary" />
+                    </div>
                     House Watching
                   </Button>
                 </Link>
@@ -306,11 +321,13 @@ export function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Performance Analytics - Moved up to second position */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5" />
+          {/* Performance Analytics - Enhanced with better styling */}
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-glass backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 font-display">
+                <div className="p-2 rounded-lg bg-chart-1/10">
+                  <TrendingUp className="h-5 w-5 text-chart-1" />
+                </div>
                 Performance Analytics
               </CardTitle>
             </CardHeader>
@@ -410,46 +427,51 @@ export function AdminDashboard() {
             <AdminAlertCenter />
           </DashboardSectionErrorBoundary>
           
-          {/* System Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Server className="h-5 w-5" />
+          {/* System Status - Enhanced styling */}
+          <Card className="shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-glass backdrop-blur-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 font-display">
+                <div className="p-2 rounded-lg bg-info/10">
+                  <Server className="h-5 w-5 text-info" />
+                </div>
                 System Status
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Database</span>
-                <Badge variant="default" className="bg-green-500">
+                <span className="text-sm font-medium">Database</span>
+                <Badge variant="default" className="bg-success text-success-foreground shadow-sm">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Online
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">API Services</span>
-                <Badge variant="default" className="bg-green-500">
+                <span className="text-sm font-medium">API Services</span>
+                <Badge variant="default" className="bg-success text-success-foreground shadow-sm">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Operational
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Notifications</span>
-                <Badge variant="default" className="bg-green-500">
+                <span className="text-sm font-medium">Notifications</span>
+                <Badge variant="default" className="bg-success text-success-foreground shadow-sm">
                   <CheckCircle className="h-3 w-3 mr-1" />
                   Active
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Real-time Status</span>
-                <Badge variant={isConnected ? "default" : "destructive"} className={isConnected ? "bg-green-500" : ""}>
+                <span className="text-sm font-medium">Real-time Status</span>
+                <Badge variant={isConnected ? "default" : "destructive"} className={cn(
+                  "shadow-sm",
+                  isConnected ? "bg-success text-success-foreground" : ""
+                )}>
                   {isConnected ? <CheckCircle className="h-3 w-3 mr-1" /> : <X className="h-3 w-3 mr-1" />}
                   {isConnected ? 'Connected' : 'Disconnected'}
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Active Channels</span>
-                <Badge variant="secondary">
+                <span className="text-sm font-medium">Active Channels</span>
+                <Badge variant="secondary" className="shadow-sm">
                   <Activity className="h-3 w-3 mr-1" />
                   {realTimeMetrics.activeConnections}
                 </Badge>
