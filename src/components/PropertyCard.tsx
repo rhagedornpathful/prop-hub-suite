@@ -236,8 +236,17 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
               <span className="text-sm text-gray-600">
                 {property.displayAddress || 
                  (isPropertyManagement && propertyManagementData ? 
-                   [propertyManagementData.city, propertyManagementData.state, propertyManagementData.zip_code]
-                     .filter(Boolean).join(', ') :
+                   (() => {
+                     const city = propertyManagementData.city;
+                     const state = propertyManagementData.state;
+                     const zip = propertyManagementData.zip_code;
+                     
+                     // If city is already in the main address, don't repeat it
+                     const addressIncludesCity = city && property.address.toLowerCase().includes(city.toLowerCase());
+                     const parts = addressIncludesCity ? [state, zip] : [city, state, zip];
+                     
+                     return parts.filter(Boolean).join(', ');
+                   })() :
                    property.displayAddress
                  )}
               </span>
