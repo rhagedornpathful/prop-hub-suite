@@ -56,8 +56,11 @@ serve(async (req) => {
     }
 
     const { userId, newPassword, resetType } = await req.json()
+    
+    console.log('Reset password request:', { userId, resetType, hasPassword: !!newPassword })
 
     if (!userId) {
+      console.error('No userId provided')
       return new Response(
         JSON.stringify({ error: 'User ID is required' }),
         { 
