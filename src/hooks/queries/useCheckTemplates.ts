@@ -58,7 +58,7 @@ export const useCheckTemplates = (type?: 'home_check' | 'property_check') => {
       try {
         console.log('Fetching templates with sections and items...');
         
-        // Get templates with their sections and items
+        // Get templates with their sections and items, properly ordered
         const { data: templates, error: templatesError } = await supabase
           .from('check_templates' as any)
           .select(`
@@ -78,11 +78,23 @@ export const useCheckTemplates = (type?: 'home_check' | 'property_check') => {
 
         console.log('Found templates with sections:', templates);
         
-        // Filter by type if specified
+        // Filter by type if specified and ensure proper ordering
         let filteredTemplates = templates || [];
         if (type && filteredTemplates.length > 0) {
           filteredTemplates = filteredTemplates.filter((t: any) => t.type === type);
         }
+        
+        // Sort sections and items within each template
+        filteredTemplates.forEach((template: any) => {
+          if (template.sections) {
+            template.sections.sort((a: any, b: any) => a.sort_order - b.sort_order);
+            template.sections.forEach((section: any) => {
+              if (section.items) {
+                section.items.sort((a: any, b: any) => a.sort_order - b.sort_order);
+              }
+            });
+          }
+        });
         
         return filteredTemplates;
       } catch (error) {
@@ -91,7 +103,8 @@ export const useCheckTemplates = (type?: 'home_check' | 'property_check') => {
       }
     },
     enabled: true,
-    staleTime: 30000,
+    staleTime: 5000, // Reduced stale time for more frequent updates
+    refetchOnWindowFocus: true,
   });
 };
 
@@ -277,6 +290,8 @@ export const useCreateCheckTemplateSection = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['check-template'] });
+      queryClient.refetchQueries({ queryKey: ['check-templates'] });
       toast({
         title: "Section Created",
         description: "Template section has been created successfully",
@@ -307,6 +322,9 @@ export const useCreateCheckTemplateItem = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['check-template'] });
+      // Force refetch of all related queries
+      queryClient.refetchQueries({ queryKey: ['check-templates'] });
       toast({
         title: "Item Created",
         description: "Check item has been created successfully",
@@ -334,6 +352,8 @@ export const useUpdateCheckTemplateSection = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['check-template'] });
+      queryClient.refetchQueries({ queryKey: ['check-templates'] });
       toast({
         title: "Section Updated",
         description: "Template section has been updated successfully",
@@ -410,6 +430,7 @@ export const useUpdateCheckTemplateItem = () => {
       console.log('updateCheckTemplateItem - Success, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
       queryClient.invalidateQueries({ queryKey: ['check-template'] });
+      queryClient.refetchQueries({ queryKey: ['check-templates'] });
       toast({
         title: "Item Updated",
         description: "Check item has been updated successfully",
