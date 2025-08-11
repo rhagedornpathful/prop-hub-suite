@@ -161,6 +161,21 @@ export function AdminRecentActivity() {
   const { data: propertyMetrics } = usePropertyMetrics();
   const { data: tenantData } = useTenants();
 
+  // Helper function to format time ago
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minutes ago`;
+    } else if (diffInMinutes < 1440) {
+      return `${Math.floor(diffInMinutes / 60)} hours ago`;
+    } else {
+      return `${Math.floor(diffInMinutes / 1440)} days ago`;
+    }
+  };
+
   // Generate real recent activity from database
   const activities = [];
 
@@ -203,8 +218,7 @@ export function AdminRecentActivity() {
 
   // Sort by most recent and limit to 4
   const sortedActivities = activities
-    .sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
-    .slice(0, 4);
+    .slice(0, 4); // Just take the first 4 instead of trying to sort by parsed time strings
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -216,19 +230,6 @@ export function AdminRecentActivity() {
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
-    if (diffInMinutes < 60) {
-      return `${diffInMinutes} minutes ago`;
-    } else if (diffInMinutes < 1440) {
-      return `${Math.floor(diffInMinutes / 60)} hours ago`;
-    } else {
-      return `${Math.floor(diffInMinutes / 1440)} days ago`;
-    }
-  };
 
   return (
     <Card>
