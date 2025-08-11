@@ -176,10 +176,10 @@ export default function Activity() {
 
   if (isLoading) {
     return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Activity Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Monitor all property activities across your portfolio</p>
+      <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-subtle min-h-screen">
+        <div className="text-center space-y-3 py-6">
+          <h1 className="text-2xl md:text-5xl font-display font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Activity Dashboard</h1>
+          <p className="text-muted-foreground text-sm md:text-lg font-medium">Monitor all property activities across your portfolio</p>
         </div>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -190,10 +190,10 @@ export default function Activity() {
 
   if (error) {
     return (
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Activity Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Monitor all property activities across your portfolio</p>
+      <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-subtle min-h-screen">
+        <div className="text-center space-y-3 py-6">
+          <h1 className="text-2xl md:text-5xl font-display font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">Activity Dashboard</h1>
+          <p className="text-muted-foreground text-sm md:text-lg font-medium">Monitor all property activities across your portfolio</p>
         </div>
         <Card>
           <CardContent className="pt-6">
@@ -211,58 +211,73 @@ export default function Activity() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground">Activity Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Monitor all property activities across your portfolio</p>
+    <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-subtle min-h-screen">
+      {/* Header Section */}
+      <div className="text-center space-y-3 py-6">
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <h1 className="text-2xl md:text-5xl font-display font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+            Activity Dashboard
+          </h1>
+        </div>
+        <p className="text-muted-foreground text-sm md:text-lg font-medium">
+          Monitor all property activities across your portfolio
+        </p>
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+      <div className="grid gap-3 md:gap-6 md:grid-cols-4">
+        <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Total Activities</p>
                 <p className="text-2xl font-bold text-foreground">{metrics.total}</p>
               </div>
-              <ActivityIcon className="h-8 w-8 text-muted-foreground" />
+              <div className="p-2 rounded-lg bg-primary/10">
+                <ActivityIcon className="h-6 w-6 text-primary" />
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border-warning/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Pending</p>
-                <p className="text-2xl font-bold text-yellow-600">{metrics.pending}</p>
+                <p className="text-2xl font-bold text-warning">{metrics.pending}</p>
               </div>
-              <Clock className="h-8 w-8 text-yellow-600" />
+              <div className="p-2 rounded-lg bg-warning/10">
+                <Clock className="h-6 w-6 text-warning" />
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border-info/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">In Progress</p>
-                <p className="text-2xl font-bold text-blue-600">{metrics.inProgress}</p>
+                <p className="text-2xl font-bold text-info">{metrics.inProgress}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-blue-600" />
+              <div className="p-2 rounded-lg bg-info/10">
+                <TrendingUp className="h-6 w-6 text-info" />
+              </div>
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="border-destructive/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Overdue</p>
-                <p className="text-2xl font-bold text-red-600">{metrics.overdue}</p>
+                <p className="text-2xl font-bold text-destructive">{metrics.overdue}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+              <div className="p-2 rounded-lg bg-destructive/10">
+                <AlertTriangle className="h-6 w-6 text-destructive" />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -270,10 +285,12 @@ export default function Activity() {
 
 
       {/* Filters */}
-      <Card>
+      <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored">
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Filter className="w-4 h-4" />
+          <CardTitle className="flex items-center gap-2 text-lg text-primary font-display">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Filter className="w-4 h-4" />
+            </div>
             Filters
           </CardTitle>
         </CardHeader>
@@ -386,9 +403,9 @@ export default function Activity() {
 
 
       {/* Activities Table */}
-      <Card>
+      <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored">
         <CardHeader>
-          <CardTitle>Recent Activities ({sortedActivities.length})</CardTitle>
+          <CardTitle className="text-primary font-display">Recent Activities ({sortedActivities.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
