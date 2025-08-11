@@ -33,20 +33,9 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
 
-    // Enhanced scraping with better prompts
+    // Enhanced scraping with Firecrawl v1 API
     const scrapeResult = await firecrawl.scrapeUrl(url, {
-      formats: ['markdown', 'html'],
-      extractorOptions: {
-        extractionPrompt: `Extract comprehensive property data including:
-        - Basic info: address, price, bedrooms, bathrooms, square footage
-        - Financial: estimated value, rent estimate, HOA fees, property taxes
-        - Property details: year built, lot size, property type, parking
-        - Market data: days on market, price history, neighborhood info
-        - Amenities and features
-        - School ratings and walkability scores
-        - Energy efficiency information
-        Return as structured JSON with clear field names.`
-      }
+      formats: ['markdown', 'html']
     })
 
     if (!scrapeResult.success) {
