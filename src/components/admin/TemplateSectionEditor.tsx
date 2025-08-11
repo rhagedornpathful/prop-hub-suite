@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Trash2, GripVertical } from 'lucide-react';
 import { useCreateCheckTemplateSection, useCreateCheckTemplateItem, useUpdateCheckTemplateSection, useDeleteCheckTemplateSection, useUpdateCheckTemplateItem, useDeleteCheckTemplateItem } from '@/hooks/queries/useCheckTemplates';
+import { useDrag } from '@use-gesture/react';
 
 interface TemplateSectionEditorProps {
   template: any;
@@ -21,6 +22,8 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editSectionData, setEditSectionData] = useState({ name: '', description: '' });
   const [editItemData, setEditItemData] = useState({ text: '', required: false });
+  const [draggedSection, setDraggedSection] = useState<string | null>(null);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
 
   const createSectionMutation = useCreateCheckTemplateSection();
   const createItemMutation = useCreateCheckTemplateItem();
@@ -132,6 +135,84 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
     }
   };
 
+  const reorderSections = (fromIndex: number, toIndex: number) => {
+    const sections = [...template.sections];
+    const [moved] = sections.splice(fromIndex, 1);
+    sections.splice(toIndex, 0, moved);
+    
+    // Update sort_order for all affected sections
+    sections.forEach((section, index) => {
+      if (section.sort_order !== index) {
+        updateSectionMutation.mutate({
+          id: section.id,
+          updates: { sort_order: index }
+        });
+      }
+    });
+  };
+
+  const reorderItems = (sectionId: string, fromIndex: number, toIndex: number) => {
+    const section = template.sections?.find((s: any) => s.id === sectionId);
+    if (!section?.items) return;
+    
+    const items = [...section.items];
+    const [moved] = items.splice(fromIndex, 1);
+    items.splice(toIndex, 0, moved);
+    
+    // Update sort_order for all affected items
+    items.forEach((item, index) => {
+      if (item.sort_order !== index) {
+        updateItemMutation.mutate({
+          id: item.id,
+          updates: { sort_order: index }
+        });
+      }
+    });
+  };
+
+  const getSectionDragProps = (section: any, index: number) => {
+    return useDrag(
+      ({ active, movement: [, my], memo = index }) => {
+        if (active && Math.abs(my) > 20) {
+          const newIndex = Math.max(0, Math.min(template.sections.length - 1, 
+            memo + Math.round(my / 60)));
+          if (newIndex !== index) {
+            reorderSections(index, newIndex);
+            return newIndex;
+          }
+        }
+        return memo;
+      },
+      {
+        from: () => [0, 0],
+        bounds: { top: -index * 60, bottom: (template.sections.length - index - 1) * 60 }
+      }
+    )();
+  };
+
+  const getItemDragProps = (item: any, sectionId: string, index: number) => {
+    const section = template.sections?.find((s: any) => s.id === sectionId);
+    const itemCount = section?.items?.length || 0;
+    
+    return useDrag(
+      ({ active, movement: [, my], memo = index }) => {
+        if (active && Math.abs(my) > 20) {
+          const newIndex = Math.max(0, Math.min(itemCount - 1, 
+            memo + Math.round(my / 50)));
+          if (newIndex !== index) {
+            reorderItems(sectionId, index, newIndex);
+            return newIndex;
+          }
+        }
+        return memo;
+      },
+      {
+        from: () => [0, 0],
+        bounds: { top: -index * 50, bottom: (itemCount - index - 1) * 50 }
+      }
+    )();
+  };
+
   console.log('Template in TemplateSectionEditor:', template);
   console.log('Template sections:', template?.sections);
 
@@ -181,85 +262,94 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
       )}
 
       <div className="space-y-4">
-        {template.sections?.map((section: any) => (
-          <Card key={section.id}>
-            <CardHeader className="pb-3">
-              {editingSection === section.id ? (
-                <div className="space-y-2">
-                  <Input
-                    value={editSectionData.name}
-                    onChange={(e) => setEditSectionData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Section name"
-                  />
-                  <Textarea
-                    value={editSectionData.description}
-                    onChange={(e) => setEditSectionData(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Section description"
-                    rows={2}
-                  />
-                  <div className="flex gap-2">
-                    <Button onClick={handleUpdateSection} size="sm">Save</Button>
-                    <Button onClick={() => setEditingSection(null)} variant="outline" size="sm">Cancel</Button>
+        {template.sections?.map((section: any, sectionIndex: number) => {
+          const sectionDragProps = getSectionDragProps(section, sectionIndex);
+          return (
+            <Card key={section.id} className="touch-none">
+              <CardHeader className="pb-3">
+                {editingSection === section.id ? (
+                  <div className="space-y-2">
+                    <Input
+                      value={editSectionData.name}
+                      onChange={(e) => setEditSectionData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Section name"
+                    />
+                    <Textarea
+                      value={editSectionData.description}
+                      onChange={(e) => setEditSectionData(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Section description"
+                      rows={2}
+                    />
+                    <div className="flex gap-2">
+                      <Button onClick={handleUpdateSection} size="sm">Save</Button>
+                      <Button onClick={() => setEditingSection(null)} variant="outline" size="sm">Cancel</Button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex-1">
-                    <CardTitle className="text-base">{section.name}</CardTitle>
-                    {section.description && (
-                      <p className="text-sm text-muted-foreground">{section.description}</p>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <div {...sectionDragProps} className="cursor-grab active:cursor-grabbing">
+                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <CardTitle className="text-base">{section.name}</CardTitle>
+                      {section.description && (
+                        <p className="text-sm text-muted-foreground">{section.description}</p>
+                      )}
+                    </div>
+                    <Badge variant="outline">{section.items?.length || 0} items</Badge>
+                    <Button variant="ghost" size="sm" onClick={() => handleEditSection(section)}>
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDeleteSection(section.id)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </CardHeader>
+            <CardContent className="space-y-3">
+              {section.items?.map((item: any, itemIndex: number) => {
+                const itemDragProps = getItemDragProps(item, section.id, itemIndex);
+                return (
+                  <div key={item.id} className="border rounded p-2 touch-none">
+                    {editingItem === item.id ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={editItemData.text}
+                          onChange={(e) => setEditItemData(prev => ({ ...prev, text: e.target.value }))}
+                          placeholder="Item text"
+                        />
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={editItemData.required}
+                            onCheckedChange={(checked) => setEditItemData(prev => ({ ...prev, required: checked }))}
+                          />
+                          <Label className="text-xs">Required</Label>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button onClick={() => { console.log('Save button clicked!'); handleUpdateItem(); }} size="sm">Save</Button>
+                          <Button onClick={() => setEditingItem(null)} variant="outline" size="sm">Cancel</Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <div {...itemDragProps} className="cursor-grab active:cursor-grabbing">
+                          <GripVertical className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <span className="flex-1">{item.item_text}</span>
+                        {item.is_required && (
+                          <Badge variant="secondary" className="text-xs">Required</Badge>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={() => handleEditItem(item)}>
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(item.id)}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
                   </div>
-                  <Badge variant="outline">{section.items?.length || 0} items</Badge>
-                  <Button variant="ghost" size="sm" onClick={() => handleEditSection(section)}>
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteSection(section.id)}>
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {section.items?.map((item: any) => (
-                <div key={item.id} className="border rounded p-2">
-                  {editingItem === item.id ? (
-                    <div className="space-y-2">
-                      <Input
-                        value={editItemData.text}
-                        onChange={(e) => setEditItemData(prev => ({ ...prev, text: e.target.value }))}
-                        placeholder="Item text"
-                      />
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={editItemData.required}
-                          onCheckedChange={(checked) => setEditItemData(prev => ({ ...prev, required: checked }))}
-                        />
-                        <Label className="text-xs">Required</Label>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button onClick={() => { console.log('Save button clicked!'); handleUpdateItem(); }} size="sm">Save</Button>
-                        <Button onClick={() => setEditingItem(null)} variant="outline" size="sm">Cancel</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
-                      <span className="flex-1">{item.item_text}</span>
-                      {item.is_required && (
-                        <Badge variant="secondary" className="text-xs">Required</Badge>
-                      )}
-                      <Button variant="ghost" size="sm" onClick={() => handleEditItem(item)}>
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDeleteItem(item.id)}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
               
               <div className="border-t pt-3 space-y-2">
                 <div className="flex gap-2">
@@ -286,7 +376,8 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
