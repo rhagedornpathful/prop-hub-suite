@@ -136,6 +136,7 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
   };
 
   const reorderSections = (fromIndex: number, toIndex: number) => {
+    console.log('Reordering sections:', { fromIndex, toIndex });
     const sections = [...template.sections];
     const [moved] = sections.splice(fromIndex, 1);
     sections.splice(toIndex, 0, moved);
@@ -143,6 +144,7 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
     // Update sort_order for all affected sections
     sections.forEach((section, index) => {
       if (section.sort_order !== index) {
+        console.log('Updating section sort_order:', section.id, 'from', section.sort_order, 'to', index);
         updateSectionMutation.mutate({
           id: section.id,
           updates: { sort_order: index }
@@ -152,16 +154,21 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
   };
 
   const reorderItems = (sectionId: string, fromIndex: number, toIndex: number) => {
+    console.log('Reordering items:', { sectionId, fromIndex, toIndex });
     const section = template.sections?.find((s: any) => s.id === sectionId);
-    if (!section?.items) return;
+    if (!section?.items) {
+      console.log('No section or items found');
+      return;
+    }
     
-    const items = [...section.items];
+    const items = [...section.items].sort((a, b) => a.sort_order - b.sort_order);
     const [moved] = items.splice(fromIndex, 1);
     items.splice(toIndex, 0, moved);
     
     // Update sort_order for all affected items
     items.forEach((item, index) => {
       if (item.sort_order !== index) {
+        console.log('Updating item sort_order:', item.id, 'from', item.sort_order, 'to', index);
         updateItemMutation.mutate({
           id: item.id,
           updates: { sort_order: index }
@@ -173,9 +180,11 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
   const getSectionDragProps = (section: any, index: number) => {
     return useDrag(
       ({ active, movement: [, my], memo = index }) => {
-        if (active && Math.abs(my) > 20) {
+        console.log('Section drag:', { active, my, memo, index });
+        if (active && Math.abs(my) > 30) {
           const newIndex = Math.max(0, Math.min(template.sections.length - 1, 
-            memo + Math.round(my / 60)));
+            memo + Math.round(my / 80)));
+          console.log('Calculated new index:', newIndex, 'current:', index);
           if (newIndex !== index) {
             reorderSections(index, newIndex);
             return newIndex;
@@ -185,7 +194,7 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
       },
       {
         from: () => [0, 0],
-        bounds: { top: -index * 60, bottom: (template.sections.length - index - 1) * 60 }
+        bounds: { top: -index * 80, bottom: (template.sections.length - index - 1) * 80 }
       }
     )();
   };
@@ -196,9 +205,11 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
     
     return useDrag(
       ({ active, movement: [, my], memo = index }) => {
-        if (active && Math.abs(my) > 20) {
+        console.log('Item drag:', { active, my, memo, index, itemId: item.id });
+        if (active && Math.abs(my) > 30) {
           const newIndex = Math.max(0, Math.min(itemCount - 1, 
-            memo + Math.round(my / 50)));
+            memo + Math.round(my / 60)));
+          console.log('Calculated new item index:', newIndex, 'current:', index);
           if (newIndex !== index) {
             reorderItems(sectionId, index, newIndex);
             return newIndex;
@@ -208,7 +219,7 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
       },
       {
         from: () => [0, 0],
-        bounds: { top: -index * 50, bottom: (itemCount - index - 1) * 50 }
+        bounds: { top: -index * 60, bottom: (itemCount - index - 1) * 60 }
       }
     )();
   };
@@ -307,7 +318,7 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
                 )}
               </CardHeader>
             <CardContent className="space-y-3">
-              {section.items?.map((item: any, itemIndex: number) => {
+              {section.items?.sort((a: any, b: any) => a.sort_order - b.sort_order).map((item: any, itemIndex: number) => {
                 const itemDragProps = getItemDragProps(item, section.id, itemIndex);
                 return (
                   <div key={item.id} className="border rounded p-2 touch-none">
