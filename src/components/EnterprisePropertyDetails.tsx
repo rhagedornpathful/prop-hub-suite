@@ -192,8 +192,8 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden p-0">
-        <div className="flex flex-col h-full">
+      <DialogContent className="max-w-7xl h-[95vh] overflow-hidden p-0 flex flex-col">
+        <div className="flex flex-col h-full min-h-0">
           {/* Header */}
           <DialogHeader className="p-6 border-b bg-gradient-subtle">
             <div className="flex items-start justify-between">
@@ -242,9 +242,9 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
           </DialogHeader>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto">
-            <Tabs defaultValue="overview" className="h-full">
-              <TabsList className="w-full justify-start p-6 pb-0 bg-transparent">
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            <Tabs defaultValue="overview" className="h-full flex flex-col">
+              <TabsList className="w-full justify-start p-6 pb-0 bg-transparent flex-shrink-0">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <Home className="h-4 w-4" />
                   Overview
@@ -267,7 +267,7 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="overview" className="p-6 space-y-6">
+              <TabsContent value="overview" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
                 {/* Key Metrics Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <Card className="relative overflow-hidden bg-gradient-to-br from-success/10 to-success/5 border-success/20">
@@ -505,7 +505,7 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 )}
               </TabsContent>
 
-              <TabsContent value="financials" className="p-6 space-y-6">
+              <TabsContent value="financials" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
                 {/* Financial Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
@@ -618,7 +618,7 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 </Card>
               </TabsContent>
 
-              <TabsContent value="market" className="p-6 space-y-6">
+              <TabsContent value="market" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
@@ -713,7 +713,7 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 </Card>
               </TabsContent>
 
-              <TabsContent value="details" className="p-6 space-y-6">
+              <TabsContent value="details" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Property Specifications */}
                   <Card>
@@ -837,7 +837,7 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 </Card>
               </TabsContent>
 
-              <TabsContent value="media" className="p-6 space-y-6">
+              <TabsContent value="media" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg flex items-center gap-2">
