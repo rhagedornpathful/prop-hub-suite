@@ -369,11 +369,21 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
   const handlePasswordReset = async (resetType: 'reset_link' | 'set_password') => {
     if (!user) return;
 
+    // Check if user has a valid auth account
+    if (!user.email) {
+      toast({
+        title: "Reset Failed",
+        description: "This user doesn't have an email address associated with their account",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setPasswordResetLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('reset-user-password', {
         body: {
-          userId: resetType === 'reset_link' ? user.email : user.id,
+          userId: user.email, // Always use email for both reset types
           resetType,
           newPassword: resetType === 'set_password' ? newPassword : undefined
         }
@@ -392,9 +402,17 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
       setNewPassword('');
     } catch (error: any) {
       console.error('Password reset error:', error);
+      let errorMessage = "Failed to reset password";
+      
+      if (error.message?.includes('User not found')) {
+        errorMessage = "This user doesn't have an account in the system yet. Please create an account for them first.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Reset Failed",
-        description: error.message || "Failed to reset password",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
