@@ -178,11 +178,11 @@ export function StreamlinedAddPropertyDialog({
       if (data?.success && data?.propertyData) {
         console.log('Property data found, updating state:', data.propertyData);
         
-        // Map Zillow fields to our database fields - exclude price field
-        const { price, ...zillowDataWithoutPrice } = data.propertyData;
+        // Map Zillow fields to our database fields - exclude fields not in DB schema
+        const { price, price_per_sqft, ...zillowDataWithoutExtraFields } = data.propertyData;
         const mappedData = {
           ...propertyData,
-          ...zillowDataWithoutPrice,
+          ...zillowDataWithoutExtraFields,
           address: data.propertyData.address || propertyData.address,
           estimated_value: price || data.propertyData.estimated_value, // Map price to estimated_value
           monthly_rent: data.propertyData.rent_estimate || data.propertyData.monthly_rent,
