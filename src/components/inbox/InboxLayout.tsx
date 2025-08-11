@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
-import { Search, Menu, Star, Archive, Tag, Users, Building, Clock, AlertTriangle } from 'lucide-react';
+import { Search, Menu, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { InboxSidebar } from './InboxSidebar';
 import { MessageList } from './MessageList';
 import { MessageView } from './MessageView';
 import { ComposeDialog } from './ComposeDialog';
-import { InboxStats } from './InboxStats';
 import { useInboxConversations } from '@/hooks/queries/useInbox';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -31,7 +29,6 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
   const unreadCount = conversations.filter(c => c.unread_count > 0).length;
-  const priorityCount = conversations.filter(c => c.priority === 'high').length;
 
   return (
     <div className={`flex h-screen bg-background ${className}`}>
@@ -49,7 +46,7 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
+        {/* Gmail-style Header */}
         <div className="h-14 border-b border-border bg-card px-4 flex items-center gap-3">
           <Button
             variant="ghost"
@@ -72,27 +69,14 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="hidden sm:flex">
-              {conversations.length} conversations
+          {unreadCount > 0 && (
+            <Badge variant="destructive">
+              {unreadCount} unread
             </Badge>
-            {unreadCount > 0 && (
-              <Badge variant="destructive">
-                {unreadCount} unread
-              </Badge>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Stats Dashboard */}
-        <InboxStats
-          totalConversations={conversations.length}
-          unreadCount={unreadCount}
-          priorityCount={priorityCount}
-          responseTime="2.1h"
-        />
-
-        {/* Content Area */}
+        {/* Gmail-style Content Area */}
         <div className="flex-1 flex min-h-0">
           {/* Message List */}
           <div className="w-80 border-r border-border bg-card overflow-hidden">

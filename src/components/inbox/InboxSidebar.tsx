@@ -77,12 +77,6 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
 
   const businessFilters = [
     { 
-      id: 'properties', 
-      label: 'Property Related', 
-      icon: Building,
-      color: 'text-indigo-600'
-    },
-    { 
       id: 'maintenance', 
       label: 'Maintenance', 
       icon: Wrench,
@@ -90,9 +84,15 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
     },
     { 
       id: 'tenants', 
-      label: 'Tenant Messages', 
+      label: 'Tenants', 
       icon: Users,
       color: 'text-purple-600'
+    },
+    { 
+      id: 'properties', 
+      label: 'Properties', 
+      icon: Building,
+      color: 'text-indigo-600'
     }
   ];
 
@@ -168,47 +168,12 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
 
         <Separator className="my-3" />
 
-        {/* Business Categories */}
+        {/* Categories */}
         <div className="space-y-1">
-          {!collapsed && (
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">
-              Business
-            </h3>
-          )}
           {businessFilters.map(filter => (
             <FilterButton key={filter.id} filter={filter} />
           ))}
         </div>
-
-        {/* Admin/Manager Only */}
-        {(isAdminUser || isPropertyManagerUser) && (
-          <>
-            <Separator className="my-3" />
-            <div className="space-y-1">
-              {!collapsed && (
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-3 mb-2">
-                  Management
-                </h3>
-              )}
-              <FilterButton 
-                filter={{
-                  id: 'all-users',
-                  label: 'All User Messages',
-                  icon: Users,
-                  color: 'text-slate-600'
-                }}
-              />
-              <FilterButton 
-                filter={{
-                  id: 'system',
-                  label: 'System Messages',
-                  icon: Settings,
-                  color: 'text-slate-500'
-                }}
-              />
-            </div>
-          </>
-        )}
       </div>
 
       {/* Settings */}
