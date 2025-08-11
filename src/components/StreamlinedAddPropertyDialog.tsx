@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -81,6 +82,7 @@ export function StreamlinedAddPropertyDialog({
   const [isSaving, setIsSaving] = useState(false);
   
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Load property owners when dialog opens
   useEffect(() => {
@@ -289,6 +291,9 @@ export function StreamlinedAddPropertyDialog({
         description: "Property added successfully!",
       });
 
+      // Invalidate properties cache to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      
       onPropertyAdded?.();
       onOpenChange(false);
     } catch (error) {
