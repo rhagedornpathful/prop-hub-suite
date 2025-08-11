@@ -271,6 +271,36 @@ interface UserTableProps {
   isAllSelected?: boolean;
 }
 
+// Phone number formatting function
+const formatPhoneNumber = (phone: string | null): string => {
+  if (!phone) return '';
+  
+  // Remove all non-digit characters
+  const digits = phone.replace(/\D/g, '');
+  
+  // If we have 10 digits, format as XXX.XXX.XXXX
+  if (digits.length === 10) {
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  }
+  
+  // If we have 11 digits and starts with 1, remove the 1 and format
+  if (digits.length === 11 && digits.startsWith('1')) {
+    const phoneDigits = digits.slice(1);
+    return `${phoneDigits.slice(0, 3)}.${phoneDigits.slice(3, 6)}.${phoneDigits.slice(6)}`;
+  }
+  
+  // For other cases, return the original phone or format as best as possible
+  if (digits.length >= 6) {
+    const areaCode = digits.slice(0, 3);
+    const exchange = digits.slice(3, 6);
+    const number = digits.slice(6, 10);
+    return `${areaCode}.${exchange}.${number}`;
+  }
+  
+  // Return original if we can't format properly
+  return phone;
+};
+
 export function UserMobileTable({
   users,
   onUserClick,
@@ -327,7 +357,7 @@ export function UserMobileTable({
       width: '15%',
       render: (phone) => (
         phone ? (
-          <span className="text-sm">{phone}</span>
+          <span className="text-sm font-mono">{formatPhoneNumber(phone)}</span>
         ) : (
           <span className="text-sm text-muted-foreground">—</span>
         )
