@@ -228,8 +228,13 @@ export function StreamlinedAddPropertyDialog({
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
 
+      console.log('Saving property with data:', propertyData);
+
       // Extract owner_id before sending to database
       const { owner_id, ...propertyDataWithoutOwnerId } = propertyData;
+
+      console.log('Property data without owner_id:', propertyDataWithoutOwnerId);
+      console.log('Owner ID:', owner_id);
 
       const { data, error } = await supabase
         .from('properties')
@@ -240,11 +245,17 @@ export function StreamlinedAddPropertyDialog({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error inserting property:', error);
+        throw error;
+      }
+
+      console.log('Property inserted successfully:', data);
 
       // Create owner association
       if (owner_id) {
-        await supabase
+        console.log('Creating owner association...');
+        const { error: associationError } = await supabase
           .from('property_owner_associations')
           .insert({
             property_id: data.id,
@@ -252,6 +263,13 @@ export function StreamlinedAddPropertyDialog({
             ownership_percentage: 100,
             is_primary_owner: true,
           });
+
+        if (associationError) {
+          console.error('Error creating owner association:', associationError);
+          throw associationError;
+        }
+        
+        console.log('Owner association created successfully');
       }
 
       toast({
@@ -263,9 +281,16 @@ export function StreamlinedAddPropertyDialog({
       onOpenChange(false);
     } catch (error) {
       console.error('Error saving property:', error);
+      
+      // More detailed error message
+      let errorMessage = "Failed to save property. Please try again.";
+      if (error?.message) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to save property. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
