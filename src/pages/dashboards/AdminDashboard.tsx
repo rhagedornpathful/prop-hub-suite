@@ -55,6 +55,10 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 import { AdminDashboardSkeleton } from "@/components/admin/AdminDashboardSkeleton";
 import { AdminErrorBoundary, DashboardSectionErrorBoundary } from "@/components/admin/AdminErrorBoundary";
+import { AdminBreadcrumbs } from "@/components/admin/AdminBreadcrumbs";
+import { AdvancedSearch } from "@/components/admin/AdvancedSearch";
+import { QuickActions } from "@/components/admin/QuickActions";
+import { NavigationHub } from "@/components/admin/NavigationHub";
 
 export function AdminDashboard() {
   // Real-time connection management
@@ -205,26 +209,36 @@ export function AdminDashboard() {
 
   return (
     <AdminErrorBoundary>
-      <div className="flex-1 space-y-4 md:space-y-8 p-3 md:p-6 bg-gradient-to-br from-background to-muted/20">
-      {/* Command Center Header with Real-time Status */}
-      <div className="text-center space-y-2">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            Command Center
-          </h1>
-          <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+      <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-to-br from-background to-muted/20">
+        
+        {/* Breadcrumb Navigation */}
+        <AdminBreadcrumbs />
+        
+        {/* Advanced Search Bar */}
+        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <AdvancedSearch className="w-full md:max-w-lg" />
+          <QuickActions variant="dropdown" />
         </div>
-        <p className="text-muted-foreground text-sm md:text-lg">
-          Complete oversight and control of your property management operations
-        </p>
-        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-          <span>Last Update: {realTimeMetrics.lastUpdateTime.toLocaleTimeString()}</span>
-          <Button variant="ghost" size="sm" onClick={refreshAllData} className="h-6 px-2">
-            <Activity className="h-3 w-3 mr-1" />
-            Refresh
-          </Button>
+
+        {/* Command Center Header with Real-time Status */}
+        <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Command Center
+            </h1>
+            <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+          </div>
+          <p className="text-muted-foreground text-sm md:text-lg">
+            Complete oversight and control of your property management operations
+          </p>
+          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+            <span>Last Update: {realTimeMetrics.lastUpdateTime.toLocaleTimeString()}</span>
+            <Button variant="ghost" size="sm" onClick={refreshAllData} className="h-6 px-2">
+              <Activity className="h-3 w-3 mr-1" />
+              Refresh
+            </Button>
+          </div>
         </div>
-      </div>
 
       {/* Executive Overview */}
       <DashboardSectionErrorBoundary sectionName="Overview Cards">
@@ -380,8 +394,13 @@ export function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Right Sidebar - Recent Activity, System Alerts & System Status */}
+        {/* Right Sidebar - Navigation, Quick Actions & System Status */}
         <div className="space-y-3 md:space-y-6">
+          {/* Navigation Hub */}
+          <DashboardSectionErrorBoundary sectionName="Navigation Hub">
+            <NavigationHub showRecent={true} showBookmarks={true} maxShortcuts={4} />
+          </DashboardSectionErrorBoundary>
+          
           <DashboardSectionErrorBoundary sectionName="Recent Activity">
             <AdminRecentActivity />
           </DashboardSectionErrorBoundary>
