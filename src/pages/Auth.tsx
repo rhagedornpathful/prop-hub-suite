@@ -199,17 +199,28 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome</CardTitle>
-          <p className="text-muted-foreground">
-            Please sign in to your account
-          </p>
+        <CardHeader className="text-center space-y-6">
+          {/* Company Logo */}
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/lovable-uploads/d57228a9-3aea-44c1-9331-d5c7640e4b3e.png" 
+              alt="Latitude Premier Properties" 
+              className="h-20 w-auto object-contain"
+            />
+          </div>
+          
+          {/* Welcome Text */}
+          <div>
+            <CardTitle className="text-2xl font-bold text-foreground">Welcome</CardTitle>
+            <p className="text-muted-foreground mt-2">
+              Please sign in to your account
+            </p>
+          </div>
         </CardHeader>
-        
-        <CardContent>
+        <CardContent className="space-y-6">
           <form onSubmit={handleSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -218,7 +229,7 @@ const Auth = () => {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => handleFieldChange('email', e.target.value)}
-                  className="pl-9"
+                  className="pl-9 h-11"
                   required
                 />
               </div>
@@ -226,7 +237,7 @@ const Auth = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -235,7 +246,7 @@ const Auth = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => handleFieldChange('password', e.target.value)}
-                  className="pl-9 pr-10"
+                  className="pl-9 pr-10 h-11"
                   required
                 />
                 <Button
@@ -255,14 +266,14 @@ const Auth = () => {
               <FormFieldError error={fieldErrors.password} />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-2">
               <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   id="remember-me"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300"
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <Label htmlFor="remember-me" className="text-sm">
                   Remember me
@@ -271,7 +282,7 @@ const Auth = () => {
               <Button
                 type="button"
                 variant="link"
-                className="p-0 h-auto text-sm"
+                className="p-0 h-auto text-sm text-primary hover:text-primary/80"
                 onClick={() => setForgotPasswordOpen(true)}
               >
                 Forgot password?
@@ -279,7 +290,7 @@ const Auth = () => {
             </div>
             
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="mt-4">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -287,7 +298,7 @@ const Auth = () => {
             
             <Button
               type="submit"
-              className="w-full"
+              className="w-full h-11 mt-6"
               disabled={loading}
             >
               {loading ? (
@@ -304,7 +315,7 @@ const Auth = () => {
             </Button>
           </form>
           
-          <div className="mt-6 text-center">
+          <div className="text-center pt-4 border-t border-border">
             <p className="text-sm text-muted-foreground">
               Need access? Contact your administrator to create an account.
             </p>
