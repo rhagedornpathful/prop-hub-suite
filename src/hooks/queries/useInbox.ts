@@ -109,7 +109,8 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
           break;
         case 'inbox':
         default:
-          query = query.eq('is_archived', false).neq('created_by', user.id);
+          // Show all active conversations (both sent and received)
+          query = query.eq('is_archived', false);
           break;
       }
 
