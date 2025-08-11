@@ -304,18 +304,11 @@ export function UserMobileTable({
                 : 'No Name Set'
               }
             </div>
-            <div className="space-y-1">
-              {user.phone && (
-                <div className="text-sm text-muted-foreground flex items-center gap-1">
-                  📞 {user.phone}
-                </div>
-              )}
-              {user.company_name && (
-                <div className="text-sm text-muted-foreground">
-                  🏢 {user.company_name}
-                </div>
-              )}
-            </div>
+            {user.company_name && (
+              <div className="text-sm text-muted-foreground">
+                🏢 {user.company_name}
+              </div>
+            )}
           </div>
         </div>
       )
@@ -326,6 +319,18 @@ export function UserMobileTable({
       width: '25%',
       render: (email) => (
         <span className="truncate block">{email}</span>
+      )
+    },
+    {
+      key: 'phone',
+      label: 'Phone',
+      width: '15%',
+      render: (phone) => (
+        phone ? (
+          <span className="text-sm">{phone}</span>
+        ) : (
+          <span className="text-sm text-muted-foreground">—</span>
+        )
       )
     },
     {
