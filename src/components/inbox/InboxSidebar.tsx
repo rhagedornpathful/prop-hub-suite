@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Inbox, 
   Star, 
@@ -13,11 +13,13 @@ import {
   Wrench,
   AlertTriangle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { FolderManager } from './FolderManager';
 import { useUserRole } from '@/hooks/useUserRole';
 
 interface InboxSidebarProps {
@@ -38,6 +40,7 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
   unreadCount
 }) => {
   const { isAdmin, isPropertyManager } = useUserRole();
+  const [selectedCustomFolder, setSelectedCustomFolder] = useState<string | null>(null);
   const isAdminUser = isAdmin();
   const isPropertyManagerUser = isPropertyManager();
 
@@ -47,31 +50,31 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
       label: 'Inbox', 
       icon: Inbox, 
       count: unreadCount,
-      color: 'text-blue-600'
+      color: 'text-primary'
     },
     { 
       id: 'starred', 
       label: 'Starred', 
       icon: Star,
-      color: 'text-yellow-500'
+      color: 'text-warning'
     },
     { 
       id: 'sent', 
       label: 'Sent', 
       icon: Send,
-      color: 'text-green-600'
+      color: 'text-success'
     },
     { 
       id: 'drafts', 
       label: 'Drafts', 
       icon: Tag,
-      color: 'text-gray-600'
+      color: 'text-muted-foreground'
     },
     { 
       id: 'archived', 
       label: 'Archived', 
       icon: Archive,
-      color: 'text-gray-500'
+      color: 'text-muted-foreground'
     }
   ];
 
@@ -80,19 +83,19 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
       id: 'maintenance', 
       label: 'Maintenance', 
       icon: Wrench,
-      color: 'text-orange-600'
+      color: 'text-orange-500'
     },
     { 
       id: 'tenants', 
       label: 'Tenants', 
       icon: Users,
-      color: 'text-purple-600'
+      color: 'text-purple-500'
     },
     { 
       id: 'properties', 
       label: 'Properties', 
       icon: Building,
-      color: 'text-indigo-600'
+      color: 'text-info'
     }
   ];
 
@@ -104,17 +107,20 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
       <Button
         variant={isSelected ? "default" : "ghost"}
         size="sm"
-        className={`w-full justify-start h-9 ${collapsed ? 'px-2' : 'px-3'} ${
-          isSelected ? '' : 'hover:bg-muted'
+        className={`w-full justify-start h-8 ${collapsed ? 'px-2' : 'px-3'} ${
+          isSelected ? 'bg-primary/90 text-primary-foreground' : 'hover:bg-muted/50'
         }`}
-        onClick={() => onFilterChange(filter.id)}
+        onClick={() => {
+          onFilterChange(filter.id);
+          setSelectedCustomFolder(null);
+        }}
       >
-        <Icon className={`h-4 w-4 ${filter.color} ${collapsed ? '' : 'mr-3'}`} />
+        <Icon className={`h-4 w-4 ${isSelected ? 'text-primary-foreground' : filter.color} ${collapsed ? '' : 'mr-3'}`} />
         {showLabel && !collapsed && (
           <>
-            <span className="flex-1 text-left truncate">{filter.label}</span>
+            <span className="flex-1 text-left truncate text-sm">{filter.label}</span>
             {filter.count > 0 && (
-              <Badge variant="secondary" className="ml-2 h-5 text-xs">
+              <Badge variant="secondary" className="ml-2 h-4 text-xs">
                 {filter.count}
               </Badge>
             )}
@@ -125,17 +131,20 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
   };
 
   return (
-    <div className="h-full flex flex-col bg-card">
+    <div className="h-full flex flex-col bg-card/50 backdrop-blur-sm">
       {/* Header */}
-      <div className="h-14 px-3 flex items-center justify-between border-b border-border">
+      <div className="h-14 px-3 flex items-center justify-between border-b border-border/50">
         {!collapsed && (
-          <h2 className="font-semibold text-foreground">Messages</h2>
+          <div className="flex items-center gap-2">
+            <MessageCircle className="h-5 w-5 text-primary" />
+            <h2 className="font-semibold text-foreground">Messages</h2>
+          </div>
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={onToggleCollapse}
-          className="h-8 w-8 p-0"
+          className="h-8 w-8 p-0 hover:bg-muted/50"
         >
           {collapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -149,7 +158,7 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
       <div className="p-3">
         <Button 
           onClick={onCompose} 
-          className={`w-full ${collapsed ? 'px-2' : ''}`}
+          className={`w-full bg-primary hover:bg-primary/90 ${collapsed ? 'px-2' : ''}`}
           size={collapsed ? "sm" : "default"}
         >
           <Plus className={`h-4 w-4 ${collapsed ? '' : 'mr-2'}`} />
@@ -158,33 +167,55 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
       </div>
 
       {/* Navigation */}
-      <div className="flex-1 overflow-y-auto px-3 space-y-1">
+      <div className="flex-1 overflow-y-auto px-3 space-y-4">
         {/* Primary Filters */}
         <div className="space-y-1">
+          {!collapsed && (
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-2 py-1">
+              Main
+            </h3>
+          )}
           {primaryFilters.map(filter => (
             <FilterButton key={filter.id} filter={filter} />
           ))}
         </div>
 
-        <Separator className="my-3" />
+        <Separator className="my-3 bg-border/50" />
 
-        {/* Categories */}
+        {/* Business Categories */}
         <div className="space-y-1">
+          {!collapsed && (
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide px-2 py-1">
+              Categories
+            </h3>
+          )}
           {businessFilters.map(filter => (
             <FilterButton key={filter.id} filter={filter} />
           ))}
         </div>
+
+        <Separator className="my-3 bg-border/50" />
+
+        {/* Custom Folders */}
+        <FolderManager
+          collapsed={collapsed}
+          selectedFolder={selectedCustomFolder}
+          onFolderSelect={(folderId) => {
+            setSelectedCustomFolder(folderId);
+            onFilterChange(`folder:${folderId}`);
+          }}
+        />
       </div>
 
       {/* Settings */}
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border/50">
         <Button
           variant="ghost"
           size="sm"
-          className={`w-full justify-start h-9 ${collapsed ? 'px-2' : 'px-3'}`}
+          className={`w-full justify-start h-8 ${collapsed ? 'px-2' : 'px-3'} hover:bg-muted/50`}
         >
-          <Settings className={`h-4 w-4 text-gray-600 ${collapsed ? '' : 'mr-3'}`} />
-          {!collapsed && 'Settings'}
+          <Settings className={`h-4 w-4 text-muted-foreground ${collapsed ? '' : 'mr-3'}`} />
+          {!collapsed && <span className="text-sm">Settings</span>}
         </Button>
       </div>
     </div>
