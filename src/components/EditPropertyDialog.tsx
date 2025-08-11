@@ -149,6 +149,7 @@ export function EditPropertyDialog({ open, onOpenChange, property, onPropertyUpd
     }
 
     // Clean the data - remove empty strings and convert to null where appropriate
+    // IMPORTANT: Do not include user_id in updates as it's NOT NULL and shouldn't change
     const cleanedData = {
       address: propertyData.address.trim(),
       street_address: propertyData.street_address?.trim() || null,
