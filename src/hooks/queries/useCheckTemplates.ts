@@ -386,6 +386,8 @@ export const useDeleteCheckTemplateSection = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['check-template'] });
+      queryClient.refetchQueries({ queryKey: ['check-templates'] });
       toast({
         title: "Section Deleted",
         description: "Template section has been deleted successfully",
@@ -454,15 +456,23 @@ export const useDeleteCheckTemplateItem = () => {
   
   return useMutation({
     mutationFn: async (id: string) => {
+      console.log('Deleting item with ID:', id);
       const { error } = await supabase
         .from('check_template_items' as any)
         .delete()
         .eq('id', id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Delete error:', error);
+        throw error;
+      }
+      console.log('Item deleted successfully');
     },
     onSuccess: () => {
+      console.log('Delete successful, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['check-template'] });
+      queryClient.refetchQueries({ queryKey: ['check-templates'] });
       toast({
         title: "Item Deleted",
         description: "Check item has been deleted successfully",
