@@ -13,6 +13,7 @@ import { useProfiles } from '@/hooks/queries/useProfiles';
 import { useProperties } from '@/hooks/queries/useProperties';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useCreateInboxConversation } from '@/hooks/queries/useInbox';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ComposeDialogProps {
   open: boolean;
@@ -83,19 +84,13 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
       if (recipientType === 'individual') {
         participantIds = recipients;
       } else {
-        // Handle group messaging logic here
-        // This would need to be implemented based on your specific requirements
-        switch (selectedGroup) {
-          case 'all-tenants':
-            // Get all tenant user IDs
-            break;
-          case 'all-owners':
-            // Get all owner user IDs  
-            break;
-          case 'maintenance-team':
-            // Get all maintenance team user IDs
-            break;
-        }
+        // Handle group messaging logic
+        const { data: groupRecipients } = await supabase
+          .from('profiles')
+          .select('user_id')
+          .in('user_id', await getGroupUserIds(selectedGroup));
+        
+        participantIds = groupRecipients?.map(p => p.user_id) || [];
       }
 
       await createConversation.mutateAsync({
@@ -123,6 +118,35 @@ export const ComposeDialog: React.FC<ComposeDialogProps> = ({
         return 'text-red-600 bg-red-50 border-red-200';
       default:
         return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  // Helper function to get user IDs for group messaging
+  const getGroupUserIds = async (groupType: string): Promise<string[]> => {
+    switch (groupType) {
+      case 'all-tenants':
+        const { data: tenants } = await supabase
+          .from('tenants')
+          .select('user_account_id')
+          .not('user_account_id', 'is', null);
+        return tenants?.map(t => t.user_account_id).filter(Boolean) || [];
+      
+      case 'all-owners':
+        const { data: owners } = await supabase
+          .from('property_owners')
+          .select('user_id')
+          .not('user_id', 'is', null);
+        return owners?.map(o => o.user_id) || [];
+      
+      case 'maintenance-team':
+        const { data: maintenance } = await supabase
+          .from('user_roles')
+          .select('user_id')
+          .eq('role', 'property_manager');
+        return maintenance?.map(m => m.user_id) || [];
+      
+      default:
+        return [];
     }
   };
 

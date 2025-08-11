@@ -419,7 +419,6 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
               <div className="text-sm text-muted-foreground">
                 Note: Forwarding will create a new conversation with selected recipients
               </div>
-              {/* For now, simplified recipient selection - you could enhance this with a proper user selector */}
               <input
                 type="text"
                 placeholder="Enter recipient email addresses (comma-separated)"

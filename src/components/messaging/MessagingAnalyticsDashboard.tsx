@@ -139,7 +139,7 @@ export const MessagingAnalyticsDashboard: React.FC = () => {
     },
     {
       title: 'Avg Response Time',
-      value: '2.3h',
+      value: 'N/A',
       icon: <Clock className="h-4 w-4" />,
       description: 'Average response time'
     }
@@ -193,15 +193,15 @@ export const MessagingAnalyticsDashboard: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm">Most active conversation</span>
-              <Badge variant="outline">Property Discussion</Badge>
+              <Badge variant="outline">No data</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm">Most used template</span>
-              <Badge variant="outline">Maintenance Follow-up</Badge>
+              <Badge variant="outline">No data</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm">Peak messaging hours</span>
-              <Badge variant="outline">2-4 PM</Badge>
+              <Badge variant="outline">No data</Badge>
             </div>
           </div>
         </CardContent>
