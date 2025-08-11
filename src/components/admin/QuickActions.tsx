@@ -61,13 +61,13 @@ const quickActions: QuickAction[] = [
   { id: 'house-watching', label: 'House Watching', icon: Eye, href: '/house-watching', category: 'view' },
   
   // Communicate Actions
-  { id: 'bulk-email', label: 'Bulk Email', icon: Mail, onClick: () => {}, category: 'communicate' },
-  { id: 'sms-blast', label: 'SMS Blast', icon: Phone, onClick: () => {}, category: 'communicate' },
+  { id: 'bulk-email', label: 'Bulk Email', icon: Mail, href: '/messages?action=bulk', category: 'communicate' },
+  { id: 'sms-blast', label: 'SMS Blast', icon: Phone, href: '/messages?action=sms', category: 'communicate' },
   
   // Analyze Actions
-  { id: 'generate-report', label: 'Generate Report', icon: FileText, href: '/reports/generate', category: 'analyze' },
-  { id: 'export-data', label: 'Export Data', icon: Download, onClick: () => {}, category: 'analyze' },
-  { id: 'import-data', label: 'Import Data', icon: Upload, onClick: () => {}, category: 'analyze' }
+  { id: 'generate-report', label: 'Generate Report', icon: FileText, href: '/reports', category: 'analyze' },
+  { id: 'export-data', label: 'Export Data', icon: Download, href: '/reports?action=export', category: 'analyze' },
+  { id: 'import-data', label: 'Import Data', icon: Upload, href: '/settings?tab=import', category: 'analyze' }
 ];
 
 const actionCategories = [

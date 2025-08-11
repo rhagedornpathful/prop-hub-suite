@@ -186,7 +186,7 @@ export function AdminDashboard() {
   const upcomingExpirations = Array.isArray(tenantData) 
     ? tenantData.filter(tenant => {
         if (!tenant.lease_start_date) return false;
-        // Assume 1 year lease for demo
+        // Calculate lease end date (assume 1 year lease)
         const leaseEnd = new Date(tenant.lease_start_date);
         leaseEnd.setFullYear(leaseEnd.getFullYear() + 1);
         const now = new Date();

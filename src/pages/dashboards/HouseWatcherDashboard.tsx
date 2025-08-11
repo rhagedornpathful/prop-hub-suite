@@ -88,7 +88,7 @@ const HouseWatcherDashboard = () => {
           state: p.state || 'N/A',
           zip_code: p.zip_code || 'N/A',
           property_type: p.property_type || 'Unknown',
-          notes: 'Sample assignment for demo purposes',
+          notes: 'Preview assignment for viewing mode',
           assigned_date: new Date().toISOString(),
           monthly_rent: p.monthly_rent,
           bedrooms: p.bedrooms,
@@ -97,7 +97,7 @@ const HouseWatcherDashboard = () => {
 
         setAssignedProperties(formattedSampleProperties);
 
-        // Load sample house watching data for View As mode
+        // Load preview house watching data for View As mode
         const { data: sampleWatching, error: sampleWatchingError } = await supabase
           .from('house_watching')
           .select('*')
