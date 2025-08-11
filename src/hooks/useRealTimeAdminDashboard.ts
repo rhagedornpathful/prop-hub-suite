@@ -161,16 +161,10 @@ export function useRealTimeAdminDashboard() {
       }));
 
       if (status === 'disconnected') {
-        toast({
-          title: "Real-time Connection Lost",
-          description: "Attempting to reconnect...",
-          variant: "destructive",
-        });
+        // Removed disruptive connection-lost toast per user request
+        // Previously showed a destructive toast here
       } else if (status === 'connected') {
-        toast({
-          title: "Real-time Connection Restored",
-          description: "Dashboard is now receiving live updates.",
-        });
+        // Removed connection restored toast as well
       }
     };
 
