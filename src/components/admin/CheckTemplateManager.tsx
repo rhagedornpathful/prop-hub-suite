@@ -3,20 +3,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, CheckCircle2 } from 'lucide-react';
 import { useCheckTemplates, useDeleteCheckTemplate } from '@/hooks/queries/useCheckTemplates';
 import { CreateCheckTemplateDialog } from './CreateCheckTemplateDialog';
 import { EditCheckTemplateDialog } from './EditCheckTemplateDialog';
 import { CheckTemplatePreview } from './CheckTemplatePreview';
+import { InteractiveCheckTemplatePreview } from './InteractiveCheckTemplatePreview';
 
 export const CheckTemplateManager = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [previewDialogOpen, setPreviewDialogOpen] = useState(false);
+  const [interactivePreviewOpen, setInteractivePreviewOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [templateType, setTemplateType] = useState<'home_check' | 'property_check'>('home_check');
 
   const { data: templates, isLoading } = useCheckTemplates();
+  
+  console.log('Templates data:', templates);
   const deleteTemplateMutation = useDeleteCheckTemplate();
 
   const homeCheckTemplates = templates?.filter((t: any) => t.type === 'home_check') || [];
@@ -37,6 +41,11 @@ export const CheckTemplateManager = () => {
   const handlePreview = (template: any) => {
     setSelectedTemplate(template);
     setPreviewDialogOpen(true);
+  };
+
+  const handleInteractivePreview = (template: any) => {
+    setSelectedTemplate(template);
+    setInteractivePreviewOpen(true);
   };
 
   const handleDelete = async (template: any) => {
@@ -105,25 +114,38 @@ export const CheckTemplateManager = () => {
               </div>
             </div>
             
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handlePreview(template)} className="flex-1">
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleEdit(template)} className="flex-1">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleDelete(template)}
-                disabled={deleteTemplateMutation.isPending}
-                className="flex-1 hover:bg-destructive hover:text-destructive-foreground"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {deleteTemplateMutation.isPending ? 'Deleting...' : 'Delete'}
-              </Button>
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handlePreview(template)} className="flex-1">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleEdit(template)} className="flex-1">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="default" 
+                  size="sm" 
+                  onClick={() => handleInteractivePreview(template)}
+                  className="flex-1"
+                >
+                  <CheckCircle2 className="h-4 w-4 mr-2" />
+                  Test Template
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleDelete(template)}
+                  disabled={deleteTemplateMutation.isPending}
+                  className="flex-1 hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {deleteTemplateMutation.isPending ? 'Deleting...' : 'Delete'}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -184,6 +206,11 @@ export const CheckTemplateManager = () => {
             template={selectedTemplate}
             open={previewDialogOpen}
             onOpenChange={setPreviewDialogOpen}
+          />
+          <InteractiveCheckTemplatePreview
+            template={selectedTemplate}
+            open={interactivePreviewOpen}
+            onOpenChange={setInteractivePreviewOpen}
           />
         </>
       )}
