@@ -21,6 +21,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { 
   User, 
   Mail, 
@@ -69,6 +76,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
   const [profileData, setProfileData] = useState({
     first_name: '',
     last_name: '',
+    email: '',
     phone: '',
     address: '',
     city: '',
@@ -76,6 +84,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
     zip_code: '',
     company_name: ''
   });
+  const [selectedRole, setSelectedRole] = useState<string>(user?.role || '');
   const [propertyCount, setPropertyCount] = useState(0);
   const [tenantInfo, setTenantInfo] = useState<any>(null);
   const [passwordResetLoading, setPasswordResetLoading] = useState(false);
@@ -86,6 +95,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
   useEffect(() => {
     if (user && open) {
       console.log('UserDetailsDialog: Loading data for user:', user.email, user.id);
+      setSelectedRole(user.role || '');
       // Load complete user profile data from database
       loadUserProfile();
       // Load additional role-specific data
@@ -117,6 +127,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
       const profileData = {
         first_name: profile?.first_name || user.first_name || '',
         last_name: profile?.last_name || user.last_name || '',
+        email: user.email || '',
         phone: profile?.phone || '',
         address: profile?.address || '',
         city: profile?.city || '',
@@ -147,6 +158,7 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
       setProfileData({
         first_name: user.first_name || '',
         last_name: user.last_name || '',
+        email: user.email || '',
         phone: '',
         address: '',
         city: '',
@@ -219,9 +231,10 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
     try {
       setSaving(true);
       console.log('UserDetailsDialog: Saving profile data:', profileData);
+      console.log('UserDetailsDialog: Saving role:', selectedRole);
 
-      // Upsert profile data (insert or update)
-      const { data, error } = await supabase
+      // 1. Update profile data in profiles table
+      const { data: profileUpdateData, error: profileError } = await supabase
         .from('profiles')
         .upsert({
           user_id: user.id,
@@ -236,15 +249,73 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
           updated_at: new Date().toISOString(),
           created_at: new Date().toISOString()
         }, {
-          onConflict: 'user_id' // Use user_id as the conflict resolution column
+          onConflict: 'user_id'
         })
         .select();
 
-      console.log('UserDetailsDialog: Save result:', { data, error });
+      if (profileError) {
+        console.error('Error saving profile:', profileError);
+        throw profileError;
+      }
 
-      if (error) {
-        console.error('Error saving profile:', error);
-        throw error;
+      // 2. Update role if it has changed
+      if (selectedRole && selectedRole !== user.role) {
+        console.log('UserDetailsDialog: Updating role from', user.role, 'to', selectedRole);
+        
+        // Delete existing role
+        if (user.role) {
+          const { error: deleteRoleError } = await supabase
+            .from('user_roles')
+            .delete()
+            .eq('user_id', user.id);
+          
+          if (deleteRoleError) {
+            console.error('Error deleting old role:', deleteRoleError);
+            // Continue anyway, the upsert below should handle it
+          }
+        }
+
+        // Insert new role using proper typing
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .insert({
+            user_id: user.id,
+            role: selectedRole as any, // Type assertion to handle enum conversion
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (roleError) {
+          console.error('Error updating role:', roleError);
+          throw roleError;
+        }
+      }
+
+      // 3. Update email if it has changed (using admin function)
+      if (profileData.email && profileData.email !== user.email) {
+        console.log('UserDetailsDialog: Updating email from', user.email, 'to', profileData.email);
+        
+        try {
+          const { error: emailError } = await supabase.functions.invoke('update-user-email', {
+            body: {
+              userId: user.id,
+              newEmail: profileData.email
+            }
+          });
+
+          if (emailError) {
+            console.error('Error updating email:', emailError);
+            // Don't throw - email update might fail but other updates succeeded
+            toast({
+              title: "Partial Update",
+              description: "Profile and role updated, but email update failed. You may need admin privileges to change emails.",
+              variant: "destructive"
+            });
+          }
+        } catch (emailErr) {
+          console.error('Email update function call failed:', emailErr);
+          // Don't throw - continue with success message for other updates
+        }
       }
 
       toast({
@@ -403,6 +474,49 @@ export function UserDetailsDialog({ user, open, onOpenChange, onUserUpdate }: Us
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Email and Role Section */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="email">Email Address</Label>
+                    {editing ? (
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, email: e.target.value }))}
+                      />
+                    ) : (
+                      <p className="text-sm p-2 bg-muted rounded">{profileData.email || 'Not set'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="role">Role</Label>
+                    {editing ? (
+                      <Select value={selectedRole} onValueChange={setSelectedRole}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="property_manager">Property Manager</SelectItem>
+                          <SelectItem value="property_owner">Property Owner</SelectItem>
+                          <SelectItem value="tenant">Tenant</SelectItem>
+                          <SelectItem value="house_watcher">House Watcher</SelectItem>
+                          <SelectItem value="contractor">Contractor</SelectItem>
+                          <SelectItem value="vendor">Vendor</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-sm p-2 bg-muted rounded">
+                        <Badge className={getRoleBadgeColor(selectedRole)}>
+                          {formatRoleName(selectedRole)}
+                        </Badge>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Personal Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="first_name">First Name</Label>
