@@ -157,7 +157,6 @@ export const useVendorWorkOrders = (vendorId?: string) => {
       console.log("✅ Vendor work orders fetched successfully:", workOrders);
       return workOrders as VendorWorkOrder[];
     },
-    enabled: !!vendorId,
   });
 };
 
@@ -167,10 +166,15 @@ export const useVendorReviews = (vendorId?: string) => {
     queryFn: async () => {
       console.log("📋 Fetching vendor reviews...");
       
-      const { data: reviews, error } = await supabase
+      let query = supabase
         .from("vendor_reviews")
-        .select("*")
-        .eq("vendor_id", vendorId)
+        .select("*");
+
+      if (vendorId) {
+        query = query.eq("vendor_id", vendorId);
+      }
+
+      const { data: reviews, error } = await query
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -181,7 +185,6 @@ export const useVendorReviews = (vendorId?: string) => {
       console.log("✅ Vendor reviews fetched successfully:", reviews);
       return reviews as VendorReview[];
     },
-    enabled: !!vendorId,
   });
 };
 

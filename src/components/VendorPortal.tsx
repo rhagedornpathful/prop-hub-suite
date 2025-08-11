@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,8 +26,10 @@ import {
 } from "lucide-react";
 import { useVendors, useVendorWorkOrders, useVendorReviews } from "@/hooks/queries/useVendors";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import AddVendorDialog from "@/components/AddVendorDialog";
 
 const VendorPortal = () => {
+  const [addVendorOpen, setAddVendorOpen] = useState(false);
   const { data: vendors, isLoading: vendorsLoading } = useVendors();
   const { data: workOrders, isLoading: workOrdersLoading } = useVendorWorkOrders();
   const { data: reviews, isLoading: reviewsLoading } = useVendorReviews();
@@ -78,7 +81,7 @@ const VendorPortal = () => {
             Manage contractors, track performance, and coordinate services
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setAddVendorOpen(true)}>
           <Users className="w-4 h-4 mr-2" />
           Add Vendor
         </Button>
@@ -386,6 +389,12 @@ const VendorPortal = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Add Vendor Dialog */}
+      <AddVendorDialog 
+        open={addVendorOpen} 
+        onOpenChange={setAddVendorOpen} 
+      />
     </div>
   );
 };
