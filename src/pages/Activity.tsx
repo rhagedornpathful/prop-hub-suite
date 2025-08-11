@@ -238,19 +238,26 @@ export default function Activity() {
             <div className="flex gap-2">
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="h-9 justify-start flex-1">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    {filters.dateRange.from ? (
-                      filters.dateRange.to ? (
-                        <>
-                          {format(filters.dateRange.from, "MMM dd")} - {format(filters.dateRange.to, "MMM dd")}
-                        </>
-                      ) : (
-                        format(filters.dateRange.from, "MMM dd, y")
-                      )
-                    ) : (
-                      "Date Range"
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className={cn(
+                      "h-9 justify-start text-left font-normal min-w-0 flex-1",
+                      !filters.dateRange.from && !filters.dateRange.to && "text-muted-foreground"
                     )}
+                  >
+                    <CalendarIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">
+                      {filters.dateRange.from ? (
+                        filters.dateRange.to ? (
+                          `${format(filters.dateRange.from, "MMM dd")} - ${format(filters.dateRange.to, "MMM dd")}`
+                        ) : (
+                          format(filters.dateRange.from, "MMM dd, y")
+                        )
+                      ) : (
+                        "Date Range"
+                      )}
+                    </span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 bg-background border border-border z-50" align="start">
@@ -267,7 +274,7 @@ export default function Activity() {
               <Button
                 variant="outline"
                 size="sm"
-                className="h-9"
+                className="h-9 flex-shrink-0"
                 onClick={() => setFilters({
                   search: '',
                   activityType: 'all',
