@@ -166,7 +166,10 @@ export function StreamlinedAddPropertyDialog({
 
       if (error) throw error;
 
+      console.log('Received data from edge function:', data);
+
       if (data?.success && data?.propertyData) {
+        console.log('Property data found, updating state:', data.propertyData);
         setPropertyData({
           ...propertyData,
           ...data.propertyData,
@@ -178,9 +181,11 @@ export function StreamlinedAddPropertyDialog({
           description: "Successfully imported property data from Zillow",
         });
         
+        console.log('Setting step to assign');
         setStep('assign');
       } else {
-        throw new Error('Could not extract property data');
+        console.log('No property data found or success=false:', data);
+        throw new Error(`Could not extract property data. Response: ${JSON.stringify(data)}`);
       }
     } catch (error: any) {
       console.error('Error searching property:', error);
