@@ -43,6 +43,8 @@ import { useAllPropertyActivity } from "@/hooks/useAllPropertyActivity";
 import { useGlobalSearch, useSearch } from "@/hooks/useSearch";
 import { useSearchContext } from "@/contexts/SearchContext";
 import { useBusinessSummary } from "@/hooks/queries/useBusinessSummary";
+import { useRealTimeAdminDashboard } from "@/hooks/useRealTimeAdminDashboard";
+import { useOptimizedQueries } from "@/hooks/useOptimizedQueries";
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
@@ -55,7 +57,10 @@ import { AdminDashboardSkeleton } from "@/components/admin/AdminDashboardSkeleto
 import { AdminErrorBoundary, DashboardSectionErrorBoundary } from "@/components/admin/AdminErrorBoundary";
 
 export function AdminDashboard() {
-  // Fetch real data from all sources
+  // Real-time connection management
+  const { metrics: realTimeMetrics, refreshAllData, isConnected } = useRealTimeAdminDashboard();
+
+  // Fetch real data from all sources with optimized queries
   const { data: propertyMetrics, isLoading: isPropertyMetricsLoading } = usePropertyMetrics();
   const { data: houseWatchingMetrics, isLoading: isHouseWatchingLoading } = useHouseWatchingMetrics();
   const { data: maintenanceData, isLoading: isMaintenanceLoading } = useMaintenanceRequests();
@@ -200,15 +205,25 @@ export function AdminDashboard() {
 
   return (
     <AdminErrorBoundary>
-      <div className="flex-1 space-y-8 p-6 bg-gradient-to-br from-background to-muted/20">
-      {/* Command Center Header */}
+      <div className="flex-1 space-y-4 md:space-y-8 p-3 md:p-6 bg-gradient-to-br from-background to-muted/20">
+      {/* Command Center Header with Real-time Status */}
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-          Command Center
-        </h1>
-        <p className="text-muted-foreground text-lg">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <h1 className="text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            Command Center
+          </h1>
+          <div className={`h-2 w-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'} animate-pulse`} />
+        </div>
+        <p className="text-muted-foreground text-sm md:text-lg">
           Complete oversight and control of your property management operations
         </p>
+        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <span>Last Update: {realTimeMetrics.lastUpdateTime.toLocaleTimeString()}</span>
+          <Button variant="ghost" size="sm" onClick={refreshAllData} className="h-6 px-2">
+            <Activity className="h-3 w-3 mr-1" />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Executive Overview */}
@@ -217,8 +232,8 @@ export function AdminDashboard() {
       </DashboardSectionErrorBoundary>
 
       {/* Real-time Operations Dashboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 md:gap-6">
+        <div className="lg:col-span-2 space-y-3 md:space-y-6">
           {/* Mission Control - Prominently positioned first */}
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardHeader>
@@ -231,45 +246,45 @@ export function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
                 <Link to="/properties/add">
-                  <Button className="w-full justify-start h-12" variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
+                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
+                    <Plus className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                     Add Property
                   </Button>
                 </Link>
                 
                 <Link to="/maintenance">
-                  <Button className="w-full justify-start h-12" variant="outline">
-                    <Wrench className="h-4 w-4 mr-2" />
-                    Schedule Maintenance
+                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
+                    <Wrench className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">Schedule </span>Maintenance
                   </Button>
                 </Link>
                 
                 <Link to="/tenants/add">
-                  <Button className="w-full justify-start h-12" variant="outline">
-                    <Users className="h-4 w-4 mr-2" />
+                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
+                    <Users className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                     Add Tenant
                   </Button>
                 </Link>
                 
                 <Link to="/reports">
-                  <Button className="w-full justify-start h-12" variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Generate Report
+                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
+                    <FileText className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">Generate </span>Report
                   </Button>
                 </Link>
                 
                 <Link to="/messages">
-                  <Button className="w-full justify-start h-12" variant="outline">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Send Communication
+                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
+                    <MessageSquare className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
+                    <span className="hidden sm:inline">Send </span>Communication
                   </Button>
                 </Link>
 
                 <Link to="/house-watching">
-                  <Button className="w-full justify-start h-12" variant="outline">
-                    <Eye className="h-4 w-4 mr-2" />
+                  <Button className="w-full justify-start h-10 md:h-12 text-xs md:text-sm" variant="outline">
+                    <Eye className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2" />
                     House Watching
                   </Button>
                 </Link>
@@ -366,7 +381,7 @@ export function AdminDashboard() {
         </div>
 
         {/* Right Sidebar - Recent Activity, System Alerts & System Status */}
-        <div className="space-y-6">
+        <div className="space-y-3 md:space-y-6">
           <DashboardSectionErrorBoundary sectionName="Recent Activity">
             <AdminRecentActivity />
           </DashboardSectionErrorBoundary>
@@ -407,10 +422,17 @@ export function AdminDashboard() {
                 </Badge>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Backup Status</span>
+                <span className="text-sm">Real-time Status</span>
+                <Badge variant={isConnected ? "default" : "destructive"} className={isConnected ? "bg-green-500" : ""}>
+                  {isConnected ? <CheckCircle className="h-3 w-3 mr-1" /> : <X className="h-3 w-3 mr-1" />}
+                  {isConnected ? 'Connected' : 'Disconnected'}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Active Channels</span>
                 <Badge variant="secondary">
-                  <Clock className="h-3 w-3 mr-1" />
-                  2 hours ago
+                  <Activity className="h-3 w-3 mr-1" />
+                  {realTimeMetrics.activeConnections}
                 </Badge>
               </div>
             </CardContent>
