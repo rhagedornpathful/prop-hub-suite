@@ -39,7 +39,7 @@ import { useProperties, useUpdateProperty } from "@/hooks/queries/useProperties"
 import { useDeleteProperty } from "@/hooks/useDeleteProperty";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { StreamlinedAddPropertyDialog } from "@/components/StreamlinedAddPropertyDialog";
-import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
+import { PropertyDetailsDialogDB } from "@/components/PropertyDetailsDialogDB";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
 import { useToast } from "@/hooks/use-toast";
 import { BulkManagementTools } from "@/components/BulkManagementTools";
@@ -281,7 +281,7 @@ const Properties = () => {
           editProperty={selectedProperty}
         />
 
-        <PropertyDetailsDialog
+        <PropertyDetailsDialogDB
           property={selectedProperty}
           open={showPropertyDetails}
           onOpenChange={setShowPropertyDetails}
@@ -650,7 +650,7 @@ const Properties = () => {
         editProperty={selectedProperty}
       />
 
-      <PropertyDetailsDialog
+      <PropertyDetailsDialogDB
         property={selectedProperty}
         open={showPropertyDetails}
         onOpenChange={setShowPropertyDetails}
