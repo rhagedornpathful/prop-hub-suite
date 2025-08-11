@@ -43,11 +43,12 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     // Always allow access to setup page
     if (location.pathname === '/setup') return;
     
-    // If no user, redirect to auth
-    if (!user) {
-      navigate('/auth', { replace: true });
-      return;
-    }
+  // If no user, redirect to auth
+  if (!user) {
+    console.log('🔒 No user found, redirecting to auth');
+    navigate('/auth', { replace: true });
+    return;
+  }
     
     
     // If user exists but no role and not on setup page, check if setup is actually needed
