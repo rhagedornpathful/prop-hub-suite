@@ -8,247 +8,171 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { address } = await req.json()
+    const { url, propertyId, updateExisting = false } = await req.json()
     
-    if (!address) {
-      return new Response(
-        JSON.stringify({ error: 'Address is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Get Firecrawl API key from secrets
+    console.log('Starting enhanced property scraping for:', { url, propertyId, updateExisting })
+    
     const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY')
     if (!firecrawlApiKey) {
-      return new Response(
-        JSON.stringify({ error: 'Firecrawl API key not configured' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+      throw new Error('FIRECRAWL_API_KEY not configured')
     }
 
-    const app = new FirecrawlApp({ apiKey: firecrawlApiKey })
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
     
-    // Try multiple URL formats for better success rate
-    const searchUrls = [
-      `https://www.zillow.com/homes/${encodeURIComponent(address)}_rb/`,
-      `https://www.zillow.com/homedetails/${encodeURIComponent(address.replace(/\s+/g, '-'))}`,
-      `https://www.zillow.com/homes/for_sale/${encodeURIComponent(address)}`
-    ]
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Supabase configuration missing')
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
+
+    // Enhanced scraping with better prompts
+    const scrapeResult = await firecrawl.scrapeUrl(url, {
+      formats: ['markdown', 'html'],
+      extractorOptions: {
+        extractionPrompt: `Extract comprehensive property data including:
+        - Basic info: address, price, bedrooms, bathrooms, square footage
+        - Financial: estimated value, rent estimate, HOA fees, property taxes
+        - Property details: year built, lot size, property type, parking
+        - Market data: days on market, price history, neighborhood info
+        - Amenities and features
+        - School ratings and walkability scores
+        - Energy efficiency information
+        Return as structured JSON with clear field names.`
+      }
+    })
+
+    if (!scrapeResult.success) {
+      throw new Error('Failed to scrape property data')
+    }
+
+    console.log('Raw scraped data:', scrapeResult.data)
     
-    let scrapedData = null
-    let lastError = null
-    
-    // Try each URL until we get good data
-    for (const searchUrl of searchUrls) {
-      try {
-        console.log('Attempting to scrape:', searchUrl)
+    // Enhanced data extraction with more comprehensive mapping
+    const extractPropertyData = (scrapedData: any): any => {
+      const content = scrapedData.markdown || scrapedData.html || ''
+      const extractedData = scrapedData.llm_extraction || {}
+      
+      console.log('Extracted LLM data:', extractedData)
+      
+      // Enhanced extraction patterns
+      const patterns = {
+        // Basic property info
+        bedrooms: /(\d+)\s*(?:bed|bedroom|br\b)/i,
+        bathrooms: /(\d+(?:\.\d+)?)\s*(?:bath|bathroom|ba\b)/i,
+        square_feet: /(\d{1,3}(?:,\d{3})*)\s*(?:sq\.?\s*ft|square\s*feet|sqft)/i,
         
-        const crawlResponse = await app.scrapeUrl(searchUrl, {
-          formats: ['markdown', 'html'],
-          waitFor: 3000,
-          timeout: 15000
-        })
-
-        if (crawlResponse.success && crawlResponse.data) {
-          const content = crawlResponse.data.markdown || crawlResponse.data.html || ''
-          console.log('Content length:', content.length)
-          console.log('Content preview:', content.substring(0, 500))
+        // Financial information
+        price: /\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/,
+        estimated_value: /(?:zestimate|estimated?\s*value|home\s*value)[\s:]*\$(\d{1,3}(?:,\d{3})*)/i,
+        rent_estimate: /(?:rent\s*zestimate|rental?\s*estimate)[\s:]*\$(\d{1,3}(?:,\d{3})*)/i,
+        hoa_fees: /(?:hoa|homeowners?\s*association)[\s:]*\$(\d{1,3}(?:,\d{3})*)/i,
+        property_taxes: /(?:property\s*tax|taxes?)[\s:]*\$(\d{1,3}(?:,\d{3})*)/i,
+        
+        // Property details
+        year_built: /(?:built|year\s*built)[\s:]*(\d{4})/i,
+        lot_size: /(?:lot\s*size)[\s:]*(\d+(?:\.\d+)?)\s*(?:acres?|sq\.?\s*ft)/i,
+        property_type: /(single\s*family|condo|townhouse|duplex|multi\s*family)/i,
+        
+        // Market information
+        days_on_market: /(\d+)\s*days?\s*on\s*(?:market|zillow)/i,
+        
+        // Location
+        address: /^(.+?)(?:\s*,\s*[A-Z]{2}\s*\d{5}|\s*\|\s*Zillow)/m,
+        city: /,\s*([^,]+),\s*[A-Z]{2}/,
+        state: /,\s*[^,]+,\s*([A-Z]{2})/,
+        zip_code: /(\d{5}(?:-\d{4})?)/,
+        
+        // Scores and ratings
+        walkability_score: /walk\s*score[\s:]*(\d+)/i,
+        school_rating: /school\s*rating[\s:]*(\d+(?:\.\d+)?)/i,
+        
+        // Energy efficiency
+        energy_efficiency_rating: /(energy\s*star|leed|green\s*certified)/i
+      }
+      
+      const result: any = {}
+      
+      // Apply patterns to extract data
+      for (const [key, pattern] of Object.entries(patterns)) {
+        const match = content.match(pattern)
+        if (match) {
+          let value = match[1] || match[0]
           
-          if (content.length > 100) { // Only use if we got substantial content
-            scrapedData = {
-              content,
-              metadata: crawlResponse.data.metadata || {},
-              url: searchUrl
-            }
-            break
+          // Clean and convert numeric values
+          if (['bedrooms', 'bathrooms', 'square_feet', 'price', 'estimated_value', 'rent_estimate', 'hoa_fees', 'property_taxes', 'year_built', 'days_on_market', 'walkability_score', 'school_rating'].includes(key)) {
+            value = parseFloat(value.replace(/,/g, '')) || null
           }
+          
+          result[key] = value
         }
-      } catch (error) {
-        console.log('Error with URL:', searchUrl, error)
-        lastError = error
       }
+      
+      // Use LLM extraction if available and better
+      if (extractedData) {
+        Object.assign(result, extractedData)
+      }
+      
+      // Extract images
+      const imageMatches = content.match(/https:\/\/[^\s"']+\.(?:jpg|jpeg|png|webp)/gi) || []
+      if (imageMatches.length > 0) {
+        result.images = imageMatches.slice(0, 10) // Limit to 10 images
+      }
+      
+      // Calculate derived metrics
+      if (result.price && result.square_feet) {
+        result.price_per_sqft = Math.round((result.price / result.square_feet) * 100) / 100
+      }
+      
+      // Store raw Zillow data for future reference
+      result.zillow_data = {
+        url,
+        scraped_at: new Date().toISOString(),
+        raw_content: content.substring(0, 5000), // Store first 5000 chars
+        llm_extraction: extractedData
+      }
+      
+      result.last_zillow_sync = new Date().toISOString()
+      result.data_sources = { zillow: { last_updated: new Date().toISOString(), url } }
+      
+      return result
     }
-
-    if (!scrapedData) {
-      console.log('Failed to scrape any URL, last error:', lastError)
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          data: { 
-            address: address,
-            street_address: address,
-            description: 'Could not automatically fetch property details. Please enter manually.'
-          },
-          error: 'Could not fetch property data from Zillow'
-        }),
-        { 
-          status: 200, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Enhanced property data extraction
-    const extractPropertyData = (content: string, metadata: any) => {
-      console.log('Extracting property data from content...')
-      
-      const propertyData: any = {
-        address: address,
-        street_address: address,
-        description: metadata.description || '',
-      }
-
-      // Extract price/value with multiple patterns
-      const pricePatterns = [
-        /\$([0-9,]+)/g,
-        /price[:\s]*\$?([0-9,]+)/gi,
-        /value[:\s]*\$?([0-9,]+)/gi,
-        /est[imated]*[:\s]*\$?([0-9,]+)/gi
-      ]
-      
-      for (const pattern of pricePatterns) {
-        const matches = content.match(pattern)
-        if (matches && matches.length > 0) {
-          // Get the largest number (likely the property value)
-          const prices = matches.map(m => parseInt(m.replace(/[$,]/g, ''))).filter(p => p > 50000)
-          if (prices.length > 0) {
-            propertyData.estimated_value = Math.max(...prices)
-            console.log('Found price:', propertyData.estimated_value)
-            break
-          }
-        }
-      }
-
-      // Extract bedrooms with enhanced patterns
-      const bedroomPatterns = [
-        /(\d+)\s*(?:bed|br|bedroom)s?/gi,
-        /bed[room]*s?[:\s]*(\d+)/gi,
-        /(\d+)\s*bd/gi
-      ]
-      
-      for (const pattern of bedroomPatterns) {
-        const match = content.match(pattern)
-        if (match) {
-          const beds = parseInt(match[1])
-          if (beds > 0 && beds <= 20) {
-            propertyData.bedrooms = beds
-            console.log('Found bedrooms:', beds)
-            break
-          }
-        }
-      }
-
-      // Extract bathrooms with enhanced patterns
-      const bathroomPatterns = [
-        /(\d+(?:\.\d+)?)\s*(?:bath|ba|bathroom)s?/gi,
-        /bath[room]*s?[:\s]*(\d+(?:\.\d+)?)/gi,
-        /(\d+(?:\.\d+)?)\s*ba/gi
-      ]
-      
-      for (const pattern of bathroomPatterns) {
-        const match = content.match(pattern)
-        if (match) {
-          const baths = parseFloat(match[1])
-          if (baths > 0 && baths <= 20) {
-            propertyData.bathrooms = baths
-            console.log('Found bathrooms:', baths)
-            break
-          }
-        }
-      }
-
-      // Extract square feet with enhanced patterns
-      const sqftPatterns = [
-        /(\d{1,3}(?:,\d{3})*)\s*(?:sq\s*ft|sqft|square\s*feet)/gi,
-        /(?:size|area)[:\s]*(\d{1,3}(?:,\d{3})*)\s*(?:sq\s*ft|sqft)/gi,
-        /(\d{1,3}(?:,\d{3})*)\s*sf/gi
-      ]
-      
-      for (const pattern of sqftPatterns) {
-        const match = content.match(pattern)
-        if (match) {
-          const sqft = parseInt(match[1].replace(/,/g, ''))
-          if (sqft > 200 && sqft < 50000) {
-            propertyData.square_feet = sqft
-            console.log('Found square feet:', sqft)
-            break
-          }
-        }
-      }
-
-      // Extract year built
-      const yearPatterns = [
-        /(?:built|year)[:\s]*(\d{4})/gi,
-        /(\d{4})\s*built/gi,
-        /year[:\s]*(\d{4})/gi
-      ]
-      
-      for (const pattern of yearPatterns) {
-        const match = content.match(pattern)
-        if (match) {
-          const year = parseInt(match[1])
-          const currentYear = new Date().getFullYear()
-          if (year > 1800 && year <= currentYear) {
-            propertyData.year_built = year
-            console.log('Found year built:', year)
-            break
-          }
-        }
-      }
-
-      // Extract property type
-      const typePatterns = [
-        /(?:property\s*type|type)[:\s]*(single\s*family|condo|townhouse|apartment|multi\s*family)/gi,
-        /(single\s*family|condo|townhouse|apartment|multi\s*family)\s*home/gi,
-        /(house|condo|townhouse|apartment)/gi
-      ]
-      
-      for (const pattern of typePatterns) {
-        const match = content.match(pattern)
-        if (match) {
-          propertyData.property_type = match[1].toLowerCase().replace(/\s+/g, '_')
-          console.log('Found property type:', propertyData.property_type)
-          break
-        }
-      }
-
-      console.log('Extracted property data:', propertyData)
-      return propertyData
-    }
-
-    const propertyData = extractPropertyData(scrapedData.content, scrapedData.metadata)
-
+    
+    const propertyData = extractPropertyData(scrapeResult.data)
+    console.log('Final extracted property data:', propertyData)
+    
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        data: propertyData,
-        rawContent: scrapedData.content.substring(0, 1000) // First 1000 chars for debugging
+      JSON.stringify({
+        success: true,
+        propertyData,
+        message: updateExisting ? 'Property updated with Zillow data' : 'Property data extracted successfully'
       }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      },
     )
-
+    
   } catch (error) {
-    console.error('Error in scrape-property function:', error)
+    console.error('Error in enhanced property scraping:', error)
+    
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      JSON.stringify({
+        success: false,
+        error: error.message,
+        details: 'Enhanced property scraping failed'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      },
     )
   }
 })

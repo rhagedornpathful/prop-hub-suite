@@ -1585,21 +1585,48 @@ export type Database = {
         Row: {
           address: string
           amenities: string[] | null
+          appreciation_rate: number | null
+          assessed_value: number | null
           bathrooms: number | null
           bedrooms: number | null
+          cap_rate: number | null
+          cash_flow: number | null
           city: string | null
           created_at: string
+          crime_score: number | null
+          data_sources: Json | null
+          days_on_market: number | null
           description: string | null
+          energy_efficiency_rating: string | null
           estimated_value: number | null
           gate_code: string | null
+          hoa_fees: number | null
           home_value_estimate: number | null
           id: string
           images: string[] | null
+          insurance_cost: number | null
+          investment_metrics: Json | null
+          last_inspection_date: string | null
+          last_zillow_sync: string | null
+          lease_expiry_date: string | null
+          listing_status: string | null
           lot_size: string | null
+          market_value: number | null
+          marketing_description: string | null
           monthly_rent: number | null
+          nearby_attractions: Json | null
+          neighborhood_score: number | null
+          next_inspection_date: string | null
+          occupancy_rate: number | null
           owner_id: string | null
+          property_class: string | null
+          property_taxes: number | null
           property_type: string | null
+          purchase_date: string | null
+          purchase_price: number | null
+          renovation_cost: number | null
           rent_estimate: number | null
+          school_rating: number | null
           service_type: string | null
           square_feet: number | null
           state: string | null
@@ -1607,27 +1634,56 @@ export type Database = {
           street_address: string | null
           updated_at: string
           user_id: string
+          walkability_score: number | null
           year_built: number | null
+          zillow_data: Json | null
           zip_code: string | null
         }
         Insert: {
           address: string
           amenities?: string[] | null
+          appreciation_rate?: number | null
+          assessed_value?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
+          cap_rate?: number | null
+          cash_flow?: number | null
           city?: string | null
           created_at?: string
+          crime_score?: number | null
+          data_sources?: Json | null
+          days_on_market?: number | null
           description?: string | null
+          energy_efficiency_rating?: string | null
           estimated_value?: number | null
           gate_code?: string | null
+          hoa_fees?: number | null
           home_value_estimate?: number | null
           id?: string
           images?: string[] | null
+          insurance_cost?: number | null
+          investment_metrics?: Json | null
+          last_inspection_date?: string | null
+          last_zillow_sync?: string | null
+          lease_expiry_date?: string | null
+          listing_status?: string | null
           lot_size?: string | null
+          market_value?: number | null
+          marketing_description?: string | null
           monthly_rent?: number | null
+          nearby_attractions?: Json | null
+          neighborhood_score?: number | null
+          next_inspection_date?: string | null
+          occupancy_rate?: number | null
           owner_id?: string | null
+          property_class?: string | null
+          property_taxes?: number | null
           property_type?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          renovation_cost?: number | null
           rent_estimate?: number | null
+          school_rating?: number | null
           service_type?: string | null
           square_feet?: number | null
           state?: string | null
@@ -1635,27 +1691,56 @@ export type Database = {
           street_address?: string | null
           updated_at?: string
           user_id: string
+          walkability_score?: number | null
           year_built?: number | null
+          zillow_data?: Json | null
           zip_code?: string | null
         }
         Update: {
           address?: string
           amenities?: string[] | null
+          appreciation_rate?: number | null
+          assessed_value?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
+          cap_rate?: number | null
+          cash_flow?: number | null
           city?: string | null
           created_at?: string
+          crime_score?: number | null
+          data_sources?: Json | null
+          days_on_market?: number | null
           description?: string | null
+          energy_efficiency_rating?: string | null
           estimated_value?: number | null
           gate_code?: string | null
+          hoa_fees?: number | null
           home_value_estimate?: number | null
           id?: string
           images?: string[] | null
+          insurance_cost?: number | null
+          investment_metrics?: Json | null
+          last_inspection_date?: string | null
+          last_zillow_sync?: string | null
+          lease_expiry_date?: string | null
+          listing_status?: string | null
           lot_size?: string | null
+          market_value?: number | null
+          marketing_description?: string | null
           monthly_rent?: number | null
+          nearby_attractions?: Json | null
+          neighborhood_score?: number | null
+          next_inspection_date?: string | null
+          occupancy_rate?: number | null
           owner_id?: string | null
+          property_class?: string | null
+          property_taxes?: number | null
           property_type?: string | null
+          purchase_date?: string | null
+          purchase_price?: number | null
+          renovation_cost?: number | null
           rent_estimate?: number | null
+          school_rating?: number | null
           service_type?: string | null
           square_feet?: number | null
           state?: string | null
@@ -1663,7 +1748,9 @@ export type Database = {
           street_address?: string | null
           updated_at?: string
           user_id?: string
+          walkability_score?: number | null
           year_built?: number | null
+          zillow_data?: Json | null
           zip_code?: string | null
         }
         Relationships: [
@@ -1672,6 +1759,121 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "property_owners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string
+          current_value: number | null
+          description: string | null
+          id: string
+          is_acknowledged: boolean | null
+          is_active: boolean | null
+          priority: string
+          property_id: string
+          resolved_at: string | null
+          threshold_value: number | null
+          title: string
+          triggered_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          is_acknowledged?: boolean | null
+          is_active?: boolean | null
+          priority?: string
+          property_id: string
+          resolved_at?: string | null
+          threshold_value?: number | null
+          title: string
+          triggered_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string
+          current_value?: number | null
+          description?: string | null
+          id?: string
+          is_acknowledged?: boolean | null
+          is_active?: boolean | null
+          priority?: string
+          property_id?: string
+          resolved_at?: string | null
+          threshold_value?: number | null
+          title?: string
+          triggered_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_alerts_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_analytics: {
+        Row: {
+          benchmark_value: number | null
+          change_percentage: number | null
+          comparison_period: string | null
+          created_at: string
+          id: string
+          metric_date: string
+          metric_type: string
+          metric_value: number
+          notes: string | null
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          benchmark_value?: number | null
+          change_percentage?: number | null
+          comparison_period?: string | null
+          created_at?: string
+          id?: string
+          metric_date?: string
+          metric_type: string
+          metric_value: number
+          notes?: string | null
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          benchmark_value?: number | null
+          change_percentage?: number | null
+          comparison_period?: string | null
+          created_at?: string
+          id?: string
+          metric_date?: string
+          metric_type?: string
+          metric_value?: number
+          notes?: string | null
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_analytics_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -1898,6 +2100,62 @@ export type Database = {
             foreignKeyName: "property_manager_assignments_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: true
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_market_comparisons: {
+        Row: {
+          comparable_address: string
+          comparable_bed_bath: string | null
+          comparable_price: number | null
+          comparable_sqft: number | null
+          comparison_score: number | null
+          created_at: string
+          data_source: string | null
+          days_on_market: number | null
+          distance_miles: number | null
+          id: string
+          price_per_sqft: number | null
+          property_id: string
+          sold_date: string | null
+        }
+        Insert: {
+          comparable_address: string
+          comparable_bed_bath?: string | null
+          comparable_price?: number | null
+          comparable_sqft?: number | null
+          comparison_score?: number | null
+          created_at?: string
+          data_source?: string | null
+          days_on_market?: number | null
+          distance_miles?: number | null
+          id?: string
+          price_per_sqft?: number | null
+          property_id: string
+          sold_date?: string | null
+        }
+        Update: {
+          comparable_address?: string
+          comparable_bed_bath?: string | null
+          comparable_price?: number | null
+          comparable_sqft?: number | null
+          comparison_score?: number | null
+          created_at?: string
+          data_source?: string | null
+          days_on_market?: number | null
+          distance_miles?: number | null
+          id?: string
+          price_per_sqft?: number | null
+          property_id?: string
+          sold_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_market_comparisons_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
