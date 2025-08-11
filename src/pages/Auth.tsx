@@ -198,62 +198,69 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-6">
-          {/* Company Logo */}
-          <div className="flex justify-center mb-4">
+      <Card className="w-full max-w-lg shadow-lg">
+        {/* Logo Section */}
+        <div className="pt-8 pb-4 px-8">
+          <div className="flex justify-center">
             <img 
               src="/lovable-uploads/d57228a9-3aea-44c1-9331-d5c7640e4b3e.png" 
               alt="Latitude Premier Properties" 
-              className="h-20 w-auto object-contain"
+              className="h-32 w-auto object-contain"
             />
           </div>
-          
-          {/* Welcome Text */}
-          <div>
-            <CardTitle className="text-2xl font-bold text-foreground">Welcome</CardTitle>
-            <p className="text-muted-foreground mt-2">
-              Please sign in to your account
-            </p>
-          </div>
+        </div>
+        
+        {/* Header Section */}
+        <CardHeader className="text-center pt-0 pb-6">
+          <CardTitle className="text-3xl font-bold text-foreground mb-2">Welcome</CardTitle>
+          <p className="text-muted-foreground text-base">
+            Please sign in to your account
+          </p>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSignIn} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
+        {/* Form Section */}
+        <CardContent className="px-8 pb-8">
+          <form onSubmit={handleSignIn} className="space-y-6">
+            {/* Email Field */}
+            <div className="space-y-3">
+              <Label htmlFor="email" className="text-sm font-semibold text-foreground">
+                Email
+              </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => handleFieldChange('email', e.target.value)}
-                  className="pl-9 h-11"
+                  className="pl-10 h-12 text-base border-2 focus:border-primary"
                   required
                 />
               </div>
               <FormFieldError error={fieldErrors.email} />
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+            {/* Password Field */}
+            <div className="space-y-3">
+              <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+                Password
+              </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => handleFieldChange('password', e.target.value)}
-                  className="pl-9 pr-10 h-11"
+                  className="pl-10 pr-12 h-12 text-base border-2 focus:border-primary"
                   required
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  className="absolute right-1 top-1 h-10 w-10 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
@@ -266,57 +273,61 @@ const Auth = () => {
               <FormFieldError error={fieldErrors.password} />
             </div>
 
+            {/* Remember Me and Forgot Password */}
             <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <input
                   type="checkbox"
                   id="remember-me"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  className="h-4 w-4 rounded border-2 border-muted-foreground text-primary focus:ring-primary focus:ring-2"
                 />
-                <Label htmlFor="remember-me" className="text-sm">
+                <Label htmlFor="remember-me" className="text-sm font-medium">
                   Remember me
                 </Label>
               </div>
               <Button
                 type="button"
                 variant="link"
-                className="p-0 h-auto text-sm text-primary hover:text-primary/80"
+                className="p-0 h-auto text-sm text-primary hover:text-primary/80 font-medium"
                 onClick={() => setForgotPasswordOpen(true)}
               >
                 Forgot password?
               </Button>
             </div>
             
+            {/* Error Display */}
             {error && (
-              <Alert variant="destructive" className="mt-4">
+              <Alert variant="destructive" className="mt-6">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription className="text-sm">{error}</AlertDescription>
               </Alert>
             )}
             
+            {/* Sign In Button */}
             <Button
               type="submit"
-              className="w-full h-11 mt-6"
+              className="w-full h-12 text-base font-semibold mt-8"
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Signing in...
                 </>
               ) : (
                 <>
-                  <LogIn className="mr-2 h-4 w-4" />
+                  <LogIn className="mr-2 h-5 w-5" />
                   Sign In
                 </>
               )}
             </Button>
           </form>
           
-          <div className="text-center pt-4 border-t border-border">
-            <p className="text-sm text-muted-foreground">
+          {/* Footer Message */}
+          <div className="text-center pt-8 mt-8 border-t border-border">
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Need access? Contact your administrator to create an account.
             </p>
           </div>
