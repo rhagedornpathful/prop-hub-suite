@@ -105,6 +105,7 @@ export function StreamlinedAddPropertyDialog({
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('Loaded property owners:', data);
       setPropertyOwners(data || []);
     } catch (error) {
       console.error('Error loading property owners:', error);
@@ -114,7 +115,11 @@ export function StreamlinedAddPropertyDialog({
   };
 
   const getOwnerDisplayName = (owner: PropertyOwner) => {
-    return owner.company_name || `${owner.first_name} ${owner.last_name}`;
+    console.log('Getting display name for owner:', owner);
+    if (owner.company_name && owner.company_name.trim()) {
+      return owner.company_name;
+    }
+    return `${owner.first_name} ${owner.last_name}`.trim();
   };
 
   const isValidZillowUrl = (url: string) => {
