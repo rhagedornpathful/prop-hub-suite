@@ -182,11 +182,18 @@ export function StreamlinedAddPropertyDialog({
       } else {
         throw new Error('Could not extract property data');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error searching property:', error);
+      
+      let errorMessage = "Could not import from Zillow. You can add manually instead.";
+      
+      if (error?.message) {
+        errorMessage = `Zillow import failed: ${error.message}`;
+      }
+      
       toast({
         title: "Import Failed",
-        description: "Could not import from Zillow. You can add manually instead.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

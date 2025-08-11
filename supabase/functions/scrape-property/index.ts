@@ -38,9 +38,13 @@ serve(async (req) => {
     const firecrawl = new FirecrawlApp({ apiKey: firecrawlApiKey })
 
     // Enhanced scraping with Firecrawl v1 API
+    console.log('Attempting to scrape URL with Firecrawl:', url);
+    
     const scrapeResult = await firecrawl.scrapeUrl(url, {
       formats: ['markdown', 'html']
-    })
+    });
+    
+    console.log('Firecrawl scrape result:', scrapeResult);
 
     if (!scrapeResult.success) {
       throw new Error('Failed to scrape property data')
