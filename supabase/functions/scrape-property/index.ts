@@ -18,6 +18,10 @@ serve(async (req) => {
     
     console.log('Starting enhanced property scraping for:', { url, propertyId, updateExisting })
     
+    if (!url) {
+      throw new Error('URL parameter is required')
+    }
+    
     const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY')
     if (!firecrawlApiKey) {
       throw new Error('FIRECRAWL_API_KEY not configured')

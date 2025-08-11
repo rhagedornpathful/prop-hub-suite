@@ -147,9 +147,11 @@ export function StreamlinedAddPropertyDialog({
     }
 
     setIsSearching(true);
-    setSearchProgress(0);
+     setSearchProgress(0);
 
     try {
+      console.log('Starting Zillow search with URL:', zillowUrl);
+      
       // Simulate progress
       const progressInterval = setInterval(() => {
         setSearchProgress(prev => Math.min(prev + 10, 90));
