@@ -104,15 +104,24 @@ export const TemplateSectionEditor = ({ template }: TemplateSectionEditorProps) 
   };
 
   const handleUpdateItem = () => {
-    if (!editItemData.text.trim() || !editingItem) return;
+    console.log('handleUpdateItem called', { editItemData, editingItem });
+    if (!editItemData.text.trim() || !editingItem) {
+      console.log('Early return - missing data');
+      return;
+    }
 
+    console.log('Calling updateItemMutation.mutate');
     updateItemMutation.mutate({
       id: editingItem,
       updates: { item_text: editItemData.text, is_required: editItemData.required },
     }, {
       onSuccess: () => {
+        console.log('Update successful');
         setEditingItem(null);
         setEditItemData({ text: '', required: false });
+      },
+      onError: (error) => {
+        console.error('Update failed:', error);
       },
     });
   };
