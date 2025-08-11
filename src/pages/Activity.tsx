@@ -84,9 +84,6 @@ export default function Activity() {
   };
 
   const filteredActivities = activities?.filter(activity => {
-    const matchesSearch = activity.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-                         activity.description?.toLowerCase().includes(filters.search.toLowerCase());
-    
     const matchesType = filters.activityType === 'all' || activity.type === filters.activityType;
     const matchesStatus = filters.status === 'all' || activity.status === filters.status;
     
@@ -94,7 +91,7 @@ export default function Activity() {
     const matchesDateRange = (!filters.dateRange.from || activityDate >= filters.dateRange.from) &&
                            (!filters.dateRange.to || activityDate <= filters.dateRange.to);
     
-    return matchesSearch && matchesType && matchesStatus && matchesDateRange;
+    return matchesType && matchesStatus && matchesDateRange;
   }) || [];
 
   const handleBulkAction = (action: string) => {
@@ -187,62 +184,6 @@ export default function Activity() {
         <p className="text-sm text-muted-foreground mt-1">Monitor all property activities across your portfolio</p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Activities</p>
-                <p className="text-2xl font-bold">{activities?.length || 0}</p>
-              </div>
-              <ActivityIcon className="w-8 h-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Maintenance</p>
-                <p className="text-2xl font-bold">
-                  {activities?.filter(a => a.type === 'maintenance').length || 0}
-                </p>
-              </div>
-              <Wrench className="w-8 h-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Property Checks</p>
-                <p className="text-2xl font-bold">
-                  {activities?.filter(a => a.type === 'property_check').length || 0}
-                </p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Payments</p>
-                <p className="text-2xl font-bold">
-                  {activities?.filter(a => a.type === 'payment').length || 0}
-                </p>
-              </div>
-              <DollarSign className="w-8 h-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Filters */}
       <Card>
@@ -253,91 +194,90 @@ export default function Activity() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search activities..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              
-              <Select value={filters.activityType} onValueChange={(value) => handleFilterChange('activityType', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Activity Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Types</SelectItem>
-                  <SelectItem value="maintenance">Maintenance</SelectItem>
-                  <SelectItem value="property_check">Property Check</SelectItem>
-                  <SelectItem value="payment">Payment</SelectItem>
-                  <SelectItem value="status_change">Status Change</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={filters.propertyType} onValueChange={(value) => handleFilterChange('propertyType', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Property Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Properties</SelectItem>
-                  <SelectItem value="single_family">Single Family</SelectItem>
-                  <SelectItem value="townhouse">Townhouse</SelectItem>
-                  <SelectItem value="condo">Condo</SelectItem>
-                  <SelectItem value="apartment">Apartment</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid gap-4 md:grid-cols-4 mb-4">
+            <Select value={filters.activityType} onValueChange={(value) => handleFilterChange('activityType', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+                <SelectItem value="property_check">Property Check</SelectItem>
+                <SelectItem value="payment">Payment</SelectItem>
+                <SelectItem value="status_change">Status Change</SelectItem>
+              </SelectContent>
+            </Select>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-between">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="justify-start">
-                    <CalendarIcon className="w-4 h-4 mr-2" />
-                    Date Range
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="range"
-                    selected={filters.dateRange}
-                    onSelect={(range) => handleFilterChange('dateRange', range)}
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-              
-              <Button
-                variant="outline"
-                onClick={() => setFilters({
-                  search: '',
-                  activityType: 'all',
-                  status: 'all',
-                  propertyType: 'all',
-                  dateRange: { from: undefined, to: undefined },
-                  assignedUser: 'all'
-                })}
-              >
-                Clear Filters
-              </Button>
-            </div>
+            <Select value={filters.status} onValueChange={(value) => handleFilterChange('status', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={filters.propertyType} onValueChange={(value) => handleFilterChange('propertyType', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Properties" />
+              </SelectTrigger>
+              <SelectContent className="bg-background border border-border z-50">
+                <SelectItem value="all">All Properties</SelectItem>
+                <SelectItem value="single_family">Single Family</SelectItem>
+                <SelectItem value="townhouse">Townhouse</SelectItem>
+                <SelectItem value="condo">Condo</SelectItem>
+                <SelectItem value="apartment">Apartment</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="justify-start">
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  {filters.dateRange.from ? (
+                    filters.dateRange.to ? (
+                      <>
+                        {format(filters.dateRange.from, "LLL dd")} - {format(filters.dateRange.to, "LLL dd")}
+                      </>
+                    ) : (
+                      format(filters.dateRange.from, "LLL dd, y")
+                    )
+                  ) : (
+                    "Date Range"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-background border border-border z-50" align="start">
+                <Calendar
+                  mode="range"
+                  selected={filters.dateRange}
+                  onSelect={(range) => handleFilterChange('dateRange', range || { from: undefined, to: undefined })}
+                  className={cn("p-3 pointer-events-auto")}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setFilters({
+                search: '',
+                activityType: 'all',
+                status: 'all',
+                propertyType: 'all',
+                dateRange: { from: undefined, to: undefined },
+                assignedUser: 'all'
+              })}
+            >
+              Clear Filters
+            </Button>
           </div>
         </CardContent>
       </Card>
