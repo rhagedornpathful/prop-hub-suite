@@ -29,8 +29,14 @@ export const CreateCheckTemplateDialog = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.name.trim()) {
+      return;
+    }
+    
     createTemplateMutation.mutate({
       ...formData,
+      name: formData.name.trim(),
+      description: formData.description.trim(),
       type: templateType,
     }, {
       onSuccess: () => {
@@ -56,13 +62,17 @@ export const CreateCheckTemplateDialog = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Template Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="Enter template name"
-              required
-            />
+             <Input
+               id="name"
+               value={formData.name}
+               onChange={(e) => handleChange('name', e.target.value)}
+               placeholder="Enter template name"
+               required
+               className={!formData.name.trim() && formData.name.length > 0 ? 'border-destructive' : ''}
+             />
+             {!formData.name.trim() && formData.name.length > 0 && (
+               <p className="text-sm text-destructive">Template name is required</p>
+             )}
           </div>
 
           <div className="space-y-2">
@@ -89,12 +99,12 @@ export const CreateCheckTemplateDialog = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
-              disabled={createTemplateMutation.isPending}
-            >
-              {createTemplateMutation.isPending ? 'Creating...' : 'Create Template'}
-            </Button>
+             <Button 
+               type="submit" 
+               disabled={createTemplateMutation.isPending || !formData.name.trim()}
+             >
+               {createTemplateMutation.isPending ? 'Creating...' : 'Create Template'}
+             </Button>
           </div>
         </form>
       </DialogContent>

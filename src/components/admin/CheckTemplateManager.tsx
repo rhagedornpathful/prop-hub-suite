@@ -27,13 +27,20 @@ export const CheckTemplateManager = () => {
     setEditDialogOpen(true);
   };
 
+  const handleEditDialogClose = (open: boolean) => {
+    setEditDialogOpen(open);
+    if (!open) {
+      setSelectedTemplate(null);
+    }
+  };
+
   const handlePreview = (template: any) => {
     setSelectedTemplate(template);
     setPreviewDialogOpen(true);
   };
 
   const handleDelete = async (template: any) => {
-    if (confirm('Are you sure you want to delete this template?')) {
+    if (window.confirm(`Are you sure you want to delete the template "${template.name}"? This action cannot be undone.`)) {
       deleteTemplateMutation.mutate(template.id);
     }
   };
@@ -44,7 +51,16 @@ export const CheckTemplateManager = () => {
   };
 
   if (isLoading) {
-    return <div>Loading templates...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Check Template Management</h1>
+        </div>
+        <div className="flex justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
   }
 
   const TemplateGrid = ({ templates, type }: { templates: any[], type: string }) => (
@@ -92,9 +108,14 @@ export const CheckTemplateManager = () => {
                 <Edit className="h-4 w-4 mr-1" />
                 Edit
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleDelete(template)}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleDelete(template)}
+                disabled={deleteTemplateMutation.isPending}
+              >
                 <Trash2 className="h-4 w-4 mr-1" />
-                Delete
+                {deleteTemplateMutation.isPending ? 'Deleting...' : 'Delete'}
               </Button>
             </div>
           </CardContent>
@@ -135,7 +156,7 @@ export const CheckTemplateManager = () => {
           <EditCheckTemplateDialog
             template={selectedTemplate}
             open={editDialogOpen}
-            onOpenChange={setEditDialogOpen}
+            onOpenChange={handleEditDialogClose}
           />
           <CheckTemplatePreview
             template={selectedTemplate}

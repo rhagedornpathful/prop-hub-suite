@@ -201,9 +201,18 @@ export const useUpdateCheckTemplate = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['check-template'] });
       toast({
         title: "Template Updated",
         description: "Check template has been updated successfully",
+      });
+    },
+    onError: (error) => {
+      console.error('Update template error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update check template",
+        variant: "destructive",
       });
     },
   });

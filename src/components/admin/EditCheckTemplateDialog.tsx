@@ -39,8 +39,12 @@ export const EditCheckTemplateDialog = ({
     }
   }, [fullTemplate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      return;
+    }
     
     updateTemplateMutation.mutate({
       id: fullTemplate?.id || template.id,
@@ -56,11 +60,26 @@ export const EditCheckTemplateDialog = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Loading Template...</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Template: {template?.name}</DialogTitle>
+          <DialogTitle>Edit Template: {fullTemplate?.name || template?.name}</DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="details" className="space-y-4">
@@ -73,13 +92,17 @@ export const EditCheckTemplateDialog = ({
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Template Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleChange('name', e.target.value)}
-                  placeholder="Enter template name"
-                  required
-                />
+                 <Input
+                   id="name"
+                   value={formData.name}
+                   onChange={(e) => handleChange('name', e.target.value)}
+                   placeholder="Enter template name"
+                   required
+                   className={!formData.name.trim() && formData.name.length > 0 ? 'border-destructive' : ''}
+                 />
+                 {!formData.name.trim() && formData.name.length > 0 && (
+                   <p className="text-sm text-destructive">Template name is required</p>
+                 )}
               </div>
 
               <div className="space-y-2">
@@ -106,12 +129,12 @@ export const EditCheckTemplateDialog = ({
                 <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={updateTemplateMutation.isPending}
-                >
-                  {updateTemplateMutation.isPending ? 'Updating...' : 'Update Template'}
-                </Button>
+                 <Button 
+                   type="submit" 
+                   disabled={updateTemplateMutation.isPending || !formData.name.trim()}
+                 >
+                   {updateTemplateMutation.isPending ? 'Updating...' : 'Update Template'}
+                 </Button>
               </div>
             </form>
           </TabsContent>
