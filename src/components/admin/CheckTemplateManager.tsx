@@ -74,20 +74,6 @@ export const CheckTemplateManager = () => {
 
   const TemplateGrid = ({ templates, type }: { templates: any[], type: string }) => (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-      {/* Create New Template Card */}
-      <Card className="border-dashed border-2 border-muted-foreground/25 bg-muted/20 hover:bg-muted/40 transition-all duration-200 cursor-pointer group" 
-            onClick={() => handleCreate(type as 'home_check' | 'property_check')}>
-        <CardContent className="flex flex-col items-center justify-center h-[320px] text-center p-8">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-            <Plus className="h-8 w-8 text-primary" />
-          </div>
-          <h3 className="font-semibold text-lg mb-2 text-foreground">Create New Template</h3>
-          <p className="text-sm text-muted-foreground max-w-[200px]">
-            Add a new {type === 'home_check' ? 'home check' : 'property check'} template
-          </p>
-        </CardContent>
-      </Card>
-      
       {/* Template Cards */}
       {templates.map((template) => (
         <Card key={template.id} className="group hover:shadow-lg transition-all duration-200 border bg-card">
@@ -178,6 +164,20 @@ export const CheckTemplateManager = () => {
           </CardContent>
         </Card>
       ))}
+      
+      {/* Create New Template Card */}
+      <Card className="border-dashed border-2 border-muted-foreground/25 bg-muted/20 hover:bg-muted/40 transition-all duration-200 cursor-pointer group" 
+            onClick={() => handleCreate(type as 'home_check' | 'property_check')}>
+        <CardContent className="flex flex-col items-center justify-center h-[320px] text-center p-8">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+            <Plus className="h-8 w-8 text-primary" />
+          </div>
+          <h3 className="font-semibold text-lg mb-2 text-foreground">Create New Template</h3>
+          <p className="text-sm text-muted-foreground max-w-[200px]">
+            Add a new {type === 'home_check' ? 'home check' : 'property check'} template
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 
