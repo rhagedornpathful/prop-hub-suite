@@ -51,6 +51,16 @@ export function OptimizedPropertyGrid({
     ...properties.map(property => {
       const determinedType: 'property_management' | 'house_watching' = property.service_type === 'house_watching' ? 'house_watching' : 'property_management';
       
+      console.log('🔍 Property transformation:', {
+        id: property.id,
+        address: property.address,
+        city: property.city,
+        state: property.state,
+        zip_code: property.zip_code,
+        service_type: property.service_type,
+        determined_type: determinedType
+      });
+      
       // Add visible debugging for the specific property
       if (property.address === '2168 Falls Manor') {
         console.log('🔍 2168 Falls Manor transformation:', {
