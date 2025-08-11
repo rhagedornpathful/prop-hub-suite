@@ -142,7 +142,7 @@ serve(async (req) => {
       return result
     }
     
-    const propertyData = extractPropertyData(scrapeResult.data)
+    const propertyData = extractPropertyData(scrapeResult)
     console.log('Final extracted property data:', propertyData)
     
     return new Response(
