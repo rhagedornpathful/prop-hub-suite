@@ -30,6 +30,10 @@ import { cn } from '@/lib/utils';
 import { InboxConversation } from '@/hooks/queries/useInbox';
 import { useInboxMessages, useSendInboxMessage, useCreateInboxConversation } from '@/hooks/queries/useInbox';
 import { useAuth } from '@/contexts/AuthContext';
+import { MessageReactions } from '@/components/messaging/MessageReactions';
+import { RichTextEditor } from '@/components/messaging/RichTextEditor';
+import { AdvancedMessageSearch } from '@/components/messaging/AdvancedMessageSearch';
+import { MessageTemplates } from '@/components/messaging/MessageTemplates';
 
 interface MessageViewProps {
   conversation: InboxConversation;
@@ -193,7 +197,12 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
         </div>
 
         {/* Quick Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <MessageTemplates onTemplateSelect={(content) => setReplyContent(content)} />
+          <AdvancedMessageSearch 
+            onResultSelect={(result) => console.log('Selected message:', result)} 
+            conversationId={conversation.id}
+          />
           <Button 
             variant="outline" 
             size="sm"
@@ -298,6 +307,9 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
                   </div>
                 </div>
               )}
+
+              {/* Message Reactions */}
+              <MessageReactions messageId={message.id} className="mt-2" />
             </div>
 
             {index < messages.length - 1 && <Separator className="my-6" />}
@@ -314,11 +326,13 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
               <span>Reply to: {conversation.sender_name || 'Unknown User'}</span>
             </div>
             
-            <Textarea
-              placeholder="Type your reply..."
+            <RichTextEditor
               value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              className="min-h-24 resize-none"
+              onChange={setReplyContent}
+              onSend={handleReply}
+              placeholder="Type your reply..."
+              showFormatting={true}
+              allowAttachments={true}
             />
             
             <div className="flex items-center justify-between">

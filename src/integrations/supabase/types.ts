@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       check_template_items: {
         Row: {
           created_at: string
@@ -198,17 +237,21 @@ export type Database = {
       }
       conversations: {
         Row: {
+          auto_delete_after_days: number | null
           created_at: string
           created_by: string
+          encryption_enabled: boolean | null
           id: string
           is_archived: boolean | null
           is_starred: boolean | null
           labels: string[] | null
           last_message_at: string | null
           maintenance_request_id: string | null
+          muted_until: string | null
           priority: string | null
           property_id: string | null
           recipient_names: string[] | null
+          retention_policy_id: string | null
           sender_name: string | null
           status: string
           thread_count: number | null
@@ -217,17 +260,21 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_delete_after_days?: number | null
           created_at?: string
           created_by: string
+          encryption_enabled?: boolean | null
           id?: string
           is_archived?: boolean | null
           is_starred?: boolean | null
           labels?: string[] | null
           last_message_at?: string | null
           maintenance_request_id?: string | null
+          muted_until?: string | null
           priority?: string | null
           property_id?: string | null
           recipient_names?: string[] | null
+          retention_policy_id?: string | null
           sender_name?: string | null
           status?: string
           thread_count?: number | null
@@ -236,17 +283,21 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_delete_after_days?: number | null
           created_at?: string
           created_by?: string
+          encryption_enabled?: boolean | null
           id?: string
           is_archived?: boolean | null
           is_starred?: boolean | null
           labels?: string[] | null
           last_message_at?: string | null
           maintenance_request_id?: string | null
+          muted_until?: string | null
           priority?: string | null
           property_id?: string | null
           recipient_names?: string[] | null
+          retention_policy_id?: string | null
           sender_name?: string | null
           status?: string
           thread_count?: number | null
@@ -267,6 +318,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_retention_policy_id_fkey"
+            columns: ["retention_policy_id"]
+            isOneToOne: false
+            referencedRelation: "message_retention_policies"
             referencedColumns: ["id"]
           },
         ]
@@ -885,6 +943,51 @@ export type Database = {
           },
         ]
       }
+      message_analytics: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          event_type: string
+          id: string
+          message_id: string | null
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          message_id?: string | null
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_analytics_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_analytics_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_deliveries: {
         Row: {
           delivered_at: string | null
@@ -917,6 +1020,160 @@ export type Database = {
           },
         ]
       }
+      message_encryption_keys: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          key_fingerprint: string
+          public_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_fingerprint: string
+          public_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          key_fingerprint?: string
+          public_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      message_mentions: {
+        Row: {
+          created_at: string | null
+          id: string
+          mentioned_user_id: string
+          message_id: string
+          read_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          mentioned_user_id: string
+          message_id: string
+          read_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          mentioned_user_id?: string
+          message_id?: string
+          read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_mentions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          id: string
+          message_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_retention_policies: {
+        Row: {
+          auto_delete_enabled: boolean | null
+          conversation_type: string
+          created_at: string | null
+          id: string
+          retention_days: number
+          updated_at: string | null
+        }
+        Insert: {
+          auto_delete_enabled?: boolean | null
+          conversation_type: string
+          created_at?: string | null
+          id?: string
+          retention_days: number
+          updated_at?: string | null
+        }
+        Update: {
+          auto_delete_enabled?: boolean | null
+          conversation_type?: string
+          created_at?: string | null
+          id?: string
+          retention_days?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      message_templates: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string | null
+          id: string
+          is_shared: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          is_shared?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_shared?: boolean | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           attachments: Json | null
@@ -927,13 +1184,19 @@ export type Database = {
           created_at: string
           deleted_at: string | null
           edited_at: string | null
+          encrypted_content: string | null
+          encryption_key_id: string | null
+          expires_at: string | null
+          forwarded_from_id: string | null
           id: string
           importance: string | null
           is_draft: boolean | null
           message_type: string
           reply_to_id: string | null
+          scheduled_at: string | null
           sender_id: string
           subject: string | null
+          thread_id: string | null
           updated_at: string
         }
         Insert: {
@@ -945,13 +1208,19 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           edited_at?: string | null
+          encrypted_content?: string | null
+          encryption_key_id?: string | null
+          expires_at?: string | null
+          forwarded_from_id?: string | null
           id?: string
           importance?: string | null
           is_draft?: boolean | null
           message_type?: string
           reply_to_id?: string | null
+          scheduled_at?: string | null
           sender_id: string
           subject?: string | null
+          thread_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -963,13 +1232,19 @@ export type Database = {
           created_at?: string
           deleted_at?: string | null
           edited_at?: string | null
+          encrypted_content?: string | null
+          encryption_key_id?: string | null
+          expires_at?: string | null
+          forwarded_from_id?: string | null
           id?: string
           importance?: string | null
           is_draft?: boolean | null
           message_type?: string
           reply_to_id?: string | null
+          scheduled_at?: string | null
           sender_id?: string
           subject?: string | null
+          thread_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -981,6 +1256,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "messages_encryption_key_id_fkey"
+            columns: ["encryption_key_id"]
+            isOneToOne: false
+            referencedRelation: "message_encryption_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_forwarded_from_id_fkey"
+            columns: ["forwarded_from_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "messages_reply_to_id_fkey"
             columns: ["reply_to_id"]
             isOneToOne: false
@@ -988,6 +1277,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_preferences: {
+        Row: {
+          created_at: string | null
+          email_notifications: boolean | null
+          id: string
+          mention_notifications: boolean | null
+          message_notifications: boolean | null
+          push_notifications: boolean | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          sms_notifications: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          mention_notifications?: boolean | null
+          message_notifications?: boolean | null
+          push_notifications?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          sms_notifications?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_notifications?: boolean | null
+          id?: string
+          mention_notifications?: boolean | null
+          message_notifications?: boolean | null
+          push_notifications?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          sms_notifications?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       owner_distributions: {
         Row: {
@@ -1215,6 +1546,7 @@ export type Database = {
           state: string | null
           updated_at: string
           user_id: string
+          username: string | null
           zip_code: string | null
         }
         Insert: {
@@ -1229,6 +1561,7 @@ export type Database = {
           state?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
           zip_code?: string | null
         }
         Update: {
@@ -1243,6 +1576,7 @@ export type Database = {
           state?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
           zip_code?: string | null
         }
         Relationships: []
@@ -2652,6 +2986,26 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
       has_role: {
         Args: {
           _user_id: string
@@ -2659,13 +3013,52 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_message_analytics: {
+        Args: {
+          conv_id: string
+          msg_id: string
+          event_type: string
+          user_id?: string
+          metadata?: Json
+        }
+        Returns: undefined
+      }
       make_me_admin: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      search_messages: {
+        Args: {
+          search_query: string
+          user_id_param: string
+          conversation_id_param?: string
+          limit_param?: number
+          offset_param?: number
+        }
+        Returns: {
+          message_id: string
+          conversation_id: string
+          content: string
+          sender_id: string
+          created_at: string
+          rank: number
+        }[]
+      }
       seed_test_users: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
       }
       user_can_access_conversation: {
         Args: { _conversation_id: string; _user_id: string }
