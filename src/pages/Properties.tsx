@@ -131,7 +131,8 @@ const Properties = () => {
   };
 
   const handlePropertyClick = (property: any) => {
-    navigate(`/properties/${property.id}`);
+    setSelectedProperty(property);
+    setShowPropertyDetails(true);
   };
 
   const handleEdit = (property: any) => {
