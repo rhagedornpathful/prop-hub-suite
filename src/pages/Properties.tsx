@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Plus, 
   Building, 
@@ -17,7 +18,9 @@ import {
   Pencil,
   Trash2,
   Archive,
-  ArchiveRestore
+  ArchiveRestore,
+  CheckSquare,
+  Square
 } from "lucide-react";
 import {
   AlertDialog,
@@ -38,21 +41,26 @@ import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { PropertyDetailsDialog } from "@/components/PropertyDetailsDialog";
 import { PullToRefreshIndicator } from "@/components/PullToRefreshIndicator";
+import { BulkManagementTools } from "@/components/BulkManagementTools";
+import { AdvancedSearchFilters } from "@/components/AdvancedSearchFilters";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import PropertiesMap from "@/components/PropertiesMap";
+import type { PropertyWithRelations } from "@/hooks/queries/useProperties";
 const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [showPropertyDetails, setShowPropertyDetails] = useState(false);
   const [showAddProperty, setShowAddProperty] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list' | 'map'>('grid');
   const [searchTerm, setSearchTerm] = useState("");
+  const [filteredProperties, setFilteredProperties] = useState<PropertyWithRelations[]>([]);
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [propertyToDelete, setPropertyToDelete] = useState<any>(null);
-
   const [showArchived, setShowArchived] = useState(false);
+  
   const { data: propertyData, isLoading, error, refetch } = useProperties(1, 100);
   const properties = propertyData?.properties || [];
   const deletePropertyMutation = useDeleteProperty();
@@ -74,19 +82,37 @@ const Properties = () => {
     resistanceRatio: 0.5
   });
 
-  // Filter properties (status + search)
-  const statusFiltered = properties.filter(p => showArchived ? true : (p.status === 'active' || !p.status));
-  const filteredProperties = statusFiltered.filter(property => 
-    property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.state?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Use filtered properties or fall back to status/search filtered
+  const displayProperties = filteredProperties.length > 0 || searchTerm ? 
+    filteredProperties : 
+    properties.filter(p => showArchived ? true : (p.status === 'active' || !p.status))
+      .filter(property => 
+        property.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.state?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
   // Calculate summary stats
   const totalProperties = properties.length;
   const activeProperties = properties.filter(p => p.status === 'active' || !p.status).length;
   const houseWatchingProperties = properties.filter(p => p.service_type === 'house_watching').length;
   const propertyManagementProperties = properties.filter(p => p.service_type === 'property_management' || !p.service_type).length;
+
+  const handlePropertySelection = (propertyId: string, checked: boolean) => {
+    setSelectedProperties(prev => 
+      checked 
+        ? [...prev, propertyId]
+        : prev.filter(id => id !== propertyId)
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedProperties.length === displayProperties.length) {
+      setSelectedProperties([]);
+    } else {
+      setSelectedProperties(displayProperties.map(p => p.id));
+    }
+  };
 
   const handlePropertyClick = (property: any) => {
     navigate(`/properties/${property.id}`);
@@ -241,49 +267,68 @@ const Properties = () => {
         </Card>
       </div>
 
-      {/* Search and View Controls */}
-      <div className="flex flex-col gap-3">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search properties..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-11"
-          />
+      {/* Advanced Search and Filters */}
+      <AdvancedSearchFilters 
+        properties={properties}
+        onFilterChange={setFilteredProperties}
+        onSearchChange={setSearchTerm}
+      />
+
+      {/* Bulk Management Tools */}
+      <BulkManagementTools 
+        properties={displayProperties}
+        selectedProperties={selectedProperties}
+        onSelectionChange={setSelectedProperties}
+        onRefresh={refetch}
+      />
+
+      {/* View Mode Toggle */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex bg-muted rounded-lg p-1">
+            <Button
+              variant={viewMode === 'grid' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('grid')}
+              className="flex-1"
+            >
+              <Grid3X3 className="h-4 w-4 mr-1" />
+              Grid
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="flex-1"
+            >
+              <List className="h-4 w-4 mr-1" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === 'map' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('map')}
+              className="flex-1"
+            >
+              <Map className="h-4 w-4 mr-1" />
+              Map
+            </Button>
+          </div>
+          
+          {displayProperties.length > 0 && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                checked={selectedProperties.length === displayProperties.length && displayProperties.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+              <span className="text-sm text-muted-foreground">
+                Select All ({displayProperties.length})
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex bg-muted rounded-lg p-1">
-          <Button
-            variant={viewMode === 'grid' ? 'default' : 'ghost'}
-            size="default"
-            onClick={() => setViewMode('grid')}
-            className="flex-1 h-11 touch-target"
-          >
-            <Grid3X3 className="h-4 w-4 mr-1" />
-            <span className="text-base">Grid</span>
-          </Button>
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'ghost'}
-            size="default"
-            onClick={() => setViewMode('list')}
-            className="flex-1 h-11 touch-target"
-          >
-            <List className="h-4 w-4 mr-1" />
-            <span className="text-base">List</span>
-          </Button>
-          <Button
-            variant={viewMode === 'map' ? 'default' : 'ghost'}
-            size="default"
-            onClick={() => setViewMode('map')}
-            className="flex-1 h-11 touch-target"
-          >
-            <Map className="h-4 w-4 mr-1" />
-            <span className="text-base">Map</span>
-          </Button>
-        </div>
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center gap-2">
           <Label htmlFor="show-archived" className="text-sm">Show archived</Label>
           <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
         </div>
@@ -293,14 +338,21 @@ const Properties = () => {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Properties</h2>
-          <p className="text-sm text-muted-foreground">
-            {filteredProperties.length} properties shown
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              {displayProperties.length} properties shown
+            </p>
+            {selectedProperties.length > 0 && (
+              <Badge variant="secondary">
+                {selectedProperties.length} selected
+              </Badge>
+            )}
+          </div>
         </div>
 
         {viewMode === 'list' ? (
           <PropertyMobileTable
-            properties={filteredProperties}
+            properties={displayProperties}
             onPropertyClick={handlePropertyClick}
             onEdit={handleEdit}
             onScheduleMaintenance={handleScheduleMaintenance}
@@ -310,7 +362,7 @@ const Properties = () => {
         ) : viewMode === 'map' ? (
           <Card>
             <CardContent className="p-3">
-              <PropertiesMap properties={filteredProperties as any} />
+              <PropertiesMap properties={displayProperties as any} />
             </CardContent>
           </Card>
         ) : (
@@ -332,7 +384,7 @@ const Properties = () => {
                   </CardContent>
                 </Card>
               ))
-            ) : filteredProperties.length === 0 ? (
+            ) : displayProperties.length === 0 ? (
               <div className="col-span-full">
                 <Card>
                   <CardContent className="flex items-center justify-center py-12">
@@ -353,15 +405,25 @@ const Properties = () => {
                 </Card>
               </div>
             ) : (
-              filteredProperties.map((property) => (
+              displayProperties.map((property) => (
                 <Card 
                   key={property.id} 
-                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow min-h-[44px]"
+                  className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow min-h-[44px] relative"
                   onClick={() => handlePropertyClick(property)}
                 >
+                  {/* Selection checkbox */}
+                  <div className="absolute top-2 left-2 z-10">
+                    <Checkbox
+                      checked={selectedProperties.includes(property.id)}
+                      onCheckedChange={(checked) => handlePropertySelection(property.id, checked as boolean)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="bg-white shadow-sm"
+                    />
+                  </div>
+
                   <div className="aspect-[4/3] bg-muted relative">
                     {/* Card actions menu */}
-                    <div className="absolute top-2 left-2 z-10">
+                    <div className="absolute top-2 right-2 z-10">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button
@@ -408,7 +470,8 @@ const Properties = () => {
                         <Building className="h-8 w-8 text-muted-foreground" />
                       </div>
                     )}
-                    <div className="absolute top-2 right-2 flex flex-col gap-1">
+                    
+                    <div className="absolute bottom-2 right-2 flex flex-col gap-1">
                       <Badge 
                         className={
                           property.status === 'active' || !property.status
@@ -425,6 +488,7 @@ const Properties = () => {
                       )}
                     </div>
                   </div>
+                  
                   <CardContent className="p-3">
                     <div className="space-y-1">
                       <h3 className="font-medium leading-tight text-sm line-clamp-1">{property.address}</h3>
