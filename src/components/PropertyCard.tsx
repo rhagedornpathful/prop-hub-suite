@@ -229,24 +229,24 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
-              {property.address}
+              {(() => {
+                // Clean the address to show only street address (remove city if present)
+                const address = property.address;
+                if (isPropertyManagement && propertyManagementData?.city) {
+                  const city = propertyManagementData.city;
+                  // Remove city from the end of address if present
+                  return address.replace(new RegExp(`,?\\s*${city}\\s*$`, 'i'), '').trim();
+                }
+                return address;
+              })()}
             </CardTitle>
             <div className="flex items-center gap-1 mt-1">
               <MapPin className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-gray-600">
                 {property.displayAddress || 
                  (isPropertyManagement && propertyManagementData ? 
-                   (() => {
-                     const city = propertyManagementData.city;
-                     const state = propertyManagementData.state;
-                     const zip = propertyManagementData.zip_code;
-                     
-                     // If city is already in the main address, don't repeat it
-                     const addressIncludesCity = city && property.address.toLowerCase().includes(city.toLowerCase());
-                     const parts = addressIncludesCity ? [state, zip] : [city, state, zip];
-                     
-                     return parts.filter(Boolean).join(', ');
-                   })() :
+                   [propertyManagementData.city, propertyManagementData.state, propertyManagementData.zip_code]
+                     .filter(Boolean).join(', ') :
                    property.displayAddress
                  )}
               </span>
