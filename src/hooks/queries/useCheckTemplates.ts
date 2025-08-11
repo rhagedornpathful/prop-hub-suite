@@ -380,6 +380,8 @@ export const useUpdateCheckTemplateItem = () => {
   
   return useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<CheckTemplateItemInsert> }) => {
+      console.log('updateCheckTemplateItem - Starting update:', { id, updates });
+      
       const { data, error } = await supabase
         .from('check_template_items' as any)
         .update(updates)
@@ -387,18 +389,25 @@ export const useUpdateCheckTemplateItem = () => {
         .select()
         .single();
       
-      if (error) throw error;
+      console.log('updateCheckTemplateItem - Response:', { data, error });
+      
+      if (error) {
+        console.error('updateCheckTemplateItem - Error details:', error);
+        throw error;
+      }
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('updateCheckTemplateItem - Success, invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['check-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['check-template'] });
       toast({
         title: "Item Updated",
         description: "Check item has been updated successfully",
       });
     },
     onError: (error) => {
-      console.error('Error updating item:', error);
+      console.error('updateCheckTemplateItem - onError:', error);
       toast({
         title: "Error",
         description: "Failed to update item",
