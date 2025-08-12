@@ -173,20 +173,20 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
-                        <Route path="/finances" element={
-                          <PageTransition>
-                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
-                              <Finances />
-                            </RoleBasedAccess>
-                          </PageTransition>
-                        } />
-                        <Route path="/maintenance" element={
-                          <PageTransition>
-                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
-                              <Maintenance />
-                            </RoleBasedAccess>
-                          </PageTransition>
-                        } />
+<Route path="/finances" element={
+  <PageTransition>
+    <RoleBasedAccess allowedRoles={['admin','owner_investor','tenant','property_manager']}>
+      <Finances />
+    </RoleBasedAccess>
+  </PageTransition>
+} />
+<Route path="/maintenance" element={
+  <PageTransition>
+    <RoleBasedAccess allowedRoles={['admin','property_manager','owner_investor','tenant']}>
+      <Maintenance />
+    </RoleBasedAccess>
+  </PageTransition>
+} />
                         <Route path="/house-watching" element={
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
@@ -395,7 +395,9 @@ const AppContent = () => {
                       </Routes>
                     </main>
                   </div>
-                  <MobileNavigation />
+<RoleBasedAccess allowedRoles={['admin','property_manager','owner_investor','tenant','client','contractor','leasing_agent']}>
+  <MobileNavigation />
+</RoleBasedAccess>
                   <MobileBottomNavigation />
                   
                 </SidebarProvider>

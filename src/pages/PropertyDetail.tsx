@@ -506,72 +506,74 @@ export function PropertyDetail() {
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="services" className="bg-white rounded-lg shadow-sm border-0 p-4">
-            <AccordionTrigger className="hover:no-underline">
-              <div className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                <span className="font-semibold">Services & Financials</span>
+{userRole !== 'house_watcher' && (
+  <AccordionItem value="services" className="bg-white rounded-lg shadow-sm border-0 p-4">
+    <AccordionTrigger className="hover:no-underline">
+      <div className="flex items-center gap-2">
+        <Package className="h-5 w-5" />
+        <span className="font-semibold">Services & Financials</span>
+      </div>
+    </AccordionTrigger>
+    <AccordionContent className="pt-4 space-y-4">
+      <PropertyServiceAssignments propertyId={property.id} />
+
+      {/* Financial Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Financial Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="text-xs text-muted-foreground">Monthly Income</div>
+              <div className="text-xl font-semibold">{formatCurrency(property.monthly_rent)}</div>
+            </div>
+            <div className="p-3 bg-muted rounded-lg">
+              <div className="text-xs text-muted-foreground">Property Value</div>
+              <div className="text-xl font-semibold">{formatCurrency(property.estimated_value)}</div>
+            </div>
+            {property.rent_estimate && (
+              <div className="p-3 bg-muted rounded-lg">
+                <div className="text-xs text-muted-foreground">Market Rent</div>
+                <div className="text-xl font-semibold">{formatCurrency(property.rent_estimate)}</div>
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="pt-4 space-y-4">
-              <PropertyServiceAssignments propertyId={property.id} />
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-              {/* Financial Overview */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    Financial Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-3 bg-muted rounded-lg">
-                      <div className="text-xs text-muted-foreground">Monthly Income</div>
-                      <div className="text-xl font-semibold">{formatCurrency(property.monthly_rent)}</div>
-                    </div>
-                    <div className="p-3 bg-muted rounded-lg">
-                      <div className="text-xs text-muted-foreground">Property Value</div>
-                      <div className="text-xl font-semibold">{formatCurrency(property.estimated_value)}</div>
-                    </div>
-                    {property.rent_estimate && (
-                      <div className="p-3 bg-muted rounded-lg">
-                        <div className="text-xs text-muted-foreground">Market Rent</div>
-                        <div className="text-xl font-semibold">{formatCurrency(property.rent_estimate)}</div>
-                      </div>
-                    )}
+      {/* Recent Payments */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Recent Payments</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {payments.length === 0 ? (
+            <div className="text-sm text-muted-foreground">No recent payments</div>
+          ) : (
+            <div className="space-y-3">
+              {payments.map((p) => (
+                <div key={p.id} className="flex items-center justify-between border rounded-lg p-3">
+                  <div className="space-y-1">
+                    <div className="text-sm font-medium capitalize">{p.payment_type || 'payment'}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Payments */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Recent Payments</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {payments.length === 0 ? (
-                    <div className="text-sm text-muted-foreground">No recent payments</div>
-                  ) : (
-                    <div className="space-y-3">
-                      {payments.map((p) => (
-                        <div key={p.id} className="flex items-center justify-between border rounded-lg p-3">
-                          <div className="space-y-1">
-                            <div className="text-sm font-medium capitalize">{p.payment_type || 'payment'}</div>
-                            <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</div>
-                          </div>
-                          <div className="text-right space-y-1">
-                            <div className="text-sm font-semibold">${(p.amount/100).toFixed(2)}</div>
-                            <Badge variant="outline" className="capitalize">{p.status}</Badge>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </AccordionContent>
-          </AccordionItem>
+                  <div className="text-right space-y-1">
+                    <div className="text-sm font-semibold">${(p.amount/100).toFixed(2)}</div>
+                    <Badge variant="outline" className="capitalize">{p.status}</Badge>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </AccordionContent>
+  </AccordionItem>
+)}
 
           <AccordionItem value="house-watching" className="bg-white rounded-lg shadow-sm border-0 p-4">
             <AccordionTrigger className="hover:no-underline">

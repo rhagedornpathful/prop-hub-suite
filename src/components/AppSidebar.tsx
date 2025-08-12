@@ -17,9 +17,9 @@ import {
   Eye,
   Shield,
   X,
-  Navigation,
   Activity,
-  TrendingUp
+  TrendingUp,
+  ClipboardCheck,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
@@ -296,16 +296,10 @@ const houseWatcherMenuItems = [
     description: "Assigned properties"
   },
   {
-    title: "Messages",
-    url: "/messages",
-    icon: MessageCircle,
-    description: "Communication hub"
-  },
-  {
-    title: "Maintenance Tasks",
-    url: "/maintenance",
-    icon: Wrench,
-    description: "Maintenance work"
+    title: "Checks",
+    url: "/house-watcher/checks",
+    icon: ClipboardCheck,
+    description: "Start and review checks"
   },
   {
     title: "Settings",

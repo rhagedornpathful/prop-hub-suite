@@ -1,4 +1,4 @@
-import { Home, Building, MessageCircle, Wrench, Settings } from 'lucide-react';
+import { Home, Building, ClipboardCheck, Settings } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -14,14 +14,9 @@ const navigationItems = [
     icon: Building
   },
   {
-    title: 'Messages',
-    href: '/messages',
-    icon: MessageCircle
-  },
-  {
-    title: 'Tasks',
-    href: '/maintenance',
-    icon: Wrench
+    title: 'Checks',
+    href: '/house-watcher/checks',
+    icon: ClipboardCheck
   },
   {
     title: 'Settings',
