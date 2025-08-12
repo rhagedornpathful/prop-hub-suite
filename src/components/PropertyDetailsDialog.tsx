@@ -137,6 +137,24 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
     pending: "Pending Setup"
   };
 
+  // Fetch house watcher profile data
+  const { data: houseWatcherProfile, isLoading: houseWatcherLoading } = useQuery({
+    queryKey: ['house-watcher-profile', houseWatchingData?.user_id],
+    queryFn: async () => {
+      if (!houseWatchingData?.user_id) return null;
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, phone')
+        .eq('user_id', houseWatchingData.user_id)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: !!houseWatchingData?.user_id && open,
+  });
+
   const isMobile = useMobileDetection();
   const DialogWrapper = isMobile ? MobileDialog : Dialog;
   const ContentWrapper = isMobile ? "div" : DialogContent;
@@ -319,58 +337,123 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
           )}
           
           {isHouseWatching && houseWatchingData && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold">House Watching Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Service Details</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Service Status:</span>
-                      <Badge className={statusColors[houseWatchingData.status as keyof typeof statusColors]}>
-                        {statusText[houseWatchingData.status as keyof typeof statusText]}
-                      </Badge>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Start Date:</span>
-                      <span>{format(new Date(houseWatchingData.start_date), 'MMM d, yyyy')}</span>
-                    </div>
-                    {houseWatchingData.end_date && (
-                      <div className="flex justify-between">
-                        <span>End Date:</span>
-                        <span>{format(new Date(houseWatchingData.end_date), 'MMM d, yyyy')}</span>
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold">House Watching Activity</h3>
+              
+              {/* House Watcher Assignment */}
+              <div className="p-4 bg-muted rounded-lg border">
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-primary" />
+                  Assigned House Watcher
+                </h4>
+                {houseWatcherLoading ? (
+                  <LoadingSpinner />
+                ) : houseWatcherProfile ? (
+                  <div className="space-y-2">
+                    <p className="font-medium">{houseWatcherProfile.first_name} {houseWatcherProfile.last_name}</p>
+                    <div className="space-y-1 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        <span>{houseWatcherProfile.phone || 'No phone on file'}</span>
                       </div>
-                    )}
-                  </div>
-                </div>
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Recent Check History</h4>
-                  {homeChecksLoading ? (
-                    <LoadingSpinner />
-                  ) : homeCheckSessions && homeCheckSessions.length > 0 ? (
-                    <div className="space-y-2 text-sm">
-                      {homeCheckSessions.slice(0, 3).map((session) => (
-                        <div key={session.id} className="flex justify-between">
-                          <span>{session.status}</span>
-                          <span>{format(new Date(session.created_at), 'MMM d')}</span>
-                        </div>
-                      ))}
-                      {homeCheckSessions.length > 3 && (
-                        <p className="text-muted-foreground">+{homeCheckSessions.length - 3} more checks</p>
-                      )}
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        <span>Contact via admin</span>
+                      </div>
                     </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">No checks completed yet</p>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    No house watcher assigned
+                  </div>
+                )}
+              </div>
+
+              {/* Next Scheduled Check */}
+              <div className="p-4 bg-gradient-primary/10 rounded-lg border border-primary/20">
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  Next Scheduled Check
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-semibold">
+                      {houseWatchingData.next_check_date 
+                        ? format(new Date(houseWatchingData.next_check_date), 'EEEE, MMMM d, yyyy')
+                        : 'Not scheduled'
+                      }
+                    </span>
+                    <Badge className="bg-primary text-primary-foreground">
+                      {houseWatchingData.check_frequency} check
+                    </Badge>
+                  </div>
+                  {houseWatchingData.next_check_date && (
+                    <p className="text-sm text-muted-foreground">
+                      Due in {Math.ceil((new Date(houseWatchingData.next_check_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                    </p>
                   )}
                 </div>
               </div>
-              
-              {houseWatchingData.notes && (
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Special Instructions</h4>
-                  <p className="text-sm text-muted-foreground">{houseWatchingData.notes}</p>
-                </div>
-              )}
+
+              {/* Recent Activity */}
+              <div className="space-y-3">
+                <h4 className="font-medium flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  Recent Check Activity
+                </h4>
+                {homeChecksLoading ? (
+                  <LoadingSpinner />
+                ) : homeCheckSessions && homeCheckSessions.length > 0 ? (
+                  <div className="space-y-3">
+                    {homeCheckSessions.map((session) => (
+                      <div key={session.id} className="p-3 bg-muted rounded-lg border-l-4 border-l-primary">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <Badge 
+                              className={
+                                session.status === 'completed' 
+                                  ? 'bg-success text-success-foreground' 
+                                  : session.status === 'in_progress' 
+                                  ? 'bg-warning text-warning-foreground'
+                                  : 'bg-muted text-muted-foreground'
+                              }
+                            >
+                              {session.status}
+                            </Badge>
+                            <span className="text-sm font-medium">
+                              {format(new Date(session.created_at), 'MMM d, yyyy')}
+                            </span>
+                          </div>
+                          {session.duration_minutes && (
+                            <span className="text-sm text-muted-foreground">
+                              {session.duration_minutes} min
+                            </span>
+                          )}
+                        </div>
+                        {session.general_notes && (
+                          <p className="text-sm text-muted-foreground">{session.general_notes}</p>
+                        )}
+                        {session.total_issues_found > 0 && (
+                          <p className="text-sm text-destructive">
+                            {session.total_issues_found} issue(s) found
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                    
+                    <Button variant="outline" size="sm" className="w-full">
+                      View All Check History
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-muted rounded-lg text-center">
+                    <p className="text-sm text-muted-foreground mb-3">No checks completed yet</p>
+                    <Button variant="outline" size="sm">
+                      Schedule First Check
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           
@@ -431,10 +514,16 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
                 Manage Tenants
               </Button>
             )}
-            {isHouseWatching && (
+            {isHouseWatching && houseWatchingData && (
               <Button variant="outline">
                 <Calendar className="h-4 w-4 mr-2" />
                 Schedule Check
+              </Button>
+            )}
+            {isHouseWatching && houseWatchingData && (
+              <Button variant="outline">
+                <UserCheck className="h-4 w-4 mr-2" />
+                Assign House Watcher
               </Button>
             )}
             <Button 
