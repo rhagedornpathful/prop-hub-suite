@@ -66,6 +66,8 @@ import { PropertyServiceAssignments } from "@/components/PropertyServiceAssignme
 import { PropertyOwnershipManager } from "@/components/PropertyOwnershipManager";
 import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
 import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
+import { usePropertyActivity } from "@/hooks/usePropertyActivity";
+import { ActivityDetailDialog } from "@/components/ActivityDetailDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<'properties'>;
@@ -85,6 +87,9 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
   const [openScheduleMaintenance, setOpenScheduleMaintenance] = useState(false);
   const { data: allMaintenance = [] } = useMaintenanceRequests();
   const maintenanceForProperty = property ? allMaintenance.filter((m: any) => m.property_id === property.id) : [];
+  const { activities, isLoading: activitiesLoading, error: activitiesError } = usePropertyActivity(property?.id);
+  const [selectedActivity, setSelectedActivity] = useState<any | null>(null);
+  const [activityDialogOpen, setActivityDialogOpen] = useState(false);
 
   if (!property) return null;
 
@@ -279,6 +284,10 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 <TabsTrigger value="owners" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
                   Owners
+                </TabsTrigger>
+                <TabsTrigger value="activity" className="flex items-center gap-2">
+                  <Activity className="h-4 w-4" />
+                  Activity
                 </TabsTrigger>
                 <TabsTrigger value="media" className="flex items-center gap-2">
                   <Camera className="h-4 w-4" />
@@ -881,6 +890,58 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                     <PropertyOwnershipManager propertyId={property.id} propertyAddress={property.address} />
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              <TabsContent value="activity" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Activity className="h-5 w-5" />
+                      Recent Activity
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {activitiesLoading ? (
+                      <div className="space-y-3">
+                        <div className="h-10 bg-muted rounded" />
+                        <div className="h-10 bg-muted rounded" />
+                        <div className="h-10 bg-muted rounded" />
+                      </div>
+                    ) : activities && activities.length > 0 ? (
+                      <div className="divide-y">
+                        {activities.map((act) => (
+                          <div key={act.id} className="py-3 flex items-center justify-between">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="capitalize">{act.type.replace('_',' ')}</Badge>
+                                {act.status && <Badge className="capitalize">{act.status}</Badge>}
+                              </div>
+                              <div className="text-sm font-medium">{act.title}</div>
+                              {act.description && (
+                                <div className="text-xs text-muted-foreground line-clamp-1">{act.description}</div>
+                              )}
+                              <div className="text-xs text-muted-foreground">
+                                {new Date(act.date).toLocaleString()}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {typeof act.amount === 'number' && (
+                                <span className="text-sm font-medium">${act.amount.toLocaleString()}</span>
+                              )}
+                              <Button size="sm" variant="outline" onClick={() => { setSelectedActivity(act); setActivityDialogOpen(true); }}>
+                                View
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">No recent activity for this property.</div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <ActivityDetailDialog activity={selectedActivity} open={activityDialogOpen} onOpenChange={setActivityDialogOpen} />
               </TabsContent>
 
               <TabsContent value="media" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
