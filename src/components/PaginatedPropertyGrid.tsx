@@ -38,7 +38,7 @@ export const PaginatedPropertyGrid: React.FC<PaginatedPropertyGridProps> = ({ on
   const unifiedProperties = [
     ...properties.map(property => ({
       id: property.id,
-      type: 'property_management' as const,
+      type: (property.service_type === 'house_watching' ? 'house_watching' : 'property_management') as 'property_management' | 'house_watching',
       address: property.address,
       displayAddress: `${property.city}, ${property.state} ${property.zip_code}`,
       status: property.status,
