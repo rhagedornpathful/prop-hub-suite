@@ -4,6 +4,10 @@ import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
 import { 
   Building, 
   MapPin, 
@@ -81,6 +85,39 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
   const occupancyRate = isPropertyManagement 
     ? (property.occupiedUnits / property.units) * 100 
     : 0;
+
+  // Fetch house watching data for this property
+  const { data: houseWatchingData, isLoading: houseWatchingLoading } = useQuery({
+    queryKey: ['house-watching', property.address],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('house_watching')
+        .select('*')
+        .eq('property_address', property.address)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') throw error;
+      return data;
+    },
+    enabled: isHouseWatching && open,
+  });
+
+  // Fetch home check sessions for this property
+  const { data: homeCheckSessions, isLoading: homeChecksLoading } = useQuery({
+    queryKey: ['home-check-sessions', property.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('home_check_sessions')
+        .select('*')
+        .eq('property_id', property.id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isHouseWatching && open,
+  });
 
   const statusColors = {
     occupied: "bg-success text-success-foreground",
@@ -189,39 +226,61 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
               
               {isHouseWatching && (
                 <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-primary" />
-                        <span className="font-medium">Check Frequency</span>
-                      </div>
-                      <p className="text-lg capitalize">{property.checkFrequency}</p>
+                  {houseWatchingLoading ? (
+                    <div className="flex justify-center py-4">
+                      <LoadingSpinner />
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-success" />
-                        <span className="font-medium">Monthly Fee</span>
+                  ) : houseWatchingData ? (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-5 w-5 text-primary" />
+                            <span className="font-medium">Check Frequency</span>
+                          </div>
+                          <p className="text-lg capitalize">{houseWatchingData.check_frequency}</p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <DollarSign className="h-5 w-5 text-success" />
+                            <span className="font-medium">Monthly Fee</span>
+                          </div>
+                          <p className="text-lg font-semibold">${houseWatchingData.monthly_fee}</p>
+                        </div>
                       </div>
-                      <p className="text-lg font-semibold">${property.monthlyFee}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-primary" />
-                        <span className="font-medium">Last Check</span>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-5 w-5 text-primary" />
+                            <span className="font-medium">Last Check</span>
+                          </div>
+                          <p className="text-lg">
+                            {houseWatchingData.last_check_date 
+                              ? format(new Date(houseWatchingData.last_check_date), 'MMM d, yyyy')
+                              : 'No checks yet'
+                            }
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Calendar className="h-5 w-5 text-success" />
+                            <span className="font-medium">Next Check</span>
+                          </div>
+                          <p className="text-lg">
+                            {houseWatchingData.next_check_date 
+                              ? format(new Date(houseWatchingData.next_check_date), 'MMM d, yyyy')
+                              : 'Not scheduled'
+                            }
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-lg">{property.lastCheckDate}</p>
+                    </>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground">
+                      No house watching service configured for this property
                     </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-success" />
-                        <span className="font-medium">Next Check</span>
-                      </div>
-                      <p className="text-lg">{property.nextCheckDate}</p>
-                    </div>
-                  </div>
+                  )}
                 </>
               )}
             </div>
@@ -259,32 +318,59 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
             </div>
           )}
           
-          {isHouseWatching && (
+          {isHouseWatching && houseWatchingData && (
             <div className="space-y-4">
-              <h3 className="text-xl font-semibold">Monitoring Details</h3>
+              <h3 className="text-xl font-semibold">House Watching Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Security Features</h4>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• Regular security checks</li>
-                    <li>• Property maintenance monitoring</li>
-                    <li>• Emergency response protocol</li>
-                  </ul>
-                </div>
-                <div className="p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium mb-2">Contact Information</h4>
+                  <h4 className="font-medium mb-2">Service Details</h4>
                   <div className="space-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      <span>(555) 123-4567</span>
+                    <div className="flex justify-between">
+                      <span>Service Status:</span>
+                      <Badge className={statusColors[houseWatchingData.status as keyof typeof statusColors]}>
+                        {statusText[houseWatchingData.status as keyof typeof statusText]}
+                      </Badge>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      <span>owner@example.com</span>
+                    <div className="flex justify-between">
+                      <span>Start Date:</span>
+                      <span>{format(new Date(houseWatchingData.start_date), 'MMM d, yyyy')}</span>
                     </div>
+                    {houseWatchingData.end_date && (
+                      <div className="flex justify-between">
+                        <span>End Date:</span>
+                        <span>{format(new Date(houseWatchingData.end_date), 'MMM d, yyyy')}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">Recent Check History</h4>
+                  {homeChecksLoading ? (
+                    <LoadingSpinner />
+                  ) : homeCheckSessions && homeCheckSessions.length > 0 ? (
+                    <div className="space-y-2 text-sm">
+                      {homeCheckSessions.slice(0, 3).map((session) => (
+                        <div key={session.id} className="flex justify-between">
+                          <span>{session.status}</span>
+                          <span>{format(new Date(session.created_at), 'MMM d')}</span>
+                        </div>
+                      ))}
+                      {homeCheckSessions.length > 3 && (
+                        <p className="text-muted-foreground">+{homeCheckSessions.length - 3} more checks</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No checks completed yet</p>
+                  )}
+                </div>
               </div>
+              
+              {houseWatchingData.notes && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <h4 className="font-medium mb-2">Special Instructions</h4>
+                  <p className="text-sm text-muted-foreground">{houseWatchingData.notes}</p>
+                </div>
+              )}
             </div>
           )}
           
