@@ -150,15 +150,24 @@ export const usePropertiesByOwner = (ownerId: string | undefined) => {
     queryFn: async () => {
       if (!user || !ownerId) return [];
       
-      // Let RLS policies handle access control
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', ownerId)
-        .order('address', { ascending: true });
+      // Get properties through the associations table (many-to-many relationship)
+      const { data: associations, error } = await supabase
+        .from('property_owner_associations')
+        .select(`
+          ownership_percentage,
+          is_primary_owner,
+          property:properties(*)
+        `)
+        .eq('property_owner_id', ownerId);
 
       if (error) throw error;
-      return data || [];
+      
+      // Extract properties and add ownership information
+      return (associations || []).map(assoc => ({
+        ...assoc.property,
+        ownership_percentage: assoc.ownership_percentage,
+        is_primary_owner: assoc.is_primary_owner
+      }));
     },
     enabled: !!user && !!ownerId,
   });
