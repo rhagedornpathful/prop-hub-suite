@@ -3247,6 +3247,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
+      ensure_home_watch_schedule_horizon: {
+        Args: {
+          _property_id: string
+          _frequency: string
+          _horizon_days?: number
+          _threshold_days?: number
+          _force?: boolean
+        }
+        Returns: number
+      }
       force_make_me_admin: {
         Args: Record<PropertyKey, never>
         Returns: Json
