@@ -108,20 +108,20 @@ export const PropertyCheckItemCard = ({
   const hasIssue = item.notes && item.notes.toLowerCase().includes('issue');
 
   return (
-    <div className={`border rounded-lg p-4 space-y-3 transition-colors ${
+    <div className={`border rounded-xl p-4 space-y-4 transition-all duration-200 ${
       item.completed ? 'border-success/30 bg-success/5' : 'border-border'
     }`}>
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-4">
         <Checkbox
           id={`item-${item.id}`}
           checked={item.completed}
           onCheckedChange={() => onToggle(item.id)}
-          className="mt-1"
+          className="mt-1 min-h-[20px] min-w-[20px]"
         />
         <div className="flex-1">
           <label 
             htmlFor={`item-${item.id}`} 
-            className={`text-sm font-medium cursor-pointer ${
+            className={`text-base font-medium cursor-pointer block leading-relaxed ${
               item.completed ? 'line-through text-muted-foreground' : 'text-foreground'
             }`}
           >
@@ -129,62 +129,63 @@ export const PropertyCheckItemCard = ({
             {item.required && <span className="text-destructive ml-1">*</span>}
           </label>
           
-          {/* Photo Section */}
-          <div className="mt-3 space-y-2">
-            <div className="flex items-center gap-2">
+          {/* Phone-Optimized Photo Section */}
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-3">
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,video/*"
+                capture="environment"
                 onChange={handleFileUpload}
                 className="hidden"
                 id={`photo-upload-${item.id}`}
                 disabled={isUploading}
               />
-              <label htmlFor={`photo-upload-${item.id}`}>
+              <label htmlFor={`photo-upload-${item.id}`} className="flex-1">
                 <Button
-                  size="sm"
+                  size="default"
                   variant="outline"
                   disabled={isUploading}
-                  className="flex items-center gap-1 cursor-pointer"
+                  className="w-full min-h-[48px] flex items-center gap-2 cursor-pointer rounded-xl"
                   asChild
                 >
                   <span>
                     {isUploading ? (
-                      <Upload className="h-3 w-3 animate-spin" />
+                      <Upload className="h-4 w-4 animate-spin" />
                     ) : (
-                      <Camera className="h-3 w-3" />
+                      <Camera className="h-4 w-4" />
                     )}
-                    {isUploading ? 'Uploading...' : 'Add Photo'}
+                    {isUploading ? 'Uploading...' : 'Take Photo'}
                   </span>
                 </Button>
               </label>
               {item.photos.length > 0 && (
-                <Badge variant="secondary" className="text-xs">
-                  {item.photos.length} photo{item.photos.length > 1 ? 's' : ''}
+                <Badge variant="secondary" className="px-3 py-1">
+                  {item.photos.length}
                 </Badge>
               )}
             </div>
 
-            {/* Photo Grid */}
+            {/* Phone-Optimized Photo Grid */}
             {item.photos.length > 0 && (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {item.photos.map((photoUrl, index) => (
                   <div key={index} className="relative group">
-                    <div className="aspect-[4/3] relative overflow-hidden rounded border bg-muted">
+                    <div className="aspect-square relative overflow-hidden rounded-xl border bg-muted">
                       <img
                         src={photoUrl}
                         alt={`${item.item} photo ${index + 1}`}
-                        className="w-full h-full object-contain hover:object-cover transition-all duration-200 cursor-pointer"
+                        className="w-full h-full object-cover cursor-pointer"
                         loading="lazy"
                       />
                     </div>
                     <Button
                       size="sm"
                       variant="destructive"
-                      className="absolute -top-1 -right-1 h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 h-8 w-8 p-0 rounded-full shadow-lg"
                       onClick={() => handleRemovePhoto(photoUrl)}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
@@ -192,13 +193,13 @@ export const PropertyCheckItemCard = ({
             )}
           </div>
 
-          {/* Notes */}
-          <div className="mt-3">
+          {/* Phone-Optimized Notes */}
+          <div className="mt-4">
             <Textarea
               placeholder="Add notes or observations..."
               value={item.notes}
               onChange={(e) => onNotesChange(item.id, e.target.value)}
-              className="min-h-[60px] text-sm"
+              className="min-h-[80px] text-base rounded-xl border-border focus:border-primary resize-none"
             />
           </div>
           

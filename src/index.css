@@ -181,6 +181,12 @@
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     --transition-elegant: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
+    /* Safe area insets for phone notches and navigation bars */
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-right: env(safe-area-inset-right);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+    --safe-area-inset-left: env(safe-area-inset-left);
+
     --radius: var(--radius-lg);
   }
 
@@ -1329,4 +1335,40 @@
 
   .shrink-0 {
     flex-shrink: 0;
+  }
+
+  /* Phone-specific utilities */
+  .safe-area-pb {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-pt {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+
+  .safe-area-px {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Phone-optimized animations */
+  @media (max-width: 768px) {
+    .phone-reduced-motion {
+      animation: none !important;
+      transition: none !important;
+    }
+
+    .phone-simple-transition {
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
   }

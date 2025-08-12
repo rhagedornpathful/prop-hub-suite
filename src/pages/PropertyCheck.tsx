@@ -156,132 +156,122 @@ const PropertyCheck = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle overflow-safe">
-      {/* Mobile-First Header */}
-      <header className="bg-card border-b border-border section-padding shadow-sm sticky top-0 z-10">
-        <div className="container-responsive">
-          {/* Mobile: Stack vertically, Desktop: Horizontal */}
-          <div className="mobile-stack items-start md:items-center">
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  // Navigate back based on user role
-                  if (userRole === 'house_watcher') {
-                    navigate('/'); // House watchers go to their dashboard (root)
-                  } else {
-                    navigate('/house-watching'); // Admins/property managers go to house watching management
-                  }
-                }}
-                className="touch-target"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="ml-2 desktop-only">Back</span>
-              </Button>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-responsive-lg font-bold text-foreground">Property Check</h1>
-                {isLoadingProperty ? (
-                  <p className="text-sm text-muted-foreground">Loading property details...</p>
-                ) : propertyError ? (
-                  <p className="text-sm text-destructive">Failed to load property details</p>
-                ) : property ? (
-                  <p className="text-sm text-muted-foreground overflow-safe">{property.address}</p>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Unknown property</p>
-                )}
-              </div>
+      {/* Phone-Optimized Header */}
+      <header className="bg-card border-b border-border px-4 py-3 shadow-sm sticky top-0 z-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                // Navigate back based on user role
+                if (userRole === 'house_watcher') {
+                  navigate('/'); // House watchers go to their dashboard (root)
+                } else {
+                  navigate('/house-watching'); // Admins/property managers go to house watching management
+                }
+              }}
+              className="min-h-[44px] min-w-[44px] p-2"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold text-foreground leading-tight">Property Check</h1>
+              {isLoadingProperty ? (
+                <p className="text-sm text-muted-foreground truncate">Loading...</p>
+              ) : propertyError ? (
+                <p className="text-sm text-destructive truncate">Failed to load</p>
+              ) : property ? (
+                <p className="text-sm text-muted-foreground truncate">{property.address}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground truncate">Unknown property</p>
+              )}
             </div>
-            
-            {/* Progress and Status Badges - Stack on mobile */}
-            <div className="w-full md:w-auto">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="text-xs">
-                  {getOverallProgress()}% Complete
-                </Badge>
-                <Badge 
-                  variant={canCompleteCheck() ? "default" : "secondary"} 
-                  className="text-xs"
-                >
-                  Required: {requiredProgress.completed}/{requiredProgress.total}
-                </Badge>
-                {sessionStarted && (
-                  <Badge variant="secondary" className="text-xs flex items-center gap-1">
-                    <Timer className="h-3 w-3" />
-                    {formatElapsedTime(elapsedTime)}
-                  </Badge>
-                )}
-                <div className="flex items-center gap-1">
-                  {hasUnsavedChanges && (
-                    <Badge variant="secondary" className="text-xs">
-                      Unsaved
-                    </Badge>
-                  )}
-                  {lastSaveTime && !hasUnsavedChanges && (
-                    <Badge variant="outline" className="text-xs">
-                      Saved {lastSaveTime.toLocaleTimeString()}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
+          </div>
+          
+          {/* Compact Status Display */}
+          <div className="flex items-center gap-1">
+            <Badge variant="outline" className="text-xs px-2 py-1">
+              {getOverallProgress()}%
+            </Badge>
+            {sessionStarted && (
+              <Badge variant="secondary" className="text-xs px-2 py-1">
+                {formatElapsedTime(elapsedTime)}
+              </Badge>
+            )}
+          </div>
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+            <span>Required: {requiredProgress.completed}/{requiredProgress.total}</span>
+            <span className={canCompleteCheck() ? "text-success font-medium" : ""}>
+              {canCompleteCheck() ? "Ready to submit" : "In progress"}
+            </span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2">
+            <div 
+              className="bg-gradient-primary h-2 rounded-full transition-all duration-300"
+              style={{ width: `${getOverallProgress()}%` }}
+            />
           </div>
         </div>
       </header>
-      {/* Section Navigation - Mobile First */}
-      <div className="bg-card border-b border-border section-padding">
-        <div className="container-responsive">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {sections.map((section, index) => {
-              const Icon = section.icon;
-              const progress = getSectionProgress(section.key as keyof typeof checklistItems);
-              const isActive = currentSection === index;
-              
-              return (
-                <Button
-                  key={section.key}
-                  variant={isActive ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentSection(index)}
-                  className={`flex items-center gap-2 min-w-fit touch-target ${isActive ? section.color : ""}`}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{section.name}</span>
-                  <Badge variant="secondary" className="text-xs ml-1">
-                    {progress}
-                  </Badge>
-                </Button>
-              );
-            })}
-          </div>
+      {/* Phone-Optimized Section Navigation */}
+      <div className="bg-card border-b border-border px-4 py-3">
+        <div className="flex gap-1 overflow-x-auto pb-1 scrollbar-hide">
+          {sections.map((section, index) => {
+            const Icon = section.icon;
+            const progress = getSectionProgress(section.key as keyof typeof checklistItems);
+            const isActive = currentSection === index;
+            
+            return (
+              <Button
+                key={section.key}
+                variant={isActive ? "default" : "outline"}
+                size="sm"
+                onClick={() => setCurrentSection(index)}
+                className={`flex flex-col items-center gap-1 min-w-[80px] h-16 text-xs whitespace-nowrap ${
+                  isActive ? "bg-primary text-primary-foreground" : ""
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="font-medium leading-tight">{section.name}</span>
+                <span className="text-xs opacity-75">{progress}</span>
+              </Button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Main Content - Mobile First */}
-      <main className="section-padding pb-20 overflow-safe">
-        <div className="container-responsive max-w-2xl space-y-4">
-          {/* Start Session Card */}
+      {/* Phone-Optimized Main Content */}
+      <main className="px-4 py-4 pb-24 overflow-safe">
+        <div className="max-w-lg mx-auto space-y-4">
+          {/* Phone-Optimized Start Session Card */}
           {!sessionStarted && (
-            <Card className="shadow-md border-0 bg-gradient-primary">
-              <CardContent className="section-padding text-center">
-                <div className="space-y-4">
+            <Card className="shadow-lg border-0 bg-gradient-primary rounded-2xl overflow-hidden">
+              <CardContent className="p-8 text-center">
+                <div className="space-y-6">
                   <div className="flex items-center justify-center">
-                    <div className="bg-white/20 p-3 rounded-full">
-                      <Play className="h-8 w-8 text-white" />
+                    <div className="bg-white/20 p-4 rounded-full backdrop-blur-sm">
+                      <Play className="h-12 w-12 text-white" />
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-responsive-lg font-semibold text-white mb-2">
-                      Ready to Start Property Check?
+                    <h3 className="text-2xl font-bold text-white mb-3">
+                      Start Property Check
                     </h3>
-                    <p className="text-white/80 text-sm mb-4">
-                      Click start to begin timing your inspection session
+                    <p className="text-white/90 text-base mb-6">
+                      Tap to begin your inspection session
                     </p>
                     <Button
                       onClick={handleStartSession}
-                      className="bg-white text-primary hover:bg-white/90 touch-target"
+                      size="lg"
+                      className="bg-white text-primary hover:bg-white/95 font-semibold px-8 py-4 text-lg min-h-[56px] rounded-xl shadow-lg"
                     >
-                      <Play className="h-4 w-4 mr-2" />
-                      Start Property Check
+                      <Play className="h-5 w-5 mr-3" />
+                      Start Check
                     </Button>
                   </div>
                 </div>
@@ -380,37 +370,45 @@ const PropertyCheck = () => {
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Phone-Optimized Bottom Navigation */}
       {sessionStarted && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4 shadow-lg">
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border px-4 py-3 shadow-2xl safe-area-pb">
+          <div className="flex items-center justify-between">
             <Button
               variant="outline"
               disabled={currentSection === 0}
               onClick={() => setCurrentSection(prev => Math.max(0, prev - 1))}
+              className="min-h-[48px] px-6 rounded-xl"
             >
               Previous
             </Button>
             
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-success" />
-              <span className="text-sm font-medium">
-                {Object.values(checklistItems).flat().filter(item => item.completed).length} / {Object.values(checklistItems).flat().length} items
-              </span>
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <CheckCircle className="h-3 w-3" />
+                <span>
+                  {Object.values(checklistItems).flat().filter(item => item.completed).length} / {Object.values(checklistItems).flat().length}
+                </span>
+              </div>
+              <span className="text-xs font-medium">Items Complete</span>
             </div>
             
             {currentSection < sections.length - 1 ? (
               <Button
                 onClick={() => setCurrentSection(prev => Math.min(sections.length - 1, prev + 1))}
-                className="bg-gradient-primary hover:bg-primary-dark"
+                className="bg-primary hover:bg-primary/90 min-h-[48px] px-6 rounded-xl font-medium"
               >
-                Next Section
+                Next
               </Button>
             ) : currentSectionData.key !== 'summary' ? (
               <Button
                 onClick={handleCompleteCheck}
                 disabled={!canCompleteCheck() || isSubmitting}
-                className={`${canCompleteCheck() ? 'bg-gradient-success hover:bg-success-dark' : 'opacity-50'}`}
+                className={`min-h-[48px] px-6 rounded-xl font-medium ${
+                  canCompleteCheck() 
+                    ? 'bg-success hover:bg-success/90 text-white' 
+                    : 'opacity-50 cursor-not-allowed'
+                }`}
               >
                 {isSubmitting ? (
                   <>
@@ -418,10 +416,7 @@ const PropertyCheck = () => {
                     Submitting...
                   </>
                 ) : (
-                  <>
-                    <Square className="h-4 w-4 mr-2" />
-                    Submit Check
-                  </>
+                  'Submit'
                 )}
               </Button>
             ) : null}
