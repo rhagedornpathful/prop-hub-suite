@@ -3239,6 +3239,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_next_check_date: {
+        Args: { _from: string; _frequency: string }
+        Returns: string
+      }
       check_admin_exists: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -3291,6 +3295,14 @@ export type Database = {
       make_me_admin: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      schedule_home_watch_session: {
+        Args: {
+          _property_id: string
+          _frequency: string
+          _scheduled_by?: string
+        }
+        Returns: string
       }
       search_messages: {
         Args: {
