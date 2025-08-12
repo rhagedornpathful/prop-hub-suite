@@ -455,15 +455,15 @@ export function PropertyDetail() {
                     </div>
                   </div>
                   
-                  {property.monthly_rent && (
-                    <div className="flex items-center gap-3">
-                      <DollarSign className="h-4 w-4 text-success" />
-                      <div>
-                        <span className="text-sm font-medium">Monthly Income: </span>
-                        <span className="text-sm font-bold text-success">{formatCurrency(property.monthly_rent)}</span>
-                      </div>
-                    </div>
-                  )}
+{userRole !== 'house_watcher' && property.monthly_rent && (
+  <div className="flex items-center gap-3">
+    <DollarSign className="h-4 w-4 text-success" />
+    <div>
+      <span className="text-sm font-medium">Monthly Income: </span>
+      <span className="text-sm font-bold text-success">{formatCurrency(property.monthly_rent)}</span>
+    </div>
+  </div>
+)}
 
                   {property.gate_code && (
                     <div className="flex items-center gap-3">

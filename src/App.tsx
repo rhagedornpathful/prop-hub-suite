@@ -261,13 +261,20 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
-                        <Route path="/home-check/:id" element={
-                          <PageTransition>
-                            <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
-                              <HomeCheck />
-                            </RoleBasedAccess>
-                          </PageTransition>
-                         } />
+<Route path="/home-check/:id" element={
+  <PageTransition>
+    <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
+      <HomeCheck />
+    </RoleBasedAccess>
+  </PageTransition>
+ } />
+ <Route path="/house-watcher/check/:id" element={
+  <PageTransition>
+    <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
+      <HomeCheck />
+    </RoleBasedAccess>
+  </PageTransition>
+} />
                          <Route path="/house-watcher-home" element={
                            <PageTransition>
                              <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
