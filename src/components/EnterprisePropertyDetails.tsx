@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Building, 
@@ -63,6 +64,8 @@ import {
 } from "lucide-react";
 import { PropertyServiceAssignments } from "@/components/PropertyServiceAssignments";
 import { PropertyOwnershipManager } from "@/components/PropertyOwnershipManager";
+import { ScheduleMaintenanceDialog } from "@/components/ScheduleMaintenanceDialog";
+import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<'properties'>;
@@ -80,6 +83,10 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
   const navigate = useNavigate();
 
   if (!property) return null;
+
+  const [openScheduleMaintenance, setOpenScheduleMaintenance] = useState(false);
+  const { data: allMaintenance = [] } = useMaintenanceRequests();
+  const maintenanceForProperty = allMaintenance.filter((m: any) => m.property_id === property.id);
 
   const statusColors = {
     active: "bg-success text-success-foreground",
