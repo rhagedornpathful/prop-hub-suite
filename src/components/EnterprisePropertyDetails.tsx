@@ -58,8 +58,10 @@ import {
   Shield as SecurityIcon,
   Key,
   Camera as CameraIcon,
-  Thermometer
+  Thermometer,
+  Package
 } from "lucide-react";
+import { PropertyServiceAssignments } from "@/components/PropertyServiceAssignments";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<'properties'>;
@@ -261,6 +263,10 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 <TabsTrigger value="details" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Details
+                </TabsTrigger>
+                <TabsTrigger value="services" className="flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Services
                 </TabsTrigger>
                 <TabsTrigger value="media" className="flex items-center gap-2">
                   <Camera className="h-4 w-4" />
@@ -834,6 +840,20 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                         </p>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="services" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Service Assignments
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PropertyServiceAssignments propertyId={property.id} />
                   </CardContent>
                 </Card>
               </TabsContent>
