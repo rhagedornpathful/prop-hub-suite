@@ -2329,6 +2329,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "property_service_assignments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "property_service_assignments_service_id_fkey"
             columns: ["service_id"]
             isOneToOne: false
