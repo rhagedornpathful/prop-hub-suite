@@ -37,6 +37,11 @@ import {
 import { useState } from "react";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useOwnerFinancialSummary, useRentRolls, useOwnerStatements } from "@/hooks/queries/useOwnerFinancials";
+import { useMaintenanceRequests, useUpdateMaintenanceRequest } from "@/hooks/queries/useMaintenanceRequests";
+import { useInboxConversations } from "@/hooks/queries/useInbox";
 
 interface ApprovalRequest {
   id: string;
@@ -75,94 +80,82 @@ const OwnerPortalSystem = () => {
     tenantUpdates: false
   });
 
-  // Mock data
-  const approvalRequests: ApprovalRequest[] = [
-    {
-      id: "1",
-      type: "maintenance",
-      title: "HVAC System Repair - Unit 3A",
-      description: "Air conditioning unit requires compressor replacement. Tenant has been without AC for 2 days.",
-      amount: 1250,
-      requestedBy: "Property Manager",
-      requestedAt: "2024-01-13T09:30:00Z",
-      status: "pending",
-      priority: "urgent",
-      property: "Sunset Apartments",
-      documents: ["hvac-estimate.pdf", "tenant-complaint.pdf"]
-    },
-    {
-      id: "2", 
-      type: "expense",
-      title: "Landscaping Service - Q1",
-      description: "Quarterly landscaping maintenance for common areas including tree trimming and lawn care.",
-      amount: 850,
-      requestedBy: "Property Manager",
-      requestedAt: "2024-01-12T14:15:00Z",
-      status: "pending",
-      priority: "medium",
-      property: "Green Valley Complex"
-    },
-    {
-      id: "3",
-      type: "tenant",
-      title: "New Tenant Application - Unit 2B", 
-      description: "Tenant application approval for Sarah Johnson. Credit score: 720, Income: $65,000/year.",
-      requestedBy: "Leasing Agent",
-      requestedAt: "2024-01-11T16:45:00Z",
-      status: "pending",
-      priority: "medium",
-      property: "Sunset Apartments"
-    },
-    {
-      id: "4",
-      type: "maintenance",
-      title: "Plumbing Repair - Building B",
-      description: "Main water line leak in basement. Emergency repair completed, pending approval for costs.",
-      amount: 2100,
-      requestedBy: "Emergency Contractor",
-      requestedAt: "2024-01-10T08:20:00Z",
-      status: "approved",
-      priority: "urgent",
-      property: "Green Valley Complex"
-    }
-  ];
+  // Data: financial summary, maintenance approvals, messages
+  const { data: summary } = useOwnerFinancialSummary();
+  const { data: maintenance = [] } = useMaintenanceRequests();
+  const updateMaintenance = useUpdateMaintenanceRequest();
+  const { data: inboxConversations = [] } = useInboxConversations({ filter: 'inbox', searchQuery: '' });
 
-  const propertyFinancials: PropertyFinancials[] = [
-    {
-      propertyId: "1",
-      propertyName: "Sunset Apartments",
-      monthlyRent: 15600,
-      expenses: 4200,
-      netIncome: 11400,
-      occupancyRate: 95,
-      maintenanceCosts: 1800,
-      roi: 8.2
-    },
-    {
-      propertyId: "2", 
-      propertyName: "Green Valley Complex",
-      monthlyRent: 22400,
-      expenses: 6800,
-      netIncome: 15600,
-      occupancyRate: 92,
-      maintenanceCosts: 2400,
-      roi: 7.8
-    },
-    {
-      propertyId: "3",
-      propertyName: "Metro Heights",
-      monthlyRent: 18900,
-      expenses: 5100,
-      netIncome: 13800,
-      occupancyRate: 88,
-      maintenanceCosts: 2200,
-      roi: 6.9
-    }
-  ];
+  const propertyIds = (summary?.properties || []).map((p: any) => p.id);
 
-  const handleApprovalAction = (requestId: string, action: 'approve' | 'reject', notes?: string) => {
-    console.log(`${action} request ${requestId}`, notes);
-    // Implementation would update the request status
+  // Owner-visible check sessions
+  const { data: propertyChecks = [] } = useQuery({
+    queryKey: ['owner-property-checks', propertyIds.join(',')],
+    queryFn: async () => {
+      if (!propertyIds.length) return [] as any[];
+      const { data, error } = await supabase
+        .from('property_check_sessions')
+        .select('*')
+        .in('property_id', propertyIds)
+        .order('completed_at', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: propertyIds.length > 0,
+  });
+
+  const { data: homeChecks = [] } = useQuery({
+    queryKey: ['owner-home-checks', propertyIds.join(',')],
+    queryFn: async () => {
+      if (!propertyIds.length) return [] as any[];
+      const { data, error } = await supabase
+        .from('home_check_sessions')
+        .select('*')
+        .in('property_id', propertyIds)
+        .order('completed_at', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: propertyIds.length > 0,
+  });
+
+  // Map approvals from maintenance requests
+  const approvalRequests: ApprovalRequest[] = (maintenance || []).map((mr: any) => ({
+    id: mr.id,
+    type: 'maintenance',
+    title: mr.title,
+    description: mr.description || '',
+    amount: mr.estimated_cost || undefined,
+    requestedBy: mr.assigned_user ? `${mr.assigned_user.first_name || ''} ${mr.assigned_user.last_name || ''}`.trim() : 'Property Manager',
+    requestedAt: mr.created_at,
+    status: (mr.owner_approval_status as 'pending' | 'approved' | 'rejected') || 'pending',
+    priority: (mr.priority as 'low' | 'medium' | 'high' | 'urgent') || 'medium',
+    property: mr.properties?.address || 'Property',
+    documents: [],
+  }));
+
+  // Build property financials from summary
+  const propertyFinancials: PropertyFinancials[] = (summary?.properties || []).map((p: any) => ({
+    propertyId: p.id,
+    propertyName: p.address,
+    monthlyRent: p.monthly_rent || 0,
+    expenses: 0,
+    netIncome: p.monthly_rent || 0,
+    occupancyRate: 100,
+    maintenanceCosts: 0,
+    roi: 0,
+  }));
+
+  const handleApprovalAction = async (requestId: string, action: 'approve' | 'reject', notes?: string) => {
+    await updateMaintenance.mutateAsync({
+      id: requestId,
+      updates: {
+        owner_approval_status: action === 'approve' ? 'approved' : 'rejected',
+        owner_approval_notes: notes,
+      } as any,
+    });
   };
 
   const getPriorityColor = (priority: string) => {
@@ -190,8 +183,8 @@ const OwnerPortalSystem = () => {
 
   const totalIncome = propertyFinancials.reduce((sum, prop) => sum + prop.netIncome, 0);
   const totalExpenses = propertyFinancials.reduce((sum, prop) => sum + prop.expenses, 0);
-  const avgROI = propertyFinancials.reduce((sum, prop) => sum + prop.roi, 0) / propertyFinancials.length;
-  const avgOccupancy = propertyFinancials.reduce((sum, prop) => sum + prop.occupancyRate, 0) / propertyFinancials.length;
+  const avgROI = propertyFinancials.length ? propertyFinancials.reduce((sum, prop) => sum + prop.roi, 0) / propertyFinancials.length : 0;
+  const avgOccupancy = propertyFinancials.length ? propertyFinancials.reduce((sum, prop) => sum + prop.occupancyRate, 0) / propertyFinancials.length : 0;
 
   return (
     <div className="space-y-6">
@@ -229,9 +222,11 @@ const OwnerPortalSystem = () => {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="approvals">Approvals</TabsTrigger>
+              <TabsTrigger value="checks">Checks</TabsTrigger>
+              <TabsTrigger value="messages">Messages</TabsTrigger>
               <TabsTrigger value="financials">Financials</TabsTrigger>
               <TabsTrigger value="properties">Properties</TabsTrigger>
               <TabsTrigger value="reports">Reports</TabsTrigger>
@@ -488,6 +483,106 @@ const OwnerPortalSystem = () => {
                   </Card>
                 ))}
               </div>
+            </TabsContent>
+
+            {/* Checks Tab */}
+            <TabsContent value="checks" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Recent Property Checks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {propertyChecks.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No property checks available.</p>
+                      )}
+                      {propertyChecks.map((c: any) => {
+                        const addr = (summary?.properties || []).find((p: any) => p.id === c.property_id)?.address || c.property_id;
+                        return (
+                          <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium text-sm">{addr}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {c.completed_at ? `Completed ${format(new Date(c.completed_at), 'MMM dd, yyyy')}` : c.started_at ? `Started ${format(new Date(c.started_at), 'MMM dd, yyyy')}` : 'Scheduled'}
+                              </p>
+                            </div>
+                            <Badge variant="outline">{c.status}</Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Home className="w-5 h-5" />
+                      Recent Home Checks
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {homeChecks.length === 0 && (
+                        <p className="text-sm text-muted-foreground">No home checks available.</p>
+                      )}
+                      {homeChecks.map((c: any) => {
+                        const addr = (summary?.properties || []).find((p: any) => p.id === c.property_id)?.address || c.property_id;
+                        return (
+                          <div key={c.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div>
+                              <p className="font-medium text-sm">{addr}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {c.completed_at ? `Completed ${format(new Date(c.completed_at), 'MMM dd, yyyy')}` : c.started_at ? `Started ${format(new Date(c.started_at), 'MMM dd, yyyy')}` : 'Scheduled'}
+                              </p>
+                            </div>
+                            <Badge variant="outline">{c.status}</Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Messages Tab */}
+            <TabsContent value="messages" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5" />
+                    Messages from Management
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {inboxConversations.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No messages yet.</p>
+                    )}
+                    {inboxConversations.slice(0, 10).map((conv: any) => (
+                      <div key={conv.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{conv.title || conv.last_message?.subject || 'Conversation'}</p>
+                          <p className="text-xs text-muted-foreground truncate">{conv.last_message?.content || 'No messages'}</p>
+                        </div>
+                        {conv.unread_count > 0 && (
+                          <Badge variant="destructive">{conv.unread_count} new</Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4">
+                    <Button asChild size="sm">
+                      <Link to="/client-portal/messages">Open Messages</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
 
             {/* Financials Tab */}
