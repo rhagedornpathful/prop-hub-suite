@@ -166,6 +166,34 @@ const HouseWatcherDashboard = () => {
     }
   };
 
+  const ensureHorizonForAssigned = async () => {
+    try {
+      if (assignedProperties.length === 0) {
+        toast({ title: 'No properties', description: 'You have no assigned properties to schedule.' });
+        return;
+      }
+      const horizonDays = 90;
+      const thresholdDays = 60;
+      const results = await Promise.all(
+        assignedProperties.map((p) =>
+          supabase.rpc('ensure_home_watch_schedule_horizon', {
+            _property_id: p.id,
+            _frequency: null,
+            _horizon_days: horizonDays,
+            _threshold_days: thresholdDays,
+            _force: false,
+          })
+        )
+      );
+
+      const insertedTotal = results.reduce((sum, r) => sum + (r.data as number ?? 0), 0);
+      toast({ title: 'Horizon ensured', description: `Scheduled ${insertedTotal} upcoming checks.` });
+      await loadHouseWatcherData();
+    } catch (error: any) {
+      console.error('ensureHorizonForAssigned error', error);
+      toast({ title: 'Failed to ensure horizon', description: error.message, variant: 'destructive' });
+    }
+  };
   const startHomeCheck = async (watchingId: string) => {
     try {
       const { data, error } = await supabase
@@ -251,10 +279,16 @@ const HouseWatcherDashboard = () => {
           <h1 className="text-3xl font-bold">My Properties & Tasks</h1>
           <p className="text-muted-foreground">Properties assigned to you and scheduled property checks</p>
         </div>
-        <Button onClick={loadHouseWatcherData} variant="outline">
-          <Clock className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={loadHouseWatcherData} variant="outline">
+            <Clock className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Button onClick={ensureHorizonForAssigned}>
+            <Calendar className="h-4 w-4 mr-2" />
+            Ensure 90-day Horizon
+          </Button>
+        </div>
       </div>
 
       {/* To-Do Section - Property Checks */}
