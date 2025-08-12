@@ -34,8 +34,8 @@ const MobileBottomNavigation = () => {
   const tabs = userRole === 'house_watcher' ? houseWatcherTabs : propertyManagerTabs;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
-      <div className="flex justify-around items-center py-2 px-4">
+    <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-2xl z-50 safe-area-pb">
+      <div className="flex justify-around items-center py-3 px-2">
         {tabs.map(({ icon: Icon, label, path }) => (
           <Button
             key={path}
@@ -43,12 +43,17 @@ const MobileBottomNavigation = () => {
             size="sm"
             onClick={() => navigate(path)}
             className={cn(
-              "flex-1 flex-col gap-1 h-auto py-2 px-1",
-              isActive(path) && "text-primary"
+              "flex-1 flex-col gap-1 h-auto py-3 px-2 min-h-[60px] rounded-xl transition-all duration-200",
+              isActive(path) 
+                ? "text-primary bg-primary/10 font-semibold" 
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             )}
           >
-            <Icon className={cn("h-5 w-5", isActive(path) && "text-primary")} />
-            <span className="text-xs">{label}</span>
+            <Icon className={cn(
+              "h-6 w-6 transition-all duration-200", 
+              isActive(path) ? "text-primary scale-110" : ""
+            )} />
+            <span className="text-xs leading-none">{label}</span>
           </Button>
         ))}
       </div>
