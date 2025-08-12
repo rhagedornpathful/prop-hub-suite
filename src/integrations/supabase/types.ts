@@ -634,6 +634,7 @@ export type Database = {
           owner_contact: string | null
           owner_name: string | null
           property_address: string
+          property_id: string | null
           special_instructions: string | null
           start_date: string
           status: string | null
@@ -654,6 +655,7 @@ export type Database = {
           owner_contact?: string | null
           owner_name?: string | null
           property_address: string
+          property_id?: string | null
           special_instructions?: string | null
           start_date: string
           status?: string | null
@@ -674,13 +676,22 @@ export type Database = {
           owner_contact?: string | null
           owner_name?: string | null
           property_address?: string
+          property_id?: string | null
           special_instructions?: string | null
           start_date?: string
           status?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "house_watching_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
