@@ -621,8 +621,10 @@ const Properties = () => {
                           >
                             {property.status === 'active' || !property.status ? 'Active' : property.status === 'archived' ? 'Archived' : 'Inactive'}
                           </Badge>
-                          {property.service_type === 'house_watching' && (
+                          {property.service_type === 'house_watching' ? (
                             <Badge variant="secondary" className="text-xs">House Watching</Badge>
+                          ) : (
+                            <Badge variant="default" className="text-xs">Property Management</Badge>
                           )}
                         </div>
                       </div>
