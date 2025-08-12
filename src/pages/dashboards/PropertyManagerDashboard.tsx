@@ -371,6 +371,12 @@ export function PropertyManagerDashboard() {
                 <span className="text-sm">Process Payment</span>
               </Button>
             </Link>
+            <Link to="/payments">
+              <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
+                <DollarSign className="h-6 w-6" />
+                <span className="text-sm">Collect Rent</span>
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
