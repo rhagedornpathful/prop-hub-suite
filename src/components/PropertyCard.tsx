@@ -207,7 +207,7 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
         
         {/* Remove the cluttered property type badge */}
         
-        {/* Service Type Badge */}
+        {/* Service Type Badge - Always Show */}
         <div className="absolute bottom-3 left-3">
           <Badge className={isPropertyManagement 
             ? "bg-primary text-primary-foreground border-primary" 
