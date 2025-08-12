@@ -14,6 +14,7 @@ import { useProperties } from "@/hooks/queries/useProperties";
 import { useCreatePropertyServiceAssignment } from "@/hooks/queries/usePropertyServiceAssignments";
 import { Service } from "@/hooks/queries/useServices";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AssignServiceDialogProps {
   services: Service[];
@@ -47,9 +48,14 @@ export function AssignServiceDialog({ services, trigger }: AssignServiceDialogPr
       return;
     }
 
+    // Get current user ID
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     await createAssignmentMutation.mutateAsync({
       property_id: selectedPropertyId,
       service_id: selectedServiceId,
+      assigned_by: user.id,
       monthly_fee: monthlyFee,
       rent_percentage: rentPercentage,
       billing_start_date: format(billingStartDate, 'yyyy-MM-dd'),

@@ -34,6 +34,7 @@ export interface PropertyServiceAssignment {
 export interface PropertyServiceAssignmentInsert {
   property_id: string;
   service_id: string;
+  assigned_by: string;
   monthly_fee: number;
   rent_percentage: number;
   billing_start_date: string;
@@ -45,9 +46,22 @@ export const usePropertyServiceAssignments = (propertyId?: string) => {
   return useQuery({
     queryKey: ['property-service-assignments', propertyId],
     queryFn: async () => {
-      // Temporarily return empty array until migration is applied
-      console.log('Property service assignments query - migration pending');
-      return [] as PropertyServiceAssignment[];
+      let query = supabase
+        .from('property_service_assignments')
+        .select(`
+          *,
+          service:services(*),
+          property:properties(id, address)
+        `);
+      
+      if (propertyId) {
+        query = query.eq('property_id', propertyId);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return (data || []) as unknown as PropertyServiceAssignment[];
     },
     enabled: true,
     staleTime: 30000, // 30 seconds
@@ -60,17 +74,28 @@ export const useCreatePropertyServiceAssignment = () => {
 
   return useMutation({
     mutationFn: async (assignment: PropertyServiceAssignmentInsert) => {
-      // Temporarily log and return mock success until migration is applied
-      console.log('Create assignment requested:', assignment);
-      toast({
-        title: "Migration Pending",
-        description: "Service assignment feature will be available after database migration is applied",
-        variant: "default",
-      });
-      return { id: 'mock-id', ...assignment };
+      const { data, error } = await supabase
+        .from('property_service_assignments')
+        .insert(assignment)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['property-service-assignments'] });
+      toast({
+        title: "Success",
+        description: "Service package assigned successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to assign service package",
+        variant: "destructive",
+      });
     },
   });
 };
@@ -87,11 +112,29 @@ export const useUpdatePropertyServiceAssignment = () => {
       id: string; 
       updates: Partial<PropertyServiceAssignmentInsert> 
     }) => {
-      console.log('Update assignment requested:', { id, updates });
-      return { id, ...updates };
+      const { data, error } = await supabase
+        .from('property_service_assignments')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-service-assignments'] });
+      toast({
+        title: "Success",
+        description: "Service assignment updated successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update service assignment",
+        variant: "destructive",
+      });
     },
   });
 };
@@ -102,11 +145,27 @@ export const useDeletePropertyServiceAssignment = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      console.log('Delete assignment requested:', id);
+      const { error } = await supabase
+        .from('property_service_assignments')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
       return id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['property-service-assignments'] });
+      toast({
+        title: "Success",
+        description: "Service assignment deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete service assignment",
+        variant: "destructive",
+      });
     },
   });
 };
