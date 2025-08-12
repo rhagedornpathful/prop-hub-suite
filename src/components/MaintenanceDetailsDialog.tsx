@@ -15,7 +15,9 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { MaintenanceRequest, useUpdateMaintenanceRequest, useMaintenanceStatusHistory, useAssignMaintenanceRequest } from "@/hooks/queries/useMaintenanceRequests";
 import { useProfiles } from "@/hooks/queries/useProfiles";
-
+import MaintenanceTimeline from "@/components/MaintenanceTimeline";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 interface MaintenanceDetailsDialogProps {
   request: MaintenanceRequest | null;
   open: boolean;
@@ -38,7 +40,7 @@ const MaintenanceDetailsDialog = ({ request, open, onOpenChange }: MaintenanceDe
   const assignRequest = useAssignMaintenanceRequest();
   const { data: profiles = [] } = useProfiles();
   const { data: statusHistory = [] } = useMaintenanceStatusHistory(request?.id || '');
-
+  const { toast } = useToast();
   if (!request) return null;
 
   const handleSave = async () => {
@@ -50,13 +52,56 @@ const MaintenanceDetailsDialog = ({ request, open, onOpenChange }: MaintenanceDe
       actual_cost: actualCost ? parseFloat(actualCost) : null,
     };
 
+    const statusChanged = request.status !== status;
+
     await updateRequest.mutateAsync({ id: request.id, updates });
+
+    if (statusChanged) {
+      try {
+        const { error } = await supabase.functions.invoke('send-maintenance-update', {
+          body: {
+            maintenance_id: request.id,
+            status,
+            notes: completionNotes,
+            channels: ['email']
+          }
+        });
+        if (error) throw error;
+        toast({ title: 'Status updated', description: 'Notifications sent' });
+      } catch (e) {
+        console.error('Failed to send maintenance update', e);
+        toast({ title: 'Notification failed', description: 'Could not send notifications', variant: 'destructive' });
+      }
+    }
   };
 
   const handleAssign = async () => {
     if (assignedTo !== request.assigned_to) {
       const assignToUser = assignedTo === 'unassigned' ? null : assignedTo;
       await assignRequest.mutateAsync({ requestId: request.id, assignedTo: assignToUser });
+    }
+  };
+
+  const handleTimelineStatusChange = async (newStatus: string, notes?: string) => {
+    try {
+      setStatus(newStatus as MaintenanceRequest['status']);
+      await updateRequest.mutateAsync({ id: request.id, updates: { status: newStatus as MaintenanceRequest['status'] } });
+
+      const { error } = await supabase.functions.invoke('send-maintenance-update', {
+        body: {
+          maintenance_id: request.id,
+          status: newStatus,
+          notes,
+          channels: ['email']
+        }
+      });
+
+      if (error) throw error;
+
+      toast({ title: 'Status updated', description: 'Notifications sent' });
+    } catch (e) {
+      console.error('Failed to update status/notify', e);
+      toast({ title: 'Update failed', description: 'Could not send notifications', variant: 'destructive' });
     }
   };
 
@@ -310,39 +355,11 @@ const MaintenanceDetailsDialog = ({ request, open, onOpenChange }: MaintenanceDe
           </TabsContent>
 
           <TabsContent value="history" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="w-4 h-4" />
-                  Status History
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {statusHistory.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-4">No status changes recorded</p>
-                ) : (
-                  <div className="space-y-3">
-                    {statusHistory.map((entry: any) => (
-                      <div key={entry.id} className="flex items-start gap-3 p-3 border rounded-lg">
-                        <Clock className="w-4 h-4 mt-1 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="text-sm">
-                            Status changed from <span className="font-semibold">{entry.old_status || 'initial'}</span> to{' '}
-                            <span className="font-semibold">{entry.new_status}</span>
-                          </p>
-                          {entry.notes && (
-                            <p className="text-sm text-muted-foreground mt-1">{entry.notes}</p>
-                          )}
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {format(new Date(entry.changed_at), "PPp")}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <MaintenanceTimeline
+              requestId={request.id}
+              currentStatus={status}
+              onStatusChange={handleTimelineStatusChange}
+            />
           </TabsContent>
         </Tabs>
 
