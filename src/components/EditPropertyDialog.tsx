@@ -26,6 +26,9 @@ import { Loader2, Save } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PropertyImageUpload } from "@/components/PropertyImageUpload";
 import { PropertyImageUploadPreview } from "@/components/PropertyImageUploadPreview";
+import { PropertyOwnerManager } from "@/components/PropertyOwnerManager";
+import { usePropertyOwners } from "@/hooks/queries/usePropertyOwners";
+import { usePropertyOwnerAssociations } from "@/hooks/queries/usePropertyOwnerAssociations";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<'properties'>;
@@ -68,6 +71,11 @@ const amenityOptions = [
 export function EditPropertyDialog({ open, onOpenChange, property, onPropertyUpdated }: EditPropertyDialogProps) {
   const { isMobile } = useMobileDetection();
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedOwners, setSelectedOwners] = useState<any[]>([]);
+  
+  // Fetch data
+  const { data: propertyOwners = [], isLoading: isLoadingOwners } = usePropertyOwners();
+  const { data: ownerAssociations = [], refetch: refetchAssociations } = usePropertyOwnerAssociations(property?.id);
   const [propertyData, setPropertyData] = useState<PropertyData>({
     address: "",
     property_type: "",
@@ -115,6 +123,15 @@ export function EditPropertyDialog({ open, onOpenChange, property, onPropertyUpd
       });
     }
   }, [property]);
+
+  // Update selected owners when associations change
+  useEffect(() => {
+    if (ownerAssociations.length > 0) {
+      setSelectedOwners(ownerAssociations);
+    } else {
+      setSelectedOwners([]);
+    }
+  }, [ownerAssociations]);
 
   const resetForm = () => {
     setPropertyData({
@@ -354,6 +371,21 @@ export function EditPropertyDialog({ open, onOpenChange, property, onPropertyUpd
                 rows={3}
               />
             </div>
+
+            {/* Property Owner Assignment */}
+            <div className="space-y-4">
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold mb-3">Property Owners</h3>
+                <PropertyOwnerManager
+                  propertyId={property?.id}
+                  selectedOwners={selectedOwners}
+                  availableOwners={propertyOwners}
+                  isLoadingOwners={isLoadingOwners}
+                  onOwnersChange={setSelectedOwners}
+                  onReloadOwners={() => refetchAssociations()}
+                />
+              </div>
+            </div>
           </div>
           
           <div className="fixed bottom-0 left-0 right-0 bg-background border-t p-4 flex gap-3">
@@ -575,6 +607,21 @@ export function EditPropertyDialog({ open, onOpenChange, property, onPropertyUpd
                 onChange={(e) => setPropertyData({ ...propertyData, gate_code: e.target.value })}
                 placeholder="Access gate code"
               />
+            </div>
+
+            {/* Property Owner Assignment */}
+            <div className="space-y-4">
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-semibold mb-3">Property Owners</h3>
+                <PropertyOwnerManager
+                  propertyId={property?.id}
+                  selectedOwners={selectedOwners}
+                  availableOwners={propertyOwners}
+                  isLoadingOwners={isLoadingOwners}
+                  onOwnersChange={setSelectedOwners}
+                  onReloadOwners={() => refetchAssociations()}
+                />
+              </div>
             </div>
 
             <div className="space-y-3">
