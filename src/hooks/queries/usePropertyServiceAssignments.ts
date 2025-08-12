@@ -83,8 +83,39 @@ export const useCreatePropertyServiceAssignment = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       queryClient.invalidateQueries({ queryKey: ['property-service-assignments'] });
+      
+      // Check if this is a house watching service and create house watching record
+      const { data: serviceData } = await supabase
+        .from('services')
+        .select('category')
+        .eq('id', data.service_id)
+        .single();
+      
+      if (serviceData?.category === 'house_watching') {
+        // Get property details for the house watching record
+        const { data: propertyData } = await supabase
+          .from('properties')
+          .select('address, user_id')
+          .eq('id', data.property_id)
+          .single();
+        
+        if (propertyData) {
+          // Create house watching record
+          await supabase
+            .from('house_watching')
+            .insert({
+              property_address: propertyData.address,
+              user_id: propertyData.user_id,
+              start_date: data.billing_start_date,
+              status: 'active',
+              check_frequency: 'monthly', // Default frequency
+              monthly_fee: data.monthly_fee
+            });
+        }
+      }
+      
       toast({
         title: "Success",
         description: "Service package assigned successfully",
