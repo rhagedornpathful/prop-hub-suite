@@ -17,7 +17,17 @@ interface PropertyServiceAssignmentsProps {
 export function PropertyServiceAssignments({ propertyId }: PropertyServiceAssignmentsProps) {
   const [selectedAssignment, setSelectedAssignment] = useState<PropertyServiceAssignment | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const { data: assignments, isLoading } = usePropertyServiceAssignments(propertyId);
+  
+  // Debug logging
+  console.log('PropertyServiceAssignments - propertyId:', propertyId);
+  
+  const { data: assignments, isLoading, error } = usePropertyServiceAssignments(propertyId);
+  
+  // Debug logging
+  console.log('PropertyServiceAssignments - assignments:', assignments);
+  console.log('PropertyServiceAssignments - isLoading:', isLoading);
+  console.log('PropertyServiceAssignments - error:', error);
+  
   const deleteAssignmentMutation = useDeletePropertyServiceAssignment();
 
   const handleDelete = async (id: string) => {
