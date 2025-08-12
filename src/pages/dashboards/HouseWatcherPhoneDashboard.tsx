@@ -175,7 +175,7 @@ const HouseWatcherPhoneDashboard = () => {
         description: "Beginning home inspection...",
       });
 
-      navigate(`/home-check/${data.id}`);
+      navigate(`/property-check?property=${propertyId}`);
     } catch (error: any) {
       toast({
         title: "Error Starting Check",
@@ -374,7 +374,7 @@ const HouseWatcherPhoneDashboard = () => {
                         size="sm" 
                         variant="outline"
                         className="rounded-lg"
-                        onClick={() => startHomeCheck(property.id)}
+                        onClick={() => navigate(`/property-check?property=${property.id}`)}
                       >
                         <Camera className="h-4 w-4 mr-1" />
                         Check

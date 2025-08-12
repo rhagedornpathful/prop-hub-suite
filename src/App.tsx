@@ -295,8 +295,22 @@ const AppContent = () => {
                                  <HouseWatcherMobileDashboard />
                                </RoleBasedAccess>
                              </PageTransition>
-                           } />
-                           <Route path="/house-watcher/checks" element={
+                            } />
+                            <Route path="/house-watcher/new-check" element={
+                              <PageTransition>
+                                <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
+                                  <HouseWatcherMobileChecks />
+                                </RoleBasedAccess>
+                              </PageTransition>
+                            } />
+                            <Route path="/house-watcher/property/:propertyId" element={
+                              <PageTransition>
+                                <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
+                                  <PropertyDetail />
+                                </RoleBasedAccess>
+                              </PageTransition>
+                            } />
+                            <Route path="/house-watcher/checks" element={
                              <PageTransition>
                                <RoleBasedAccess allowedRoles={['admin', 'house_watcher']}>
                                  <HouseWatcherMobileChecks />

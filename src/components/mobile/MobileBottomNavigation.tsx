@@ -19,9 +19,9 @@ const MobileBottomNavigation = () => {
 
   const houseWatcherTabs = [
     { icon: Home, label: 'Home', path: '/house-watcher/dashboard' },
-    { icon: CheckCircle2, label: 'Checks', path: '/house-watcher/checks' },
+    { icon: CheckCircle2, label: 'Checks', path: '/property-check' },
     { icon: MessageSquare, label: 'Messages', path: '/messages' },
-    { icon: Settings, label: 'Settings', path: '/house-watcher-settings' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   const propertyManagerTabs = [

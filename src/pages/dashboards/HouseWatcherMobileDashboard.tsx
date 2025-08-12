@@ -126,7 +126,7 @@ const HouseWatcherMobileDashboard = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-3">
         <Button 
-          onClick={() => navigate('/house-watcher/new-check')}
+          onClick={() => navigate('/property-check')}
           className="h-16 flex-col gap-2"
           variant="default"
         >
@@ -162,7 +162,7 @@ const HouseWatcherMobileDashboard = () => {
               <div
                 key={property.id}
                 className="border rounded-lg p-3 space-y-2 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => navigate(`/house-watcher/property/${property.property_id}`)}
+                onClick={() => navigate(`/properties/${property.property_id}`)}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
