@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   Building, 
+  Building2,
   MapPin, 
   DollarSign, 
   Calendar,
@@ -41,6 +42,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { PropertyDetailsSkeleton } from "@/components/PropertyDetailsSkeleton";
 import { PropertyAssignees } from "@/components/PropertyAssignees";
+import { PropertyOwnershipManager } from "@/components/PropertyOwnershipManager";
 
 type Property = Tables<'properties'>;
 
@@ -360,7 +362,7 @@ export function PropertyDetail() {
 
       <div className={`${isMobile ? 'px-4' : 'container mx-auto px-6'} space-y-4`}>
         {/* Main Content */}
-        <Accordion type="multiple" defaultValue={["overview","assignees","activity","maintenance"]} className="space-y-4">
+        <Accordion type="multiple" defaultValue={["overview","assignees","ownership","activity","maintenance"]} className="space-y-4">
           <AccordionItem value="overview" className="bg-white rounded-lg shadow-sm border-0 p-4">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-2">
@@ -461,6 +463,21 @@ export function PropertyDetail() {
             </AccordionTrigger>
             <AccordionContent className="pt-4">
               <PropertyAssignees propertyId={property.id} />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="ownership" className="bg-white rounded-lg shadow-sm border-0 p-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                <span className="font-semibold">Property Ownership</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4">
+              <PropertyOwnershipManager 
+                propertyId={property.id} 
+                propertyAddress={property.address}
+              />
             </AccordionContent>
           </AccordionItem>
 

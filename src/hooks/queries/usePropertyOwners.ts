@@ -20,7 +20,12 @@ export const usePropertyOwners = () => {
         .from('property_owners')
         .select(`
           *,
-          properties:properties(count)
+          property_owner_associations(
+            property_id,
+            ownership_percentage,
+            is_primary_owner,
+            properties(id, address)
+          )
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -30,7 +35,12 @@ export const usePropertyOwners = () => {
       // Add property count to each owner
       return (data || []).map(owner => ({
         ...owner,
-        property_count: owner.properties?.[0]?.count || 0
+        property_count: owner.property_owner_associations?.length || 0,
+        properties: owner.property_owner_associations?.map((assoc: any) => ({
+          ...assoc.properties,
+          ownership_percentage: assoc.ownership_percentage,
+          is_primary_owner: assoc.is_primary_owner
+        })) || []
       }));
     },
     enabled: !!user,
