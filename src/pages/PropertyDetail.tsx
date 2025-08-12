@@ -30,7 +30,8 @@ import {
   ClipboardCheck,
   Home,
   UserCircle2,
-  Package
+  Package,
+  Eye
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
@@ -45,6 +46,7 @@ import { PropertyDetailsSkeleton } from "@/components/PropertyDetailsSkeleton";
 import { PropertyAssignees } from "@/components/PropertyAssignees";
 import { PropertyOwnershipManager } from "@/components/PropertyOwnershipManager";
 import { PropertyServiceAssignments } from "@/components/PropertyServiceAssignments";
+import { PropertyHouseWatchingDetails } from "@/components/PropertyHouseWatchingDetails";
 
 type Property = Tables<'properties'>;
 
@@ -364,7 +366,7 @@ export function PropertyDetail() {
 
       <div className={`${isMobile ? 'px-4' : 'container mx-auto px-6'} space-y-4`}>
         {/* Main Content */}
-        <Accordion type="multiple" defaultValue={["overview","assignees","ownership","services","activity","maintenance"]} className="space-y-4">
+        <Accordion type="multiple" defaultValue={["overview","assignees","ownership","services","house-watching","activity","maintenance"]} className="space-y-4">
           <AccordionItem value="overview" className="bg-white rounded-lg shadow-sm border-0 p-4">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-2">
@@ -492,6 +494,21 @@ export function PropertyDetail() {
             </AccordionTrigger>
             <AccordionContent className="pt-4">
               <PropertyServiceAssignments propertyId={property.id} />
+            </AccordionContent>
+          </AccordionItem>
+
+          <AccordionItem value="house-watching" className="bg-white rounded-lg shadow-sm border-0 p-4">
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                <span className="font-semibold">House Watching</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pt-4">
+              <PropertyHouseWatchingDetails 
+                propertyId={property.id} 
+                propertyAddress={property.address}
+              />
             </AccordionContent>
           </AccordionItem>
 
