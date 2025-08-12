@@ -62,6 +62,7 @@ import {
   Package
 } from "lucide-react";
 import { PropertyServiceAssignments } from "@/components/PropertyServiceAssignments";
+import { PropertyOwnershipManager } from "@/components/PropertyOwnershipManager";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Property = Tables<'properties'>;
@@ -267,6 +268,10 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 <TabsTrigger value="services" className="flex items-center gap-2">
                   <Package className="h-4 w-4" />
                   Services
+                </TabsTrigger>
+                <TabsTrigger value="owners" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Owners
                 </TabsTrigger>
                 <TabsTrigger value="media" className="flex items-center gap-2">
                   <Camera className="h-4 w-4" />
@@ -854,6 +859,19 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                   </CardHeader>
                   <CardContent>
                     <PropertyServiceAssignments propertyId={property.id} />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              <TabsContent value="owners" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Users className="h-5 w-5" />
+                      Property Owners
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PropertyOwnershipManager propertyId={property.id} propertyAddress={property.address} />
                   </CardContent>
                 </Card>
               </TabsContent>
