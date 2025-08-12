@@ -72,7 +72,7 @@ export const useCreatePropertyOwnerAssociation = () => {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to create property owner association.",
+        description: `Failed to create property owner association: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     },
@@ -104,10 +104,10 @@ export const useUpdatePropertyOwnerAssociation = () => {
       queryClient.invalidateQueries({ queryKey: ['property_owners'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update property owner association.",
+        description: `Failed to update property owner association: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     },
@@ -137,10 +137,10 @@ export const useDeletePropertyOwnerAssociation = () => {
       queryClient.invalidateQueries({ queryKey: ['property_owners'] });
       queryClient.invalidateQueries({ queryKey: ['properties'] });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to delete property owner association.",
+        description: `Failed to delete property owner association: ${error?.message || 'Unknown error'}`,
         variant: "destructive",
       });
     },
