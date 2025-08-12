@@ -180,8 +180,8 @@ export const MobilePropertyActions: React.FC<MobilePropertyActionsProps> = ({
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="h-8 w-8">
-          <MoreVertical className="h-4 w-4" />
+        <Button variant="outline" size="icon" className="h-6 w-6 shadow-sm">
+          <MoreVertical className="h-3 w-3" />
         </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[90vh] rounded-t-xl">
