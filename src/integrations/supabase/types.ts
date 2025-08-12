@@ -781,6 +781,10 @@ export type Database = {
           id: string
           is_recurring: boolean | null
           notes: string | null
+          owner_approval_at: string | null
+          owner_approval_by: string | null
+          owner_approval_notes: string | null
+          owner_approval_status: string | null
           parent_request_id: string | null
           priority: string
           property_id: string
@@ -808,6 +812,10 @@ export type Database = {
           id?: string
           is_recurring?: boolean | null
           notes?: string | null
+          owner_approval_at?: string | null
+          owner_approval_by?: string | null
+          owner_approval_notes?: string | null
+          owner_approval_status?: string | null
           parent_request_id?: string | null
           priority?: string
           property_id: string
@@ -835,6 +843,10 @@ export type Database = {
           id?: string
           is_recurring?: boolean | null
           notes?: string | null
+          owner_approval_at?: string | null
+          owner_approval_by?: string | null
+          owner_approval_notes?: string | null
+          owner_approval_status?: string | null
           parent_request_id?: string | null
           priority?: string
           property_id?: string
