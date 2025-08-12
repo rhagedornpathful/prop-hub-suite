@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, DollarSign, TrendingUp, TrendingDown, Calendar, FileText, AlertCircle } from "lucide-react";
+import OwnerStatementsList from "@/components/OwnerStatementsList";
 
 const Finances = () => {
   const mockTransactions = [
@@ -246,6 +247,9 @@ const Finances = () => {
                       </Button>
                     </CardContent>
                   </Card>
+                </div>
+                <div className="mt-6">
+                  <OwnerStatementsList />
                 </div>
               </TabsContent>
             </Tabs>
