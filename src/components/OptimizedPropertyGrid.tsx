@@ -76,6 +76,7 @@ export function OptimizedPropertyGrid({
         propertyData: property.service_type !== 'house_watching' ? property : undefined,
         houseWatchingData: property.service_type === 'house_watching' ? {
           id: property.id,
+          property_id: property.id,
           property_address: property.address,
           owner_name: property.property_owner?.first_name && property.property_owner?.last_name 
             ? `${property.property_owner.first_name} ${property.property_owner.last_name}`

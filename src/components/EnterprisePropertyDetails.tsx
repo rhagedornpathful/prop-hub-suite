@@ -82,11 +82,11 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  if (!property) return null;
-
   const [openScheduleMaintenance, setOpenScheduleMaintenance] = useState(false);
   const { data: allMaintenance = [] } = useMaintenanceRequests();
-  const maintenanceForProperty = allMaintenance.filter((m: any) => m.property_id === property.id);
+  const maintenanceForProperty = property ? allMaintenance.filter((m: any) => m.property_id === property.id) : [];
+
+  if (!property) return null;
 
   const statusColors = {
     active: "bg-success text-success-foreground",
