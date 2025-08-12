@@ -75,6 +75,7 @@ export function PropertyDetail() {
   const [selectedMaintenanceRequest, setSelectedMaintenanceRequest] = useState<Tables<'maintenance_requests'> | null>(null);
   const [isMaintenanceDetailsDialogOpen, setIsMaintenanceDetailsDialogOpen] = useState(false);
   const [isStartingCheck, setIsStartingCheck] = useState(false);
+  const [payments, setPayments] = useState<any[]>([]);
   
   // Use the new comprehensive activity hook
   const { activities, isLoading: activitiesLoading, error: activitiesError, refetch: refetchActivities } = usePropertyActivity(id);
@@ -84,6 +85,12 @@ export function PropertyDetail() {
       fetchPropertyDetails();
       fetchMaintenanceRequests();
       fetchRecentActivities();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchPayments();
     }
   }, [id]);
 
@@ -125,6 +132,20 @@ export function PropertyDetail() {
     }
   };
 
+  const fetchPayments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('property_id', id)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      setPayments(data || []);
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+    }
+  };
   const fetchRecentActivities = async () => {
     try {
       const activities: RecentActivity[] = [];
@@ -489,11 +510,66 @@ export function PropertyDetail() {
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-2">
                 <Package className="h-5 w-5" />
-                <span className="font-semibold">Service Assignments</span>
+                <span className="font-semibold">Services & Financials</span>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="pt-4">
+            <AccordionContent className="pt-4 space-y-4">
               <PropertyServiceAssignments propertyId={property.id} />
+
+              {/* Financial Overview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <DollarSign className="h-5 w-5" />
+                    Financial Overview
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="p-3 bg-muted rounded-lg">
+                      <div className="text-xs text-muted-foreground">Monthly Income</div>
+                      <div className="text-xl font-semibold">{formatCurrency(property.monthly_rent)}</div>
+                    </div>
+                    <div className="p-3 bg-muted rounded-lg">
+                      <div className="text-xs text-muted-foreground">Property Value</div>
+                      <div className="text-xl font-semibold">{formatCurrency(property.estimated_value)}</div>
+                    </div>
+                    {property.rent_estimate && (
+                      <div className="p-3 bg-muted rounded-lg">
+                        <div className="text-xs text-muted-foreground">Market Rent</div>
+                        <div className="text-xl font-semibold">{formatCurrency(property.rent_estimate)}</div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recent Payments */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Recent Payments</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {payments.length === 0 ? (
+                    <div className="text-sm text-muted-foreground">No recent payments</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {payments.map((p) => (
+                        <div key={p.id} className="flex items-center justify-between border rounded-lg p-3">
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium capitalize">{p.payment_type || 'payment'}</div>
+                            <div className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</div>
+                          </div>
+                          <div className="text-right space-y-1">
+                            <div className="text-sm font-semibold">${(p.amount/100).toFixed(2)}</div>
+                            <Badge variant="outline" className="capitalize">{p.status}</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </AccordionContent>
           </AccordionItem>
 

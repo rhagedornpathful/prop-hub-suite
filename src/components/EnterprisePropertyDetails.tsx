@@ -265,9 +265,9 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                   <Home className="h-4 w-4" />
                   Overview
                 </TabsTrigger>
-                <TabsTrigger value="financials" className="flex items-center gap-2">
+                <TabsTrigger value="services-financials" className="flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
-                  Financials
+                  Services & Financials
                 </TabsTrigger>
                 <TabsTrigger value="market" className="flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
@@ -276,10 +276,6 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 <TabsTrigger value="details" className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Details
-                </TabsTrigger>
-                <TabsTrigger value="services" className="flex items-center gap-2">
-                  <Package className="h-4 w-4" />
-                  Services
                 </TabsTrigger>
                 <TabsTrigger value="owners" className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
@@ -533,7 +529,7 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 )}
               </TabsContent>
 
-              <TabsContent value="financials" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
+              <TabsContent value="services-financials" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
                 {/* Financial Overview */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <Card className="bg-gradient-to-br from-success/10 to-success/5 border-success/20">
@@ -642,6 +638,18 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                         </div>
                       )}
                     </div>
+                  </CardContent>
+                </Card>
+                {/* Services */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Package className="h-5 w-5" />
+                      Service Assignments
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <PropertyServiceAssignments propertyId={property.id} />
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -865,19 +873,6 @@ export function EnterprisePropertyDetails({ property, open, onOpenChange, onEdit
                 </Card>
               </TabsContent>
 
-              <TabsContent value="services" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Package className="h-5 w-5" />
-                      Service Assignments
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <PropertyServiceAssignments propertyId={property.id} />
-                  </CardContent>
-                </Card>
-              </TabsContent>
               <TabsContent value="owners" className="flex-1 overflow-y-auto p-6 space-y-6 data-[state=active]:flex data-[state=active]:flex-col">
                 <Card>
                   <CardHeader>
