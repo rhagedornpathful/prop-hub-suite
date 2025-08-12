@@ -1,6 +1,6 @@
 import { BreadcrumbNavigation } from "@/components/BreadcrumbNavigation";
 import { SEOHead } from "@/components/SEOHead";
-import { OwnerPortalSystem } from "@/components/OwnerPortalSystem";
+import OwnerPortalSystem from "@/components/OwnerPortalSystem";
 
 export default function PropertyOwnerDashboard() {
   return (
