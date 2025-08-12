@@ -16,31 +16,40 @@ export const usePropertyOwners = () => {
     queryFn: async () => {
       if (!user) return [];
       
-      const { data, error } = await supabase
+      // First get the property owners
+      const { data: owners, error: ownersError } = await supabase
         .from('property_owners')
-        .select(`
-          *,
-          property_owner_associations(
-            property_id,
-            ownership_percentage,
-            is_primary_owner,
-            properties(id, address)
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (ownersError) throw ownersError;
+      if (!owners || owners.length === 0) return [];
+
+      // Then get the property counts for each owner
+      const ownerIds = owners.map(owner => owner.id);
       
+      const { data: associations, error: associationsError } = await supabase
+        .from('property_owner_associations')
+        .select(`
+          property_owner_id,
+          property:properties(id, address)
+        `)
+        .in('property_owner_id', ownerIds);
+
+      if (associationsError) throw associationsError;
+
+      // Count properties for each owner
+      const propertyCountsByOwner = (associations || []).reduce((acc, assoc) => {
+        const ownerId = assoc.property_owner_id;
+        acc[ownerId] = (acc[ownerId] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
       // Add property count to each owner
-      return (data || []).map(owner => ({
+      return owners.map(owner => ({
         ...owner,
-        property_count: owner.property_owner_associations?.length || 0,
-        properties: owner.property_owner_associations?.map((assoc: any) => ({
-          ...assoc.properties,
-          ownership_percentage: assoc.ownership_percentage,
-          is_primary_owner: assoc.is_primary_owner
-        })) || []
+        property_count: propertyCountsByOwner[owner.id] || 0
       }));
     },
     enabled: !!user,
