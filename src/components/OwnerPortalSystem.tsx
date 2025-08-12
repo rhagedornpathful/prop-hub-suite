@@ -85,6 +85,8 @@ const OwnerPortalSystem = () => {
   const { data: maintenance = [] } = useMaintenanceRequests();
   const updateMaintenance = useUpdateMaintenanceRequest();
   const { data: inboxConversations = [] } = useInboxConversations({ filter: 'inbox', searchQuery: '' });
+  const { data: rentRolls = [] } = useRentRolls();
+  const { data: ownerStatements = [] } = useOwnerStatements();
 
   const propertyIds = (summary?.properties || []).map((p: any) => p.id);
 
@@ -136,17 +138,45 @@ const OwnerPortalSystem = () => {
     documents: [],
   }));
 
-  // Build property financials from summary
-  const propertyFinancials: PropertyFinancials[] = (summary?.properties || []).map((p: any) => ({
-    propertyId: p.id,
-    propertyName: p.address,
-    monthlyRent: p.monthly_rent || 0,
-    expenses: 0,
-    netIncome: p.monthly_rent || 0,
-    occupancyRate: 100,
-    maintenanceCosts: 0,
-    roi: 0,
-  }));
+  // Build property financials from live data
+  const propertyFinancials: PropertyFinancials[] = (summary?.properties || []).map((p: any) => {
+    const rolls = (rentRolls || []).filter((r: any) => r.property_id === p.id);
+    const latestRoll = rolls.length
+      ? [...rolls].sort((a, b) => new Date(b.month_year).getTime() - new Date(a.month_year).getTime())[0]
+      : undefined;
+    const monthlyRent = (latestRoll?.rent_amount ?? p.monthly_rent ?? 0) as number;
+    const collected = (latestRoll?.amount_collected ?? 0) as number;
+
+    const propStmts = (ownerStatements || []).filter((s: any) => s.property_id === p.id);
+    const latestStmt = propStmts.length
+      ? [...propStmts].sort((a, b) => new Date(b.statement_period_start).getTime() - new Date(a.statement_period_start).getTime())[0]
+      : undefined;
+    const expenses = (latestStmt?.total_expenses ?? 0) as number;
+    const netIncome = (latestStmt?.net_amount ?? Math.max(collected - expenses, 0)) as number;
+
+    const occ = latestRoll
+      ? (latestRoll.status === 'paid' ? 100 : latestRoll.status === 'partial' ? 50 : 0)
+      : 100;
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const maintenanceCosts = (maintenance || [])
+      .filter((m: any) => m.property_id === p.id && m.completed_at && new Date(m.completed_at) >= thirtyDaysAgo)
+      .reduce((sum: number, m: any) => sum + (m.actual_cost ?? 0), 0);
+
+    const roi = monthlyRent ? Number(((netIncome / monthlyRent) * 100).toFixed(1)) : 0;
+
+    return {
+      propertyId: p.id,
+      propertyName: p.address,
+      monthlyRent,
+      expenses,
+      netIncome,
+      occupancyRate: occ,
+      maintenanceCosts,
+      roi,
+    } as PropertyFinancials;
+  });
 
   const handleApprovalAction = async (requestId: string, action: 'approve' | 'reject', notes?: string) => {
     await updateMaintenance.mutateAsync({
