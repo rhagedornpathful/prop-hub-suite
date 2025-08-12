@@ -609,23 +609,19 @@ const Properties = () => {
                           </div>
                         )}
                         
-                        <div className="absolute bottom-2 right-2 flex flex-col gap-1">
-                          <Badge 
-                            className={
-                              property.status === 'active' || !property.status
-                                ? 'bg-green-500 hover:bg-green-600 text-xs'
-                                : property.status === 'archived'
-                                ? 'bg-yellow-500 hover:bg-yellow-600 text-xs'
-                                : 'bg-red-500 hover:bg-red-600 text-xs'
-                            }
-                          >
-                            {property.status === 'active' || !property.status ? 'Active' : property.status === 'archived' ? 'Archived' : 'Inactive'}
-                          </Badge>
-                          {property.service_type === 'house_watching' ? (
-                            <Badge variant="secondary" className="text-xs">House Watching</Badge>
-                          ) : (
-                            <Badge variant="default" className="text-xs">Property Management</Badge>
+                        <div className="absolute bottom-2 right-2 flex items-center gap-2">
+                          {/* Active status indicator - green circle */}
+                          {(property.status === 'active' || !property.status) && (
+                            <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
                           )}
+                          
+                          {/* Service type badge with initials */}
+                          <Badge 
+                            variant={property.service_type === 'house_watching' ? "secondary" : "default"} 
+                            className="text-xs px-2 py-1 min-w-[32px] flex items-center justify-center"
+                          >
+                            {property.service_type === 'house_watching' ? 'HW' : 'PM'}
+                          </Badge>
                         </div>
                       </div>
                       
