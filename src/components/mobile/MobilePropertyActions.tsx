@@ -178,151 +178,16 @@ export const MobilePropertyActions: React.FC<MobilePropertyActionsProps> = ({
   ];
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="h-6 w-6 shadow-sm">
-          <MoreVertical className="h-3 w-3" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className="h-[90vh] rounded-t-xl">
-        <SheetHeader className="space-y-4">
-          <SheetTitle className="text-left">Property Actions</SheetTitle>
-          
-          {/* Property Info Card */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-2">
-                    <Building className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-sm">{property.address}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <MapPin className="h-3 w-3 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground">
-                          {[property.city, property.state].filter(Boolean).join(', ')}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {property.monthly_rent && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <DollarSign className="h-3 w-3 text-green-600" />
-                      <span className="text-sm font-medium text-green-600">
-                        ${property.monthly_rent.toLocaleString()}/mo
-                      </span>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex flex-col items-end gap-1 ml-2">
-                  <Badge className={`${getStatusColor(property.status)} text-xs`}>
-                    {(property.status || 'active').toUpperCase()}
-                  </Badge>
-                  {property.service_type && (
-                    <Badge variant="outline" className="text-xs">
-                      {property.service_type.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </SheetHeader>
-
-        <div className="space-y-6 mt-6">
-          {/* Quick Actions */}
-          <div className="space-y-3">
-            <h3 className="font-medium text-sm">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {quickActions.map((action, index) => {
-                const Icon = action.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="h-auto p-4 flex flex-col items-center gap-2"
-                    onClick={action.action}
-                  >
-                    <div className={`p-2 rounded-lg ${action.color}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs font-medium">{action.label}</p>
-                      <p className="text-xs text-muted-foreground">{action.description}</p>
-                    </div>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Owner Contact */}
-          {property.property_owner && (
-            <div className="space-y-3">
-              <h3 className="font-medium text-sm">Owner Contact</h3>
-              <Card>
-                <CardContent className="p-3">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">
-                      {property.property_owner.first_name} {property.property_owner.last_name}
-                    </p>
-                    {property.property_owner.phone && (
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-3 w-3 text-muted-foreground" />
-                        <a 
-                          href={`tel:${property.property_owner.phone}`}
-                          className="text-sm text-blue-600"
-                        >
-                          {property.property_owner.phone}
-                        </a>
-                      </div>
-                    )}
-                    {property.property_owner.email && (
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-3 w-3 text-muted-foreground" />
-                        <a 
-                          href={`mailto:${property.property_owner.email}`}
-                          className="text-sm text-blue-600"
-                        >
-                          {property.property_owner.email}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Admin Actions */}
-          <div className="space-y-3">
-            <h3 className="font-medium text-sm">Management Actions</h3>
-            <div className="space-y-2">
-              {adminActions.map((action, index) => {
-                const Icon = action.icon;
-                return (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    className="w-full justify-start h-auto p-3"
-                    onClick={action.action}
-                  >
-                    <div className={`p-2 rounded-lg ${action.color} mr-3`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-sm font-medium">{action.label}</p>
-                      <p className="text-xs text-muted-foreground">{action.description}</p>
-                    </div>
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
+    <Button 
+      variant="outline" 
+      size="icon" 
+      className="h-6 w-6 shadow-sm"
+      onClick={(e) => {
+        e.stopPropagation();
+        onView?.();
+      }}
+    >
+      <MoreVertical className="h-3 w-3" />
+    </Button>
   );
 };
