@@ -43,115 +43,124 @@ import { useUserRole } from "@/hooks/useUserRole";
 
 // Define menu items for different user roles
 const adminMenuItems = [
+  // Overview hub
   {
     title: "Admin Dashboard",
     url: "/",
     icon: Home,
-    description: "Overview & metrics"
+    description: "Overview & metrics",
+    group: "Overview"
   },
   {
     title: "Activity Dashboard",
     url: "/activity",
     icon: Activity,
-    description: "Activity dashboard"
+    description: "Activity dashboard",
+    group: "Overview"
   },
+
+  // Operations hub
   {
-    title: "Messages",
-    url: "/messages",
-    icon: MessageCircle,
-    description: "Communication"
+    title: "Properties",
+    url: "/admin/properties",
+    icon: Building,
+    description: "Manage properties",
+    group: "Operations",
+    favorite: true
   },
   {
     title: "Maintenance Management",
     url: "/maintenance",
     icon: Wrench,
-    description: "Work orders"
+    description: "Work orders",
+    group: "Operations"
   },
   {
-    title: "Properties",
-    url: "/properties",
-    icon: Building,
-    description: "Manage properties"
+    title: "House Watching",
+    url: "/house-watching",
+    icon: Eye,
+    description: "Property monitoring",
+    group: "Operations"
   },
+
+  // People hub
   {
     title: "Property Owners",
     url: "/property-owners",
     icon: UserCheck,
-    description: "Manage property owners"
-  },
-  {
-    title: "House Watcher",
-    url: "/house-watching",
-    icon: Eye,
-    description: "Property monitoring"
-  },
-  {
-    title: "Property Manager Dashboard",
-    url: "/property-manager-dashboard",
-    icon: UserCog,
-    description: "Property manager operations"
+    description: "Manage property owners",
+    group: "People"
   },
   {
     title: "Tenants",
     url: "/tenants",
     icon: Users,
-    description: "Tenant management"
+    description: "Tenant management",
+    group: "People"
   },
   {
-    title: "Lease Management",
-    url: "/leases",
-    icon: FileText,
-    description: "Lease agreements"
+    title: "Property Manager Dashboard",
+    url: "/property-manager-dashboard",
+    icon: UserCog,
+    description: "Property manager operations",
+    group: "People"
   },
+
+  // Finance hub
   {
     title: "Financial Management",
     url: "/finances",
     icon: DollarSign,
-    description: "Payments & reports"
+    description: "Payments & reports",
+    group: "Finance"
+  },
+
+  // Messaging hub
+  {
+    title: "Messages",
+    url: "/messages",
+    icon: MessageCircle,
+    description: "Communication",
+    group: "Messaging"
   },
   {
     title: "Documents",
     url: "/documents",
     icon: FolderOpen,
-    description: "File management"
+    description: "File management",
+    group: "Messaging"
   },
   {
     title: "Reports",
     url: "/client-portal/reports",
     icon: BarChart3,
-    description: "Analytics & insights"
+    description: "Analytics & insights",
+    group: "Messaging"
   },
+
+  // Settings/Tools hub
   {
     title: "User Management",
     url: "/user-management",
     icon: UserCog,
-    description: "Manage users & roles"
-  },
-  {
-    title: "Vendor Portal",
-    url: "/vendor-portal",
-    icon: Users,
-    description: "Contractor management"
-  },
-  {
-    title: "Marketing & Leasing",
-    url: "/marketing-leasing",
-    icon: TrendingUp,
-    description: "Leads & property marketing"
+    description: "Manage users & roles",
+    group: "Settings/Tools"
   },
   {
     title: "Check Templates",
     url: "/admin/check-templates",
     icon: FileText,
-    description: "Configure inspection templates"
+    description: "Configure inspection templates",
+    group: "Settings/Tools"
   },
   {
     title: "Service Packages",
     url: "/services",
     icon: Settings,
-    description: "Manage service offerings"
+    description: "Manage service offerings",
+    group: "Settings/Tools"
   }
-];
+] as const;
 
 const propertyOwnerMenuItems = [
   {
@@ -417,34 +426,115 @@ export function AppSidebar() {
           )}
 
           {/* Navigation */}
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wider text-xs font-medium">
-              {collapsed ? "Menu" : "Main Navigation"}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {filteredItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={basePath + item.url} 
-                        className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                          isActive(item.url) 
-                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" 
-                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5 flex-shrink-0" />
-                        {!collapsed && (
-                          <span className="font-medium">{item.title}</span>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {(() => {
+            const isGrouped = filteredItems.some((i: any) => (i as any).group || (i as any).favorite);
+            if (!isGrouped) {
+              return (
+                <SidebarGroup>
+                  <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wider text-xs font-medium">
+                    {collapsed ? "Menu" : "Main Navigation"}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {filteredItems.map((item) => (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton asChild>
+                            <NavLink 
+                              to={basePath + item.url} 
+                              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                                isActive(item.url) 
+                                  ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" 
+                                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                              }`}
+                            >
+                              <item.icon className="w-5 h-5 flex-shrink-0" />
+                              {!collapsed && (
+                                <span className="font-medium">{item.title}</span>
+                              )}
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              );
+            }
+
+            // Grouped rendering for Admin
+            const groupsOrder = ["Favorites", "Overview", "Operations", "People", "Finance", "Messaging", "Settings/Tools"];
+            const favorites = (filteredItems as any[]).filter((i: any) => i.favorite);
+            const byGroup = (group: string) => (filteredItems as any[]).filter((i: any) => i.group === group);
+
+            return (
+              <>
+                {favorites.length > 0 && (
+                  <SidebarGroup>
+                    <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wider text-xs font-medium">
+                      {collapsed ? "Fav" : "Favorites"}
+                    </SidebarGroupLabel>
+                    <SidebarGroupContent>
+                      <SidebarMenu>
+                        {favorites.map((item: any) => (
+                          <SidebarMenuItem key={item.title}>
+                            <SidebarMenuButton asChild>
+                              <NavLink
+                                to={basePath + item.url}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                                  isActive(item.url)
+                                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                }`}
+                              >
+                                <item.icon className="w-5 h-5 flex-shrink-0" />
+                                {!collapsed && <span className="font-medium">{item.title}</span>}
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarGroupContent>
+                  </SidebarGroup>
+                )}
+
+                {groupsOrder
+                  .filter((g) => g !== "Favorites")
+                  .map((group) => {
+                    const items = byGroup(group);
+                    if (items.length === 0) return null;
+                    return (
+                      <SidebarGroup key={group}>
+                        <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wider text-xs font-medium">
+                          {group}
+                        </SidebarGroupLabel>
+                        <SidebarGroupContent>
+                          <SidebarMenu>
+                            {items.map((item: any) => (
+                              <SidebarMenuItem key={item.title}>
+                                <SidebarMenuButton asChild>
+                                  <NavLink
+                                    to={basePath + item.url}
+                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                                      isActive(item.url)
+                                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                    }`}
+                                  >
+                                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                                    {!collapsed && <span className="font-medium">{item.title}</span>}
+                                  </NavLink>
+                                </SidebarMenuButton>
+                              </SidebarMenuItem>
+                            ))}
+                          </SidebarMenu>
+                        </SidebarGroupContent>
+                      </SidebarGroup>
+                    );
+                  })}
+              </>
+            );
+          })()}
+
 
           {/* Search */}
           {!collapsed && (

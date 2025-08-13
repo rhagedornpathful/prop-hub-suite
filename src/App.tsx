@@ -70,6 +70,7 @@ import Activity from "./pages/Activity";
 import NotFound from "./pages/NotFound";
 import PropertyManagerView from "./pages/PropertyManagerView";
 import CheckTemplates from "./pages/admin/CheckTemplates";
+import PropertiesHub from "./pages/admin/PropertiesHub";
 import { ProfileSetup } from "./components/ProfileSetup";
 
 
@@ -131,6 +132,13 @@ const AppContent = () => {
                     <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">{/* Add mobile bottom padding */}
                       <Routes>
                         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+                        <Route path="/admin/properties" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <PropertiesHub />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
                         <Route path="/properties" element={
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.PROPERTY_MANAGEMENT}>
