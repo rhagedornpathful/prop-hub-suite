@@ -93,7 +93,7 @@ const adminMenuItems = [
   },
   {
     title: "Tenants",
-    url: "/tenants",
+    url: "/admin/tenants",
     icon: Users,
     description: "Tenant management",
     group: "People"
