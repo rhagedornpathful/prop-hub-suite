@@ -72,6 +72,7 @@ import PropertyManagerView from "./pages/PropertyManagerView";
 import CheckTemplates from "./pages/admin/CheckTemplates";
 import PropertiesHub from "./pages/admin/PropertiesHub";
 import AdminOverviewPage from "./pages/admin/AdminOverview";
+import MaintenanceHub from "./pages/admin/MaintenanceHub";
 import { ProfileSetup } from "./components/ProfileSetup";
 
 
@@ -144,6 +145,13 @@ const AppContent = () => {
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
                               <PropertiesHub />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/admin/maintenance" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <MaintenanceHub />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />

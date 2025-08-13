@@ -70,7 +70,7 @@ const adminMenuItems = [
   },
   {
     title: "Maintenance Management",
-    url: "/maintenance",
+    url: "/admin/maintenance",
     icon: Wrench,
     description: "Work orders",
     group: "Operations"

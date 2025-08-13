@@ -162,28 +162,32 @@ export function ResourceList<T>({
               className="pl-9"
             />
           </div>
-          <Select value={status} onValueChange={setStatus}>
-            <SelectTrigger className="w-[150px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="vacant">Vacant</SelectItem>
-              <SelectItem value="maintenance">Maintenance</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={service} onValueChange={setService}>
-            <SelectTrigger className="w-[170px]">
-              <SelectValue placeholder="Service Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Services</SelectItem>
-              <SelectItem value="property_management">Property Mgmt</SelectItem>
-              <SelectItem value="house_watching">House Watching</SelectItem>
-            </SelectContent>
-          </Select>
+          {statusKey && (
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="vacant">Vacant</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          {serviceKey && (
+            <Select value={service} onValueChange={setService}>
+              <SelectTrigger className="w-[170px]">
+                <SelectValue placeholder="Service Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Services</SelectItem>
+                <SelectItem value="property_management">Property Mgmt</SelectItem>
+                <SelectItem value="house_watching">House Watching</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
 
         <div className="flex gap-2">
