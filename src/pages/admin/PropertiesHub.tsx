@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { OptimizedImage } from "@/components/OptimizedImage";
+
 
 export default function PropertiesHub() {
   
@@ -122,10 +122,12 @@ export default function PropertiesHub() {
                         onClick={() => onView(p)}
                       >
                         <AspectRatio ratio={16/9}>
-                          <OptimizedImage
+                          <img
                             src={(p.images && p.images.length > 0 ? p.images[0] : '/placeholder.svg')}
                             alt={`${p.address} property photo`}
-                            className="w-full h-full"
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                             sizes="(max-width: 1024px) 50vw, 33vw"
                           />
                         </AspectRatio>
