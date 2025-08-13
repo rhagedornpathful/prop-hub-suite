@@ -13,14 +13,29 @@ interface RoleBasedAccessProps {
 export const RoleBasedAccess = ({ 
   children, 
   allowedRoles, 
-  fallbackPath = '/' 
+  fallbackPath,
 }: RoleBasedAccessProps) => {
   const { user, userRole, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!loading && userRole && !allowedRoles.includes(userRole) && !allowedRoles.includes('*')) {
-      navigate(fallbackPath);
+      const roleFallback = (() => {
+        switch (userRole) {
+          case 'admin':
+            return '/admin/overview';
+          case 'house_watcher':
+            return '/house-watcher/dashboard';
+          case 'tenant':
+            return '/';
+          case 'owner_investor':
+            return '/properties';
+          default:
+            return '/';
+        }
+      })();
+      const target = fallbackPath || roleFallback;
+      navigate(target, { replace: true });
     }
   }, [userRole, allowedRoles, fallbackPath, navigate, loading]);
 
