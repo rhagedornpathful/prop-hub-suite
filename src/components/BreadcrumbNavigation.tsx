@@ -17,6 +17,8 @@ interface BreadcrumbConfig {
 
 const breadcrumbConfig: Record<string, BreadcrumbConfig> = {
   '/': { path: '/', label: 'Dashboard', icon: Home },
+  '/admin/overview': { path: '/admin/overview', label: 'Admin Overview', icon: Home },
+  '/admin/properties': { path: '/admin/properties', label: 'Properties' },
   '/properties': { path: '/properties', label: 'Properties' },
   '/property': { path: '/property', label: 'Property Details' },
   '/tenants': { path: '/tenants', label: 'Tenants' },

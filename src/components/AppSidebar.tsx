@@ -45,8 +45,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 const adminMenuItems = [
   // Overview hub
   {
-    title: "Admin Dashboard",
-    url: "/",
+    title: "Admin Overview",
+    url: "/admin/overview",
     icon: Home,
     description: "Overview & metrics",
     group: "Overview"
