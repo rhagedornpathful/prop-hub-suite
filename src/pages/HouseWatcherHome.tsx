@@ -231,11 +231,7 @@ const HouseWatcherHome = () => {
             <Home className="h-4 w-4 mr-2" />
             View My Properties
           </Button>
-          <Button onClick={() => navigate('/house-watching')} variant="outline">
-            <FileText className="h-4 w-4 mr-2" />
-            View All Assignments
-          </Button>
-          {/* Hide admin-only links from house watchers to avoid access issues */}
+          {/* Removed admin-only links from house watcher portal */}
         </CardContent>
       </Card>
 
