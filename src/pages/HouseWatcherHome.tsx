@@ -235,10 +235,7 @@ const HouseWatcherHome = () => {
             <FileText className="h-4 w-4 mr-2" />
             View All Assignments
           </Button>
-          <Button onClick={() => navigate('/activity')} variant="outline">
-            <Eye className="h-4 w-4 mr-2" />
-            Recent Activity
-          </Button>
+          {/* Hide admin-only links from house watchers to avoid access issues */}
         </CardContent>
       </Card>
 

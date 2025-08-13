@@ -48,29 +48,12 @@ export const RoleBasedAccess = ({
   }
 
   if (!user) {
-    return null; // Will be handled by ProtectedRoute
+    return null; // handled by ProtectedRoute
   }
 
   if (!userRole || (!allowedRoles.includes(userRole) && !allowedRoles.includes('*'))) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-subtle">
-        <Card className="max-w-md">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <AlertTriangle className="h-12 w-12 mx-auto text-warning mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">Access Restricted</h3>
-              <p className="text-muted-foreground mb-4">
-                You don't have permission to access this page. Your current role ({userRole}) 
-                doesn't allow access to this section.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Redirecting to your dashboard...
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    // Quietly redirect handled in useEffect; render nothing to avoid layout clashes on mobile portals
+    return null;
   }
 
   return <>{children}</>;
