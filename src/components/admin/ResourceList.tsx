@@ -82,10 +82,10 @@ export function ResourceList<T>({
         searchKeys.some((k) => String((item as any)[k] ?? "").toLowerCase().includes(s))
       );
     }
-    if (status && statusKey) {
+    if (status && statusKey && status !== "all") {
       r = r.filter((i) => String((i as any)[statusKey] ?? "") === status);
     }
-    if (service && serviceKey) {
+    if (service && serviceKey && service !== "all") {
       r = r.filter((i) => String((i as any)[serviceKey] ?? "") === service);
     }
     return r;
@@ -167,7 +167,7 @@ export function ResourceList<T>({
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Status</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="inactive">Inactive</SelectItem>
               <SelectItem value="vacant">Vacant</SelectItem>
@@ -179,7 +179,7 @@ export function ResourceList<T>({
               <SelectValue placeholder="Service Type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Services</SelectItem>
+              <SelectItem value="all">All Services</SelectItem>
               <SelectItem value="property_management">Property Mgmt</SelectItem>
               <SelectItem value="house_watching">House Watching</SelectItem>
             </SelectContent>
