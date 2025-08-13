@@ -55,7 +55,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import PropertiesMap from "@/components/PropertiesMap";
+const PropertiesMap = lazy(() => import("@/components/PropertiesMap"));
 import type { PropertyWithRelations } from "@/hooks/queries/useProperties";
 const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
@@ -70,6 +70,7 @@ const Properties = () => {
   const [propertyToDelete, setPropertyToDelete] = useState<any>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'reports'>('overview');
+  const [visibleCount, setVisibleCount] = useState(24);
   
   const { data: propertyData, isLoading, error, refetch } = useProperties(1, 50); // Reduced from 100 to 50 for performance
   const properties = propertyData?.properties || [];
@@ -524,7 +525,9 @@ const Properties = () => {
             ) : viewMode === 'map' ? (
               <Card>
                 <CardContent className="p-3">
-                  <PropertiesMap properties={displayProperties as any} />
+                  <Suspense fallback={<div className="p-6 text-center text-muted-foreground">Loading map...</div>}>
+                    <PropertiesMap properties={displayProperties as any} />
+                  </Suspense>
                 </CardContent>
               </Card>
             ) : (
@@ -532,7 +535,7 @@ const Properties = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {isLoading ? (
                   Array.from({ length: 8 }).map((_, i) => (
-                    <Card key={i} className="overflow-hidden">
+                    <Card key={i} className="overflow-hidden" style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}>
                       <div className="aspect-video bg-muted animate-pulse rounded-t-lg" />
                       <CardContent className="p-4">
                         <div className="space-y-3">
@@ -567,87 +570,99 @@ const Properties = () => {
                     </Card>
                   </div>
                 ) : (
-                  displayProperties.map((property) => (
-                    <Card 
-                      key={property.id} 
-                      className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow min-h-[44px] relative"
-                      onClick={() => handlePropertyClick(property)}
-                    >
-                      {/* Selection checkbox */}
-                      <div className="absolute top-2 left-2 z-10">
-                        <Checkbox
-                          checked={selectedProperties.includes(property.id)}
-                          onCheckedChange={(checked) => handlePropertySelection(property.id, checked as boolean)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="bg-white shadow-sm"
-                        />
-                      </div>
-
-                      <div className="aspect-[4/3] bg-muted relative">
-                        {/* Mobile actions menu */}
-                        <div className="absolute top-2 right-2 z-10">
-                          <MobilePropertyActions
-                            property={property}
-                            onView={() => handlePropertyClick(property)}
-                            onEdit={() => handleEdit(property)}
-                            onScheduleMaintenance={() => handleScheduleMaintenance(property)}
-                            onArchive={() => handleArchiveProperty(property)}
-                            onDelete={() => handleDeleteProperty(property)}
-                          />
-                        </div>
-
-                        {property.images && property.images.length > 0 ? (
-                          <img 
-                            src={property.images[0]} 
-                            alt={property.address}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Building className="h-8 w-8 text-muted-foreground" />
+                  <>
+                    {displayProperties.slice(0, visibleCount).map((property) => (
+                      <div key={property.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}>
+                        <Card 
+                          className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow min-h-[44px] relative"
+                          onClick={() => handlePropertyClick(property)}
+                        >
+                          {/* Selection checkbox */}
+                          <div className="absolute top-2 left-2 z-10">
+                            <Checkbox
+                              checked={selectedProperties.includes(property.id)}
+                              onCheckedChange={(checked) => handlePropertySelection(property.id, checked as boolean)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="bg-white shadow-sm"
+                            />
                           </div>
-                        )}
-                        
-                        <div className="absolute bottom-2 right-2 flex items-center gap-2">
-                          {/* Active status indicator - green circle */}
-                          {(property.status === 'active' || !property.status) && (
-                            <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
-                          )}
-                          
-                          {/* Service type badge with initials */}
-                          <Badge 
-                            variant={property.service_type === 'house_watching' ? "secondary" : "default"} 
-                            className="text-xs px-2 py-1 min-w-[32px] flex items-center justify-center"
-                          >
-                            {property.service_type === 'house_watching' ? 'HW' : 'PM'}
-                          </Badge>
-                        </div>
-                      </div>
-                      
-                      <CardContent className="p-3">
-                        <div className="space-y-1">
-                          <h3 className="font-medium leading-tight text-sm line-clamp-1">{property.address}</h3>
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {[property.city, property.state].filter(Boolean).join(', ')}
-                            {property.zip_code && ` ${property.zip_code}`}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <div className="text-xs text-muted-foreground">
-                              {property.bedrooms && property.bathrooms && (
-                                <span>{property.bedrooms}br • {property.bathrooms}ba</span>
-                              )}
+
+                          <div className="aspect-[4/3] bg-muted relative">
+                            {/* Mobile actions menu */}
+                            <div className="absolute top-2 right-2 z-10">
+                              <MobilePropertyActions
+                                property={property}
+                                onView={() => handlePropertyClick(property)}
+                                onEdit={() => handleEdit(property)}
+                                onScheduleMaintenance={() => handleScheduleMaintenance(property)}
+                                onArchive={() => handleArchiveProperty(property)}
+                                onDelete={() => handleDeleteProperty(property)}
+                              />
                             </div>
-                            {property.monthly_rent && (
-                              <div className="font-medium text-xs text-right">
-                                ${property.monthly_rent.toLocaleString()}/mo
+
+                            {property.images && property.images.length > 0 ? (
+                              <img 
+                                src={property.images[0]} 
+                                alt={property.address}
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Building className="h-8 w-8 text-muted-foreground" />
                               </div>
                             )}
+                            
+                            <div className="absolute bottom-2 right-2 flex items-center gap-2">
+                              {/* Active status indicator - green circle */}
+                              {(property.status === 'active' || !property.status) && (
+                                <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+                              )}
+                              
+                              {/* Service type badge with initials */}
+                              <Badge 
+                                variant={property.service_type === 'house_watching' ? "secondary" : "default"} 
+                                className="text-xs px-2 py-1 min-w-[32px] flex items-center justify-center"
+                              >
+                                {property.service_type === 'house_watching' ? 'HW' : 'PM'}
+                              </Badge>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                          
+                          <CardContent className="p-3">
+                            <div className="space-y-1">
+                              <h3 className="font-medium leading-tight text-sm line-clamp-1">{property.address}</h3>
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {[property.city, property.state].filter(Boolean).join(', ')}
+                                {property.zip_code && ` ${property.zip_code}`}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <div className="text-xs text-muted-foreground">
+                                  {property.bedrooms && property.bathrooms && (
+                                    <span>{property.bedrooms}br • {property.bathrooms}ba</span>
+                                  )}
+                                </div>
+                                {property.monthly_rent && (
+                                  <div className="font-medium text-xs text-right">
+                                    ${property.monthly_rent.toLocaleString()}/mo
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    ))}
+
+                    {visibleCount < displayProperties.length && (
+                      <div className="col-span-full flex justify-center mt-2">
+                        <Button variant="outline" size="sm" onClick={() => setVisibleCount((c) => Math.min(c + 12, displayProperties.length))}>
+                          Show more
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
