@@ -56,7 +56,7 @@ const adminMenuItems = [
     url: "/activity",
     icon: Activity,
     description: "Activity dashboard",
-    group: "Overview"
+    group: "Operations"
   },
 
   // Operations hub
@@ -76,11 +76,11 @@ const adminMenuItems = [
     group: "Operations"
   },
   {
-    title: "House Watching",
+    title: "House Watchers",
     url: "/house-watching",
     icon: Eye,
-    description: "Property monitoring",
-    group: "Operations"
+    description: "Manage house watchers",
+    group: "People"
   },
 
   // People hub
