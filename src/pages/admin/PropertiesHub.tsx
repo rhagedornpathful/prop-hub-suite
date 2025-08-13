@@ -8,6 +8,8 @@ import PropertyDetailsDrawer from "@/components/PropertyDetailsDrawer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { OptimizedImage } from "@/components/OptimizedImage";
 
 export default function PropertiesHub() {
   
@@ -114,7 +116,19 @@ export default function PropertiesHub() {
                 return (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {properties.map((p: any) => (
-                      <Card key={p.id} className="cursor-pointer transition-shadow hover:shadow-sm" onClick={() => onView(p)}>
+                      <Card
+                        key={p.id}
+                        className="cursor-pointer transition-shadow hover:shadow-sm overflow-hidden"
+                        onClick={() => onView(p)}
+                      >
+                        <AspectRatio ratio={16/9}>
+                          <OptimizedImage
+                            src={(p.images && p.images.length > 0 ? p.images[0] : '/placeholder.svg')}
+                            alt={`${p.address} property photo`}
+                            className="w-full h-full"
+                            sizes="(max-width: 1024px) 50vw, 33vw"
+                          />
+                        </AspectRatio>
                         <CardHeader>
                           <CardTitle className="text-base">{p.address}</CardTitle>
                           <div className="text-xs text-muted-foreground">{[p.city, p.state].filter(Boolean).join(', ')}</div>
