@@ -47,34 +47,8 @@ const HouseWatcherHome = () => {
     });
   }, [weeklySchedule]);
 
-  const startHomeCheck = async (propertyId: string, propertyAddress: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('home_check_sessions')
-        .insert({
-          property_id: propertyId,
-          user_id: user?.id,
-          status: 'in_progress',
-          started_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast({
-        title: "Home Check Started",
-        description: "You can now begin documenting your home inspection.",
-      });
-
-      navigate(`/house-watcher/check/${data.id}`);
-    } catch (error: any) {
-      toast({
-        title: "Error Starting Check",
-        description: error.message,
-        variant: "destructive"
-      });
-    }
+  const startHomeCheck = (propertyId: string, propertyAddress: string) => {
+    navigate(`/house-watcher/check/${propertyId}`);
   };
 
   const completeCheck = async (watchingId: string, propertyAddress: string) => {

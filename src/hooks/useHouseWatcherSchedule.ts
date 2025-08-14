@@ -120,7 +120,8 @@ export const useHouseWatcherSchedule = (currentWeek: Date) => {
 
       let nextDate = new Date(completedDate);
       
-      switch (watching.check_frequency) {
+      const freq = (watching.check_frequency || 'weekly').toLowerCase();
+      switch (freq) {
         case 'daily':
           nextDate = addDays(completedDate, 1);
           break;
@@ -128,10 +129,14 @@ export const useHouseWatcherSchedule = (currentWeek: Date) => {
           nextDate = addDays(completedDate, 7);
           break;
         case 'bi-weekly':
+        case 'biweekly':
           nextDate = addDays(completedDate, 14);
           break;
         case 'monthly':
           nextDate = addDays(completedDate, 30);
+          break;
+        case 'quarterly':
+          nextDate = addDays(completedDate, 90);
           break;
         default:
           nextDate = addDays(completedDate, 7);
