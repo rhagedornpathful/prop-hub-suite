@@ -25,6 +25,7 @@ interface ScheduledCheck {
   monthly_fee: number;
   owner_name: string;
   emergency_contact: string;
+  property_id: string;
 }
 
 const HouseWatcherHome = () => {
@@ -46,12 +47,12 @@ const HouseWatcherHome = () => {
     });
   }, [weeklySchedule]);
 
-  const startHomeCheck = async (watchingId: string, propertyAddress: string) => {
+  const startHomeCheck = async (propertyId: string, propertyAddress: string) => {
     try {
       const { data, error } = await supabase
         .from('home_check_sessions')
         .insert({
-          property_id: watchingId,
+          property_id: propertyId,
           user_id: user?.id,
           status: 'in_progress',
           started_at: new Date().toISOString()
@@ -66,7 +67,7 @@ const HouseWatcherHome = () => {
         description: "You can now begin documenting your home inspection.",
       });
 
-      navigate(`/home-check/${data.id}`);
+      navigate(`/house-watcher/check/${data.id}`);
     } catch (error: any) {
       toast({
         title: "Error Starting Check",
@@ -282,7 +283,7 @@ const HouseWatcherHome = () => {
                             <Badge variant={priority.color as any}>{priority.label}</Badge>
                             <Button 
                               size="sm"
-                              onClick={() => startHomeCheck(check.id, check.property_address)}
+                              onClick={() => startHomeCheck(check.property_id, check.property_address)}
                             >
                               <Camera className="h-4 w-4 mr-2" />
                               Start Check

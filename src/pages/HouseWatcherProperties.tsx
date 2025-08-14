@@ -132,10 +132,10 @@ const HouseWatcherProperties = () => {
         const { data: watchingData } = await supabase
           .from('house_watching')
           .select('*')
-          .in('id', propertyIds);
+          .in('property_id', propertyIds);
 
         const formattedProperties = properties?.map(p => {
-          const watching = watchingData?.find(w => w.id === p.properties.id);
+          const watching = watchingData?.find(w => w.property_id === p.properties.id);
           return {
             id: p.properties.id,
             address: p.properties.address,

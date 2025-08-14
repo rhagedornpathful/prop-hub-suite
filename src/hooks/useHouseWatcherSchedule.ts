@@ -70,7 +70,7 @@ export const useHouseWatcherSchedule = (currentWeek: Date) => {
       const { data: watchingData } = await supabase
         .from('house_watching')
         .select('*')
-        .in('property_address', assignments.map(a => a.properties.address));
+        .in('property_id', propertyIds);
 
       const scheduleItems: ScheduledCheck[] = [];
 
@@ -78,7 +78,7 @@ export const useHouseWatcherSchedule = (currentWeek: Date) => {
         if (watching.next_check_date) {
           const checkDate = parseISO(watching.next_check_date);
           if (isWithinInterval(checkDate, { start: weekStart, end: weekEnd })) {
-            const assignment = assignments.find(a => a.properties.address === watching.property_address);
+            const assignment = assignments.find(a => a.property_id === watching.property_id);
             scheduleItems.push({
               id: watching.id,
               property_address: watching.property_address,
@@ -90,7 +90,7 @@ export const useHouseWatcherSchedule = (currentWeek: Date) => {
               owner_name: watching.owner_name || '',
               emergency_contact: watching.emergency_contact || '',
               last_check_date: watching.last_check_date,
-              property_id: assignment?.property_id || watching.id
+              property_id: assignment?.property_id || watching.property_id
             });
           }
         }
