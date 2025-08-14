@@ -105,7 +105,7 @@ const HouseWatcherMobileChecks = () => {
     },
     onSuccess: (session) => {
       queryClient.invalidateQueries({ queryKey: ['check-sessions'] });
-      navigate(`/house-watcher/check/${session.id}`);
+      navigate(`/house-watcher/check/${session.property_id}`);
       toast({
         title: "Check Started",
         description: "House check session has been started.",
@@ -170,7 +170,7 @@ const HouseWatcherMobileChecks = () => {
                 <div
                   key={session.id}
                   className="border border-warning/20 rounded-lg p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => navigate(`/house-watcher/check/${session.id}`)}
+                  onClick={() => navigate(`/house-watcher/check/${property?.properties.id || session.property_id}`)}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-medium text-sm">
@@ -255,7 +255,7 @@ const HouseWatcherMobileChecks = () => {
                 <div
                   key={session.id}
                   className="border rounded-lg p-3 space-y-2 cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => navigate(`/house-watcher/check/${session.id}`)}
+                  onClick={() => navigate(`/house-watcher/check/${property?.properties.id || session.property_id}`)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="font-medium text-sm">
