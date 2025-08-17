@@ -311,26 +311,9 @@ export function PropertyDetailsDialog({ property, open, onOpenChange, onEdit, on
             <div className="space-y-4">
               <h3 className="text-xl font-semibold">Property Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <Bed className="h-8 w-8 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Bedrooms</p>
-                    <p className="text-lg font-semibold">3-4</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <Bath className="h-8 w-8 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Bathrooms</p>
-                    <p className="text-lg font-semibold">2-3</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <Square className="h-8 w-8 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Sq Ft</p>
-                    <p className="text-lg font-semibold">1,200+</p>
-                  </div>
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Property details require database integration.</p>
+                  <p className="text-sm mt-2">Bedrooms, bathrooms, and square footage should be pulled from the properties table.</p>
                 </div>
               </div>
             </div>

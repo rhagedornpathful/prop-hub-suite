@@ -183,18 +183,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
   }, [editProperty, mode]);
 
   const loadPropertyOwners = async () => {
-    // Check if we're in demo mode
-    const isDemoMode = window.location.pathname.startsWith('/demo');
-    
-    if (isDemoMode) {
-      // Mock data for demo mode
-      setPropertyOwners([
-        { id: "1", first_name: "John", last_name: "Smith", company_name: "Smith Properties LLC" },
-        { id: "2", first_name: "Sarah", last_name: "Johnson" },
-        { id: "3", first_name: "Michael", last_name: "Davis", company_name: "Davis Real Estate Holdings" }
-      ]);
-      return;
-    }
+    // Always load from database - removed demo mode mock data
 
     setIsLoadingOwners(true);
     try {
@@ -233,41 +222,7 @@ export function AddPropertyDialog({ open, onOpenChange, onPropertyAdded, editPro
 
     setIsSearching(true);
     try {
-      // Check if we're in demo mode
-      const isDemoMode = window.location.pathname.startsWith('/demo');
-      
-      if (isDemoMode) {
-        // In demo mode, simulate property search with mock data
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate search delay
-        
-        const mockPropertyData = {
-          address: searchAddress,
-          city: "Demo City",
-          state: "CA", 
-          zip_code: "90210",
-          property_type: "single_family",
-          bedrooms: 3,
-          bathrooms: 2,
-          square_feet: 1800,
-          year_built: 2010,
-          estimated_value: 650000,
-          monthly_rent: 3200,
-          description: "Beautiful demo property with modern amenities"
-        };
-        
-        setPropertyData({
-          ...propertyData,
-          ...mockPropertyData,
-        });
-        
-        toast({
-          title: "Success",
-          description: "Demo property information loaded!",
-        });
-        return;
-      }
-
-      // Regular mode - try to use the edge function
+      // Use edge function to scrape property data
       const { data, error } = await supabase.functions.invoke('scrape-property', {
         body: { address: searchAddress }
       });

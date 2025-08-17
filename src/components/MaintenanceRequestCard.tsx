@@ -131,11 +131,13 @@ export const MaintenanceRequestCard = ({
 
     setIsSendingMessage(true);
     try {
-      // Here you would send the message to your backend
-      // For now, we'll just show a success message
+      // TODO: Implement actual message sending to database
+      // This should create a conversation and send message via supabase
+      console.error('Message sending not implemented - requires conversation system integration');
       toast({
-        title: "Message Sent",
-        description: "Your message has been sent to all parties",
+        title: "Feature Not Available",
+        description: "Message sending is not yet implemented for this component",
+        variant: "destructive",
       });
       setNewMessage("");
     } catch (error) {
