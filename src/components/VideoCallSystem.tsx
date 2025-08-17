@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Video, 
   VideoOff, 
@@ -66,30 +67,50 @@ export const VideoCallSystem: React.FC<VideoCallSystemProps> = ({ onClose }) => 
   }, []);
 
   const loadUpcomingCalls = async () => {
-    // Mock data - in real implementation, fetch from database
-    const mockCalls: VideoCall[] = [
-      {
-        id: '1',
-        title: 'Property Tour - 123 Main St',
-        type: 'property_tour',
-        property_id: 'prop_1',
-        participants: ['tenant@example.com', 'manager@example.com'],
-        scheduled_for: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+    try {
+      // Fetch video calls from conversations table
+      const { data: conversations, error } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          title,
+          type,
+          created_at,
+          property_id,
+          conversation_participants!inner(
+            user_id,
+            profiles!inner(first_name, last_name, email)
+          )
+        `)
+        .eq('type', 'video_call')
+        .eq('status', 'scheduled')
+        .order('created_at', { ascending: true })
+        .limit(10);
+
+      if (error) {
+        console.error('Error loading video calls:', error);
+        // Fallback to empty array instead of mock data
+        setUpcomingCalls([]);
+        return;
+      }
+
+      const calls: VideoCall[] = (conversations || []).map(conv => ({
+        id: conv.id,
+        title: conv.title || 'Video Call',
+        type: 'general_meeting' as const,
+        property_id: conv.property_id,
+        participants: (conv.conversation_participants || []).map((p: any) => p.profiles?.email || 'unknown'),
+        scheduled_for: conv.created_at,
         duration_minutes: 30,
         status: 'scheduled',
-        meeting_url: 'https://meet.example.com/property-tour-123'
-      },
-      {
-        id: '2',
-        title: 'Maintenance Consultation',
-        type: 'maintenance_consultation',
-        participants: ['contractor@example.com', 'owner@example.com'],
-        scheduled_for: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // Tomorrow
-        duration_minutes: 45,
-        status: 'scheduled'
-      }
-    ];
-    setUpcomingCalls(mockCalls);
+        meeting_url: `https://meet.example.com/call-${conv.id}`
+      }));
+      
+      setUpcomingCalls(calls);
+    } catch (error) {
+      console.error('Failed to load video calls:', error);
+      setUpcomingCalls([]);
+    }
   };
 
   const scheduleCall = async () => {

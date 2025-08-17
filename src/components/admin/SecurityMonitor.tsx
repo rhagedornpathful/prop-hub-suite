@@ -39,29 +39,48 @@ export const SecurityMonitor: React.FC = () => {
   const { data: securityMetrics, isLoading: metricsLoading } = useQuery({
     queryKey: ['security-metrics'],
     queryFn: async (): Promise<SecurityMetric[]> => {
-      // Simulate security metrics - in production, this would come from your security monitoring service
+      // Get real security metrics from audit logs and user sessions
+      const { data: auditLogs, error: auditError } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
+
+      if (auditError) throw auditError;
+
+      // Count failed login attempts in last hour
+      const failedLogins = auditLogs?.filter(log => 
+        log.action === 'login_failed' && 
+        new Date(log.created_at) > new Date(Date.now() - 60 * 60 * 1000)
+      ).length || 0;
+
+      // Count permission changes today
+      const permissionChanges = auditLogs?.filter(log => 
+        log.action === 'role_updated' && 
+        new Date(log.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      ).length || 0;
+
       return [
         {
           id: '1',
           name: 'Active Sessions',
           status: 'secure',
-          value: '12',
-          description: 'Current active user sessions',
+          value: 'N/A',
+          description: 'Current active user sessions (requires auth integration)',
           lastChecked: new Date().toISOString(),
         },
         {
           id: '2',
           name: 'Failed Login Attempts',
-          status: 'warning',
-          value: '3',
+          status: failedLogins > 5 ? 'critical' : failedLogins > 0 ? 'warning' : 'secure',
+          value: failedLogins.toString(),
           description: 'Failed login attempts in last hour',
           lastChecked: new Date().toISOString(),
         },
         {
           id: '3',
           name: 'Permission Changes',
-          status: 'secure',
-          value: '1',
+          status: permissionChanges > 10 ? 'warning' : 'secure',
+          value: permissionChanges.toString(),
           description: 'Role/permission changes today',
           lastChecked: new Date().toISOString(),
         },
@@ -70,7 +89,7 @@ export const SecurityMonitor: React.FC = () => {
           name: 'Data Export Activity',
           status: 'secure',
           value: '0',
-          description: 'Large data exports in last 24h',
+          description: 'Large data exports in last 24h (requires implementation)',
           lastChecked: new Date().toISOString(),
         },
       ];
@@ -81,25 +100,56 @@ export const SecurityMonitor: React.FC = () => {
   const { data: securityAlerts, isLoading: alertsLoading } = useQuery({
     queryKey: ['security-alerts'],
     queryFn: async (): Promise<SecurityAlert[]> => {
-      // Simulate security alerts - in production, this would come from your security monitoring service
-      return [
-        {
-          id: '1',
-          type: 'login_failure',
-          severity: 'medium',
-          message: 'Multiple failed login attempts from IP 192.168.1.100',
-          timestamp: new Date(Date.now() - 1800000).toISOString(), // 30 minutes ago
-          resolved: false,
-        },
-        {
-          id: '2',
+      // Get real security alerts from audit logs
+      const { data: auditLogs, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+
+      const alerts: SecurityAlert[] = [];
+      
+      // Group failed logins by IP
+      const failedLogins = auditLogs?.filter(log => log.action === 'login_failed') || [];
+      const loginsByIP = failedLogins.reduce((acc, log) => {
+        const ip = (log.ip_address as string) || 'unknown';
+        acc[ip] = (acc[ip] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Create alerts for IPs with multiple failures
+      Object.entries(loginsByIP).forEach(([ip, count]) => {
+        if (count >= 3) {
+          alerts.push({
+            id: `login-${ip}`,
+            type: 'login_failure',
+            severity: count >= 10 ? 'critical' : count >= 5 ? 'high' : 'medium',
+            message: `${count} failed login attempts from IP ${ip}`,
+            timestamp: new Date().toISOString(),
+            resolved: false,
+          });
+        }
+      });
+
+      // Add permission change alerts
+      const roleChanges = auditLogs?.filter(log => log.action === 'role_updated') || [];
+      roleChanges.forEach(log => {
+        const oldRole = typeof log.old_values === 'object' && log.old_values ? (log.old_values as any).role : 'unknown';
+        const newRole = typeof log.new_values === 'object' && log.new_values ? (log.new_values as any).role : 'unknown';
+        alerts.push({
+          id: `role-${log.id}`,
           type: 'permission_change',
           severity: 'high',
-          message: 'Admin role assigned to user john.doe@example.com',
-          timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-          resolved: true,
-        },
-      ];
+          message: `Role change: ${oldRole} → ${newRole}`,
+          timestamp: log.created_at,
+          resolved: false,
+        });
+      });
+
+      return alerts.slice(0, 5); // Return latest 5 alerts
     },
     refetchInterval: 60000, // Refresh every minute
   });
@@ -146,8 +196,26 @@ export const SecurityMonitor: React.FC = () => {
   };
 
   const handleResolveAlert = async (alertId: string) => {
-    // In production, this would call an API to resolve the alert
-    console.log('Resolving alert:', alertId);
+    try {
+      // Mark alert as resolved in audit logs or create resolution record
+      const { error } = await supabase
+        .from('audit_logs')
+        .insert({
+          action: 'security_alert_resolved',
+          table_name: 'security_monitor',
+          record_id: alertId,
+          user_id: null,
+          old_values: { alert_id: alertId },
+          new_values: { resolved: true, resolved_at: new Date().toISOString() }
+        });
+
+      if (error) throw error;
+      
+      // Refresh the alerts
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to resolve alert:', error);
+    }
   };
 
   if (metricsLoading || alertsLoading) {

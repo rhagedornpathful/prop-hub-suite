@@ -8,7 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import { TrendingUp, DollarSign, Eye, Users, Target, Plus, Calendar, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 
-// Mock data for marketing campaigns since we don't have the hook yet
+import { useMarketingCampaigns } from '@/hooks/queries/useMarketingCampaigns';
+
+// Mock data for marketing campaigns as fallback
 const mockCampaigns = [
   {
     id: '1',
@@ -83,9 +85,10 @@ export const MarketingCampaignManager = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
 
-  // Use mock data for now
-  const campaigns = mockCampaigns;
-  const isLoading = false;
+  // Use real campaigns from database hook - fallback to mock data if hook fails
+  const { data: realCampaigns, isLoading: campaignsLoading } = useMarketingCampaigns();
+  const campaigns = realCampaigns && realCampaigns.length > 0 ? realCampaigns : mockCampaigns;
+  const isLoading = campaignsLoading;
 
   const filteredCampaigns = campaigns?.filter(campaign => {
     const matchesSearch = 
@@ -102,7 +105,13 @@ export const MarketingCampaignManager = () => {
     total: campaigns?.length || 0,
     active: campaigns?.filter(c => c.status === 'active').length || 0,
     totalBudget: campaigns?.reduce((sum, c) => sum + (c.budget || 0), 0) || 0,
-    totalLeads: campaigns?.reduce((sum, c) => sum + (c.metrics?.leads || 0), 0) || 0,
+    totalLeads: campaigns?.reduce((sum, c) => {
+      const metrics = c.metrics;
+      if (typeof metrics === 'object' && metrics && 'leads' in metrics) {
+        return sum + ((metrics as any).leads || 0);
+      }
+      return sum;
+    }, 0) || 0,
   };
 
   if (isLoading) {
@@ -291,7 +300,12 @@ export const MarketingCampaignManager = () => {
                 {campaign.metrics && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/50 rounded-lg">
                     <div className="text-center">
-                      <div className="text-lg font-semibold">{campaign.metrics.impressions?.toLocaleString()}</div>
+                      <div className="text-lg font-semibold">
+                        {typeof campaign.metrics === 'object' && campaign.metrics && 'impressions' in campaign.metrics 
+                          ? (campaign.metrics as any).impressions?.toLocaleString() || '0'
+                          : '0'
+                        }
+                      </div>
                       <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
                         <Eye className="h-3 w-3" />
                         Impressions
@@ -299,12 +313,22 @@ export const MarketingCampaignManager = () => {
                     </div>
                     
                     <div className="text-center">
-                      <div className="text-lg font-semibold">{campaign.metrics.clicks?.toLocaleString()}</div>
+                      <div className="text-lg font-semibold">
+                        {typeof campaign.metrics === 'object' && campaign.metrics && 'clicks' in campaign.metrics 
+                          ? (campaign.metrics as any).clicks?.toLocaleString() || '0'
+                          : '0'
+                        }
+                      </div>
                       <div className="text-xs text-muted-foreground">Clicks</div>
                     </div>
                     
                     <div className="text-center">
-                      <div className="text-lg font-semibold">{campaign.metrics.leads}</div>
+                      <div className="text-lg font-semibold">
+                        {typeof campaign.metrics === 'object' && campaign.metrics && 'leads' in campaign.metrics 
+                          ? (campaign.metrics as any).leads || '0'
+                          : '0'
+                        }
+                      </div>
                       <div className="text-xs text-muted-foreground flex items-center justify-center gap-1">
                         <Users className="h-3 w-3" />
                         Leads
@@ -312,7 +336,12 @@ export const MarketingCampaignManager = () => {
                     </div>
                     
                     <div className="text-center">
-                      <div className="text-lg font-semibold">${campaign.metrics.cost_per_lead?.toFixed(2)}</div>
+                      <div className="text-lg font-semibold">
+                        ${typeof campaign.metrics === 'object' && campaign.metrics && 'cost_per_lead' in campaign.metrics 
+                          ? (campaign.metrics as any).cost_per_lead?.toFixed(2) || '0.00'
+                          : '0.00'
+                        }
+                      </div>
                       <div className="text-xs text-muted-foreground">Cost/Lead</div>
                     </div>
                   </div>

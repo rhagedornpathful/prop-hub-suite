@@ -71,6 +71,7 @@ interface Distribution {
 const PropertyOwnerDetail = () => {
   const { ownerId } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [distributions, setDistributions] = useState<Distribution[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -79,7 +80,6 @@ const PropertyOwnerDetail = () => {
   const [isPropertyDetailsDialogOpen, setIsPropertyDetailsDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [dateFilter, setDateFilter] = useState<{ from?: Date; to?: Date }>({});
-  const { toast } = useToast();
 
   // Use hooks to fetch data
   const { data: owner, isLoading: isOwnerLoading, error: ownerError } = usePropertyOwner(ownerId);
@@ -627,12 +627,18 @@ const PropertyOwnerDetail = () => {
         open={isPropertyDetailsDialogOpen}
         onOpenChange={setIsPropertyDetailsDialogOpen}
         onEdit={(property) => {
-          console.log('Edit property:', property);
-          // TODO: Implement property edit functionality
+          toast({
+            title: "Edit Property",
+            description: "Property editing functionality is not yet implemented. Please contact support.",
+            variant: "destructive"
+          });
         }}
         onDelete={(property) => {
-          console.log('Delete property:', property);
-          // TODO: Implement property delete functionality
+          toast({
+            title: "Delete Property", 
+            description: "Property deletion functionality is not yet implemented. Please contact support.",
+            variant: "destructive"
+          });
         }}
       />
     </div>

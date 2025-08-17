@@ -341,10 +341,10 @@ export function PropertyDetail() {
               variant="outline"
               className="min-h-[80px] h-20 flex flex-col items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200 active:scale-[0.98] transition-transform touch-manipulation"
               onClick={() => {
-                // TODO: Implement camera capture functionality
                 toast({
                   title: "Add Photo",
-                  description: "Camera functionality coming soon",
+                  description: "Camera capture feature is not yet implemented. Please contact support for photo upload functionality.",
+                  variant: "destructive"
                 });
               }}
             >
