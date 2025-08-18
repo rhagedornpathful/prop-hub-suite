@@ -62,7 +62,7 @@ const adminMenuItems = [
   // Operations hub
   {
     title: "Properties",
-    url: "/admin/properties",
+    url: "/properties",
     icon: Building,
     description: "Manage properties",
     group: "Operations",
