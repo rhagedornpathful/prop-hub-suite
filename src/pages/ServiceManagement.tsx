@@ -91,28 +91,14 @@ export default function ServiceManagement() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {services?.map((service) => (
-                  <div key={service.id} className="relative">
-                    <ServiceCard
-                      service={service}
-                      showSelectButton={false}
-                    />
-                    <div className="absolute top-2 right-2 flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleEditService(service)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteService(service)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    showSelectButton={false}
+                    showActions={true}
+                    onEdit={handleEditService}
+                    onDelete={handleDeleteService}
+                  />
                 ))}
               </div>
             </CardContent>
@@ -127,25 +113,14 @@ export default function ServiceManagement() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categorizedServices.house_watching.map((service) => (
-                  <div key={service.id} className="relative">
-                    <ServiceCard service={service} showSelectButton={false} />
-                    <div className="absolute top-2 right-2 flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleEditService(service)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteService(service)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    showSelectButton={false}
+                    showActions={true}
+                    onEdit={handleEditService}
+                    onDelete={handleDeleteService}
+                  />
                 ))}
               </div>
             </CardContent>
@@ -160,25 +135,14 @@ export default function ServiceManagement() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categorizedServices.property_management.map((service) => (
-                  <div key={service.id} className="relative">
-                    <ServiceCard service={service} showSelectButton={false} />
-                    <div className="absolute top-2 right-2 flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleEditService(service)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteService(service)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    showSelectButton={false}
+                    showActions={true}
+                    onEdit={handleEditService}
+                    onDelete={handleDeleteService}
+                  />
                 ))}
               </div>
             </CardContent>
@@ -193,25 +157,14 @@ export default function ServiceManagement() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {categorizedServices.add_on.map((service) => (
-                  <div key={service.id} className="relative">
-                    <ServiceCard service={service} showSelectButton={false} />
-                    <div className="absolute top-2 right-2 flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => handleEditService(service)}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDeleteService(service)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
+                  <ServiceCard
+                    key={service.id}
+                    service={service}
+                    showSelectButton={false}
+                    showActions={true}
+                    onEdit={handleEditService}
+                    onDelete={handleDeleteService}
+                  />
                 ))}
               </div>
             </CardContent>

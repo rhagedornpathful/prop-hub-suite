@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Edit, Trash2 } from "lucide-react";
 import { Service } from "@/hooks/queries/useServices";
 
 interface ServiceCardProps {
@@ -9,9 +9,12 @@ interface ServiceCardProps {
   onSelect?: (service: Service) => void;
   isSelected?: boolean;
   showSelectButton?: boolean;
+  onEdit?: (service: Service) => void;
+  onDelete?: (service: Service) => void;
+  showActions?: boolean;
 }
 
-export function ServiceCard({ service, onSelect, isSelected, showSelectButton = true }: ServiceCardProps) {
+export function ServiceCard({ service, onSelect, isSelected, showSelectButton = true, onEdit, onDelete, showActions = false }: ServiceCardProps) {
   const formatPrice = (service: Service) => {
     if (service.billing_type === 'quote_based') {
       return 'Quote-based';
@@ -113,15 +116,42 @@ export function ServiceCard({ service, onSelect, isSelected, showSelectButton = 
           </ul>
         </div>
         
-        {showSelectButton && onSelect && (
-          <Button
-            onClick={() => onSelect(service)}
-            variant={isSelected ? "default" : "outline"}
-            className="w-full"
-          >
-            {isSelected ? "Selected" : "Select Service"}
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {showSelectButton && onSelect && (
+            <Button
+              onClick={() => onSelect(service)}
+              variant={isSelected ? "default" : "outline"}
+              className="flex-1"
+            >
+              {isSelected ? "Selected" : "Select Service"}
+            </Button>
+          )}
+          
+          {showActions && (
+            <>
+              {onEdit && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onEdit(service)}
+                  className="px-3"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+              {onDelete && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onDelete(service)}
+                  className="px-3 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
