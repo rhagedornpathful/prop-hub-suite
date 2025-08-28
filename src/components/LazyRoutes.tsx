@@ -28,7 +28,7 @@ const DevTools = lazy(() => import('@/pages/DevTools'));
 const Documents = lazy(() => import('@/pages/Documents'));
 const Leases = lazy(() => import('@/pages/Leases'));
 const ResidentPortal = lazy(() => import('@/pages/ResidentPortal'));
-const AdminEmergency = lazy(() => import('@/pages/AdminEmergency'));
+
 const AdminNavigation = lazy(() => import('@/pages/AdminNavigation'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 
@@ -92,7 +92,7 @@ export const LazyRoutes: React.FC = () => (
       <Route path="/documents" element={<Documents />} />
       <Route path="/leases" element={<Leases />} />
       <Route path="/resident-portal" element={<ResidentPortal />} />
-      <Route path="/admin-emergency" element={<AdminEmergency />} />
+      
       <Route path="/admin-navigation" element={<AdminNavigation />} />
       
       {/* Dashboard Routes */}

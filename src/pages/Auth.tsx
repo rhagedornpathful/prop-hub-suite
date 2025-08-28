@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { clearEmergencyMode } from '@/lib/authUtils';
+
 import { ForgotPasswordDialog } from '@/components/auth/ForgotPasswordDialog';
 import { FormFieldError } from '@/components/FormFieldError';
 
@@ -31,8 +31,6 @@ const Auth = () => {
       try {
         console.log('🔍 Auth page: Checking if user is already logged in...');
         
-        // Clear emergency mode on auth page visit
-        clearEmergencyMode();
         
         const { data: { session }, error } = await supabase.auth.getSession();
         
@@ -116,8 +114,6 @@ const Auth = () => {
     try {
       console.log('🔐 Auth: Starting sign in process...');
       
-      // Clear any existing auth state first
-      clearEmergencyMode();
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000);

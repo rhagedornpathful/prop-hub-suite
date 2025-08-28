@@ -13,7 +13,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { DevAdminProvider } from "@/contexts/DevAdminContext";
 import { ViewAsProvider } from "@/contexts/ViewAsContext";
 import { ViewAsBanner } from "@/components/ViewAsBanner";
-import { EmergencyAdminBanner } from "@/components/EmergencyAdminBanner";
+
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AppWrapper } from "@/components/AppWrapper";
@@ -60,7 +60,7 @@ import ClientProperties from "./pages/ClientPortal/Properties";
 import ClientReports from "./pages/ClientPortal/Reports";
 import ClientRequests from "./pages/ClientPortal/Requests";
 import ClientMessages from "./pages/ClientPortal/Messages";
-import AdminEmergency from "./pages/AdminEmergency";
+
 import Auth from "./pages/Auth";
 import Setup from "./pages/Setup";
 import PropertyOwners from "./pages/PropertyOwners";
@@ -106,14 +106,12 @@ const AppContent = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <EmergencyAdminBanner />
+                
                 <ViewAsBanner />
           <Routes>
             {/* Public Auth Route - Always accessible */}
             <Route path="/auth" element={<Auth />} />
             
-            {/* Emergency Admin Route - Bypasses all authentication */}
-            <Route path="/admin-emergency" element={<AdminEmergency />} />
             
             {/* Setup Route - Always accessible for first admin setup */}
             <Route path="/setup" element={<Setup />} />

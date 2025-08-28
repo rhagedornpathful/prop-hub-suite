@@ -86,3 +86,63 @@ export const generateCSRFToken = (): string => {
 export const validateCSRFToken = (token: string, storedToken: string): boolean => {
   return token === storedToken && token.length === 64;
 };
+
+// Enhanced form validation helper
+export const validateFormField = (fieldName: string, value: any): { isValid: boolean; error?: string } => {
+  try {
+    switch (fieldName) {
+      case 'email':
+        emailSchema.parse(value);
+        break;
+      case 'phone':
+        phoneSchema.parse(value);
+        break;
+      case 'password':
+        passwordSchema.parse(value);
+        break;
+      case 'firstName':
+      case 'lastName':
+        nameSchema.parse(value);
+        break;
+      case 'address':
+        addressSchema.parse(value);
+        break;
+      case 'zipCode':
+        zipCodeSchema.parse(value);
+        break;
+      default:
+        return { isValid: true };
+    }
+    return { isValid: true };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return { isValid: false, error: error.errors[0].message };
+    }
+    return { isValid: false, error: 'Invalid input' };
+  }
+};
+
+// Secure password generation for temporary passwords
+export const generateSecurePassword = (length: number = 16): string => {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz';
+  const numbers = '0123456789';
+  const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+  const allChars = uppercase + lowercase + numbers + symbols;
+
+  let password = '';
+  
+  // Ensure at least one character from each category
+  password += uppercase[Math.floor(Math.random() * uppercase.length)];
+  password += lowercase[Math.floor(Math.random() * lowercase.length)];
+  password += numbers[Math.floor(Math.random() * numbers.length)];
+  password += symbols[Math.floor(Math.random() * symbols.length)];
+
+  // Fill the rest randomly
+  for (let i = 4; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)];
+  }
+
+  // Shuffle the password
+  return password.split('').sort(() => Math.random() - 0.5).join('');
+};

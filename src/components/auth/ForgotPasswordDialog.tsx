@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { getAuthRedirectUrl } from '@/lib/authUtils';
+
 
 interface ForgotPasswordDialogProps {
   open: boolean;
@@ -27,7 +27,7 @@ export const ForgotPasswordDialog = ({ open, onOpenChange }: ForgotPasswordDialo
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${getAuthRedirectUrl()}/auth?reset=true`
+        redirectTo: `${window.location.origin}/auth?reset=true`
       });
 
       if (error) throw error;
