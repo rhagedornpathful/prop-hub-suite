@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.12 (cd3cf9e)"
@@ -3263,7 +3263,7 @@ export type Database = {
     }
     Functions: {
       calculate_next_check_date: {
-        Args: { _from: string; _frequency: string }
+        Args: { _frequency: string; _from: string }
         Returns: string
       }
       check_admin_exists: {
@@ -3272,11 +3272,11 @@ export type Database = {
       }
       ensure_home_watch_schedule_horizon: {
         Args: {
-          _property_id: string
+          _force?: boolean
           _frequency: string
           _horizon_days?: number
+          _property_id: string
           _threshold_days?: number
-          _force?: boolean
         }
         Returns: number
       }
@@ -3290,18 +3290,18 @@ export type Database = {
       }
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
       log_message_analytics: {
         Args: {
           conv_id: string
-          msg_id: string
           event_type: string
-          user_id?: string
           metadata?: Json
+          msg_id: string
+          user_id?: string
         }
         Returns: undefined
       }
@@ -3311,27 +3311,27 @@ export type Database = {
       }
       schedule_home_watch_session: {
         Args: {
-          _property_id: string
           _frequency: string
+          _property_id: string
           _scheduled_by?: string
         }
         Returns: string
       }
       search_messages: {
         Args: {
-          search_query: string
-          user_id_param: string
           conversation_id_param?: string
           limit_param?: number
           offset_param?: number
+          search_query: string
+          user_id_param: string
         }
         Returns: {
-          message_id: string
-          conversation_id: string
           content: string
-          sender_id: string
+          conversation_id: string
           created_at: string
+          message_id: string
           rank: number
+          sender_id: string
         }[]
       }
       seed_test_users: {
@@ -3353,8 +3353,8 @@ export type Database = {
       validate_conversation_participants: {
         Args: {
           conversation_id_param: string
-          sender_id_param: string
           recipient_ids_param: string[]
+          sender_id_param: string
         }
         Returns: boolean
       }
