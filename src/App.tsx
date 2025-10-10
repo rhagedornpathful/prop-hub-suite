@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,65 +16,64 @@ import { ViewAsBanner } from "@/components/ViewAsBanner";
 
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { AppWrapper } from "@/components/AppWrapper";
 
-import { config } from "@/lib/config";
 import { logger } from "@/lib/logger";
-import { MobileNavigation } from "@/components/MobileNavigation";
-import Index from "./pages/Index";
-import Properties from "./pages/Properties";
-import PropertyDetail from "./pages/PropertyDetail";
-import Tenants from "./pages/Tenants";
-import Leases from "./pages/Leases";
-import Finances from "./pages/Finances";
-import Maintenance from "./pages/Maintenance";
-import Messages from "./pages/Messages";
-import Services from "./pages/Services";
-import ServiceManagement from "./pages/ServiceManagement";
-import HouseWatching from "./pages/HouseWatching";
-import HouseWatcherDetail from "./pages/HouseWatcherDetail";
-import HouseWatcherHome from "./pages/HouseWatcherHome";
-import HouseWatcherProperties from "./pages/HouseWatcherProperties";
-import HouseWatcherSettings from "./pages/HouseWatcherSettings";
-import PropertyManagerHome from "./pages/PropertyManagerHome";
-import PropertyManagerProperties from "./pages/PropertyManagerProperties";
-import PropertyManagerSettings from "./pages/PropertyManagerSettings";
-import PropertyCheck from "./pages/PropertyCheck";
-import HomeCheck from "./pages/HomeCheck";
-import HouseWatcherMobileDashboard from "./pages/dashboards/HouseWatcherMobileDashboard";
-import PropertyManagerMobileDashboard from "./pages/dashboards/PropertyManagerMobileDashboard";
-import HouseWatcherMobileChecks from "./pages/HouseWatcherMobileChecks";
-import PropertyManagerMobileMaintenance from "./pages/PropertyManagerMobileMaintenance";
-import MobileBottomNavigation from "./components/mobile/MobileBottomNavigation";
-import Documents from "./pages/Documents";
-import UserManagement from "./pages/UserManagement";
-import DevTools from "./pages/DevTools";
-import Payments from "./pages/Payments";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentCancelled from "./pages/PaymentCancelled";
-import VendorPortalPage from "./pages/VendorPortal";
-import MarketingLeasingPage from "./pages/MarketingLeasing";
-import Settings from "./pages/Settings";
-import ClientDashboard from "./pages/ClientPortal/Dashboard";
-import ClientProperties from "./pages/ClientPortal/Properties";
-import ClientReports from "./pages/ClientPortal/Reports";
-import ClientRequests from "./pages/ClientPortal/Requests";
-import ClientMessages from "./pages/ClientPortal/Messages";
+import { RouteLoadingFallback } from "@/components/RouteLoadingFallback";
+import { PreloadCriticalResources } from "@/components/PreloadCriticalResources";
 
-import Auth from "./pages/Auth";
-import Setup from "./pages/Setup";
-import PropertyOwners from "./pages/PropertyOwners";
-import PropertyOwnerDetail from "./pages/PropertyOwnerDetail";
-import AdminNavigation from "./pages/AdminNavigation";
-import Activity from "./pages/Activity";
-import NotFound from "./pages/NotFound";
-import PropertyManagerView from "./pages/PropertyManagerView";
-import CheckTemplates from "./pages/admin/CheckTemplates";
-
-import AdminOverviewPage from "./pages/admin/AdminOverview";
-import MaintenanceHub from "./pages/admin/MaintenanceHub";
-import TenantsHub from "./pages/admin/TenantsHub";
-import { ProfileSetup } from "./components/ProfileSetup";
+// Lazy load ALL page components for optimal code splitting
+const Index = lazy(() => import("./pages/Index"));
+const Properties = lazy(() => import("./pages/Properties"));
+const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
+const Tenants = lazy(() => import("./pages/Tenants"));
+const Leases = lazy(() => import("./pages/Leases"));
+const Finances = lazy(() => import("./pages/Finances"));
+const Maintenance = lazy(() => import("./pages/Maintenance"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Services = lazy(() => import("./pages/Services"));
+const ServiceManagement = lazy(() => import("./pages/ServiceManagement"));
+const HouseWatching = lazy(() => import("./pages/HouseWatching"));
+const HouseWatcherDetail = lazy(() => import("./pages/HouseWatcherDetail"));
+const HouseWatcherHome = lazy(() => import("./pages/HouseWatcherHome"));
+const HouseWatcherProperties = lazy(() => import("./pages/HouseWatcherProperties"));
+const HouseWatcherSettings = lazy(() => import("./pages/HouseWatcherSettings"));
+const PropertyManagerHome = lazy(() => import("./pages/PropertyManagerHome"));
+const PropertyManagerProperties = lazy(() => import("./pages/PropertyManagerProperties"));
+const PropertyManagerSettings = lazy(() => import("./pages/PropertyManagerSettings"));
+const PropertyCheck = lazy(() => import("./pages/PropertyCheck"));
+const HomeCheck = lazy(() => import("./pages/HomeCheck"));
+const HouseWatcherMobileDashboard = lazy(() => import("./pages/dashboards/HouseWatcherMobileDashboard"));
+const PropertyManagerMobileDashboard = lazy(() => import("./pages/dashboards/PropertyManagerMobileDashboard"));
+const HouseWatcherMobileChecks = lazy(() => import("./pages/HouseWatcherMobileChecks"));
+const PropertyManagerMobileMaintenance = lazy(() => import("./pages/PropertyManagerMobileMaintenance"));
+const MobileBottomNavigation = lazy(() => import("./components/mobile/MobileBottomNavigation"));
+const Documents = lazy(() => import("./pages/Documents"));
+const UserManagement = lazy(() => import("./pages/UserManagement"));
+const DevTools = lazy(() => import("./pages/DevTools"));
+const Payments = lazy(() => import("./pages/Payments"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
+const VendorPortalPage = lazy(() => import("./pages/VendorPortal"));
+const MarketingLeasingPage = lazy(() => import("./pages/MarketingLeasing"));
+const Settings = lazy(() => import("./pages/Settings"));
+const ClientDashboard = lazy(() => import("./pages/ClientPortal/Dashboard"));
+const ClientProperties = lazy(() => import("./pages/ClientPortal/Properties"));
+const ClientReports = lazy(() => import("./pages/ClientPortal/Reports"));
+const ClientRequests = lazy(() => import("./pages/ClientPortal/Requests"));
+const ClientMessages = lazy(() => import("./pages/ClientPortal/Messages"));
+const Auth = lazy(() => import("./pages/Auth"));
+const Setup = lazy(() => import("./pages/Setup"));
+const PropertyOwners = lazy(() => import("./pages/PropertyOwners"));
+const PropertyOwnerDetail = lazy(() => import("./pages/PropertyOwnerDetail"));
+const AdminNavigation = lazy(() => import("./pages/AdminNavigation"));
+const Activity = lazy(() => import("./pages/Activity"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PropertyManagerView = lazy(() => import("./pages/PropertyManagerView"));
+const CheckTemplates = lazy(() => import("./pages/admin/CheckTemplates"));
+const AdminOverviewPage = lazy(() => import("./pages/admin/AdminOverview"));
+const MaintenanceHub = lazy(() => import("./pages/admin/MaintenanceHub"));
+const TenantsHub = lazy(() => import("./pages/admin/TenantsHub"));
+const ProfileSetup = lazy(() => import("./components/ProfileSetup").then(m => ({ default: m.ProfileSetup })));
 
 
 
@@ -98,6 +97,7 @@ const AppContent = () => {
 
   return (
     <ErrorBoundary>
+      <PreloadCriticalResources />
       <AuthProvider>
         <DevAdminProvider>
           <ViewAsProvider>
@@ -110,11 +110,18 @@ const AppContent = () => {
                 <ViewAsBanner />
           <Routes>
             {/* Public Auth Route - Always accessible */}
-            <Route path="/auth" element={<Auth />} />
-            
+            <Route path="/auth" element={
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <Auth />
+              </Suspense>
+            } />
             
             {/* Setup Route - Always accessible for first admin setup */}
-            <Route path="/setup" element={<Setup />} />
+            <Route path="/setup" element={
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <Setup />
+              </Suspense>
+            } />
             
             
             {/* Protected Routes */}
@@ -131,7 +138,8 @@ const AppContent = () => {
                   <div className="min-h-screen flex w-full">
                     <AppSidebar />
                     <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">{/* Add mobile bottom padding */}
-                      <Routes>
+                      <Suspense fallback={<RouteLoadingFallback />}>
+                        <Routes>
                         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
                         <Route path="/admin/overview" element={
                           <PageTransition>
@@ -422,13 +430,13 @@ const AppContent = () => {
                           <Route path="/dev-tools" element={<PageTransition><DevTools /></PageTransition>} />
                         )}
                         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-                      </Routes>
+                        </Routes>
+                      </Suspense>
                     </main>
+                    <Suspense fallback={null}>
+                      <MobileBottomNavigation />
+                    </Suspense>
                   </div>
-<RoleBasedAccess allowedRoles={['admin','property_manager','owner_investor','tenant','client','contractor','leasing_agent']}>
-  <MobileNavigation />
-</RoleBasedAccess>
-                  <MobileBottomNavigation />
                   
                 </SidebarProvider>
               </ProtectedRoute>
