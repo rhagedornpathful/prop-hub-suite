@@ -3346,6 +3346,10 @@ export type Database = {
         Args: { _property_id: string }
         Returns: boolean
       }
+      user_can_view_pm_assignment: {
+        Args: { _assignment_id: string; _user_id: string }
+        Returns: boolean
+      }
       user_created_conversation: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
