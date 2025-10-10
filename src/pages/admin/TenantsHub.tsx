@@ -2,38 +2,15 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SEOHead } from "@/components/SEOHead";
 import { BreadcrumbNavigation } from "@/components/BreadcrumbNavigation";
-import { ResourceList, Column } from "@/components/admin/ResourceList";
-import { useTenants, Tenant } from "@/hooks/queries/useTenants";
+import { ResourceList } from "@/components/admin/ResourceList";
+import { getTenantColumns } from "@/components/admin/ResourceListColumns";
+import { useTenants } from "@/hooks/queries/useTenants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
 export default function TenantsHub() {
   const { data: tenants = [], isLoading } = useTenants();
   const navigate = useNavigate();
-
-  const columns: Column<Tenant>[] = [
-    { key: "name", header: "Tenant", render: (t) => (
-      <div>
-        <div className="font-medium text-foreground">{t.first_name} {t.last_name}</div>
-        <div className="text-xs text-muted-foreground">{t.email || t.phone || "No contact"}</div>
-      </div>
-    ), accessor: (t) => `${t.first_name} ${t.last_name}` },
-    { key: "property", header: "Property", render: (t) => (
-      <div>
-        <div className="font-medium text-foreground">{t.property?.address || "Unknown"}</div>
-        <div className="text-xs text-muted-foreground">{[t.property?.city, t.property?.state].filter(Boolean).join(', ')}</div>
-      </div>
-    ), accessor: (t) => t.property?.address || "" },
-    { key: "monthly_rent", header: "Rent", render: (t) => (
-      <span className="text-sm text-muted-foreground">{t.monthly_rent ? `$${t.monthly_rent.toLocaleString()}` : '-'}</span>
-    ), accessor: (t) => t.monthly_rent || 0 },
-    { key: "lease", header: "Lease", render: (t) => (
-      <span className="text-sm text-muted-foreground">
-        {t.lease_start_date ? new Date(t.lease_start_date).toLocaleDateString() : '-'} → {t.lease_end_date ? new Date(t.lease_end_date).toLocaleDateString() : '-'}
-      </span>
-    ), accessor: (t) => `${t.lease_start_date || ''}/${t.lease_end_date || ''}` },
-  ];
-
+  const columns = getTenantColumns();
   const items = useMemo(() => tenants, [tenants]);
 
   return (

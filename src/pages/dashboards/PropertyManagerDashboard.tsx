@@ -2,58 +2,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AnimatedList, AnimatedListItem } from "@/components/AnimatedList";
+import { MetricCard } from "@/components/dashboard/MetricCard";
+import { AlertCard } from "@/components/dashboard/AlertCard";
+import { QuickActionButton } from "@/components/dashboard/QuickActionButton";
 import { 
   Building, 
   Users, 
   DollarSign, 
   AlertTriangle,
-  Calendar,
   Wrench,
-  TrendingUp,
-  CheckCircle,
-  Clock,
   Phone,
   MessageSquare,
-  Eye,
   PlusCircle,
   ClipboardList,
   Home,
   Receipt,
   Bell,
-  Activity,
-  BarChart3,
-  ArrowUpRight,
   UserCheck,
-  FileText,
   Shield
 } from "lucide-react";
-import { usePropertyMetrics } from "@/hooks/queries/useProperties";
+import { useDashboardMetrics } from "@/hooks/useDashboardMetrics";
 import { useMaintenanceRequests } from "@/hooks/queries/useMaintenanceRequests";
 import { useTenants } from "@/hooks/queries/useTenants";
 import { useConversations } from "@/hooks/queries/useConversations";
-import { useAllPropertyActivity } from "@/hooks/useAllPropertyActivity";
 import { Link } from "react-router-dom";
-import { format } from "date-fns";
+import { formatCurrency, formatDateTime } from "@/lib/formatters";
 
 export function PropertyManagerDashboard() {
-  // Fetch real data
-  const { data: propertyMetrics } = usePropertyMetrics();
+  const metrics = useDashboardMetrics();
   const { data: maintenanceRequests = [] } = useMaintenanceRequests();
   const { data: tenants = [] } = useTenants();
   const { data: conversations = [] } = useConversations();
-  const { activities: recentActivity = [] } = useAllPropertyActivity();
-
-  // Calculate operational metrics
-  const totalProperties = propertyMetrics?.totalProperties || 0;
-  const totalTenants = tenants.length;
-  const occupancyRate = propertyMetrics?.totalProperties ? Math.round((propertyMetrics.occupiedUnits / propertyMetrics.totalProperties) * 100) : 0;
-  const monthlyRent = propertyMetrics?.totalRent || 0;
-  
-  // Operational alerts
-  const urgentMaintenance = maintenanceRequests.filter(r => r.priority === 'urgent' && r.status !== 'completed').length;
-  const pendingMaintenance = maintenanceRequests.filter(r => r.status === 'pending').length;
-  const inProgressMaintenance = maintenanceRequests.filter(r => r.status === 'in_progress').length;
-  const unreadMessages = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
   
   // Upcoming tasks
   const upcomingInspections = tenants.filter(tenant => {
@@ -66,7 +45,7 @@ export function PropertyManagerDashboard() {
     id: conv.id,
     tenant: conv.title || 'Unknown',
     message: typeof conv.last_message === 'string' ? conv.last_message : 'No recent messages',
-    time: conv.last_message_at ? format(new Date(conv.last_message_at), 'MMM dd, h:mm a') : 'No date',
+    time: formatDateTime(conv.last_message_at),
     unread: conv.unread_count || 0
   }));
 
@@ -123,71 +102,46 @@ export function PropertyManagerDashboard() {
       {/* Operational Metrics */}
       <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" staggerDelay={0.05}>
         <AnimatedListItem>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link to="/properties">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Properties Managed</CardTitle>
-                <Building className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalProperties}</div>
-                <p className="text-xs text-muted-foreground">
-                  {occupancyRate}% occupied
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
+          <MetricCard
+            title="Properties Managed"
+            value={metrics.totalProperties}
+            description={`${metrics.occupancyRate}% occupied`}
+            icon={Building}
+            link="/properties"
+          />
         </AnimatedListItem>
 
         <AnimatedListItem>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link to="/tenants">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Tenants</CardTitle>
-                <UserCheck className="h-4 w-4 text-secondary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalTenants}</div>
-                <p className="text-xs text-muted-foreground">
-                  Tenant relations
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
+          <MetricCard
+            title="Active Tenants"
+            value={metrics.totalTenants}
+            description="Tenant relations"
+            icon={UserCheck}
+            iconColor="text-secondary"
+            link="/tenants"
+          />
         </AnimatedListItem>
 
         <AnimatedListItem>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link to="/maintenance">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Active Maintenance</CardTitle>
-                <Wrench className="h-4 w-4 text-warning" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{pendingMaintenance + inProgressMaintenance}</div>
-                <p className="text-xs text-muted-foreground">
-                  {urgentMaintenance} urgent
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
+          <MetricCard
+            title="Active Maintenance"
+            value={metrics.activeMaintenance}
+            description={`${metrics.urgentMaintenance} urgent`}
+            icon={Wrench}
+            iconColor="text-warning"
+            link="/maintenance"
+          />
         </AnimatedListItem>
 
         <AnimatedListItem>
-          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-            <Link to="/finances">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Collections</CardTitle>
-                <Receipt className="h-4 w-4 text-success" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">${monthlyRent.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground">
-                  Rent management
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
+          <MetricCard
+            title="Monthly Collections"
+            value={formatCurrency(metrics.monthlyRent)}
+            description="Rent management"
+            icon={Receipt}
+            iconColor="text-success"
+            link="/finances"
+          />
         </AnimatedListItem>
       </AnimatedList>
 
@@ -201,43 +155,37 @@ export function PropertyManagerDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {urgentMaintenance > 0 && (
-              <div className="p-4 bg-destructive/10 rounded-lg border border-destructive/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-destructive" />
-                  <span className="font-medium text-destructive">Urgent Maintenance</span>
-                </div>
-                <p className="text-2xl font-bold text-destructive">{urgentMaintenance}</p>
-                <Link to="/maintenance" className="text-sm text-destructive hover:underline">
-                  Handle now →
-                </Link>
-              </div>
+            {metrics.urgentMaintenance > 0 && (
+              <AlertCard
+                title="Urgent Maintenance"
+                value={metrics.urgentMaintenance}
+                icon={AlertTriangle}
+                variant="destructive"
+                link="/maintenance"
+                linkText="Handle now →"
+              />
             )}
             
-            {unreadMessages > 0 && (
-              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  <span className="font-medium text-primary">Tenant Messages</span>
-                </div>
-                <p className="text-2xl font-bold text-primary">{unreadMessages}</p>
-                <Link to="/messages" className="text-sm text-primary hover:underline">
-                  Respond →
-                </Link>
-              </div>
+            {metrics.unreadMessages > 0 && (
+              <AlertCard
+                title="Tenant Messages"
+                value={metrics.unreadMessages}
+                icon={MessageSquare}
+                variant="primary"
+                link="/messages"
+                linkText="Respond →"
+              />
             )}
 
-            {occupancyRate < 95 && (
-              <div className="p-4 bg-warning/10 rounded-lg border border-warning/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <Home className="h-4 w-4 text-warning" />
-                  <span className="font-medium text-warning">Vacancy Alert</span>
-                </div>
-                <p className="text-2xl font-bold text-warning">{100 - occupancyRate}%</p>
-                <Link to="/properties" className="text-sm text-warning hover:underline">
-                  Review units →
-                </Link>
-              </div>
+            {metrics.occupancyRate < 95 && (
+              <AlertCard
+                title="Vacancy Alert"
+                value={`${100 - metrics.occupancyRate}%`}
+                icon={Home}
+                variant="warning"
+                link="/properties"
+                linkText="Review units →"
+              />
             )}
           </div>
         </CardContent>
@@ -347,36 +295,11 @@ export function PropertyManagerDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Link to="/maintenance">
-              <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
-                <Wrench className="h-6 w-6" />
-                <span className="text-sm">Schedule Maintenance</span>
-              </Button>
-            </Link>
-            <Link to="/tenants">
-              <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
-                <Phone className="h-6 w-6" />
-                <span className="text-sm">Contact Tenant</span>
-              </Button>
-            </Link>
-            <Link to="/property-check">
-              <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
-                <Shield className="h-6 w-6" />
-                <span className="text-sm">Property Inspection</span>
-              </Button>
-            </Link>
-            <Link to="/finances">
-              <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
-                <Receipt className="h-6 w-6" />
-                <span className="text-sm">Process Payment</span>
-              </Button>
-            </Link>
-            <Link to="/payments">
-              <Button variant="outline" className="w-full h-auto p-4 flex flex-col items-center gap-2">
-                <DollarSign className="h-6 w-6" />
-                <span className="text-sm">Collect Rent</span>
-              </Button>
-            </Link>
+            <QuickActionButton label="Schedule Maintenance" icon={Wrench} link="/maintenance" />
+            <QuickActionButton label="Contact Tenant" icon={Phone} link="/tenants" />
+            <QuickActionButton label="Property Inspection" icon={Shield} link="/property-check" />
+            <QuickActionButton label="Process Payment" icon={Receipt} link="/finances" />
+            <QuickActionButton label="Collect Rent" icon={DollarSign} link="/payments" />
           </div>
         </CardContent>
       </Card>
