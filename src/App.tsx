@@ -26,8 +26,8 @@ const Index = lazy(() => import("./pages/Index"));
 const Properties = lazy(() => import("./pages/Properties"));
 const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
 const Tenants = lazy(() => import("./pages/Tenants"));
-const Leases = lazy(() => import("./pages/Leases"));
 const Finances = lazy(() => import("./pages/Finances"));
+const LeasingPage = lazy(() => import("./pages/Leasing"));
 const Maintenance = lazy(() => import("./pages/Maintenance"));
 const Messages = lazy(() => import("./pages/Messages"));
 const Services = lazy(() => import("./pages/Services"));
@@ -54,7 +54,6 @@ const Payments = lazy(() => import("./pages/Payments"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const VendorPortalPage = lazy(() => import("./pages/VendorPortal"));
-const MarketingLeasingPage = lazy(() => import("./pages/MarketingLeasing"));
 const Settings = lazy(() => import("./pages/Settings"));
 const ClientDashboard = lazy(() => import("./pages/ClientPortal/Dashboard"));
 const ClientProperties = lazy(() => import("./pages/ClientPortal/Properties"));
@@ -197,27 +196,20 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
-                        <Route path="/leases" element={
+                        <Route path="/finances" element={
                           <PageTransition>
-                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
-                              <Leases />
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.FINANCIAL_ACCESS}>
+                              <Finances />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
-<Route path="/finances" element={
-  <PageTransition>
-    <RoleBasedAccess allowedRoles={['admin','owner_investor','tenant','property_manager']}>
-      <Finances />
-    </RoleBasedAccess>
-  </PageTransition>
-} />
-<Route path="/maintenance" element={
-  <PageTransition>
-    <RoleBasedAccess allowedRoles={['admin','property_manager','owner_investor','tenant']}>
-      <Maintenance />
-    </RoleBasedAccess>
-  </PageTransition>
-} />
+                        <Route path="/maintenance" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.MAINTENANCE_ACCESS}>
+                              <Maintenance />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
                         <Route path="/house-watching" element={
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.HOUSE_WATCHING}>
@@ -260,10 +252,30 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/payment-cancelled" element={<PaymentCancelled />} />
-            <Route path="/vendor-portal" element={<VendorPortalPage />} />
-            <Route path="/marketing-leasing" element={<MarketingLeasingPage />} />
+                        <Route path="/payment-success" element={
+                          <PageTransition>
+                            <PaymentSuccess />
+                          </PageTransition>
+                        } />
+                        <Route path="/payment-cancelled" element={
+                          <PageTransition>
+                            <PaymentCancelled />
+                          </PageTransition>
+                        } />
+                        <Route path="/vendor-portal" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.VENDOR_PORTAL}>
+                              <VendorPortalPage />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/leasing" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.LEASING}>
+                              <LeasingPage />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
                          <Route path="/messages" element={
                            <PageTransition>
                              <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ALL_ROLES}>
