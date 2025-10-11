@@ -126,6 +126,36 @@ export const useUserRole = () => {
           canViewHouseWatchingReports: true,
           canSubmitHouseWatchingReports: true,
         };
+      case 'leasing_agent':
+        return {
+          canManageAllProperties: false,
+          canManageOwnProperties: true,
+          canViewAllTenants: true,
+          canManageOwnTenants: true,
+          canViewAllMaintenanceRequests: false,
+          canCreateMaintenanceRequests: true,
+          canManageUsers: false,
+          canViewFinancialReports: false,
+          canManageDocuments: true,
+          canAssignHouseWatchers: false,
+          canViewHouseWatchingReports: false,
+          canSubmitHouseWatchingReports: false,
+        };
+      case 'contractor':
+        return {
+          canManageAllProperties: false,
+          canManageOwnProperties: false,
+          canViewAllTenants: false,
+          canManageOwnTenants: false,
+          canViewAllMaintenanceRequests: false,
+          canCreateMaintenanceRequests: true,
+          canManageUsers: false,
+          canViewFinancialReports: false,
+          canManageDocuments: false,
+          canAssignHouseWatchers: false,
+          canViewHouseWatchingReports: false,
+          canSubmitHouseWatchingReports: false,
+        };
       default:
         return {
           canManageAllProperties: false,
@@ -159,6 +189,10 @@ export const useUserRole = () => {
           return 'Tenant';
         case 'house_watcher':
           return 'House Watcher';
+        case 'leasing_agent':
+          return 'Leasing Agent';
+        case 'contractor':
+          return 'Contractor';
         default:
           return 'User';
       }
