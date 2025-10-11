@@ -35,7 +35,8 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useProperties, useUpdateProperty } from "@/hooks/queries/useProperties";
+import { useUpdateProperty } from "@/hooks/queries/useProperties";
+import { useOptimizedProperties } from "@/hooks/queries/useOptimizedProperties";
 import { useDeleteProperty } from "@/hooks/useDeleteProperty";
 import { PropertyMobileTable } from "@/components/PropertyMobileTable";
 import { StreamlinedAddPropertyDialog } from "@/components/StreamlinedAddPropertyDialog";
@@ -46,6 +47,8 @@ import { useToast } from "@/hooks/use-toast";
 import { BulkManagementTools } from "@/components/BulkManagementTools";
 import { AdvancedSearchFilters } from "@/components/AdvancedSearchFilters";
 import { MobilePropertyDashboard } from "@/components/mobile/MobilePropertyDashboard";
+import { usePagination } from "@/hooks/usePagination";
+import { PaginationControls } from "@/components/ui/pagination-controls";
 
 // Lazy load heavy components for better performance
 // Lazy load heavy components for better performance
@@ -70,16 +73,26 @@ const Properties = () => {
   const [propertyToDelete, setPropertyToDelete] = useState<any>(null);
   const [showArchived, setShowArchived] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'reports'>('overview');
-  const [visibleCount, setVisibleCount] = useState(24);
   
-  const { data: propertyData, isLoading, error, refetch } = useProperties(1, 50); // Reduced from 100 to 50 for performance
-  const properties = propertyData?.properties || [];
-  const deletePropertyMutation = useDeleteProperty();
-  const updateProperty = useUpdateProperty();
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  // Pagination setup
+  const pagination = usePagination(0, isMobile ? 10 : 20);
+  
+  // Optimized properties query with pagination
+  const { data: propertyData, isLoading, error, refetch } = useOptimizedProperties({
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+  });
+  
+  const properties = propertyData?.properties || [];
+  const totalCount = propertyData?.total || 0;
+  
+  const deletePropertyMutation = useDeleteProperty();
+  const updateProperty = useUpdateProperty();
 
   // Pull to refresh functionality with error handling
   const handleRefresh = async () => {
@@ -113,8 +126,7 @@ const Properties = () => {
         property.state?.toLowerCase().includes(searchTerm.toLowerCase())
       );
 
-  // Calculate summary stats
-  const totalProperties = properties.length;
+  // Calculate summary stats (use total count from API)
   const activeProperties = properties.filter(p => p.status === 'active' || !p.status).length;
   const houseWatchingProperties = properties.filter(p => p.service_type === 'house_watching').length;
   const propertyManagementProperties = properties.filter(p => p.service_type === 'property_management' || !p.service_type).length;
@@ -247,7 +259,7 @@ const Properties = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold">Properties</h1>
-            <p className="text-sm text-muted-foreground">{totalProperties} properties</p>
+            <p className="text-sm text-muted-foreground">{totalCount} properties</p>
           </div>
           
           <div className="flex gap-2">
@@ -422,7 +434,7 @@ const Properties = () => {
                     <Building className="h-4 w-4" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xl font-bold">{totalProperties}</p>
+                    <p className="text-xl font-bold">{totalCount}</p>
                     <p className="text-xs text-muted-foreground">Total Properties</p>
                   </div>
                 </div>
@@ -571,7 +583,7 @@ const Properties = () => {
                   </div>
                 ) : (
                   <>
-                    {displayProperties.slice(0, visibleCount).map((property) => (
+                    {displayProperties.map((property) => (
                       <div key={property.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '300px' }}>
                         <Card 
                           className="overflow-hidden cursor-pointer hover:shadow-lg transition-shadow min-h-[44px] relative"
@@ -654,15 +666,25 @@ const Properties = () => {
                         </Card>
                       </div>
                     ))}
-
-                    {visibleCount < displayProperties.length && (
-                      <div className="col-span-full flex justify-center mt-2">
-                        <Button variant="outline" size="sm" onClick={() => setVisibleCount((c) => Math.min(c + 12, displayProperties.length))}>
-                          Show more
-                        </Button>
-                      </div>
-                    )}
                   </>
+                )}
+                
+                 {/* Pagination Controls */}
+                {displayProperties.length > 0 && (
+                  <div className="col-span-full mt-6">
+                    <PaginationControls
+                      page={pagination.page}
+                      totalPages={pagination.totalPages}
+                      pageSize={pagination.pageSize}
+                      totalItems={totalCount}
+                      startIndex={pagination.startIndex}
+                      endIndex={pagination.endIndex}
+                      onPageChange={pagination.goToPage}
+                      onPageSizeChange={pagination.setPageSize}
+                      canGoNext={pagination.canGoNext}
+                      canGoPrevious={pagination.canGoPrevious}
+                    />
+                  </div>
                 )}
               </div>
             )}
