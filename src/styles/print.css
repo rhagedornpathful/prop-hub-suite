@@ -1,0 +1,205 @@
+/* Print-friendly styles */
+@media print {
+  /* Hide non-essential elements */
+  nav,
+  aside,
+  .sidebar,
+  .app-sidebar,
+  button:not(.print-keep),
+  .no-print,
+  .mobile-navigation,
+  .pull-to-refresh,
+  header .actions,
+  .dropdown-menu,
+  .tooltip {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.5;
+  }
+
+  /* Typography */
+  h1 {
+    font-size: 24pt;
+    margin-bottom: 12pt;
+    page-break-after: avoid;
+  }
+
+  h2 {
+    font-size: 18pt;
+    margin-top: 12pt;
+    margin-bottom: 8pt;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 14pt;
+    margin-top: 8pt;
+    margin-bottom: 6pt;
+    page-break-after: avoid;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr {
+    page-break-inside: avoid;
+  }
+
+  th {
+    background-color: #f3f4f6 !important;
+    border: 1px solid #d1d5db !important;
+    padding: 8pt;
+    font-weight: bold;
+    text-align: left;
+  }
+
+  td {
+    border: 1px solid #d1d5db !important;
+    padding: 6pt;
+  }
+
+  /* Cards and containers */
+  .card {
+    border: 1px solid #d1d5db !important;
+    page-break-inside: avoid;
+    margin-bottom: 12pt;
+  }
+
+  /* Links */
+  a {
+    color: #1a56db !important;
+    text-decoration: underline;
+  }
+
+  a[href]:after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #6b7280;
+  }
+
+  /* Images */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid;
+  }
+
+  /* Badges and status indicators */
+  .badge {
+    border: 1px solid currentColor;
+    padding: 2pt 6pt;
+    border-radius: 4pt;
+  }
+
+  /* Charts (convert to static if possible) */
+  .recharts-wrapper {
+    page-break-inside: avoid;
+  }
+
+  /* Hide interactive elements */
+  .dialog,
+  .dropdown,
+  .tooltip,
+  .popover {
+    display: none !important;
+  }
+
+  /* Financial reports */
+  .financial-summary {
+    page-break-inside: avoid;
+    border: 2px solid #1a56db !important;
+    padding: 12pt;
+    margin-bottom: 12pt;
+  }
+
+  /* Property cards */
+  .property-card {
+    page-break-inside: avoid;
+    margin-bottom: 12pt;
+    border: 1px solid #d1d5db !important;
+    padding: 8pt;
+  }
+
+  /* Page breaks */
+  .page-break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after {
+    page-break-after: always;
+  }
+
+  .page-break-avoid {
+    page-break-inside: avoid;
+  }
+
+  /* Print header (add company logo) */
+  .print-header {
+    margin-bottom: 20pt;
+    border-bottom: 2px solid #1a56db;
+    padding-bottom: 12pt;
+  }
+
+  .print-header img {
+    max-height: 60pt;
+  }
+
+  /* Print footer */
+  .print-footer {
+    margin-top: 20pt;
+    padding-top: 12pt;
+    border-top: 1px solid #d1d5db;
+    font-size: 9pt;
+    color: #6b7280;
+  }
+
+  /* Data grid/list improvements */
+  .data-grid,
+  .data-list {
+    page-break-inside: auto;
+  }
+
+  .data-grid > *,
+  .data-list > * {
+    page-break-inside: avoid;
+  }
+}
+
+/* Print-specific utility classes */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block !important;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+}
