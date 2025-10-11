@@ -193,43 +193,43 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-subtle p-4 sm:p-6">
+      <Card className="w-full max-w-md shadow-xl">
         {/* Logo Section */}
-        <div className="pt-8 pb-4 px-8">
+        <div className="pt-8 pb-6 px-6 sm:px-8">
           <div className="flex justify-center">
             <img 
               src="/lovable-uploads/d57228a9-3aea-44c1-9331-d5c7640e4b3e.png" 
               alt="Latitude Premier Properties" 
-              className="h-32 w-auto object-contain"
+              className="h-24 sm:h-28 w-auto object-contain"
             />
           </div>
         </div>
         
         {/* Header Section */}
-        <CardHeader className="text-center pt-0 pb-6">
-          <CardTitle className="text-3xl font-bold text-foreground mb-2">Welcome</CardTitle>
-          <p className="text-muted-foreground text-base">
+        <CardHeader className="text-center pt-0 pb-6 px-6 sm:px-8">
+          <CardTitle className="text-2xl sm:text-3xl font-bold mb-2">Welcome</CardTitle>
+          <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
             Please sign in to your account
           </p>
         </CardHeader>
         {/* Form Section */}
-        <CardContent className="px-8 pb-8">
-          <form onSubmit={handleSignIn} className="space-y-6">
+        <CardContent className="px-6 pb-8 sm:px-8">
+          <form onSubmit={handleSignIn} className="space-y-5">
             {/* Email Field */}
-            <div className="space-y-3">
-              <Label htmlFor="email" className="text-sm font-semibold text-foreground">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-semibold">
                 Email
               </Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => handleFieldChange('email', e.target.value)}
-                  className="pl-10 h-12 text-base border-2 focus:border-primary"
+                  className="pl-12"
                   required
                 />
               </div>
@@ -237,32 +237,32 @@ const Auth = () => {
             </div>
             
             {/* Password Field */}
-            <div className="space-y-3">
-              <Label htmlFor="password" className="text-sm font-semibold text-foreground">
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-semibold">
                 Password
               </Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => handleFieldChange('password', e.target.value)}
-                  className="pl-10 pr-12 h-12 text-base border-2 focus:border-primary"
+                  className="pl-12 pr-12"
                   required
                 />
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1 h-10 w-10 hover:bg-transparent"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 w-10"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    <EyeOff className="h-5 w-5 text-muted-foreground" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="h-5 w-5 text-muted-foreground" />
                   )}
                 </Button>
               </div>
@@ -270,23 +270,23 @@ const Auth = () => {
             </div>
 
             {/* Remember Me and Forgot Password */}
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   id="remember-me"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-2 border-muted-foreground text-primary focus:ring-primary focus:ring-2"
+                  className="h-4 w-4 rounded border-2 border-input text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 />
-                <Label htmlFor="remember-me" className="text-sm font-medium">
+                <Label htmlFor="remember-me" className="text-sm font-medium cursor-pointer">
                   Remember me
                 </Label>
               </div>
               <Button
                 type="button"
                 variant="link"
-                className="p-0 h-auto text-sm text-primary hover:text-primary/80 font-medium"
+                className="p-0 h-auto text-sm font-medium"
                 onClick={() => setForgotPasswordOpen(true)}
               >
                 Forgot password?
@@ -295,26 +295,27 @@ const Auth = () => {
             
             {/* Error Display */}
             {error && (
-              <Alert variant="destructive" className="mt-6">
+              <Alert variant="destructive" className="mt-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-sm">{error}</AlertDescription>
+                <AlertDescription className="text-sm leading-relaxed">{error}</AlertDescription>
               </Alert>
             )}
             
             {/* Sign In Button */}
             <Button
               type="submit"
-              className="w-full h-12 text-base font-semibold mt-8"
+              className="w-full mt-6"
+              size="lg"
               disabled={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   Signing in...
                 </>
               ) : (
                 <>
-                  <LogIn className="mr-2 h-5 w-5" />
+                  <LogIn className="h-5 w-5" />
                   Sign In
                 </>
               )}
@@ -322,7 +323,7 @@ const Auth = () => {
           </form>
           
           {/* Footer Message */}
-          <div className="text-center pt-8 mt-8 border-t border-border">
+          <div className="text-center pt-6 mt-6 border-t border-border">
             <p className="text-sm text-muted-foreground leading-relaxed">
               Need access? Contact your administrator to create an account.
             </p>
