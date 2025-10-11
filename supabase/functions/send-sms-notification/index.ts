@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createRateLimit } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Rate limit: 10 SMS per minute per user
+const rateLimiter = createRateLimit(10, 60000);
 
 interface SMSRequest {
   template: 'urgent_maintenance' | 'payment_overdue' | 'emergency_alert' | 'lease_expiration' | 'inspection_reminder' | 'custom';
@@ -45,6 +49,12 @@ const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Apply rate limiting
+  const rateLimitResponse = rateLimiter(req);
+  if (rateLimitResponse) {
+    return rateLimitResponse;
   }
 
   try {
