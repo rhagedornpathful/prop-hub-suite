@@ -3350,6 +3350,14 @@ export type Database = {
         Args: { _assignment_id: string; _user_id: string }
         Returns: boolean
       }
+      user_can_view_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_can_view_tenant: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
       user_created_conversation: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
