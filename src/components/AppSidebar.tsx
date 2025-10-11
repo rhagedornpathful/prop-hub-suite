@@ -154,6 +154,13 @@ const adminMenuItems = [
     group: "Settings/Tools"
   },
   {
+    title: "Audit Logs",
+    url: "/admin/audit-logs",
+    icon: Shield,
+    description: "Security & compliance audit trail",
+    group: "Settings/Tools"
+  },
+  {
     title: "Service Packages",
     url: "/services",
     icon: Settings,
