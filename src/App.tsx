@@ -72,6 +72,7 @@ const CheckTemplates = lazy(() => import("./pages/admin/CheckTemplates"));
 const AdminOverviewPage = lazy(() => import("./pages/admin/AdminOverview"));
 const MaintenanceHub = lazy(() => import("./pages/admin/MaintenanceHub"));
 const TenantsHub = lazy(() => import("./pages/admin/TenantsHub"));
+const AuditLogsPage = lazy(() => import("./pages/admin/AuditLogs"));
 const ProfileSetup = lazy(() => import("./components/ProfileSetup").then(m => ({ default: m.ProfileSetup })));
 
 
@@ -151,6 +152,20 @@ const AppContent = () => {
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
                               <MaintenanceHub />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/admin/tenants" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <TenantsHub />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/admin/audit-logs" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
+                              <AuditLogsPage />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
