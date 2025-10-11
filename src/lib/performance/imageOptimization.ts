@@ -3,6 +3,8 @@
  * Handles WebP conversion, responsive sizes, lazy loading, and CDN integration
  */
 
+const SUPABASE_URL = 'https://nhjsxtwuweegqcexakoz.supabase.co';
+
 export interface ImageOptimizationOptions {
   width?: number;
   height?: number;
@@ -12,17 +14,42 @@ export interface ImageOptimizationOptions {
   blur?: number;
 }
 
+export interface CDNConfig {
+  enabled: boolean;
+  baseUrl?: string;
+  transformPath?: string;
+}
+
 /**
- * Generate optimized image URL
- * In production, this would integrate with a CDN/image service
+ * Generate optimized image URL with CDN support
+ * Supports Supabase storage transformations and CloudFlare CDN integration
  */
 export const getOptimizedImageUrl = (
   src: string,
-  options: ImageOptimizationOptions = {}
+  options: ImageOptimizationOptions = {},
+  cdnConfig?: CDNConfig
 ): string => {
   if (!src) return '';
   
-  // If it's a Supabase storage URL, we can add transformation params
+  // CloudFlare CDN integration
+  if (cdnConfig?.enabled && cdnConfig.baseUrl) {
+    const transformParams = [];
+    
+    if (options.width) transformParams.push(`w=${options.width}`);
+    if (options.height) transformParams.push(`h=${options.height}`);
+    if (options.quality) transformParams.push(`q=${options.quality}`);
+    if (options.format) transformParams.push(`f=${options.format}`);
+    if (options.fit) transformParams.push(`fit=${options.fit}`);
+    if (options.blur) transformParams.push(`blur=${options.blur}`);
+    
+    const transformPath = transformParams.length > 0 ? transformParams.join(',') : 'original';
+    
+    // Extract path from original URL
+    const srcPath = src.replace(/^https?:\/\/[^/]+/, '');
+    return `${cdnConfig.baseUrl}/cdn-cgi/image/${transformPath}${srcPath}`;
+  }
+  
+  // Supabase storage transformations
   if (src.includes('supabase.co/storage')) {
     const url = new URL(src);
     const params = new URLSearchParams();
@@ -32,11 +59,32 @@ export const getOptimizedImageUrl = (
     if (options.quality) params.set('quality', options.quality.toString());
     if (options.format) params.set('format', options.format);
     
-    url.search = params.toString();
+    // Supabase specific transformation parameters
+    const bucket = url.pathname.split('/')[3];
+    if (bucket === 'property-images') {
+      // Public bucket - can use transformation
+      const transformPath = `/render/image/authenticated/${bucket}`;
+      url.pathname = url.pathname.replace(`/storage/v1/object/public/${bucket}`, transformPath);
+    }
+    
+    if (params.toString()) {
+      url.search = params.toString();
+    }
+    
     return url.toString();
   }
   
   return src;
+};
+
+/**
+ * Get CloudFlare CDN configuration from environment
+ */
+export const getCDNConfig = (): CDNConfig => {
+  return {
+    enabled: false, // Enable when CloudFlare is configured
+    baseUrl: undefined, // Set to your CloudFlare domain when ready
+  };
 };
 
 /**

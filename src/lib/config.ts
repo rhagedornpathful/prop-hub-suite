@@ -41,6 +41,12 @@ export const config = {
     animationDuration: 300,
     toastDuration: 5000,
   },
+  
+  // CDN Configuration
+  cdn: {
+    enabled: false, // Enable when CloudFlare is configured
+    baseUrl: undefined, // Set to your CloudFlare-proxied domain
+  },
 };
 
 // Type-safe feature flag checker
