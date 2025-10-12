@@ -412,7 +412,7 @@ export function AppSidebar() {
 
 
           {/* Quick Actions */}
-          {!collapsed && (
+          {!collapsed && !isMobile && (
             <div className="p-4 border-b border-sidebar-border">
               <div className="flex gap-2">
                 <Button 

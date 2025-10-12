@@ -13,6 +13,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { DevAdminProvider } from "@/contexts/DevAdminContext";
 import { ViewAsProvider } from "@/contexts/ViewAsContext";
 import { ViewAsBanner } from "@/components/ViewAsBanner";
+import { AppHeader } from "@/components/layout/AppHeader";
+import { MobileTabBar } from "@/components/navigation/MobileTabBar";
 
 
 import { useMobileDetection } from "@/hooks/useMobileDetection";
@@ -139,6 +141,7 @@ const AppContent = () => {
                   <div className="min-h-screen flex w-full">
                     <AppSidebar />
                     <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
+                      <AppHeader />
                       <Suspense fallback={<RouteLoadingFallback />}>
                         <Routes>
                         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
@@ -460,7 +463,7 @@ const AppContent = () => {
                         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
                         </Routes>
                       </Suspense>
-                      
+                      <MobileTabBar />
                     </main>
                   </div>
                   
