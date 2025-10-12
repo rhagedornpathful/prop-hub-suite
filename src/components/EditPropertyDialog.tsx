@@ -125,13 +125,16 @@ export function EditPropertyDialog({ open, onOpenChange, property, onPropertyUpd
   }, [property]);
 
   // Update selected owners when associations change
+  // Use JSON.stringify to properly compare the array contents
   useEffect(() => {
-    if (ownerAssociations.length > 0) {
+    const associationIds = ownerAssociations.map(a => a.id).sort().join(',');
+    const selectedIds = selectedOwners.map(a => a.id).sort().join(',');
+    
+    // Only update if the associations actually changed
+    if (associationIds !== selectedIds) {
       setSelectedOwners(ownerAssociations);
-    } else {
-      setSelectedOwners([]);
     }
-  }, [ownerAssociations]);
+  }, [ownerAssociations.map(a => a.id).sort().join(',')]);
 
   const resetForm = () => {
     setPropertyData({
