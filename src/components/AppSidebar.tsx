@@ -53,13 +53,6 @@ const adminMenuItems = [
     group: "Core"
   },
   {
-    title: "Dashboard",
-    url: "/admin/overview",
-    icon: BarChart3,
-    description: "Overview & metrics",
-    group: "Core"
-  },
-  {
     title: "Properties",
     url: "/properties",
     icon: Building,
