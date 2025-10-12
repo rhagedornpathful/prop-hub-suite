@@ -1,5 +1,5 @@
 import { SEOHead } from "@/components/SEOHead";
-import { AdminDashboard } from "@/pages/dashboards/AdminDashboard";
+import DashboardHub from "@/pages/DashboardHub";
 
 export default function AdminOverviewPage() {
   return (
@@ -9,7 +9,7 @@ export default function AdminOverviewPage() {
         description="Unified admin overview with KPIs, alerts, and action queues."
         keywords="admin dashboard, property management KPIs, maintenance alerts"
       />
-      <AdminDashboard />
+      <DashboardHub />
     </div>
   );
 }
