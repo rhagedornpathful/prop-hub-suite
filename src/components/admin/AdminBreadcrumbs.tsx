@@ -67,7 +67,7 @@ export function AdminBreadcrumbs({ items, className }: AdminBreadcrumbsProps) {
         const IconComponent = item.icon;
 
         return (
-          <React.Fragment key={index}>
+          <div key={index} className="flex items-center gap-1">
             {index > 0 && (
               <ChevronRight className="h-4 w-4 text-muted-foreground/50" />
             )}
@@ -89,7 +89,7 @@ export function AdminBreadcrumbs({ items, className }: AdminBreadcrumbsProps) {
                 {item.label}
               </span>
             )}
-          </React.Fragment>
+          </div>
         );
       })}
     </nav>
