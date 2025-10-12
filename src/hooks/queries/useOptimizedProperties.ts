@@ -22,23 +22,19 @@ export const useOptimizedProperties = ({
   sortOrder = 'desc',
   enabled = true,
 }: UseOptimizedPropertiesOptions = {}) => {
-  const { user } = useAuth();
+  const { user, activeRole, actualRole } = useAuth();
   const queryClient = useQueryClient();
 
   return useQuery({
-    queryKey: [CACHE_KEYS.PROPERTIES, user?.id, page, pageSize, sortBy, sortOrder],
+    queryKey: [CACHE_KEYS.PROPERTIES, user?.id, activeRole, page, pageSize, sortBy, sortOrder],
     queryFn: async (): Promise<{ properties: PropertyWithRelations[]; total: number }> => {
       if (!user) return { properties: [], total: 0 };
 
-      // Get total count
-      const { count } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true });
+      const effectiveRole = activeRole || actualRole;
 
-      const total = count || 0;
-
-      // Fetch properties with pagination
-      const { data: properties, error } = await supabase
+      // Build base query
+      let countQuery = supabase.from('properties').select('*', { count: 'exact', head: true });
+      let dataQuery = supabase
         .from('properties')
         .select(`
           *,
@@ -49,7 +45,42 @@ export const useOptimizedProperties = ({
           ),
           tenants(*),
           maintenance_requests(*)
-        `)
+        `);
+
+      // Filter by role - property owners only see their properties
+      if (effectiveRole === 'owner_investor') {
+        // Get properties where user is associated as owner
+        const { data: ownerData } = await supabase
+          .from('property_owners')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (ownerData) {
+          const { data: associations } = await supabase
+            .from('property_owner_associations')
+            .select('property_id')
+            .eq('property_owner_id', ownerData.id);
+
+          const propertyIds = associations?.map(a => a.property_id) || [];
+          
+          if (propertyIds.length === 0) {
+            return { properties: [], total: 0 };
+          }
+
+          countQuery = countQuery.in('id', propertyIds);
+          dataQuery = dataQuery.in('id', propertyIds);
+        } else {
+          return { properties: [], total: 0 };
+        }
+      }
+
+      // Get total count
+      const { count } = await countQuery;
+      const total = count || 0;
+
+      // Fetch properties with pagination
+      const { data: properties, error } = await dataQuery
         .range((page - 1) * pageSize, page * pageSize - 1)
         .order(sortBy, { ascending: sortOrder === 'asc' });
 
