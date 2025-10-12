@@ -104,11 +104,9 @@ The following areas have priority test coverage:
    - Protected routes
 
 2. **Role-Based Access Control**
-   - Permission checks for all roles (admin, property_manager, owner_investor, tenant, house_watcher, contractor, leasing_agent)
+   - Permission checks
    - Role switching
    - View-as functionality
-   - Navigation redirects based on role
-   - Feature visibility per role
 
 3. **Property Management**
    - CRUD operations
@@ -124,33 +122,6 @@ The following areas have priority test coverage:
    - Role-specific views
    - Data loading
    - Error states
-
-## Running Role-Based Tests
-
-```bash
-# Run all tests
-npm test
-
-# Run only role-based access tests
-npm test roleBasedAccess
-
-# Run only navigation tests
-npm test roleNavigation
-
-# Run with coverage
-npm run test:coverage
-```
-
-## Role Test Matrix
-
-| Role | Finances | Properties | House Watching | Admin Panel | Tenant Portal |
-|------|----------|------------|----------------|-------------|---------------|
-| Admin | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Property Manager | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Owner/Investor | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Tenant | ❌ | ❌ | ❌ | ❌ | ✅ |
-| House Watcher | ❌ | ❌ | ✅ | ❌ | ❌ |
-| Contractor | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ## Best Practices
 
