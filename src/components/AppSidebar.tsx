@@ -41,54 +41,37 @@ import { Input } from "@/components/ui/input";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { useUserRole } from "@/hooks/useUserRole";
 
-// Define menu items for different user roles
+// Define menu items for different user roles with simplified grouping
 const adminMenuItems = [
-  // Overview hub
+  // Core Operations
   {
-    title: "Admin Overview",
+    title: "Dashboard",
     url: "/admin/overview",
     icon: Home,
     description: "Overview & metrics",
-    group: "Overview"
+    group: "Core"
   },
-  {
-    title: "Activity Dashboard",
-    url: "/activity",
-    icon: Activity,
-    description: "Activity dashboard",
-    group: "Operations"
-  },
-
-  // Operations hub
   {
     title: "Properties",
     url: "/properties",
     icon: Building,
     description: "Manage properties",
-    group: "Operations",
-    favorite: true
+    group: "Core"
   },
   {
-    title: "Maintenance Management",
-    url: "/admin/maintenance",
-    icon: Wrench,
-    description: "Work orders",
-    group: "Operations"
-  },
-  {
-    title: "House Watchers",
-    url: "/house-watching",
-    icon: Eye,
-    description: "Manage house watchers",
-    group: "People"
+    title: "Activity",
+    url: "/activity",
+    icon: Activity,
+    description: "Recent activity",
+    group: "Core"
   },
 
-  // People hub
+  // People & Assignments
   {
     title: "Property Owners",
     url: "/property-owners",
     icon: UserCheck,
-    description: "Manage property owners",
+    description: "Manage owners",
     group: "People"
   },
   {
@@ -99,73 +82,85 @@ const adminMenuItems = [
     group: "People"
   },
   {
-    title: "Property Manager Dashboard",
+    title: "House Watchers",
+    url: "/house-watching",
+    icon: Eye,
+    description: "House watchers",
+    group: "People"
+  },
+  {
+    title: "Property Managers",
     url: "/property-manager-dashboard",
     icon: UserCog,
-    description: "Property manager operations",
+    description: "Manager operations",
     group: "People"
   },
 
-  // Finance hub
+  // Operations
   {
-    title: "Financial Management",
+    title: "Maintenance",
+    url: "/admin/maintenance",
+    icon: Wrench,
+    description: "Work orders",
+    group: "Operations"
+  },
+  {
+    title: "Finances",
     url: "/finances",
     icon: DollarSign,
-    description: "Payments & reports",
-    group: "Finance"
+    description: "Financial management",
+    group: "Operations"
   },
-
-  // Messaging hub
   {
     title: "Messages",
     url: "/messages",
     icon: MessageCircle,
-    description: "Communication",
-    group: "Messaging"
+    description: "Communications",
+    group: "Operations"
   },
   {
     title: "Documents",
     url: "/documents",
     icon: FolderOpen,
     description: "File management",
-    group: "Messaging"
+    group: "Operations"
   },
   {
     title: "Reports",
     url: "/client-portal/reports",
     icon: BarChart3,
-    description: "Analytics & insights",
-    group: "Messaging"
+    description: "Analytics",
+    group: "Operations"
   },
 
-  // Settings/Tools hub
+  // Settings
   {
-    title: "User Management",
+    title: "Users",
     url: "/user-management",
     icon: UserCog,
-    description: "Manage users & roles",
-    group: "Settings/Tools"
+    description: "User management",
+    group: "Settings"
   },
   {
-    title: "Check Templates",
+    title: "Templates",
     url: "/admin/check-templates",
     icon: FileText,
-    description: "Configure inspection templates",
-    group: "Settings/Tools"
+    description: "Check templates",
+    group: "Settings"
+  },
+  {
+    title: "Services",
+    url: "/services",
+    icon: Settings,
+    description: "Service packages",
+    group: "Settings"
   },
   {
     title: "Audit Logs",
     url: "/admin/audit-logs",
     icon: Shield,
-    description: "Security & compliance audit trail",
-    group: "Settings/Tools"
-  },
-  {
-    title: "Service Packages",
-    url: "/services",
-    icon: Settings,
-    description: "Manage service offerings",
-    group: "Settings/Tools"
+    description: "Security audit",
+    group: "Settings"
   }
 ] as const;
 
@@ -468,76 +463,45 @@ export function AppSidebar() {
               );
             }
 
-            // Grouped rendering for Admin
-            const groupsOrder = ["Favorites", "Overview", "Operations", "People", "Finance", "Messaging", "Settings/Tools"];
-            const favorites = (filteredItems as any[]).filter((i: any) => i.favorite);
+            // Grouped rendering with cleaner organization
+            const groupsOrder = ["Core", "People", "Operations", "Settings"];
             const byGroup = (group: string) => (filteredItems as any[]).filter((i: any) => i.group === group);
 
             return (
               <>
-                {favorites.length > 0 && (
-                  <SidebarGroup>
-                    <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wider text-xs font-medium">
-                      {collapsed ? "Fav" : "Favorites"}
-                    </SidebarGroupLabel>
-                    <SidebarGroupContent>
-                      <SidebarMenu>
-                        {favorites.map((item: any) => (
-                          <SidebarMenuItem key={item.title}>
-                            <SidebarMenuButton asChild>
-                              <NavLink
-                                to={basePath + item.url}
-                                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                                  isActive(item.url)
-                                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                }`}
-                              >
-                                <item.icon className="w-5 h-5 flex-shrink-0" />
-                                {!collapsed && <span className="font-medium">{item.title}</span>}
-                              </NavLink>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarGroupContent>
-                  </SidebarGroup>
-                )}
-
-                {groupsOrder
-                  .filter((g) => g !== "Favorites")
-                  .map((group) => {
-                    const items = byGroup(group);
-                    if (items.length === 0) return null;
-                    return (
-                      <SidebarGroup key={group}>
-                        <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wider text-xs font-medium">
-                          {group}
-                        </SidebarGroupLabel>
-                        <SidebarGroupContent>
-                          <SidebarMenu>
-                            {items.map((item: any) => (
-                              <SidebarMenuItem key={item.title}>
-                                <SidebarMenuButton asChild>
-                                  <NavLink
-                                    to={basePath + item.url}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                                      isActive(item.url)
-                                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                    }`}
-                                  >
-                                    <item.icon className="w-5 h-5 flex-shrink-0" />
-                                    {!collapsed && <span className="font-medium">{item.title}</span>}
-                                  </NavLink>
-                                </SidebarMenuButton>
-                              </SidebarMenuItem>
-                            ))}
-                          </SidebarMenu>
-                        </SidebarGroupContent>
-                      </SidebarGroup>
-                    );
-                  })}
+                {groupsOrder.map((group) => {
+                  const groupItems = byGroup(group);
+                  if (groupItems.length === 0) return null;
+                  
+                  return (
+                    <SidebarGroup key={group}>
+                      <SidebarGroupLabel className="text-sidebar-foreground/60 uppercase tracking-wider text-xs font-medium px-2">
+                        {collapsed ? group.slice(0, 3) : group}
+                      </SidebarGroupLabel>
+                      <SidebarGroupContent>
+                        <SidebarMenu>
+                          {groupItems.map((item: any) => (
+                            <SidebarMenuItem key={item.title}>
+                              <SidebarMenuButton asChild>
+                                <NavLink
+                                  to={basePath + item.url}
+                                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
+                                    isActive(item.url)
+                                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm font-medium"
+                                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                  }`}
+                                >
+                                  <item.icon className="w-4 h-4 flex-shrink-0" />
+                                  {!collapsed && <span className="text-sm">{item.title}</span>}
+                                </NavLink>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          ))}
+                        </SidebarMenu>
+                      </SidebarGroupContent>
+                    </SidebarGroup>
+                  );
+                })}
               </>
             );
           })()}

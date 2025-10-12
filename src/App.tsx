@@ -13,7 +13,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { DevAdminProvider } from "@/contexts/DevAdminContext";
 import { ViewAsProvider } from "@/contexts/ViewAsContext";
 import { ViewAsBanner } from "@/components/ViewAsBanner";
-import { UnifiedMobileNavigation } from "@/components/UnifiedMobileNavigation";
+
 
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -460,7 +460,7 @@ const AppContent = () => {
                         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
                         </Routes>
                       </Suspense>
-                      <UnifiedMobileNavigation />
+                      
                     </main>
                   </div>
                   
