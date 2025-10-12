@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ interface QuickStat {
   change: string;
   trend: 'up' | 'down';
   icon: any;
+  href: string;
 }
 
 export function AdminOverviewCards() {
@@ -41,51 +43,57 @@ export function AdminOverviewCards() {
       value: totalProperties.toString(),
       change: businessSummary?.newRentalProperties ? `+${businessSummary.newRentalProperties}` : '+0',
       trend: 'up',
-      icon: Building
+      icon: Building,
+      href: '/properties'
     },
     {
       label: 'Total Tenants',
       value: totalTenants.toString(),
       change: '+8%',
       trend: 'up',
-      icon: Users
+      icon: Users,
+      href: '/tenants'
     },
     {
       label: 'Monthly Revenue',
       value: `$${monthlyRevenue.toLocaleString()}`,
       change: businessSummary?.combinedRevenue ? `+$${businessSummary.combinedRevenue.toLocaleString()}` : '+0',
       trend: 'up',
-      icon: DollarSign
+      icon: DollarSign,
+      href: '/finances'
     },
     {
       label: 'Open Requests',
       value: openRequests.toString(),
       change: openRequests > 0 ? `${openRequests} pending` : 'All clear',
       trend: openRequests > 10 ? 'up' : 'down',
-      icon: Wrench
+      icon: Wrench,
+      href: '/maintenance'
     }
   ];
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {quickStats.map((stat) => (
-        <Card key={stat.label}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
-            <stat.icon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stat.value}</div>
-            <p className={`text-xs flex items-center ${
-              stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-            }`}>
-              <TrendingUp className={`h-3 w-3 mr-1 ${
-                stat.trend === 'down' ? 'rotate-180' : ''
-              }`} />
-              {stat.change} from last month
-            </p>
-          </CardContent>
-        </Card>
+        <Link key={stat.label} to={stat.href} className="block">
+          <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{stat.label}</CardTitle>
+              <stat.icon className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stat.value}</div>
+              <p className={`text-xs flex items-center ${
+                stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                <TrendingUp className={`h-3 w-3 mr-1 ${
+                  stat.trend === 'down' ? 'rotate-180' : ''
+                }`} />
+                {stat.change} from last month
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
       ))}
     </div>
   );
