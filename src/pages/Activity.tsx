@@ -211,7 +211,7 @@ export default function Activity() {
   }
 
   return (
-    <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-subtle min-h-screen">
+    <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 pb-24 md:pb-6 bg-gradient-subtle min-h-screen">
       {/* Header Section */}
       <div className="text-center space-y-3 py-6">
         <div className="flex items-center justify-center gap-3 mb-2">

@@ -11,6 +11,11 @@ interface EmptyStateProps {
     onClick: () => void;
     variant?: 'default' | 'outline' | 'secondary';
   };
+  secondaryAction?: {
+    label: string;
+    onClick: () => void;
+  };
+  suggestions?: string[];
   className?: string;
   size?: 'sm' | 'md' | 'lg';
 }
@@ -20,6 +25,8 @@ export const EmptyState = ({
   title,
   description,
   action,
+  secondaryAction,
+  suggestions,
   className,
   size = 'md',
 }: EmptyStateProps) => {
@@ -51,17 +58,41 @@ export const EmptyState = ({
           {title}
         </h3>
         {description && (
-          <p className="text-muted-foreground mb-6 max-w-md">
+          <p className="text-muted-foreground mb-4 max-w-md">
             {description}
           </p>
         )}
-        {action && (
-          <Button
-            onClick={action.onClick}
-            variant={action.variant || 'default'}
-          >
-            {action.label}
-          </Button>
+        {suggestions && suggestions.length > 0 && (
+          <ul className="text-sm text-muted-foreground mb-6 space-y-1 text-left">
+            {suggestions.map((suggestion, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <span className="text-primary mt-0.5">•</span>
+                <span>{suggestion}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {(action || secondaryAction) && (
+          <div className="flex flex-col sm:flex-row gap-3 mt-2">
+            {action && (
+              <Button
+                onClick={action.onClick}
+                variant={action.variant || 'default'}
+                size="lg"
+              >
+                {action.label}
+              </Button>
+            )}
+            {secondaryAction && (
+              <Button
+                onClick={secondaryAction.onClick}
+                variant="outline"
+                size="lg"
+              >
+                {secondaryAction.label}
+              </Button>
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

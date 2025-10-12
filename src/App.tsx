@@ -15,7 +15,7 @@ import { ViewAsProvider } from "@/contexts/ViewAsContext";
 import { ViewAsBanner } from "@/components/ViewAsBanner";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MobileTabBar } from "@/components/navigation/MobileTabBar";
-
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -109,7 +109,7 @@ const AppContent = () => {
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                
+                <OfflineIndicator />
                 <ViewAsBanner />
           <Routes>
             {/* Public Auth Route - Always accessible */}

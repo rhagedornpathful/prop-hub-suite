@@ -1,16 +1,18 @@
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ICON_SIZES } from '@/lib/iconSizes';
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   text?: string;
 }
 
 const sizeClasses = {
-  sm: 'h-4 w-4',
-  md: 'h-6 w-6', 
-  lg: 'h-8 w-8'
+  sm: ICON_SIZES.sm,
+  md: ICON_SIZES.lg,
+  lg: ICON_SIZES.xl,
+  xl: ICON_SIZES['2xl']
 };
 
 export const LoadingSpinner = ({ 

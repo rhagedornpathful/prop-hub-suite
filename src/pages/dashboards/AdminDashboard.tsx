@@ -213,12 +213,10 @@ export function AdminDashboard() {
 
   return (
     <AdminErrorBoundary>
-      <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-subtle min-h-screen">
+      <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 pb-24 md:pb-6 bg-gradient-subtle min-h-screen">
         
-        {/* Breadcrumb Navigation - Desktop only */}
-        <div className="hidden md:block">
-          <AdminBreadcrumbs />
-        </div>
+        {/* Breadcrumb Navigation - Now visible on all devices */}
+        <AdminBreadcrumbs />
         
         {/* Advanced Search Bar - Desktop only */}
         <div className="hidden md:flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">

@@ -337,7 +337,7 @@ const Properties = () => {
 
   return (
     <div 
-      className="flex-1 p-4 md:p-6 safe-area-inset space-y-6 relative overflow-hidden"
+      className="flex-1 p-4 md:p-6 pb-24 md:pb-6 safe-area-inset space-y-6 relative overflow-hidden"
       ref={pullToRefresh.bindToContainer}
       style={{ touchAction: 'pan-y' }}
     >
