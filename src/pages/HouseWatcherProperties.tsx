@@ -10,7 +10,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { HouseWatcherMobileNavigation } from '@/components/HouseWatcherMobileNavigation';
+
 import { PropertiesGridSkeleton } from '@/components/HouseWatcherLoadingStates';
 import { useMobileDetection } from '@/hooks/useMobileDetection';
 
@@ -193,12 +193,7 @@ const HouseWatcherProperties = () => {
   );
 
   if (loading) {
-    return (
-      <>
-        <PropertiesGridSkeleton />
-        {isMobile && <HouseWatcherMobileNavigation />}
-      </>
-    );
+    return <PropertiesGridSkeleton />;
   }
 
   return (
@@ -391,7 +386,7 @@ const HouseWatcherProperties = () => {
           ))}
         </div>
       )}
-      {isMobile && <HouseWatcherMobileNavigation />}
+      
     </div>
   );
 };

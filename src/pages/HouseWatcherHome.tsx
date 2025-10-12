@@ -11,7 +11,7 @@ import { format, isToday, isTomorrow, isPast, differenceInDays, addDays, startOf
 import { useNavigate } from 'react-router-dom';
 import { useHouseWatcherSchedule } from '@/hooks/useHouseWatcherSchedule';
 import { useHouseWatcherNotifications } from '@/hooks/useHouseWatcherNotifications';
-import { HouseWatcherMobileNavigation } from '@/components/HouseWatcherMobileNavigation';
+
 import { DashboardSkeleton } from '@/components/HouseWatcherLoadingStates';
 import { useMobileDetection } from '@/hooks/useMobileDetection';
 
@@ -103,12 +103,7 @@ const HouseWatcherHome = () => {
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   if (loading) {
-    return (
-      <>
-        <DashboardSkeleton />
-        {isMobile && <HouseWatcherMobileNavigation />}
-      </>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -273,7 +268,7 @@ const HouseWatcherHome = () => {
           );
         })}
       </div>
-      {isMobile && <HouseWatcherMobileNavigation />}
+      
     </div>
   );
 };

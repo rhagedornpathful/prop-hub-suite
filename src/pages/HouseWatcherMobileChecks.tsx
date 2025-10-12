@@ -10,7 +10,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { HouseWatcherMobileNavigation } from '@/components/HouseWatcherMobileNavigation';
+
 interface CheckSession {
   id: string;
   property_id: string;
@@ -279,7 +279,7 @@ const HouseWatcherMobileChecks = () => {
           )}
         </CardContent>
       </Card>
-      <HouseWatcherMobileNavigation />
+      
     </div>
   );
 };

@@ -377,7 +377,8 @@ export function AppSidebar() {
       <Sidebar 
         variant="inset" 
         collapsible={isMobile ? "offcanvas" : "icon"}
-        className={isMobile ? "fixed inset-y-0 left-0 z-50 w-full" : ""}
+        className={isMobile ? "fixed inset-y-0 left-0 z-50" : ""}
+        style={isMobile ? { width: 'min(320px, 85vw)' } : undefined}
       >
         <SidebarContent>
           {/* Header */}

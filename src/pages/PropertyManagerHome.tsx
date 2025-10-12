@@ -11,7 +11,7 @@ import { format, isToday, isTomorrow, isPast, differenceInDays, addDays, startOf
 import { useNavigate } from 'react-router-dom';
 import { usePropertyManagerSchedule } from '@/hooks/usePropertyManagerSchedule';
 import { usePropertyManagerNotifications } from '@/hooks/usePropertyManagerNotifications';
-import { PropertyManagerMobileNavigation } from '@/components/PropertyManagerMobileNavigation';
+
 import { DashboardSkeleton } from '@/components/PropertyManagerLoadingStates';
 import { useMobileDetection } from '@/hooks/useMobileDetection';
 
@@ -128,12 +128,7 @@ const PropertyManagerHome = () => {
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
   if (loading) {
-    return (
-      <>
-        <DashboardSkeleton />
-        {isMobile && <PropertyManagerMobileNavigation />}
-      </>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -305,7 +300,7 @@ const PropertyManagerHome = () => {
           );
         })}
       </div>
-      {isMobile && <PropertyManagerMobileNavigation />}
+      
     </div>
   );
 };

@@ -142,7 +142,8 @@ const AppContent = () => {
                     <AppSidebar />
                     <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
                       <AppHeader />
-                      <Suspense fallback={<RouteLoadingFallback />}>
+                      <ErrorBoundary>
+                        <Suspense fallback={<RouteLoadingFallback />}>
                         <Routes>
                         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
                         <Route path="/admin/overview" element={
@@ -462,7 +463,8 @@ const AppContent = () => {
                         )}
                         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
                         </Routes>
-                      </Suspense>
+                        </Suspense>
+                      </ErrorBoundary>
                       <MobileTabBar />
                     </main>
                   </div>

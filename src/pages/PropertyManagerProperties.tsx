@@ -10,7 +10,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { PropertyManagerMobileNavigation } from '@/components/PropertyManagerMobileNavigation';
+
 import { PropertiesGridSkeleton } from '@/components/PropertyManagerLoadingStates';
 import { useMobileDetection } from '@/hooks/useMobileDetection';
 
@@ -203,12 +203,7 @@ const PropertyManagerProperties = () => {
   );
 
   if (loading) {
-    return (
-      <>
-        <PropertiesGridSkeleton />
-        {isMobile && <PropertyManagerMobileNavigation />}
-      </>
-    );
+    return <PropertiesGridSkeleton />;
   }
 
   return (
@@ -370,7 +365,7 @@ const PropertyManagerProperties = () => {
           ))}
         </div>
       )}
-      {isMobile && <PropertyManagerMobileNavigation />}
+      
     </div>
   );
 };

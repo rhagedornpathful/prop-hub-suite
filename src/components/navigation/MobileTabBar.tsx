@@ -47,16 +47,17 @@ export function MobileTabBar() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 md:hidden">
-      <div className="grid grid-cols-5 gap-1 px-1 py-1.5">
+      <div className={`grid gap-1 px-1 py-1.5 ${items.length === 5 ? 'grid-cols-5' : 'grid-cols-4'}`}>
         {items.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.href;
+          const isActive = location.pathname === item.href || 
+                          (item.href !== '/' && location.pathname.startsWith(item.href));
           return (
             <NavLink
               key={item.href}
               to={item.href}
               className={cn(
-                'flex flex-col items-center justify-center px-2 py-1.5 rounded-md text-[11px] leading-3',
+                'flex flex-col items-center justify-center px-2 py-1.5 rounded-md text-[11px] leading-3 min-h-[44px]',
                 isActive
                   ? 'text-primary bg-primary/5 font-medium'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
