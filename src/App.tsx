@@ -27,6 +27,7 @@ import { PreloadCriticalResources } from "@/components/PreloadCriticalResources"
 
 // Lazy load ALL page components for optimal code splitting
 const Index = lazy(() => import("./pages/Index"));
+const DashboardHub = lazy(() => import("./pages/DashboardHub"));
 const Properties = lazy(() => import("./pages/Properties"));
 const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
 const Tenants = lazy(() => import("./pages/Tenants"));
@@ -146,7 +147,8 @@ const AppContent = () => {
                       <ErrorBoundary>
                         <Suspense fallback={<RouteLoadingFallback />}>
                         <Routes>
-                        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+                        <Route path="/" element={<PageTransition><DashboardHub /></PageTransition>} />
+                        <Route path="/home" element={<PageTransition><Index /></PageTransition>} />
                         <Route path="/admin/overview" element={
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
