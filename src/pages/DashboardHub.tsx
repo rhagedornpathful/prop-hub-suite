@@ -105,7 +105,7 @@ export default function Dashboard() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-                Welcome to Property Management Hub
+                Welcome to Lattitude Premier Properties
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
