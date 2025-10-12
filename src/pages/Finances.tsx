@@ -4,8 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, DollarSign, TrendingUp, TrendingDown, Calendar, FileText, AlertCircle } from "lucide-react";
 import OwnerStatementsList from "@/components/OwnerStatementsList";
+import { Suspense } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useMobileDetection } from "@/hooks/useMobileDetection";
+import { PropertyManagerMobileNavigation } from "@/components/PropertyManagerMobileNavigation";
 
 const Finances = () => {
+  const { isMobile } = useMobileDetection();
+  
   const mockTransactions = [
     {
       id: 1,
@@ -74,15 +81,16 @@ const Finances = () => {
   };
 
   return (
-    <div className="flex-1 p-6 overflow-auto">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <>
+    <div className="flex-1 p-4 md:p-6 overflow-auto">
+      <div className="max-w-7xl mx-auto space-y-4 md:space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Financial Management</h1>
-                <p className="text-muted-foreground mt-1">Track income, expenses, and financial reports</p>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">Financial Management</h1>
+                <p className="text-sm md:text-base text-muted-foreground mt-1">Track income, expenses, and financial reports</p>
               </div>
-              <Button className="bg-gradient-primary hover:bg-primary-dark">
+              <Button className="bg-gradient-primary hover:bg-primary-dark w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Add Transaction
               </Button>
@@ -136,11 +144,17 @@ const Finances = () => {
             </div>
 
             {/* Tabs for different financial views */}
-            <Tabs defaultValue="transactions" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="transactions">Recent Transactions</TabsTrigger>
-                <TabsTrigger value="outstanding">Outstanding Payments</TabsTrigger>
-                <TabsTrigger value="reports">Financial Reports</TabsTrigger>
+            <Tabs defaultValue="transactions" className="space-y-4 md:space-y-6">
+              <TabsList className="grid w-full grid-cols-3 h-auto">
+                <TabsTrigger value="transactions" className="text-xs md:text-sm py-2">
+                  {isMobile ? "Recent" : "Recent Transactions"}
+                </TabsTrigger>
+                <TabsTrigger value="outstanding" className="text-xs md:text-sm py-2">
+                  {isMobile ? "Outstanding" : "Outstanding Payments"}
+                </TabsTrigger>
+                <TabsTrigger value="reports" className="text-xs md:text-sm py-2">
+                  {isMobile ? "Reports" : "Financial Reports"}
+                </TabsTrigger>
               </TabsList>
 
               {/* Recent Transactions */}
@@ -248,13 +262,19 @@ const Finances = () => {
                     </CardContent>
                   </Card>
                 </div>
-                <div className="mt-6">
-                  <OwnerStatementsList />
+                <div className="mt-4 md:mt-6">
+                  <ErrorBoundary>
+                    <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+                      <OwnerStatementsList />
+                    </Suspense>
+                  </ErrorBoundary>
                 </div>
               </TabsContent>
             </Tabs>
       </div>
     </div>
+    {isMobile && <PropertyManagerMobileNavigation />}
+    </>
   );
 };
 
