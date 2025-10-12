@@ -28,6 +28,7 @@ import { PreloadCriticalResources } from "@/components/PreloadCriticalResources"
 // Lazy load ALL page components for optimal code splitting
 const Index = lazy(() => import("./pages/Index"));
 const DashboardHub = lazy(() => import("./pages/DashboardHub"));
+const PropertyOwnerHub = lazy(() => import("./pages/dashboards/PropertyOwnerHub"));
 const Properties = lazy(() => import("./pages/Properties"));
 const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
 const Tenants = lazy(() => import("./pages/Tenants"));
@@ -148,6 +149,13 @@ const AppContent = () => {
                         <Suspense fallback={<RouteLoadingFallback />}>
                         <Routes>
                         <Route path="/" element={<PageTransition><DashboardHub /></PageTransition>} />
+                        <Route path="/owner-dashboard" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={['owner_investor']}>
+                              <PropertyOwnerHub />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
                         <Route path="/home" element={<PageTransition><Index /></PageTransition>} />
                         <Route path="/admin/overview" element={
                           <PageTransition>
