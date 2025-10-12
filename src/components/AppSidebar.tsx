@@ -41,6 +41,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AddPropertyDialog } from "@/components/AddPropertyDialog";
 import { useUserRole } from "@/hooks/useUserRole";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Define menu items for different user roles with simplified grouping
 const adminMenuItems = [
@@ -329,7 +331,11 @@ export function AppSidebar() {
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
   const collapsed = state === "collapsed";
   const { isMobile } = useMobileDetection();
-  const { userRole, getRoleDisplayName } = useUserRole();
+  const { activeRole, isRoleSwitched } = useAuth();
+  const { getRoleDisplayName } = useUserRole();
+  
+  // Use activeRole instead of userRole for all role checks
+  const userRole = activeRole;
 
   // Get menu items based on user role
   const getMenuItems = () => {
@@ -595,6 +601,9 @@ export function AppSidebar() {
               )}
             </SidebarMenuButton>
           </div>
+          
+          {/* Role Switcher for Admins */}
+          <RoleSwitcher />
         </SidebarContent>
       </Sidebar>
 

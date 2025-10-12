@@ -8,6 +8,10 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   userRole: Database['public']['Enums']['app_role'] | null;
+  actualRole: Database['public']['Enums']['app_role'] | null;
+  activeRole: Database['public']['Enums']['app_role'] | null;
+  isRoleSwitched: boolean;
+  switchRole: (role: Database['public']['Enums']['app_role'] | null) => void;
   signOut: () => Promise<void>;
 }
 
@@ -30,8 +34,31 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState<Database['public']['Enums']['app_role'] | null>(null);
+  const [switchedRole, setSwitchedRole] = useState<Database['public']['Enums']['app_role'] | null>(null);
 
   // Emergency admin mode removed for production security
+
+  // Calculate active role (switched role if set, otherwise actual role)
+  const activeRole = switchedRole || userRole;
+  const isRoleSwitched = switchedRole !== null && userRole === 'admin';
+
+  const switchRole = (role: Database['public']['Enums']['app_role'] | null) => {
+    // Only admins can switch roles
+    if (userRole !== 'admin') {
+      console.warn('⚠️ Only admins can switch roles');
+      return;
+    }
+    
+    console.log('🔄 Switching role to:', role);
+    setSwitchedRole(role);
+    
+    // Store in localStorage for persistence
+    if (role) {
+      localStorage.setItem('admin_switched_role', role);
+    } else {
+      localStorage.removeItem('admin_switched_role');
+    }
+  };
 
   const fetchUserRole = async (userId: string) => {
     console.log('🔍 AuthContext: Fetching user role for:', userId);
@@ -81,6 +108,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const primaryRole = roles[0];
       console.log('✅ AuthContext: Using fallback role:', primaryRole);
       setUserRole(primaryRole);
+      
+      // Restore switched role if admin
+      if (primaryRole === 'admin') {
+        const savedSwitchedRole = localStorage.getItem('admin_switched_role');
+        if (savedSwitchedRole) {
+          console.log('✅ AuthContext: Restoring switched role:', savedSwitchedRole);
+          setSwitchedRole(savedSwitchedRole as any);
+        }
+      }
       
     } catch (error) {
       console.error('💥 AuthContext: Exception in fetchUserRole:', error);
@@ -168,13 +204,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const signOut = async () => {
-    // Clear preferred role
+    // Clear preferred role and switched role
     localStorage.removeItem('preferred_role');
+    localStorage.removeItem('admin_switched_role');
     
     // Clear all auth state
     setUser(null);
     setSession(null);
     setUserRole(null);
+    setSwitchedRole(null);
     
     await supabase.auth.signOut();
     
@@ -187,6 +225,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     loading,
     userRole,
+    actualRole: userRole,
+    activeRole,
+    isRoleSwitched,
+    switchRole,
     signOut
   };
 

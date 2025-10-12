@@ -13,6 +13,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { DevAdminProvider } from "@/contexts/DevAdminContext";
 import { ViewAsProvider } from "@/contexts/ViewAsContext";
 import { ViewAsBanner } from "@/components/ViewAsBanner";
+import { RoleSwitcherBanner } from "@/components/RoleSwitcherBanner";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MobileTabBar } from "@/components/navigation/MobileTabBar";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
@@ -117,6 +118,7 @@ const AppContent = () => {
               <BrowserRouter>
                 <OfflineIndicator />
                 <ViewAsBanner />
+                <RoleSwitcherBanner />
           <Routes>
             {/* Public Auth Route - Always accessible */}
             <Route path="/auth" element={
