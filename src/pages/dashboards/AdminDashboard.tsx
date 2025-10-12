@@ -268,13 +268,14 @@ export function AdminDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <Link to="/properties/add">
                   <Button className="w-full justify-start h-11 md:h-12 text-sm font-medium shadow-sm hover:shadow-md transition-all duration-200 hover:scale-[1.02]" variant="outline">
                     <div className="p-1.5 rounded-md bg-success/10 mr-3">
                       <Plus className="h-4 w-4 text-success" />
                     </div>
-                    Add Property
+                    <span className="hidden sm:inline">Add Property</span>
+                    <span className="sm:hidden">Property</span>
                   </Button>
                 </Link>
                 
@@ -283,7 +284,8 @@ export function AdminDashboard() {
                     <div className="p-1.5 rounded-md bg-warning/10 mr-3">
                       <Wrench className="h-4 w-4 text-warning" />
                     </div>
-                    <span className="hidden sm:inline">Schedule </span>Maintenance
+                    <span className="hidden sm:inline">Schedule Maintenance</span>
+                    <span className="sm:hidden">Maintenance</span>
                   </Button>
                 </Link>
                 
@@ -292,7 +294,8 @@ export function AdminDashboard() {
                     <div className="p-1.5 rounded-md bg-info/10 mr-3">
                       <Users className="h-4 w-4 text-info" />
                     </div>
-                    Add Tenant
+                    <span className="hidden sm:inline">Add Tenant</span>
+                    <span className="sm:hidden">Tenant</span>
                   </Button>
                 </Link>
                 
@@ -301,7 +304,8 @@ export function AdminDashboard() {
                     <div className="p-1.5 rounded-md bg-secondary/10 mr-3">
                       <FileText className="h-4 w-4 text-secondary" />
                     </div>
-                    <span className="hidden sm:inline">Generate </span>Report
+                    <span className="hidden sm:inline">Generate Report</span>
+                    <span className="sm:hidden">Reports</span>
                   </Button>
                 </Link>
                 
@@ -310,7 +314,8 @@ export function AdminDashboard() {
                     <div className="p-1.5 rounded-md bg-accent/10 mr-3">
                       <MessageSquare className="h-4 w-4 text-accent" />
                     </div>
-                    <span className="hidden sm:inline">Send </span>Communication
+                    <span className="hidden sm:inline">Send Communication</span>
+                    <span className="sm:hidden">Messages</span>
                   </Button>
                 </Link>
 
@@ -319,7 +324,8 @@ export function AdminDashboard() {
                     <div className="p-1.5 rounded-md bg-primary/10 mr-3">
                       <Eye className="h-4 w-4 text-primary" />
                     </div>
-                    House Watching
+                    <span className="hidden sm:inline">House Watching</span>
+                    <span className="sm:hidden">Watching</span>
                   </Button>
                 </Link>
               </div>
