@@ -1,11 +1,21 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { PropertyHealthScore } from "@/components/PropertyHealthScore";
+import { calculatePropertyHealth } from "@/utils/propertyHealth";
 import { 
   Building, 
   Building2,
@@ -283,8 +293,36 @@ export function PropertyDetail() {
     return `$${amount.toLocaleString()}`;
   };
 
+  // Calculate property health
+  const propertyHealth = calculatePropertyHealth(
+    property,
+    maintenanceRequests,
+    recentActivities.find(a => a.type === 'inspection')
+      ? new Date(recentActivities.find(a => a.type === 'inspection')!.date)
+      : undefined
+  );
+
   return (
     <div className={`${isMobile ? 'pb-20' : ''}`}>
+      {/* Breadcrumb Navigation - Desktop Only */}
+      {!isMobile && (
+        <div className="container mx-auto px-6 py-4">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/properties">Properties</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{property.address}</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+      )}
+      
       {/* Mobile Header */}
       {isMobile ? (
         <header className="lg:hidden sticky top-0 z-40 bg-white border-b border-border">
@@ -386,8 +424,31 @@ export function PropertyDetail() {
       )}
 
       <div className={`${isMobile ? 'px-4' : 'container mx-auto px-6'} space-y-4`}>
+        {/* Property Health Score - Only for desktop */}
+        {!isMobile && (
+          <PropertyHealthScore metrics={propertyHealth} showDetails={true} />
+        )}
+
         {/* Main Content */}
-        <Accordion type="multiple" defaultValue={["overview","assignees","ownership","services","house-watching","activity","maintenance"]} className="space-y-4">
+        <Accordion type="multiple" defaultValue={["overview","health","assignees","ownership","services","house-watching","activity","maintenance"]} className="space-y-4">
+          {/* Property Health Score - Mobile */}
+          {isMobile && (
+            <AccordionItem value="health" className="bg-white rounded-lg shadow-sm border-0 p-4">
+              <AccordionTrigger className="hover:no-underline">
+                <div className="flex items-center justify-between w-full pr-4">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-5 w-5" />
+                    <span className="font-semibold">Property Health</span>
+                  </div>
+                  <PropertyHealthScore metrics={propertyHealth} compact={true} />
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="pt-4">
+                <PropertyHealthScore metrics={propertyHealth} showDetails={true} />
+              </AccordionContent>
+            </AccordionItem>
+          )}
+          
           <AccordionItem value="overview" className="bg-white rounded-lg shadow-sm border-0 p-4">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-2">

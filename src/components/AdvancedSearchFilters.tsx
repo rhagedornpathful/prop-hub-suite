@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
@@ -93,7 +94,10 @@ export const AdvancedSearchFilters: React.FC<AdvancedSearchFiltersProps> = ({
   const [filters, setFilters] = useState<FilterState>(defaultFilters);
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeFiltersCount, setActiveFiltersCount] = useState(0);
-
+  
+  // Debounce search input to reduce re-renders
+  const debouncedSearch = useDebouncedValue(filters.search, 300);
+  
   const propertyTypes = ['single_family', 'condo', 'townhouse', 'duplex', 'multi_family', 'apartment'];
   const statusOptions = ['active', 'vacant', 'maintenance', 'inactive', 'archived'];
   const serviceTypes = ['property_management', 'house_watching'];
@@ -325,6 +329,7 @@ export const AdvancedSearchFilters: React.FC<AdvancedSearchFiltersProps> = ({
             value={filters.search}
             onChange={(e) => updateFilter('search', e.target.value)}
             className="pl-10"
+            aria-label="Search properties"
           />
         </div>
 

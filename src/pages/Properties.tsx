@@ -363,6 +363,7 @@ const Properties = () => {
           <Button 
             variant="outline"
             onClick={() => setActiveTab(activeTab === 'overview' ? 'reports' : 'overview')}
+            aria-label={`Switch to ${activeTab === 'overview' ? 'reports' : 'overview'} view`}
           >
             {activeTab === 'overview' ? 'View Reports' : 'View Overview'}
           </Button>
@@ -389,11 +390,11 @@ const Properties = () => {
             <Card className="min-h-[80px]">
               <CardContent className="p-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg shrink-0">
-                    <Home className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <div className="p-2 bg-success/10 rounded-lg shrink-0">
+                    <Home className="h-4 w-4 text-success" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xl font-bold text-green-600 dark:text-green-400">{activeProperties}</p>
+                    <p className="text-xl font-bold text-success">{activeProperties}</p>
                     <p className="text-xs text-muted-foreground">Active</p>
                   </div>
                 </div>
@@ -403,11 +404,11 @@ const Properties = () => {
             <Card className="min-h-[80px]">
               <CardContent className="p-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg shrink-0">
-                    <Eye className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <div className="p-2 bg-info/10 rounded-lg shrink-0">
+                    <Eye className="h-4 w-4 text-info" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xl font-bold text-purple-600 dark:text-purple-400">{houseWatchingProperties}</p>
+                    <p className="text-xl font-bold text-info">{houseWatchingProperties}</p>
                     <p className="text-xs text-muted-foreground">House Watching</p>
                   </div>
                 </div>
@@ -417,11 +418,11 @@ const Properties = () => {
             <Card className="min-h-[80px]">
               <CardContent className="p-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg shrink-0">
-                    <Settings className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+                    <Settings className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{propertyManagementProperties}</p>
+                    <p className="text-xl font-bold text-primary">{propertyManagementProperties}</p>
                     <p className="text-xs text-muted-foreground">Property Management</p>
                   </div>
                 </div>
@@ -431,8 +432,8 @@ const Properties = () => {
             <Card className="min-h-[80px]">
               <CardContent className="p-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
-                    <Building className="h-4 w-4" />
+                  <div className="p-2 bg-muted rounded-lg shrink-0">
+                    <Building className="h-4 w-4 text-foreground" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-xl font-bold">{totalCount}</p>
@@ -467,6 +468,8 @@ const Properties = () => {
                   size="sm"
                   onClick={() => setViewMode('grid')}
                   className="flex-1"
+                  aria-label="Grid view"
+                  aria-pressed={viewMode === 'grid'}
                 >
                   <Grid3X3 className="h-4 w-4 mr-1" />
                   Grid
@@ -476,6 +479,8 @@ const Properties = () => {
                   size="sm"
                   onClick={() => setViewMode('list')}
                   className="flex-1"
+                  aria-label="List view"
+                  aria-pressed={viewMode === 'list'}
                 >
                   <List className="h-4 w-4 mr-1" />
                   List
@@ -485,6 +490,8 @@ const Properties = () => {
                   size="sm"
                   onClick={() => setViewMode('map')}
                   className="flex-1"
+                  aria-label="Map view"
+                  aria-pressed={viewMode === 'map'}
                 >
                   <Map className="h-4 w-4 mr-1" />
                   Map
@@ -566,18 +573,31 @@ const Properties = () => {
                   <div className="col-span-full">
                     <Card>
                       <CardContent className="flex items-center justify-center py-12">
-                        <div className="text-center">
-                          <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                          <h3 className="text-lg font-medium mb-2">No Properties Found</h3>
-                          <p className="text-muted-foreground mb-4">
-                            {searchTerm ? 'No properties match your search criteria.' : 'Get started by adding your first property.'}
+                        <div className="text-center max-w-md">
+                          <Building className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+                          <h3 className="text-lg font-semibold mb-2">
+                            {searchTerm || filteredProperties.length > 0 ? 'No Properties Match Your Search' : 'No Properties Yet'}
+                          </h3>
+                          <p className="text-muted-foreground mb-4 text-sm">
+                            {searchTerm || filteredProperties.length > 0 
+                              ? 'Try adjusting your search criteria or filters to find properties.'
+                              : 'Get started by adding your first property to begin managing your portfolio.'}
                           </p>
-                          {!searchTerm && (
-                            <Button onClick={() => setShowAddProperty(true)}>
-                              <Plus className="h-4 w-4 mr-2" />
-                              Add Property
-                            </Button>
-                          )}
+                          <div className="flex gap-2 justify-center">
+                            {(searchTerm || filteredProperties.length > 0) ? (
+                              <Button variant="outline" onClick={() => {
+                                setSearchTerm('');
+                                setFilteredProperties([]);
+                              }}>
+                                Clear Filters
+                              </Button>
+                            ) : (
+                              <Button onClick={() => setShowAddProperty(true)}>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Your First Property
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -616,10 +636,14 @@ const Properties = () => {
                             {property.images && property.images.length > 0 ? (
                               <img 
                                 src={property.images[0]} 
-                                alt={property.address}
+                                alt={`Property at ${property.address}`}
                                 className="w-full h-full object-cover"
                                 loading="lazy"
                                 decoding="async"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/placeholder.svg';
+                                  e.currentTarget.alt = 'Property image unavailable';
+                                }}
                               />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
@@ -628,9 +652,9 @@ const Properties = () => {
                             )}
                             
                             <div className="absolute bottom-2 right-2 flex items-center gap-2">
-                              {/* Active status indicator - green circle */}
+                              {/* Active status indicator using semantic colors */}
                               {(property.status === 'active' || !property.status) && (
-                                <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+                                <div className="w-3 h-3 bg-success rounded-full border-2 border-white shadow-sm"></div>
                               )}
                               
                               {/* Service type badge with initials */}
