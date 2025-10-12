@@ -215,31 +215,33 @@ export function AdminDashboard() {
     <AdminErrorBoundary>
       <div className="flex-1 space-y-4 md:space-y-6 p-3 md:p-6 bg-gradient-subtle min-h-screen">
         
-        {/* Breadcrumb Navigation */}
-        <AdminBreadcrumbs />
+        {/* Breadcrumb Navigation - Desktop only */}
+        <div className="hidden md:block">
+          <AdminBreadcrumbs />
+        </div>
         
-        {/* Advanced Search Bar */}
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        {/* Advanced Search Bar - Desktop only */}
+        <div className="hidden md:flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <AdvancedSearch className="w-full md:max-w-lg" />
           <QuickActions variant="dropdown" />
         </div>
 
-        {/* Command Center Header with Real-time Status */}
-        <div className="text-center space-y-3 py-6">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <h1 className="text-2xl md:text-5xl font-display font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+        {/* Command Center Header - Simplified for mobile */}
+        <div className="text-center space-y-2 md:space-y-3 py-2 md:py-6">
+          <div className="flex items-center justify-center gap-2 md:gap-3">
+            <h1 className="text-xl md:text-5xl font-display font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
               Command Center
             </h1>
-            <div className={`h-3 w-3 rounded-full ${isConnected ? 'bg-success shadow-glow animate-pulse' : 'bg-destructive'}`} />
+            <div className={`h-2 w-2 md:h-3 md:w-3 rounded-full ${isConnected ? 'bg-success shadow-glow animate-pulse' : 'bg-destructive'}`} />
           </div>
-          <p className="text-muted-foreground text-sm md:text-lg font-medium">
+          <p className="text-muted-foreground text-xs md:text-lg font-medium hidden md:block">
             Complete oversight and control of your property management operations
           </p>
-          <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center justify-center gap-3 md:gap-4 text-[10px] md:text-xs text-muted-foreground">
             <span className="font-mono">Last Update: {realTimeMetrics.lastUpdateTime.toLocaleTimeString()}</span>
-            <Button variant="ghost" size="sm" onClick={refreshAllData} className="h-7 px-3 hover:bg-primary/10 transition-colors">
-              <Activity className="h-3 w-3 mr-1" />
-              Refresh
+            <Button variant="ghost" size="sm" onClick={refreshAllData} className="h-6 md:h-7 px-2 md:px-3 hover:bg-primary/10 transition-colors">
+              <Activity className="h-3 w-3 md:mr-1" />
+              <span className="hidden md:inline">Refresh</span>
             </Button>
           </div>
         </div>
