@@ -404,6 +404,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "documents_property_owner_id_fkey"
+            columns: ["property_owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_owners_with_counts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "documents_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -1389,6 +1396,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "owner_distributions_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_owners_with_counts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "owner_distributions_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -1782,6 +1796,13 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_owners_with_counts"
             referencedColumns: ["id"]
           },
         ]
@@ -2225,6 +2246,13 @@ export type Database = {
             columns: ["property_owner_id"]
             isOneToOne: false
             referencedRelation: "property_owners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_owner_associations_property_owner_id_fkey"
+            columns: ["property_owner_id"]
+            isOneToOne: false
+            referencedRelation: "property_owners_with_counts"
             referencedColumns: ["id"]
           },
         ]
@@ -3259,6 +3287,35 @@ export type Database = {
       }
     }
     Views: {
+      property_owners_with_counts: {
+        Row: {
+          address: string | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_routing_number: string | null
+          city: string | null
+          company_name: string | null
+          created_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string | null
+          is_self: boolean | null
+          last_name: string | null
+          notes: string | null
+          phone: string | null
+          preferred_payment_method: string | null
+          property_count: number | null
+          spouse_partner_name: string | null
+          state: string | null
+          status: string | null
+          tax_id_number: string | null
+          updated_at: string | null
+          user_account_id: string | null
+          user_id: string | null
+          zip_code: string | null
+        }
+        Relationships: []
+      }
       unified_activities: {
         Row: {
           activity_type: string | null
@@ -3327,6 +3384,42 @@ export type Database = {
           status: string
           title: string
           total_count: number
+        }[]
+      }
+      get_paginated_property_owners: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_search?: string
+          p_status_filter?: string
+          p_user_id: string
+        }
+        Returns: {
+          address: string
+          bank_account_name: string
+          bank_account_number: string
+          bank_routing_number: string
+          city: string
+          company_name: string
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          is_self: boolean
+          last_name: string
+          notes: string
+          phone: string
+          preferred_payment_method: string
+          property_count: number
+          spouse_partner_name: string
+          state: string
+          status: string
+          tax_id_number: string
+          total_count: number
+          updated_at: string
+          user_account_id: string
+          user_id: string
+          zip_code: string
         }[]
       }
       get_user_roles: {

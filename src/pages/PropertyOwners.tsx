@@ -1,32 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { 
-  Search, 
-  User,
   Plus,
   Users,
-  Phone,
-  Mail,
-  MapPin,
-  Building2,
-  Edit,
-  Eye,
-  Trash2,
-  MoreHorizontal,
-  UserPlus,
-  Archive,
-  ArchiveRestore
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,15 +19,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { AddPropertyOwnerDialog } from "@/components/AddPropertyOwnerDialog";
-import { usePropertyOwners, useDeletePropertyOwner, useUpdatePropertyOwner } from "@/hooks/queries/usePropertyOwners";
+import { useDeletePropertyOwner, useUpdatePropertyOwner } from "@/hooks/queries/usePropertyOwners";
 import { useQueryClient } from "@tanstack/react-query";
-import type { Tables } from "@/integrations/supabase/types";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-
-type PropertyOwner = Tables<'property_owners'> & {
-  property_count?: number;
-};
+import { useOptimizedPropertyOwners } from "@/hooks/useOptimizedPropertyOwners";
+import { useDebounce } from "@/hooks/useDebounce";
+import { OwnerCard } from "@/components/property-owners/OwnerCard";
+import { OwnerFilters } from "@/components/property-owners/OwnerFilters";
+import type { PropertyOwner, SortField, SortOrder } from "@/utils/propertyOwnerHelpers";
+import { getOwnerDisplayName, sortOwners } from "@/utils/propertyOwnerHelpers";
 
 const PropertyOwners = () => {
   const navigate = useNavigate();
@@ -57,20 +36,60 @@ const PropertyOwners = () => {
   const [selectedOwner, setSelectedOwner] = useState<PropertyOwner | null>(null);
   const [ownerToDelete, setOwnerToDelete] = useState<PropertyOwner | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [sortField, setSortField] = useState<SortField>('created_at');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [currentPage, setCurrentPage] = useState(0);
   const { toast } = useToast();
 
-  // Use hooks to fetch data
-  const { data: owners = [], isLoading, error } = usePropertyOwners();
+  const ITEMS_PER_PAGE = 50;
+
+  // Use optimized hook with caching
+  const { data: owners = [], isLoading, error } = useOptimizedPropertyOwners();
   const deleteOwnerMutation = useDeletePropertyOwner();
   const updateOwner = useUpdatePropertyOwner();
   const queryClient = useQueryClient();
 
-  const statusFiltered = owners.filter((owner: any) => (showArchived ? true : owner.status !== 'archived'));
-  const filteredOwners = statusFiltered.filter(owner =>
-    `${owner.first_name} ${owner.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    owner.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    owner.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  // Memoize filtered and sorted owners
+  const processedOwners = useMemo(() => {
+    let filtered = owners;
+
+    // Apply status filter
+    if (!showArchived) {
+      filtered = filtered.filter(owner => owner.status !== 'archived');
+    }
+
+    // Apply search filter
+    if (debouncedSearchTerm) {
+      const term = debouncedSearchTerm.toLowerCase();
+      filtered = filtered.filter(owner =>
+        `${owner.first_name} ${owner.last_name}`.toLowerCase().includes(term) ||
+        owner.company_name?.toLowerCase().includes(term) ||
+        owner.email.toLowerCase().includes(term)
+      );
+    }
+
+    // Apply sorting
+    const sorted = sortOwners(filtered, sortField, sortOrder);
+
+    return sorted;
+  }, [owners, showArchived, debouncedSearchTerm, sortField, sortOrder]);
+
+  // Paginate owners
+  const paginatedOwners = useMemo(() => {
+    const start = currentPage * ITEMS_PER_PAGE;
+    const end = start + ITEMS_PER_PAGE;
+    return processedOwners.slice(start, end);
+  }, [processedOwners, currentPage]);
+
+  const totalPages = Math.ceil(processedOwners.length / ITEMS_PER_PAGE);
+
+  // Reset to first page when filters change
+  useMemo(() => {
+    setCurrentPage(0);
+  }, [debouncedSearchTerm, showArchived, sortField, sortOrder]);
 
   const handleEditOwner = (owner: PropertyOwner) => {
     setSelectedOwner(owner);
@@ -194,25 +213,22 @@ const PropertyOwners = () => {
           <div className="space-y-1">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">Property Owners</h1>
             <p className="text-muted-foreground text-sm md:text-base">
-              Manage property owner information and contact details • {owners.length} owners
+              Manage property owner information and contact details • {processedOwners.length} owners
             </p>
-          </div>
-          
-          <div className="relative w-full lg:w-auto">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search owners..." 
-              className="pl-10 w-full sm:w-64 min-w-0"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2">
-          <Label htmlFor="show-archived" className="text-sm">Show archived</Label>
-          <Switch id="show-archived" checked={showArchived} onCheckedChange={setShowArchived} />
-        </div>
+        {/* Filters and Search */}
+        <OwnerFilters
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          showArchived={showArchived}
+          onShowArchivedChange={setShowArchived}
+          sortField={sortField}
+          onSortFieldChange={setSortField}
+          sortOrder={sortOrder}
+          onSortOrderChange={setSortOrder}
+        />
 
         {/* Quick Actions */}
         <div className="flex items-center gap-3">
@@ -227,188 +243,66 @@ const PropertyOwners = () => {
 
         {/* Property Owners Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredOwners.map((owner) => (
-                  <Card 
-                    key={owner.id} 
-                    className="shadow-md border-0 hover:shadow-lg transition-shadow group cursor-pointer overflow-hidden"
-                    onClick={() => handleViewOwner(owner)}
-                  >
-                     <CardHeader className="pb-4 relative">
-                      {/* "Me" Badge - Top Right Corner */}
-                      {owner.is_self && (
-                        <Badge variant="secondary" className="absolute top-4 right-4 text-xs z-10">
-                          Me
-                        </Badge>
-                      )}
-                      
-                      <div className="flex items-start gap-4">
-                        {/* Profile Photo Section */}
-                        <div className="relative">
-                          <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center text-white text-xl font-semibold overflow-hidden">
-                            {/* TODO: Replace with actual profile photo upload */}
-                            {owner.company_name ? (
-                              <Building2 className="h-8 w-8" />
-                            ) : (
-                              <span>
-                                {owner.first_name.charAt(0)}{owner.last_name.charAt(0)}
-                              </span>
-                            )}
-                          </div>
-                          {/* Photo upload indicator - for future implementation */}
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-muted border-2 border-background rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <User className="h-3 w-3 text-muted-foreground" />
-                          </div>
-                        </div>
-
-                        {/* Main Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between">
-                            <div className="min-w-0 flex-1 pr-2">
-                              <h3 className="font-bold text-lg text-foreground leading-tight">
-                                {owner.first_name} {owner.last_name}
-                              </h3>
-                              {owner.company_name && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {owner.company_name}
-                                </p>
-                              )}
-                            </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleViewOwner(owner);
-                                }}>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditOwner(owner);
-                                }}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit Owner
-                                </DropdownMenuItem>
-                                {((owner as any).status === 'archived') ? (
-                                  <DropdownMenuItem onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleUnarchiveOwner(owner);
-                                  }}>
-                                    <ArchiveRestore className="h-4 w-4 mr-2" />
-                                    Unarchive Owner
-                                  </DropdownMenuItem>
-                                ) : (
-                                  <DropdownMenuItem onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleArchiveOwner(owner);
-                                  }}>
-                                    <Archive className="h-4 w-4 mr-2" />
-                                    Archive Owner
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem 
-                                  className="text-destructive" 
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteOwner(owner);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete Owner
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="space-y-4">
-                      {/* Contact Information */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="text-muted-foreground truncate">{owner.email}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="text-muted-foreground">{owner.phone}</span>
-                        </div>
-                        {owner.address && (
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                            <span className="text-muted-foreground truncate">
-                              {owner.city}, {owner.state}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Property Count & Payment Info - Prominent Display */}
-                      <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-5 w-5 text-primary" />
-                            <span className="font-semibold text-foreground">
-                              {owner.property_count || 0} {(owner.property_count || 0) === 1 ? 'Property' : 'Properties'}
-                            </span>
-                          </div>
-                          {(owner.property_count || 0) > 0 && (
-                            <Badge variant="outline" className="bg-background">
-                              Active
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Payment Method:</span>
-                          <span className="font-medium text-foreground capitalize">
-                            {owner.preferred_payment_method.replace('_', ' ')}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Quick Action Buttons */}
-                      <div className="flex gap-2 pt-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewOwner(owner);
-                          }}
-                        >
-                          <Eye className="h-4 w-4 mr-2" />
-                          View
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          className="flex-1"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditOwner(owner);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+          {paginatedOwners.map((owner) => (
+            <OwnerCard
+              key={owner.id}
+              owner={owner}
+              onView={handleViewOwner}
+              onEdit={handleEditOwner}
+              onDelete={handleDeleteOwner}
+              onArchive={handleArchiveOwner}
+              onUnarchive={handleUnarchiveOwner}
+            />
+          ))}
         </div>
 
-        {filteredOwners.length === 0 && (
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              Showing {currentPage * ITEMS_PER_PAGE + 1} to {Math.min((currentPage + 1) * ITEMS_PER_PAGE, processedOwners.length)} of {processedOwners.length} owners
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                disabled={currentPage === 0}
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNum = currentPage < 3 ? i : currentPage - 2 + i;
+                  if (pageNum >= totalPages) return null;
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={currentPage === pageNum ? "default" : "outline"}
+                      size="sm"
+                      className="w-8 h-8 p-0"
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum + 1}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                disabled={currentPage >= totalPages - 1}
+              >
+                Next
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {processedOwners.length === 0 && (
           <div className="text-center py-12">
             <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">No property owners found</h3>
