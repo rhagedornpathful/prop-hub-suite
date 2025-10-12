@@ -46,9 +46,16 @@ import { useUserRole } from "@/hooks/useUserRole";
 const adminMenuItems = [
   // Core Operations
   {
+    title: "Home",
+    url: "/",
+    icon: Home,
+    description: "Main hub",
+    group: "Core"
+  },
+  {
     title: "Dashboard",
     url: "/admin/overview",
-    icon: Home,
+    icon: BarChart3,
     description: "Overview & metrics",
     group: "Core"
   },
