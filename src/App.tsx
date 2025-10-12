@@ -20,6 +20,7 @@ import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 
 import { logger } from "@/lib/logger";
 import { RouteLoadingFallback } from "@/components/RouteLoadingFallback";
@@ -27,7 +28,6 @@ import { PreloadCriticalResources } from "@/components/PreloadCriticalResources"
 
 // Lazy load ALL page components for optimal code splitting
 const Index = lazy(() => import("./pages/Index"));
-const DashboardHub = lazy(() => import("./pages/DashboardHub"));
 const PropertyOwnerHub = lazy(() => import("./pages/dashboards/PropertyOwnerHub"));
 const HouseWatcherHub = lazy(() => import("./pages/dashboards/HouseWatcherHub"));
 const PropertyManagerHub = lazy(() => import("./pages/dashboards/PropertyManagerHub"));
@@ -149,9 +149,15 @@ const AppContent = () => {
                     <main className="flex-1 flex flex-col min-w-0 pb-20 lg:pb-0">
                       <AppHeader />
                       <ErrorBoundary>
-                        <Suspense fallback={<RouteLoadingFallback />}>
+                         <Suspense fallback={<RouteLoadingFallback />}>
                         <Routes>
-                        <Route path="/" element={<PageTransition><DashboardHub /></PageTransition>} />
+                        {/* Home route - redirects to role-specific dashboard */}
+                        <Route path="/" element={<PageTransition><RoleBasedRedirect /></PageTransition>} />
+                        
+                        {/* Legacy home page (kept for backwards compatibility) */}
+                        <Route path="/home" element={<PageTransition><Index /></PageTransition>} />
+                        
+                        {/* Property Owner Dashboard */}
                         <Route path="/owner-dashboard" element={
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={['owner_investor']}>
@@ -180,7 +186,8 @@ const AppContent = () => {
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
-                        <Route path="/home" element={<PageTransition><Index /></PageTransition>} />
+                        
+                        {/* Admin Dashboard Routes */}
                         <Route path="/admin/overview" element={
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={ROLE_COMBINATIONS.ADMIN_ONLY}>
