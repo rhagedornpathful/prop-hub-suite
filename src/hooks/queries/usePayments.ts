@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Payment = Tables<"payments">;
@@ -28,15 +29,50 @@ export interface CreateSubscriptionData {
 }
 
 export const usePayments = () => {
+  const { user, activeRole, actualRole } = useAuth();
+
   return useQuery({
-    queryKey: ["payments"],
+    queryKey: ["payments", user?.id, activeRole],
     queryFn: async () => {
+      if (!user) return [];
+
       console.log("📋 Fetching payments from database...");
       
-      const { data: payments, error } = await supabase
+      const effectiveRole = activeRole || actualRole;
+
+      // Build query
+      let query = supabase
         .from("payments")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
+
+      // Filter by role - property owners only see payments for their properties
+      if (effectiveRole === 'owner_investor') {
+        // Get properties where user is associated as owner
+        const { data: ownerData } = await supabase
+          .from('property_owners')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (ownerData) {
+          const { data: associations } = await supabase
+            .from('property_owner_associations')
+            .select('property_id')
+            .eq('property_owner_id', ownerData.id);
+
+          const propertyIds = associations?.map(a => a.property_id) || [];
+          
+          if (propertyIds.length === 0) {
+            return [];
+          }
+
+          query = query.in('property_id', propertyIds);
+        } else {
+          return [];
+        }
+      }
+
+      const { data: payments, error } = await query.order("created_at", { ascending: false });
 
       if (error) {
         console.error("❌ Error fetching payments:", error);
@@ -46,19 +82,55 @@ export const usePayments = () => {
       console.log("✅ Payments fetched successfully:", payments);
       return payments as Payment[];
     },
+    enabled: !!user,
   });
 };
 
 export const useSubscriptions = () => {
+  const { user, activeRole, actualRole } = useAuth();
+
   return useQuery({
-    queryKey: ["subscriptions"],
+    queryKey: ["subscriptions", user?.id, activeRole],
     queryFn: async () => {
+      if (!user) return [];
+
       console.log("📋 Fetching subscriptions from database...");
       
-      const { data: subscriptions, error } = await supabase
+      const effectiveRole = activeRole || actualRole;
+
+      // Build query
+      let query = supabase
         .from("subscriptions")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select("*");
+
+      // Filter by role - property owners only see subscriptions for their properties
+      if (effectiveRole === 'owner_investor') {
+        // Get properties where user is associated as owner
+        const { data: ownerData } = await supabase
+          .from('property_owners')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (ownerData) {
+          const { data: associations } = await supabase
+            .from('property_owner_associations')
+            .select('property_id')
+            .eq('property_owner_id', ownerData.id);
+
+          const propertyIds = associations?.map(a => a.property_id) || [];
+          
+          if (propertyIds.length === 0) {
+            return [];
+          }
+
+          query = query.in('property_id', propertyIds);
+        } else {
+          return [];
+        }
+      }
+
+      const { data: subscriptions, error } = await query.order("created_at", { ascending: false });
 
       if (error) {
         console.error("❌ Error fetching subscriptions:", error);
@@ -68,6 +140,7 @@ export const useSubscriptions = () => {
       console.log("✅ Subscriptions fetched successfully:", subscriptions);
       return subscriptions as Subscription[];
     },
+    enabled: !!user,
   });
 };
 

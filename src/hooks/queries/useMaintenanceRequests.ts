@@ -69,15 +69,17 @@ export interface MaintenanceCalendarEvent {
 }
 
 export const useMaintenanceRequests = () => {
-  const { user } = useAuth();
+  const { user, activeRole, actualRole } = useAuth();
 
   return useQuery({
-    queryKey: ['maintenance-requests', user?.id],
+    queryKey: ['maintenance-requests', user?.id, activeRole],
     queryFn: async () => {
       if (!user) return [];
       
-      // Let RLS policies handle access control - get requests user has access to
-      const { data, error } = await supabase
+      const effectiveRole = activeRole || actualRole;
+
+      // Build query
+      let query = supabase
         .from('maintenance_requests')
         .select(`
           *,
@@ -88,8 +90,36 @@ export const useMaintenanceRequests = () => {
             state,
             zip_code
           )
-        `)
-        .order('created_at', { ascending: false });
+        `);
+
+      // Filter by role - property owners only see maintenance for their properties
+      if (effectiveRole === 'owner_investor') {
+        // Get properties where user is associated as owner
+        const { data: ownerData } = await supabase
+          .from('property_owners')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (ownerData) {
+          const { data: associations } = await supabase
+            .from('property_owner_associations')
+            .select('property_id')
+            .eq('property_owner_id', ownerData.id);
+
+          const propertyIds = associations?.map(a => a.property_id) || [];
+          
+          if (propertyIds.length === 0) {
+            return [];
+          }
+
+          query = query.in('property_id', propertyIds);
+        } else {
+          return [];
+        }
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       return data as any[];
@@ -196,10 +226,17 @@ export const useMaintenanceStatusHistory = (requestId: string) => {
 };
 
 export const useMaintenanceCalendarEvents = () => {
+  const { user, activeRole, actualRole } = useAuth();
+
   return useQuery({
-    queryKey: ['maintenance-calendar-events'],
+    queryKey: ['maintenance-calendar-events', user?.id, activeRole],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!user) return [];
+
+      const effectiveRole = activeRole || actualRole;
+
+      // Build query
+      let query = supabase
         .from('maintenance_requests')
         .select(`
           id,
@@ -218,8 +255,35 @@ export const useMaintenanceCalendarEvents = () => {
             zip_code
           )
         `)
-        .not('scheduled_date', 'is', null)
-        .order('scheduled_date', { ascending: true });
+        .not('scheduled_date', 'is', null);
+
+      // Filter by role - property owners only see maintenance for their properties
+      if (effectiveRole === 'owner_investor') {
+        const { data: ownerData } = await supabase
+          .from('property_owners')
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (ownerData) {
+          const { data: associations } = await supabase
+            .from('property_owner_associations')
+            .select('property_id')
+            .eq('property_owner_id', ownerData.id);
+
+          const propertyIds = associations?.map(a => a.property_id) || [];
+          
+          if (propertyIds.length === 0) {
+            return [];
+          }
+
+          query = query.in('property_id', propertyIds);
+        } else {
+          return [];
+        }
+      }
+
+      const { data, error } = await query.order('scheduled_date', { ascending: true });
 
       if (error) throw error;
       
@@ -237,6 +301,7 @@ export const useMaintenanceCalendarEvents = () => {
         assigned_to_name: null
       })) as MaintenanceCalendarEvent[];
     },
+    enabled: !!user,
   });
 };
 
