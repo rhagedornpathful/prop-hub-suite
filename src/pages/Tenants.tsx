@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ListLoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,18 +87,7 @@ const Tenants = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-muted-foreground">Loading tenants...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <ListLoadingSkeleton count={5} />;
   }
 
   if (error) {
@@ -122,7 +112,7 @@ const Tenants = () => {
   }
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1 p-4 md:p-6 pb-24 md:pb-6">{/* Added pb-24 for mobile bottom nav */}
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Clean Header */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">

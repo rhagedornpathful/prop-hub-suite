@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageLoadingSkeleton } from "@/components/ui/loading-skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -248,20 +249,11 @@ const Maintenance = () => {
   ];
 
   if (isLoading) {
-    return (
-      <div className="flex-1 p-6 overflow-auto">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-            <p className="text-muted-foreground mt-4">Loading maintenance management system...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoadingSkeleton />;
   }
 
   return (
-    <div className="flex-1 p-6 overflow-auto bg-gradient-to-br from-slate-50 to-slate-100/50">
+    <div className="flex-1 p-4 md:p-6 pb-24 md:pb-6 overflow-auto bg-gradient-to-br from-slate-50 to-slate-100/50">{/* Added pb-24 for mobile bottom nav */}
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
