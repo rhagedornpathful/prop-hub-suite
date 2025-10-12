@@ -1,111 +1,65 @@
-import { useState } from 'react';
-import { Keyboard, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Keyboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import type { KeyboardShortcut } from '@/hooks/useKeyboardShortcuts';
+import { KeyboardShortcutsDialog } from '@/components/KeyboardShortcutsDialog';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-interface KeyboardShortcutsHelpProps {
-  shortcuts: KeyboardShortcut[];
-  isOpen: boolean;
-  onClose: () => void;
-}
+/**
+ * Global keyboard shortcuts help trigger
+ * Shows a floating help button and responds to ? or Ctrl+/ to open shortcuts dialog
+ */
+export function KeyboardShortcutsHelp() {
+  const [isOpen, setIsOpen] = useState(false);
 
-const KeyboardShortcutsHelp = ({ shortcuts, isOpen, onClose }: KeyboardShortcutsHelpProps) => {
-  const formatKey = (shortcut: KeyboardShortcut) => {
-    const keys = [];
-    
-    if (shortcut.ctrlKey || shortcut.metaKey) {
-      keys.push(navigator.platform.includes('Mac') ? '⌘' : 'Ctrl');
-    }
-    if (shortcut.altKey) {
-      keys.push('Alt');
-    }
-    if (shortcut.shiftKey) {
-      keys.push('Shift');
-    }
-    keys.push(shortcut.key.toUpperCase());
-    
-    return keys;
-  };
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Open on ? key or Ctrl+/
+      if (
+        (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) ||
+        ((e.ctrlKey || e.metaKey) && e.key === '/')
+      ) {
+        // Don't trigger if user is typing in an input
+        const target = e.target as HTMLElement;
+        if (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+        
+        e.preventDefault();
+        setIsOpen(true);
+      }
+    };
 
-  // Group shortcuts by section
-  const groupedShortcuts = shortcuts.reduce((acc, shortcut) => {
-    const section = shortcut.section || 'General';
-    if (!acc[section]) {
-      acc[section] = [];
-    }
-    acc[section].push(shortcut);
-    return acc;
-  }, {} as Record<string, KeyboardShortcut[]>);
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, []);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+    <>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsOpen(true)}
+            className="fixed bottom-20 right-4 md:bottom-4 z-40 h-12 w-12 rounded-full shadow-lg hover:shadow-xl transition-all bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 screen-only"
+            aria-label="Keyboard shortcuts (press ? to open)"
+          >
             <Keyboard className="h-5 w-5" />
-            Keyboard Shortcuts
-          </DialogTitle>
-        </DialogHeader>
-        
-        <ScrollArea className="max-h-[60vh]">
-          <div className="space-y-6">
-            {Object.entries(groupedShortcuts).map(([section, sectionShortcuts]) => (
-              <div key={section}>
-                <h3 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground mb-3">
-                  {section}
-                </h3>
-                <div className="space-y-2">
-                  {sectionShortcuts.map((shortcut, index) => (
-                    <div key={`${section}-${index}`} className="flex items-center justify-between py-2">
-                      <span className="text-sm">{shortcut.description}</span>
-                      <div className="flex items-center gap-1">
-                        {formatKey(shortcut).map((key, keyIndex) => (
-                          <span key={keyIndex} className="flex items-center">
-                            <Badge 
-                              variant="outline" 
-                              className="font-mono text-xs px-2 py-1 min-w-[28px] justify-center"
-                            >
-                              {key}
-                            </Badge>
-                            {keyIndex < formatKey(shortcut).length - 1 && (
-                              <span className="mx-1 text-muted-foreground">+</span>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {section !== Object.keys(groupedShortcuts)[Object.keys(groupedShortcuts).length - 1] && (
-                  <Separator className="mt-4" />
-                )}
-              </div>
-            ))}
-            
-            <div className="pt-4 border-t">
-              <div className="flex items-center justify-between py-2">
-                <span className="text-sm">Show/hide this help</span>
-                <Badge variant="outline" className="font-mono text-xs px-2 py-1">
-                  ?
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </ScrollArea>
-        
-        <div className="flex justify-end pt-4">
-          <Button variant="outline" onClick={onClose}>
-            <X className="h-4 w-4 mr-2" />
-            Close
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </TooltipTrigger>
+        <TooltipContent side="left">
+          <p className="font-medium">Keyboard Shortcuts</p>
+          <p className="text-xs text-muted-foreground">Press <kbd className="px-1 bg-muted rounded">?</kbd> to open</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <KeyboardShortcutsDialog open={isOpen} onOpenChange={setIsOpen} />
+    </>
   );
-};
+}
 
 export default KeyboardShortcutsHelp;

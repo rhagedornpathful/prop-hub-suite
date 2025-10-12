@@ -1372,3 +1372,23 @@
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
   }
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .motion-reduce\:transition-none {
+    transition: none !important;
+  }
+
+  .motion-reduce\:animate-none {
+    animation: none !important;
+  }
+}

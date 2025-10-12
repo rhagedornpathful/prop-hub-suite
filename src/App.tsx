@@ -16,6 +16,7 @@ import { ViewAsBanner } from "@/components/ViewAsBanner";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { MobileTabBar } from "@/components/navigation/MobileTabBar";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
+import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -466,6 +467,7 @@ const AppContent = () => {
                         </Suspense>
                       </ErrorBoundary>
                       <MobileTabBar />
+                      <KeyboardShortcutsHelp />
                     </main>
                   </div>
                   

@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useMobileDetection } from "@/hooks/useMobileDetection";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import {
   Sidebar,
@@ -484,17 +485,41 @@ export function AppSidebar() {
                           {groupItems.map((item: any) => (
                             <SidebarMenuItem key={item.title}>
                               <SidebarMenuButton asChild>
-                                <NavLink
-                                  to={basePath + item.url}
-                                  className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
-                                    isActive(item.url)
-                                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm font-medium"
-                                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                                  }`}
-                                >
-                                  <item.icon className="w-4 h-4 flex-shrink-0" />
-                                  {!collapsed && <span className="text-sm">{item.title}</span>}
-                                </NavLink>
+                                {collapsed ? (
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <NavLink
+                                        to={basePath + item.url}
+                                        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
+                                          isActive(item.url)
+                                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm font-medium"
+                                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                        }`}
+                                        aria-label={item.title}
+                                      >
+                                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                                      </NavLink>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">
+                                      <p>{item.title}</p>
+                                      {item.description && (
+                                        <p className="text-xs text-muted-foreground">{item.description}</p>
+                                      )}
+                                    </TooltipContent>
+                                  </Tooltip>
+                                ) : (
+                                  <NavLink
+                                    to={basePath + item.url}
+                                    className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all ${
+                                      isActive(item.url)
+                                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm font-medium"
+                                        : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                                    }`}
+                                  >
+                                    <item.icon className="w-4 h-4 flex-shrink-0" />
+                                    <span className="text-sm">{item.title}</span>
+                                  </NavLink>
+                                )}
                               </SidebarMenuButton>
                             </SidebarMenuItem>
                           ))}
@@ -536,17 +561,38 @@ export function AppSidebar() {
           {/* Settings */}
           <div className="mt-auto p-4 border-t border-sidebar-border">
             <SidebarMenuButton asChild>
-              <NavLink 
-                to={basePath + (userRole === 'house_watcher' ? "/house-watcher-settings" : "/settings")}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive(userRole === 'house_watcher' ? "/house-watcher-settings" : "/settings") 
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground" 
-                    : "text-sidebar-foreground hover:bg-sidebar-accent"
-                }`}
-              >
-                <Settings className="w-5 h-5" />
-                {!collapsed && <span>Settings</span>}
-              </NavLink>
+              {collapsed ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <NavLink 
+                      to={basePath + (userRole === 'house_watcher' ? "/house-watcher-settings" : "/settings")}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                        isActive(userRole === 'house_watcher' ? "/house-watcher-settings" : "/settings") 
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                          : "text-sidebar-foreground hover:bg-sidebar-accent"
+                      }`}
+                      aria-label="Settings"
+                    >
+                      <Settings className="w-5 h-5" />
+                    </NavLink>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <p>Settings</p>
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <NavLink 
+                  to={basePath + (userRole === 'house_watcher' ? "/house-watcher-settings" : "/settings")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    isActive(userRole === 'house_watcher' ? "/house-watcher-settings" : "/settings") 
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                      : "text-sidebar-foreground hover:bg-sidebar-accent"
+                  }`}
+                >
+                  <Settings className="w-5 h-5" />
+                  <span>Settings</span>
+                </NavLink>
+              )}
             </SidebarMenuButton>
           </div>
         </SidebarContent>

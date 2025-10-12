@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async'
 
 import App from './App.tsx'
 import './index.css'
+import './styles/print.css'
 import { queryClient } from './lib/queryClient'
 import { logger } from './lib/logger'
 

@@ -265,11 +265,7 @@ const IndexContent = () => {
         onScheduleMaintenance={handleScheduleMaintenance}
       />
       
-      <KeyboardShortcutsHelp
-        shortcuts={shortcuts}
-        isOpen={isHelpOpen}
-        onClose={closeHelp}
-      />
+      {/* Keyboard shortcuts help is now global via App.tsx */}
       
       {/* Quick Actions Floating Button */}
       <QuickActions
