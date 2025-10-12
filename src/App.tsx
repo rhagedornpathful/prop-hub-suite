@@ -31,6 +31,7 @@ const DashboardHub = lazy(() => import("./pages/DashboardHub"));
 const PropertyOwnerHub = lazy(() => import("./pages/dashboards/PropertyOwnerHub"));
 const HouseWatcherHub = lazy(() => import("./pages/dashboards/HouseWatcherHub"));
 const PropertyManagerHub = lazy(() => import("./pages/dashboards/PropertyManagerHub"));
+const TenantHub = lazy(() => import("./pages/dashboards/TenantHub"));
 const Properties = lazy(() => import("./pages/Properties"));
 const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
 const Tenants = lazy(() => import("./pages/Tenants"));
@@ -169,6 +170,13 @@ const AppContent = () => {
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={['property_manager']}>
                               <PropertyManagerHub />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/tenant-dashboard" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={['tenant']}>
+                              <TenantHub />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
