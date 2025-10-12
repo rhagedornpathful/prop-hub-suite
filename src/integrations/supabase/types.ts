@@ -3259,7 +3259,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      unified_activities: {
+        Row: {
+          activity_type: string | null
+          amount: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          metadata: Json | null
+          property_address: string | null
+          property_city: string | null
+          property_id: string | null
+          property_state: string | null
+          property_type: string | null
+          status: string | null
+          title: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_next_check_date: {
@@ -3283,6 +3300,34 @@ export type Database = {
       force_make_me_admin: {
         Args: Record<PropertyKey, never>
         Returns: Json
+      }
+      get_paginated_activities: {
+        Args: {
+          p_activity_type?: string
+          p_date_from?: string
+          p_date_to?: string
+          p_limit?: number
+          p_offset?: number
+          p_priority?: string
+          p_search?: string
+          p_status?: string
+        }
+        Returns: {
+          activity_type: string
+          amount: number
+          created_at: string
+          description: string
+          id: string
+          metadata: Json
+          property_address: string
+          property_city: string
+          property_id: string
+          property_state: string
+          property_type: string
+          status: string
+          title: string
+          total_count: number
+        }[]
       }
       get_user_roles: {
         Args: { _user_id: string }

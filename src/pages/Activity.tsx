@@ -1,56 +1,32 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAllPropertyActivity } from "@/hooks/useAllPropertyActivity";
+import { useOptimizedActivities } from "@/hooks/useOptimizedActivities";
+import { useDebounce } from "@/hooks/useDebounce";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ActivityDetailDialog } from "@/components/ActivityDetailDialog";
+import { ActivityTable, EmptyActivityState } from "@/components/activities/ActivityTable";
 import { 
   Activity as ActivityIcon, 
-  Wrench, 
-  CheckCircle, 
-  DollarSign, 
   AlertCircle,
   Filter,
   Calendar as CalendarIcon,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
-  User2,
-  MapPin,
-  Eye,
-  Clock
+  Clock,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
-import { format, isToday, isYesterday, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-const activityTypeColors = {
-  maintenance: "bg-orange-100 text-orange-800 border-orange-200",
-  property_check: "bg-blue-100 text-blue-800 border-blue-200", 
-  payment: "bg-green-100 text-green-800 border-green-200",
-  home_check: "bg-purple-100 text-purple-800 border-purple-200"
-};
-
-const activityTypeIcons = {
-  maintenance: Wrench,
-  property_check: CheckCircle,
-  payment: DollarSign,
-  home_check: Eye
-};
-
-const statusColors = {
-  pending: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  'in-progress': "bg-blue-100 text-blue-800 border-blue-200",
-  completed: "bg-green-100 text-green-800 border-green-200",
-  cancelled: "bg-red-100 text-red-800 border-red-200",
-  scheduled: "bg-purple-100 text-purple-800 border-purple-200"
-};
+// Moved to activityHelpers.ts
 
 interface ActivityFilters {
   search: string;
@@ -60,9 +36,11 @@ interface ActivityFilters {
   dateRange: { from: Date | undefined; to: Date | undefined };
 }
 
+const ITEMS_PER_PAGE = 50;
+
 export default function Activity() {
   const navigate = useNavigate();
-  const { activities, isLoading, error, refetch } = useAllPropertyActivity();
+  const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<ActivityFilters>({
     search: '',
     activityType: 'all',
@@ -74,104 +52,64 @@ export default function Activity() {
   const [selectedActivity, setSelectedActivity] = useState<any>(null);
   const [showActivityDetail, setShowActivityDetail] = useState(false);
 
-  const handleFilterChange = (key: keyof ActivityFilters, value: any) => {
+  // Debounce search input
+  const debouncedSearch = useDebounce(filters.search, 300);
+
+  // Use optimized React Query hook
+  const { data: activities, isLoading, error, refetch } = useOptimizedActivities({
+    limit: ITEMS_PER_PAGE,
+    offset: (currentPage - 1) * ITEMS_PER_PAGE,
+    type: filters.activityType !== 'all' ? filters.activityType : undefined,
+    status: filters.status !== 'all' ? filters.status : undefined,
+    priority: filters.priority !== 'all' ? filters.priority : undefined,
+    dateFrom: filters.dateRange.from,
+    dateTo: filters.dateRange.to,
+    search: debouncedSearch
+  });
+
+  const handleFilterChange = useCallback((key: keyof ActivityFilters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }));
-  };
+    setCurrentPage(1); // Reset to first page on filter change
+  }, []);
 
-  const filteredActivities = activities?.filter(activity => {
-    const matchesSearch = !filters.search || 
-      activity.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-      activity.description?.toLowerCase().includes(filters.search.toLowerCase()) ||
-      activity.metadata?.property_address?.toLowerCase().includes(filters.search.toLowerCase());
-    
-    const matchesType = filters.activityType === 'all' || activity.type === filters.activityType;
-    const matchesStatus = filters.status === 'all' || activity.status === filters.status;
-    const matchesPriority = filters.priority === 'all' || activity.metadata?.priority === filters.priority;
-    
-    const activityDate = new Date(activity.date);
-    const matchesDateRange = (!filters.dateRange.from || activityDate >= filters.dateRange.from) &&
-                           (!filters.dateRange.to || activityDate <= filters.dateRange.to);
-    
-    return matchesSearch && matchesType && matchesStatus && matchesPriority && matchesDateRange;
-  }) || [];
+  // Memoized sorted activities
+  const sortedActivities = useMemo(() => {
+    return activities || [];
+  }, [activities]);
 
-  // Sort activities by date (newest first)
-  const sortedActivities = filteredActivities.sort((a, b) => 
-    new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-
-  const handleActivityClick = (activity: any) => {
+  const handleActivityClick = useCallback((activity: any) => {
     setSelectedActivity(activity);
     setShowActivityDetail(true);
-  };
+  }, []);
 
-  const getActivityMetrics = () => {
-    const total = filteredActivities.length;
-    const pending = filteredActivities.filter(a => a.status === 'pending').length;
-    const inProgress = filteredActivities.filter(a => a.status === 'in-progress' || a.status === 'scheduled').length;
-    const overdue = filteredActivities.filter(a => {
+  // Memoized metrics calculation
+  const metrics = useMemo(() => {
+    const total = sortedActivities.length;
+    const pending = sortedActivities.filter(a => a.status === 'pending').length;
+    const inProgress = sortedActivities.filter(a => a.status === 'in-progress' || a.status === 'scheduled').length;
+    const overdue = sortedActivities.filter(a => {
       const dueDate = a.metadata?.due_date || a.metadata?.scheduled_date;
       return dueDate && new Date(dueDate) < new Date() && !['completed', 'paid', 'cancelled'].includes(a.status);
     }).length;
 
     return { total, pending, inProgress, overdue };
-  };
+  }, [sortedActivities]);
 
-  const metrics = getActivityMetrics();
+  // Pagination handlers
+  const totalPages = Math.ceil((sortedActivities.length || 0) / ITEMS_PER_PAGE);
+  const canGoPrevious = currentPage > 1;
+  const canGoNext = currentPage < totalPages;
 
-  const getPriorityBadge = (priority: string | undefined) => {
-    if (!priority) return null;
-    return (
-      <Badge variant="outline" className={cn(
-        "text-xs",
-        priority === 'high' ? 'border-red-200 text-red-800' :
-        priority === 'medium' ? 'border-yellow-200 text-yellow-800' :
-        'border-green-200 text-green-800'
-      )}>
-        {priority}
-      </Badge>
-    );
-  };
-
-  const getRelativeDate = (date: string) => {
-    const activityDate = new Date(date);
-    const now = new Date();
-    
-    if (isToday(activityDate)) {
-      return `Today, ${format(activityDate, 'h:mm a')}`;
-    } else if (isYesterday(activityDate)) {
-      return `Yesterday, ${format(activityDate, 'h:mm a')}`;
-    } else {
-      const daysDiff = differenceInDays(now, activityDate);
-      if (daysDiff <= 7) {
-        return `${daysDiff} days ago`;
-      } else {
-        return format(activityDate, 'MMM d, yyyy');
-      }
+  const handlePreviousPage = () => {
+    if (canGoPrevious) {
+      setCurrentPage(prev => prev - 1);
     }
   };
 
-  const getActivityIcon = (type: string) => {
-    const IconComponent = activityTypeIcons[type as keyof typeof activityTypeIcons] || ActivityIcon;
-    return <IconComponent className="w-4 h-4" />;
-  };
-
-  const getStatusBadge = (status: string) => {
-    if (!status) return null;
-    return (
-      <Badge variant="outline" className={cn("text-xs", statusColors[status as keyof typeof statusColors])}>
-        {status.replace('_', ' ')}
-      </Badge>
-    );
-  };
-
-  const getActivityTypeBadge = (type: string) => {
-    return (
-      <Badge variant="outline" className={cn("text-xs", activityTypeColors[type as keyof typeof activityTypeColors])}>
-        {getActivityIcon(type)}
-        <span className="ml-1">{type.replace('_', ' ')}</span>
-      </Badge>
-    );
+  const handleNextPage = () => {
+    if (canGoNext) {
+      setCurrentPage(prev => prev + 1);
+    }
   };
 
   if (isLoading) {
@@ -199,8 +137,8 @@ export default function Activity() {
           <CardContent className="pt-6">
             <div className="text-center text-muted-foreground">
               <AlertCircle className="w-8 h-8 mx-auto mb-2" />
-              <p>Error loading activities: {error}</p>
-              <Button onClick={refetch} variant="outline" className="mt-2">
+              <p>Error loading activities: {error.message}</p>
+              <Button onClick={() => refetch()} variant="outline" className="mt-2">
                 Try Again
               </Button>
             </div>
@@ -404,83 +342,42 @@ export default function Activity() {
 
       {/* Activities Table */}
       <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-primary font-display">Recent Activities ({sortedActivities.length})</CardTitle>
+          
+          {/* Pagination Controls */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages || 1}
+            </span>
+            <div className="flex gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePreviousPage}
+                disabled={!canGoPrevious}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNextPage}
+                disabled={!canGoNext}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Activity</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Priority</TableHead>
-                <TableHead>Assigned To</TableHead>
-                <TableHead>Last Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedActivities.map((activity) => (
-                <TableRow 
-                  key={activity.id}
-                  className="cursor-pointer hover:bg-muted/50"
-                  onClick={() => handleActivityClick(activity)}
-                >
-                  <TableCell>
-                    <div className="flex items-start gap-3">
-                      <div className="flex-shrink-0 mt-1">
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          {getActivityTypeBadge(activity.type)}
-                        </div>
-                        <div className="font-medium text-sm">{activity.title}</div>
-                        {activity.description && (
-                          <div className="text-xs text-muted-foreground line-clamp-1 mt-1">
-                            {activity.description}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1 text-sm">
-                      <MapPin className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                      <span className="truncate">{activity.metadata?.property_address || 'N/A'}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(activity.status)}
-                  </TableCell>
-                  <TableCell>
-                    {getPriorityBadge(activity.metadata?.priority)}
-                  </TableCell>
-                  <TableCell>
-                    {activity.metadata?.assigned_to_name ? (
-                      <div className="flex items-center gap-1 text-sm">
-                        <User2 className="w-3 h-3 text-muted-foreground" />
-                        <span>{activity.metadata.assigned_to_name}</span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">Unassigned</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {getRelativeDate(activity.date)}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          
-          {sortedActivities.length === 0 && (
-            <div className="text-center py-8 text-muted-foreground">
-              <ActivityIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No activities found matching your filters</p>
-            </div>
+          {sortedActivities.length > 0 ? (
+            <ActivityTable 
+              activities={sortedActivities}
+              onActivityClick={handleActivityClick}
+            />
+          ) : (
+            <EmptyActivityState />
           )}
         </CardContent>
       </Card>
