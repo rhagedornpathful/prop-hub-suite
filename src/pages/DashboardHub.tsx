@@ -408,15 +408,17 @@ export default function Dashboard() {
               <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
                 {navigationCards.map((card) => (
                   <Link key={card.title} to={card.href}>
-                    <Card className="hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer border-2">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <card.icon className={cn(ICON_SIZES.lg, card.color)} />
-                          {card.count !== null && (
-                            <span className="text-2xl font-bold">{card.count}</span>
-                          )}
+                    <Card className="hover:shadow-md transition-all hover:scale-[1.02] cursor-pointer border-2 h-full">
+                      <CardContent className="p-6">
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-center justify-between">
+                            <card.icon className={cn(ICON_SIZES.lg, card.color)} />
+                            {card.count !== null && (
+                              <span className="text-2xl font-bold">{card.count}</span>
+                            )}
+                          </div>
+                          <p className="text-sm font-medium text-foreground">{card.title}</p>
                         </div>
-                        <p className="text-sm font-medium">{card.title}</p>
                       </CardContent>
                     </Card>
                   </Link>
