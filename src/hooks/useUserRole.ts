@@ -20,20 +20,23 @@ export interface RolePermissions {
 }
 
 export const useUserRole = () => {
-  const { userRole, user, loading } = useAuth();
+  const { activeRole, actualRole, isRoleSwitched, user, loading } = useAuth();
   const { isDevAdminActive, isDevelopment } = useDevAdmin();
   const { viewAsRole, isViewingAs } = useViewAs();
 
 
   // Determine the effective role:
   // 1. If in View As mode, use the view as role
-  // 2. If dev admin mode is active, use admin
-  // 3. Otherwise use the actual user role
+  // 2. If admin role switcher is active, use switched role
+  // 3. If dev admin mode is active, use admin
+  // 4. Otherwise use the actual user role
   const effectiveRole = isViewingAs 
     ? viewAsRole 
-    : (isDevelopment && isDevAdminActive) 
-      ? 'admin' 
-      : userRole;
+    : isRoleSwitched
+      ? activeRole
+      : (isDevelopment && isDevAdminActive) 
+        ? 'admin' 
+        : actualRole;
 
   // Helper functions to check specific roles (now use effective role)
   const isAdmin = () => effectiveRole === 'admin';
@@ -203,8 +206,13 @@ export const useUserRole = () => {
       return `${baseRole} (Viewing As)`;
     }
     
+    // Add role switcher indicator if active
+    if (isRoleSwitched && actualRole === 'admin') {
+      return `${baseRole} (Admin View)`;
+    }
+    
     // Add dev admin indicator if active
-    if (isDevelopment && isDevAdminActive && userRole !== 'admin') {
+    if (isDevelopment && isDevAdminActive && actualRole !== 'admin') {
       return `${baseRole} (Dev Admin)`;
     }
     
@@ -251,6 +259,7 @@ export const useUserRole = () => {
     canPerformAction,
     permissions: getPermissions(),
     isViewingAs, // Add view as state
-    actualUserRole: userRole, // Add actual user role for reference
+    isRoleSwitched, // Add role switcher state
+    actualUserRole: actualRole, // Add actual user role for reference
   };
 };

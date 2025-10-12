@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
  * This component should be used on the "/" route to ensure users land on their appropriate home page
  */
 export const RoleBasedRedirect = () => {
-  const { userRole, loading } = useAuth();
+  const { activeRole, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -16,7 +16,7 @@ export const RoleBasedRedirect = () => {
     if (loading) return;
 
     // If no role, user will be redirected by ProtectedRoute
-    if (!userRole) return;
+    if (!activeRole) return;
 
     // Map roles to their dashboard routes
     const roleRoutes: Record<string, string> = {
@@ -30,17 +30,17 @@ export const RoleBasedRedirect = () => {
       client: '/client-portal',
     };
 
-    const targetRoute = roleRoutes[userRole];
+    const targetRoute = roleRoutes[activeRole];
     
     if (targetRoute) {
-      console.log(`🚀 Redirecting ${userRole} to ${targetRoute}`);
+      console.log(`🚀 Redirecting ${activeRole} to ${targetRoute}`);
       navigate(targetRoute, { replace: true });
     } else {
       // Fallback to a default dashboard if role not recognized
-      console.warn(`⚠️ Unknown role: ${userRole}, redirecting to home`);
+      console.warn(`⚠️ Unknown role: ${activeRole}, redirecting to home`);
       navigate('/home', { replace: true });
     }
-  }, [userRole, loading, navigate]);
+  }, [activeRole, loading, navigate]);
 
   // Show loading state while determining where to redirect
   return (

@@ -15,13 +15,13 @@ export const RoleBasedAccess = ({
   allowedRoles, 
   fallbackPath,
 }: RoleBasedAccessProps) => {
-  const { user, userRole, loading } = useAuth();
+  const { user, activeRole, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && userRole && !allowedRoles.includes(userRole) && !allowedRoles.includes('*')) {
+    if (!loading && activeRole && !allowedRoles.includes(activeRole) && !allowedRoles.includes('*')) {
       const roleFallback = (() => {
-        switch (userRole) {
+        switch (activeRole) {
           case 'admin':
             return '/admin/overview';
           case 'house_watcher':
@@ -37,7 +37,7 @@ export const RoleBasedAccess = ({
       const target = fallbackPath || roleFallback;
       navigate(target, { replace: true });
     }
-  }, [userRole, allowedRoles, fallbackPath, navigate, loading]);
+  }, [activeRole, allowedRoles, fallbackPath, navigate, loading]);
 
   if (loading) {
     return (
@@ -51,7 +51,7 @@ export const RoleBasedAccess = ({
     return null; // handled by ProtectedRoute
   }
 
-  if (!userRole || (!allowedRoles.includes(userRole) && !allowedRoles.includes('*'))) {
+  if (!activeRole || (!allowedRoles.includes(activeRole) && !allowedRoles.includes('*'))) {
     // Quietly redirect handled in useEffect; render nothing to avoid layout clashes on mobile portals
     return null;
   }
