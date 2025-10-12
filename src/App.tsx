@@ -29,6 +29,7 @@ import { PreloadCriticalResources } from "@/components/PreloadCriticalResources"
 const Index = lazy(() => import("./pages/Index"));
 const DashboardHub = lazy(() => import("./pages/DashboardHub"));
 const PropertyOwnerHub = lazy(() => import("./pages/dashboards/PropertyOwnerHub"));
+const HouseWatcherHub = lazy(() => import("./pages/dashboards/HouseWatcherHub"));
 const Properties = lazy(() => import("./pages/Properties"));
 const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
 const Tenants = lazy(() => import("./pages/Tenants"));
@@ -153,6 +154,13 @@ const AppContent = () => {
                           <PageTransition>
                             <RoleBasedAccess allowedRoles={['owner_investor']}>
                               <PropertyOwnerHub />
+                            </RoleBasedAccess>
+                          </PageTransition>
+                        } />
+                        <Route path="/house-watcher-dashboard" element={
+                          <PageTransition>
+                            <RoleBasedAccess allowedRoles={['house_watcher']}>
+                              <HouseWatcherHub />
                             </RoleBasedAccess>
                           </PageTransition>
                         } />
