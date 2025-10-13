@@ -5,6 +5,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { InboxConversation } from '@/hooks/queries/useInbox';
+import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
+import { SwipeableConversationItem } from '@/components/messaging/SwipeableConversationItem';
 
 interface MessageListProps {
   conversations: InboxConversation[];
@@ -15,6 +17,8 @@ interface MessageListProps {
   selectedIds?: string[];
   onToggleSelect?: (id: string) => void;
   bulkMode?: boolean;
+  onArchive?: (id: string) => void;
+  onStar?: (id: string) => void;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
@@ -25,8 +29,17 @@ export const MessageList: React.FC<MessageListProps> = ({
   filter,
   selectedIds = [],
   onToggleSelect,
-  bulkMode = false
+  bulkMode = false,
+  onArchive,
+  onStar
 }) => {
+  const { listRef } = useKeyboardNavigation({
+    items: conversations,
+    selectedId,
+    onSelect,
+    getItemId: (conv) => conv.id,
+    enabled: !bulkMode,
+  });
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'maintenance':
@@ -137,7 +150,12 @@ export const MessageList: React.FC<MessageListProps> = ({
       </div>
 
       {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto">
+      <div 
+        ref={listRef}
+        className="flex-1 overflow-y-auto"
+        role="listbox"
+        aria-label="Conversations"
+      >
         {conversations.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
@@ -148,20 +166,34 @@ export const MessageList: React.FC<MessageListProps> = ({
           </div>
         ) : (
           <div className="space-y-1 p-2">
-            {conversations.map((conversation) => {
+            {conversations.map((conversation, index) => {
               const isSelected = bulkMode ? selectedIds.includes(conversation.id) : selectedId === conversation.id;
               
               return (
-                <div
+                <SwipeableConversationItem
                   key={conversation.id}
-                  className={cn(
-                    "p-3 rounded-lg cursor-pointer transition-colors border",
-                    isSelected
-                      ? 'bg-primary/10 border-primary/20'
-                      : 'hover:bg-muted/50 border-transparent',
-                    conversation.unread_count > 0 && 'bg-blue-50/50'
-                  )}
-                  onClick={() => bulkMode && onToggleSelect ? onToggleSelect(conversation.id) : onSelect(conversation.id)}
+                  onArchive={onArchive ? () => onArchive(conversation.id) : undefined}
+                  onStar={onStar ? () => onStar(conversation.id) : undefined}
+                  isStarred={conversation.is_starred}
+                >
+                  <div
+                    role="option"
+                    aria-selected={isSelected}
+                    tabIndex={isSelected ? 0 : -1}
+                    className={cn(
+                      "p-3 rounded-lg cursor-pointer transition-colors border focus:outline-none focus:ring-2 focus:ring-primary",
+                      isSelected
+                        ? 'bg-primary/10 border-primary/20'
+                        : 'hover:bg-muted/50 border-transparent',
+                      conversation.unread_count > 0 && 'bg-blue-50/50'
+                    )}
+                    onClick={() => bulkMode && onToggleSelect ? onToggleSelect(conversation.id) : onSelect(conversation.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        bulkMode && onToggleSelect ? onToggleSelect(conversation.id) : onSelect(conversation.id);
+                      }
+                    }}
                 >
                   <div className="flex items-start gap-3">
                     {/* Bulk Select Checkbox */}
@@ -248,6 +280,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   </div>
                 </div>
               </div>
+                </SwipeableConversationItem>
             )})}
           </div>
         )}
