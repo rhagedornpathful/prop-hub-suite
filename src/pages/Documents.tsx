@@ -33,6 +33,9 @@ import { VersionHistory } from "@/components/documents/VersionHistory";
 import { ActivityLog } from "@/components/documents/ActivityLog";
 import { ExpiryBanner } from "@/components/documents/ExpiryBanner";
 import { SignatureRequest } from "@/components/documents/SignatureRequest";
+import { DocumentAnalytics } from "@/components/documents/DocumentAnalytics";
+import { AIAnalysis } from "@/components/documents/AIAnalysis";
+import { OCRExtractor } from "@/components/documents/OCRExtractor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -592,6 +595,7 @@ export default function Documents() {
           </p>
         </div>
         <div className="flex gap-2">
+          <DocumentAnalytics documents={documents} />
           {selectedDocuments.size > 0 && (
             <Button variant="outline" onClick={handleBulkDownload}>
               <Download className="w-4 h-4 mr-2" />
@@ -966,6 +970,19 @@ export default function Documents() {
                   >
                     <Download className="w-3 h-3" />
                   </Button>
+                  <AIAnalysis
+                    documentId={document.id}
+                    fileName={document.file_name}
+                    description={document.description}
+                    onAnalysisComplete={fetchDocuments}
+                  />
+                  {document.file_type.startsWith("image/") && (
+                    <OCRExtractor
+                      documentUrl={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${document.file_path}`}
+                      documentName={document.file_name}
+                      onTextExtracted={(text) => console.log("Extracted:", text)}
+                    />
+                  )}
                   <VersionHistory
                     documentId={document.id}
                     documentName={document.file_name}
@@ -1080,6 +1097,19 @@ export default function Documents() {
                       >
                         <Download className="w-4 h-4" />
                       </Button>
+                      <AIAnalysis
+                        documentId={document.id}
+                        fileName={document.file_name}
+                        description={document.description}
+                        onAnalysisComplete={fetchDocuments}
+                      />
+                      {document.file_type.startsWith("image/") && (
+                        <OCRExtractor
+                          documentUrl={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/documents/${document.file_path}`}
+                          documentName={document.file_name}
+                          onTextExtracted={(text) => console.log("Extracted:", text)}
+                        />
+                      )}
                       <VersionHistory
                         documentId={document.id}
                         documentName={document.file_name}
