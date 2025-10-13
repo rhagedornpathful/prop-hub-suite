@@ -7,10 +7,25 @@ export interface CheckTemplate {
   name: string;
   description?: string;
   type: 'home_check' | 'property_check';
+  check_type: 'quick' | 'full';
   is_active: boolean;
   created_at: string;
   updated_at: string;
   sections?: CheckTemplateSection[];
+  quick_check_config?: QuickCheckConfig;
+}
+
+export interface QuickCheckConfig {
+  items: QuickCheckItem[];
+  min_photos_required: number;
+}
+
+export interface QuickCheckItem {
+  id: string;
+  question: string;
+  options: string[];
+  is_required: boolean;
+  sort_order: number;
 }
 
 export interface CheckTemplateSection {
@@ -34,7 +49,9 @@ export interface CheckTemplateInsert {
   name: string;
   description?: string;
   type: 'home_check' | 'property_check';
+  check_type: 'quick' | 'full';
   is_active?: boolean;
+  quick_check_config?: QuickCheckConfig;
 }
 
 export interface CheckTemplateSectionInsert {

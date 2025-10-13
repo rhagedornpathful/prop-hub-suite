@@ -6,8 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { useUpdateCheckTemplate, useCheckTemplate } from '@/hooks/queries/useCheckTemplates';
 import { TemplateSectionEditor } from './TemplateSectionEditor';
+import { QuickCheckTemplateEditor } from './QuickCheckTemplateEditor';
+import type { QuickCheckConfig } from '@/hooks/queries/useCheckTemplates';
 
 interface EditCheckTemplateDialogProps {
   template: any;
@@ -38,6 +41,15 @@ export const EditCheckTemplateDialog = ({
       });
     }
   }, [fullTemplate]);
+
+  const handleQuickCheckUpdate = (config: QuickCheckConfig) => {
+    updateTemplateMutation.mutate({
+      id: fullTemplate?.id || template.id,
+      updates: {
+        quick_check_config: config,
+      },
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,13 +91,20 @@ export const EditCheckTemplateDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Edit Template: {fullTemplate?.name || template?.name}</DialogTitle>
+          <div className="flex items-center gap-2">
+            <DialogTitle>Edit Template: {fullTemplate?.name || template?.name}</DialogTitle>
+            <Badge variant={fullTemplate?.check_type === 'quick' ? 'default' : 'secondary'}>
+              {fullTemplate?.check_type === 'quick' ? 'Quick Check' : 'Full Check'}
+            </Badge>
+          </div>
         </DialogHeader>
 
         <Tabs defaultValue="details" className="space-y-4">
           <TabsList>
             <TabsTrigger value="details">Template Details</TabsTrigger>
-            <TabsTrigger value="sections">Sections & Items</TabsTrigger>
+            <TabsTrigger value={fullTemplate?.check_type === 'quick' ? 'quick-config' : 'sections'}>
+              {fullTemplate?.check_type === 'quick' ? 'Quick Check Questions' : 'Sections & Items'}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="details">
@@ -139,25 +158,45 @@ export const EditCheckTemplateDialog = ({
             </form>
           </TabsContent>
 
-          <TabsContent value="sections" className="space-y-4">
-            {isLoading ? (
-              <div className="flex justify-center p-8">Loading sections...</div>
-            ) : (
-              <>
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    <strong>Tip:</strong> Changes to sections and items are saved individually when you click the "Save" button next to each item you edit.
-                  </p>
-                </div>
-                <TemplateSectionEditor template={fullTemplate} />
-                <div className="flex justify-end pt-4 border-t">
-                  <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                    Close
-                  </Button>
-                </div>
-              </>
-            )}
-          </TabsContent>
+          {fullTemplate?.check_type === 'quick' ? (
+            <TabsContent value="quick-config" className="space-y-4">
+              {isLoading ? (
+                <div className="flex justify-center p-8">Loading configuration...</div>
+              ) : (
+                <>
+                  <QuickCheckTemplateEditor 
+                    template={fullTemplate} 
+                    onUpdate={handleQuickCheckUpdate}
+                  />
+                  <div className="flex justify-end pt-4 border-t">
+                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </>
+              )}
+            </TabsContent>
+          ) : (
+            <TabsContent value="sections" className="space-y-4">
+              {isLoading ? (
+                <div className="flex justify-center p-8">Loading sections...</div>
+              ) : (
+                <>
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Tip:</strong> Changes to sections and items are saved individually when you click the "Save" button next to each item you edit.
+                    </p>
+                  </div>
+                  <TemplateSectionEditor template={fullTemplate} />
+                  <div className="flex justify-end pt-4 border-t">
+                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                      Close
+                    </Button>
+                  </div>
+                </>
+              )}
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>

@@ -131,6 +131,7 @@ export type Database = {
       }
       check_templates: {
         Row: {
+          check_type: Database["public"]["Enums"]["check_type"]
           created_at: string
           created_by: string
           description: string | null
@@ -141,6 +142,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          check_type?: Database["public"]["Enums"]["check_type"]
           created_at?: string
           created_by?: string
           description?: string | null
@@ -151,6 +153,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          check_type?: Database["public"]["Enums"]["check_type"]
           created_at?: string
           created_by?: string
           description?: string | null
@@ -448,6 +451,7 @@ export type Database = {
       }
       home_check_sessions: {
         Row: {
+          check_type: Database["public"]["Enums"]["check_type"]
           checklist_data: Json | null
           completed_at: string | null
           created_at: string
@@ -470,6 +474,7 @@ export type Database = {
           weather_impact: string | null
         }
         Insert: {
+          check_type?: Database["public"]["Enums"]["check_type"]
           checklist_data?: Json | null
           completed_at?: string | null
           created_at?: string
@@ -492,6 +497,7 @@ export type Database = {
           weather_impact?: string | null
         }
         Update: {
+          check_type?: Database["public"]["Enums"]["check_type"]
           checklist_data?: Json | null
           completed_at?: string | null
           created_at?: string
@@ -1959,6 +1965,7 @@ export type Database = {
       }
       property_check_sessions: {
         Row: {
+          check_type: Database["public"]["Enums"]["check_type"]
           checklist_data: Json | null
           completed_at: string | null
           created_at: string
@@ -1976,6 +1983,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          check_type?: Database["public"]["Enums"]["check_type"]
           checklist_data?: Json | null
           completed_at?: string | null
           created_at?: string
@@ -1993,6 +2001,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          check_type?: Database["public"]["Enums"]["check_type"]
           checklist_data?: Json | null
           completed_at?: string | null
           created_at?: string
@@ -3531,6 +3540,7 @@ export type Database = {
         | "tenant"
         | "owner_investor"
         | "leasing_agent"
+      check_type: "quick" | "full"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3668,6 +3678,7 @@ export const Constants = {
         "owner_investor",
         "leasing_agent",
       ],
+      check_type: ["quick", "full"],
     },
   },
 } as const

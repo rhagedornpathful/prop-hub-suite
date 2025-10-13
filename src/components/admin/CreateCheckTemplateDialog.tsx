@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useCreateCheckTemplate } from '@/hooks/queries/useCheckTemplates';
 
 interface CreateCheckTemplateDialogProps {
@@ -22,6 +23,7 @@ export const CreateCheckTemplateDialog = ({
     name: '',
     description: '',
     is_active: true,
+    check_type: 'full' as 'quick' | 'full',
   });
 
   const createTemplateMutation = useCreateCheckTemplate();
@@ -38,9 +40,10 @@ export const CreateCheckTemplateDialog = ({
       name: formData.name.trim(),
       description: formData.description.trim(),
       type: templateType,
+      check_type: formData.check_type,
     }, {
       onSuccess: () => {
-        setFormData({ name: '', description: '', is_active: true });
+        setFormData({ name: '', description: '', is_active: true, check_type: 'full' });
         onOpenChange(false);
       },
     });
@@ -84,6 +87,33 @@ export const CreateCheckTemplateDialog = ({
               placeholder="Enter template description"
               rows={3}
             />
+          </div>
+
+          <div className="space-y-3">
+            <Label>Check Type</Label>
+            <RadioGroup 
+              value={formData.check_type} 
+              onValueChange={(value) => handleChange('check_type', value as 'quick' | 'full')}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="full" id="full" />
+                <Label htmlFor="full" className="font-normal cursor-pointer">
+                  <div>
+                    <div className="font-medium">Full Check</div>
+                    <div className="text-sm text-muted-foreground">Detailed sectioned checklist with multiple items</div>
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="quick" id="quick" />
+                <Label htmlFor="quick" className="font-normal cursor-pointer">
+                  <div>
+                    <div className="font-medium">Quick Check</div>
+                    <div className="text-sm text-muted-foreground">5-10 multiple choice questions (~5 minutes)</div>
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
           </div>
 
           <div className="flex items-center space-x-2">
