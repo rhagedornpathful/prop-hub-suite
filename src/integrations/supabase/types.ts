@@ -332,6 +332,47 @@ export type Database = {
           },
         ]
       }
+      document_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          details: Json | null
+          document_id: string
+          id: string
+          ip_address: unknown | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          details?: Json | null
+          document_id: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          details?: Json | null
+          document_id?: string
+          id?: string
+          ip_address?: unknown | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_activities_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_folders: {
         Row: {
           color: string | null
@@ -373,10 +414,115 @@ export type Database = {
           },
         ]
       }
+      document_signatures: {
+        Row: {
+          document_id: string
+          expires_at: string | null
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          reminder_sent_at: string | null
+          requested_at: string
+          requested_by: string
+          signature_data: string | null
+          signature_image_url: string | null
+          signed_at: string | null
+          signer_email: string
+          signer_name: string
+          signer_user_id: string | null
+          status: string
+        }
+        Insert: {
+          document_id: string
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          reminder_sent_at?: string | null
+          requested_at?: string
+          requested_by: string
+          signature_data?: string | null
+          signature_image_url?: string | null
+          signed_at?: string | null
+          signer_email: string
+          signer_name: string
+          signer_user_id?: string | null
+          status?: string
+        }
+        Update: {
+          document_id?: string
+          expires_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          reminder_sent_at?: string | null
+          requested_at?: string
+          requested_by?: string
+          signature_data?: string | null
+          signature_image_url?: string | null
+          signed_at?: string | null
+          signer_email?: string
+          signer_name?: string
+          signer_user_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_signatures_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      document_versions: {
+        Row: {
+          change_notes: string | null
+          created_at: string
+          document_id: string
+          file_path: string
+          file_size: number
+          id: string
+          uploaded_by: string
+          version_number: number
+        }
+        Insert: {
+          change_notes?: string | null
+          created_at?: string
+          document_id: string
+          file_path: string
+          file_size: number
+          id?: string
+          uploaded_by: string
+          version_number: number
+        }
+        Update: {
+          change_notes?: string | null
+          created_at?: string
+          document_id?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          uploaded_by?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_versions_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string
           description: string | null
+          expiry_date: string | null
+          expiry_reminder_sent: boolean | null
           file_name: string
           file_path: string
           file_size: number
@@ -395,6 +541,8 @@ export type Database = {
         Insert: {
           category?: string
           description?: string | null
+          expiry_date?: string | null
+          expiry_reminder_sent?: boolean | null
           file_name: string
           file_path: string
           file_size: number
@@ -413,6 +561,8 @@ export type Database = {
         Update: {
           category?: string
           description?: string | null
+          expiry_date?: string | null
+          expiry_reminder_sent?: boolean | null
           file_name?: string
           file_path?: string
           file_size?: number

@@ -29,6 +29,10 @@ import { DragDropZone } from "@/components/documents/DragDropZone";
 import { FolderManagement } from "@/components/documents/FolderManagement";
 import { BulkOperations } from "@/components/documents/BulkOperations";
 import { AdvancedFilters } from "@/components/documents/AdvancedFilters";
+import { VersionHistory } from "@/components/documents/VersionHistory";
+import { ActivityLog } from "@/components/documents/ActivityLog";
+import { ExpiryBanner } from "@/components/documents/ExpiryBanner";
+import { SignatureRequest } from "@/components/documents/SignatureRequest";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -58,6 +62,8 @@ interface Document {
   tenant_id?: string;
   maintenance_request_id?: string;
   folder_id?: string | null;
+  expiry_date?: string | null;
+  expiry_reminder_sent?: boolean;
   // Populated from joins
   property?: { address: string; id: string };
   property_owner?: { first_name: string; last_name: string; id: string };
@@ -267,6 +273,22 @@ export default function Documents() {
     setSelectedTenantId("none");
   };
 
+  const logActivity = async (documentId: string, activityType: string, details: any = {}) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return;
+
+      await supabase.from("document_activities").insert({
+        document_id: documentId,
+        user_id: userData.user.id,
+        activity_type: activityType,
+        details,
+      });
+    } catch (error) {
+      console.error("Failed to log activity:", error);
+    }
+  };
+
   const handleDownload = async (document: Document) => {
     try {
       const { data, error } = await supabase.storage
@@ -283,6 +305,9 @@ export default function Documents() {
       a.click();
       window.document.body.removeChild(a);
       URL.revokeObjectURL(url);
+
+      // Log activity
+      await logActivity(document.id, "downloaded");
     } catch (error) {
       toast({
         title: "Error",
@@ -722,6 +747,9 @@ export default function Documents() {
         </div>
       </div>
 
+      {/* Expiry Banner */}
+      <ExpiryBanner documents={documents} />
+
       {/* Folder Management */}
       <FolderManagement
         folders={folders}
@@ -922,7 +950,7 @@ export default function Documents() {
                   <span>{formatFileSize(document.file_size)}</span>
                   <span>{new Date(document.uploaded_at).toLocaleDateString()}</span>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
                     variant="outline"
@@ -938,6 +966,21 @@ export default function Documents() {
                   >
                     <Download className="w-3 h-3" />
                   </Button>
+                  <VersionHistory
+                    documentId={document.id}
+                    documentName={document.file_name}
+                    currentFilePath={document.file_path}
+                    onVersionRestored={fetchDocuments}
+                  />
+                  <ActivityLog
+                    documentId={document.id}
+                    documentName={document.file_name}
+                  />
+                  <SignatureRequest
+                    documentId={document.id}
+                    documentName={document.file_name}
+                    onSignatureRequested={fetchDocuments}
+                  />
                   <Button
                     size="sm"
                     variant="destructive"
@@ -1022,7 +1065,7 @@ export default function Documents() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end space-x-2">
+                    <div className="flex justify-end gap-1 flex-wrap">
                       <Button
                         size="sm"
                         variant="ghost"
@@ -1037,6 +1080,21 @@ export default function Documents() {
                       >
                         <Download className="w-4 h-4" />
                       </Button>
+                      <VersionHistory
+                        documentId={document.id}
+                        documentName={document.file_name}
+                        currentFilePath={document.file_path}
+                        onVersionRestored={fetchDocuments}
+                      />
+                      <ActivityLog
+                        documentId={document.id}
+                        documentName={document.file_name}
+                      />
+                      <SignatureRequest
+                        documentId={document.id}
+                        documentName={document.file_name}
+                        onSignatureRequested={fetchDocuments}
+                      />
                       <Button
                         size="sm"
                         variant="ghost"
