@@ -332,6 +332,47 @@ export type Database = {
           },
         ]
       }
+      document_folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          parent_folder_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          parent_folder_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          parent_folder_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_folders_parent_folder_id_fkey"
+            columns: ["parent_folder_id"]
+            isOneToOne: false
+            referencedRelation: "document_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           category: string
@@ -340,6 +381,7 @@ export type Database = {
           file_path: string
           file_size: number
           file_type: string
+          folder_id: string | null
           id: string
           maintenance_request_id: string | null
           property_id: string | null
@@ -357,6 +399,7 @@ export type Database = {
           file_path: string
           file_size: number
           file_type: string
+          folder_id?: string | null
           id?: string
           maintenance_request_id?: string | null
           property_id?: string | null
@@ -374,6 +417,7 @@ export type Database = {
           file_path?: string
           file_size?: number
           file_type?: string
+          folder_id?: string | null
           id?: string
           maintenance_request_id?: string | null
           property_id?: string | null
@@ -385,6 +429,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "document_folders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_maintenance_request_id_fkey"
             columns: ["maintenance_request_id"]

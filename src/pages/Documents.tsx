@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Upload, Search, Filter, Download, Trash2, Eye, FileText, Image, Video, Archive, Home, User, Users, Grid3x3, List, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Plus, Upload, Search, Filter, Download, Trash2, Eye, FileText, Image, Video, Archive, Home, User, Users, Grid3x3, List, ChevronLeft, ChevronRight, Calendar, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tables } from "@/integrations/supabase/types";
 import { DocumentPreviewDialog } from "@/components/documents/DocumentPreviewDialog";
 import { DragDropZone } from "@/components/documents/DragDropZone";
+import { FolderManagement } from "@/components/documents/FolderManagement";
+import { BulkOperations } from "@/components/documents/BulkOperations";
+import { AdvancedFilters } from "@/components/documents/AdvancedFilters";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -54,11 +57,21 @@ interface Document {
   property_owner_id?: string;
   tenant_id?: string;
   maintenance_request_id?: string;
+  folder_id?: string | null;
   // Populated from joins
   property?: { address: string; id: string };
   property_owner?: { first_name: string; last_name: string; id: string };
   tenant?: { first_name: string; last_name: string; id: string };
   maintenance_request?: { title: string; id: string };
+}
+
+interface FolderData {
+  id: string;
+  name: string;
+  color: string;
+  icon: string;
+  parent_folder_id: string | null;
+  created_at: string;
 }
 
 type Property = Tables<'properties'>;
@@ -108,6 +121,14 @@ export default function Documents() {
   const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   
+  // Phase 2 enhancements
+  const [folders, setFolders] = useState<FolderData[]>([]);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [fileTypeFilter, setFileTypeFilter] = useState("all");
+  const [fileSizeFilter, setFileSizeFilter] = useState<{ min?: number; max?: number }>({});
+  const [sortBy, setSortBy] = useState<"name" | "date" | "size">("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  
   const { toast } = useToast();
 
   const categories = [
@@ -123,6 +144,7 @@ export default function Documents() {
   useEffect(() => {
     fetchDocuments();
     fetchRelatedData();
+    fetchFolders();
   }, []);
 
   const fetchRelatedData = async () => {
@@ -138,6 +160,20 @@ export default function Documents() {
       if (tenantsData.data) setTenants(tenantsData.data);
     } catch (error) {
       console.error('Failed to fetch related data:', error);
+    }
+  };
+
+  const fetchFolders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('document_folders')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setFolders(data || []);
+    } catch (error) {
+      console.error('Failed to fetch folders:', error);
     }
   };
 
@@ -339,14 +375,50 @@ export default function Documents() {
         if (uploadDate > endOfDay) matchesDateRange = false;
       }
     }
+
+    // Folder filter
+    const matchesFolder = currentFolderId === null ? !doc.folder_id : doc.folder_id === currentFolderId;
+
+    // File type filter
+    let matchesFileType = true;
+    if (fileTypeFilter !== "all") {
+      if (fileTypeFilter === "image") matchesFileType = doc.file_type.startsWith("image/");
+      else if (fileTypeFilter === "pdf") matchesFileType = doc.file_type.includes("pdf");
+      else if (fileTypeFilter === "video") matchesFileType = doc.file_type.startsWith("video/");
+      else if (fileTypeFilter === "document") matchesFileType = doc.file_type.includes("document") || doc.file_type.includes("text");
+      else if (fileTypeFilter === "archive") matchesFileType = doc.file_type.includes("zip") || doc.file_type.includes("archive");
+    }
+
+    // File size filter (convert bytes to MB)
+    let matchesFileSize = true;
+    if (fileSizeFilter.min !== undefined || fileSizeFilter.max !== undefined) {
+      const sizeInMB = doc.file_size / (1024 * 1024);
+      if (fileSizeFilter.min !== undefined && sizeInMB < fileSizeFilter.min) matchesFileSize = false;
+      if (fileSizeFilter.max !== undefined && sizeInMB > fileSizeFilter.max) matchesFileSize = false;
+    }
     
-    return matchesSearch && matchesCategory && matchesAssociation && matchesDateRange;
+    return matchesSearch && matchesCategory && matchesAssociation && matchesDateRange && matchesFolder && matchesFileType && matchesFileSize;
+  });
+
+  // Sorting
+  const sortedDocuments = [...filteredDocuments].sort((a, b) => {
+    let comparison = 0;
+    
+    if (sortBy === "name") {
+      comparison = a.file_name.localeCompare(b.file_name);
+    } else if (sortBy === "date") {
+      comparison = new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime();
+    } else if (sortBy === "size") {
+      comparison = a.file_size - b.file_size;
+    }
+    
+    return sortOrder === "asc" ? comparison : -comparison;
   });
 
   // Pagination
-  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedDocuments.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedDocuments = filteredDocuments.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedDocuments = sortedDocuments.slice(startIndex, startIndex + itemsPerPage);
 
   // Bulk operations
   const handleSelectAll = (checked: boolean) => {
@@ -391,13 +463,106 @@ export default function Documents() {
     }
   };
 
+  // Bulk operations handlers
+  const handleBulkDelete = async () => {
+    if (selectedDocuments.size === 0) return;
+
+    try {
+      const docsToDelete = documents.filter(d => selectedDocuments.has(d.id));
+      
+      // Delete from storage
+      const filePaths = docsToDelete.map(d => d.file_path);
+      const { error: storageError } = await supabase.storage
+        .from('documents')
+        .remove(filePaths);
+
+      if (storageError) throw storageError;
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .in('id', Array.from(selectedDocuments));
+
+      if (dbError) throw dbError;
+
+      toast({
+        title: "Success",
+        description: `Deleted ${selectedDocuments.size} document(s)`,
+      });
+
+      setSelectedDocuments(new Set());
+      fetchDocuments();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete documents",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkMoveToFolder = async (folderId: string) => {
+    if (selectedDocuments.size === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ folder_id: folderId === 'none' ? null : folderId })
+        .in('id', Array.from(selectedDocuments));
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Moved ${selectedDocuments.size} document(s) to folder`,
+      });
+
+      setSelectedDocuments(new Set());
+      fetchDocuments();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to move documents",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkCategorize = async (category: string) => {
+    if (selectedDocuments.size === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('documents')
+        .update({ category })
+        .in('id', Array.from(selectedDocuments));
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Categorized ${selectedDocuments.size} document(s)`,
+      });
+
+      setSelectedDocuments(new Set());
+      fetchDocuments();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to categorize documents",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
           <p className="text-muted-foreground mt-1">
-            {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''}
+            {sortedDocuments.length} document{sortedDocuments.length !== 1 ? 's' : ''}
             {selectedDocuments.size > 0 && ` • ${selectedDocuments.size} selected`}
           </p>
         </div>
@@ -557,6 +722,25 @@ export default function Documents() {
         </div>
       </div>
 
+      {/* Folder Management */}
+      <FolderManagement
+        folders={folders}
+        currentFolderId={currentFolderId}
+        onFolderChange={setCurrentFolderId}
+        onRefresh={fetchFolders}
+      />
+
+      {/* Bulk Operations Toolbar */}
+      <BulkOperations
+        selectedCount={selectedDocuments.size}
+        onBulkDownload={handleBulkDownload}
+        onBulkDelete={handleBulkDelete}
+        onBulkMoveToFolder={handleBulkMoveToFolder}
+        onBulkCategorize={handleBulkCategorize}
+        folders={folders}
+        categories={categories}
+      />
+
       <div className="flex flex-col space-y-4">
         <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
           <div className="flex-1">
@@ -570,33 +754,19 @@ export default function Documents() {
               />
             </div>
           </div>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
-              {categories.map(category => (
-                <SelectItem key={category.value} value={category.value}>
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={associationFilter} onValueChange={setAssociationFilter}>
-            <SelectTrigger className="w-[180px]">
-              <Users className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Documents</SelectItem>
-              <SelectItem value="with-property">With Property</SelectItem>
-              <SelectItem value="with-owner">With Owner</SelectItem>
-              <SelectItem value="with-tenant">With Tenant</SelectItem>
-              <SelectItem value="unassociated">Unassociated</SelectItem>
-            </SelectContent>
-          </Select>
+
+          {/* Advanced Filters */}
+          <AdvancedFilters
+            categoryFilter={categoryFilter}
+            onCategoryChange={setCategoryFilter}
+            associationFilter={associationFilter}
+            onAssociationChange={setAssociationFilter}
+            fileSizeFilter={fileSizeFilter}
+            onFileSizeChange={setFileSizeFilter}
+            fileTypeFilter={fileTypeFilter}
+            onFileTypeChange={setFileTypeFilter}
+            categories={categories}
+          />
 
           {/* Date Range Filter */}
           <Popover>
@@ -638,6 +808,27 @@ export default function Documents() {
               )}
             </PopoverContent>
           </Popover>
+
+          {/* Sorting */}
+          <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+            <SelectTrigger className="w-[150px]">
+              <ArrowUpDown className="w-4 h-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="name">Name</SelectItem>
+              <SelectItem value="date">Date</SelectItem>
+              <SelectItem value="size">Size</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+          >
+            {sortOrder === "asc" ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+          </Button>
 
           {/* View Toggle */}
           <div className="flex border rounded-lg">
