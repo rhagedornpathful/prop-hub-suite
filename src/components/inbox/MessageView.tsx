@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Star, 
   Archive, 
@@ -34,6 +34,15 @@ import { MessageReactions } from '@/components/messaging/MessageReactions';
 import { RichTextEditor } from '@/components/messaging/RichTextEditor';
 import { AdvancedMessageSearch } from '@/components/messaging/AdvancedMessageSearch';
 import { MessageTemplates } from '@/components/messaging/MessageTemplates';
+import { AttachmentUpload } from '@/components/messaging/AttachmentUpload';
+import { AttachmentDownload } from '@/components/messaging/AttachmentDownload';
+import { TypingIndicator, useTypingIndicator } from '@/components/messaging/TypingIndicator';
+import { MentionAutocomplete } from '@/components/messaging/MentionAutocomplete';
+import { ImprovedEmojiPicker } from '@/components/messaging/ImprovedEmojiPicker';
+import { MessageStatusIndicator } from '@/components/messaging/MessageStatusIndicator';
+import { useMessagingShortcuts } from '@/hooks/useKeyboardShortcuts.tsx';
+import { useDraftAutoSave } from '@/hooks/useDraftAutoSave';
+import { useOfflineDetection } from '@/hooks/useOfflineDetection';
 
 interface MessageViewProps {
   conversation: InboxConversation;
@@ -50,22 +59,49 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
   const [replyAllContent, setReplyAllContent] = useState('');
   const [forwardContent, setForwardContent] = useState('');
   const [forwardRecipients, setForwardRecipients] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<File[]>([]);
   
   const { data: messages = [], isLoading } = useInboxMessages(conversation.id, filter);
   const sendMessage = useSendInboxMessage();
   const createConversation = useCreateInboxConversation();
+  const { isOnline } = useOfflineDetection();
+  
+  // Typing indicator
+  const { handleTyping, stopTyping } = useTypingIndicator(conversation.id);
+  
+  // Draft auto-save
+  const { loadDraft, deleteDraft } = useDraftAutoSave({
+    conversationId: conversation.id,
+    content: replyContent,
+    draftType: 'reply',
+    enabled: showReply
+  });
 
+  // Load draft on mount
+  useEffect(() => {
+    const loadSavedDraft = async () => {
+      const draft = await loadDraft();
+      if (draft && !replyContent) {
+        setReplyContent(draft.content);
+      }
+    };
+    loadSavedDraft();
+  }, [conversation.id]);
+  
   const handleReply = async () => {
     if (!replyContent.trim()) return;
 
     try {
+      stopTyping();
       await sendMessage.mutateAsync({
         conversationId: conversation.id,
         content: replyContent,
         subject: `Re: ${conversation.title || 'No subject'}`
       });
+      await deleteDraft();
       setReplyContent('');
       setShowReply(false);
+      setAttachments([]);
     } catch (error) {
       console.error('Failed to send reply:', error);
     }
@@ -106,6 +142,16 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
       console.error('Failed to forward message:', error);
     }
   };
+
+  // Keyboard shortcuts - defined after handlers
+  useMessagingShortcuts({
+    onSend: showReply ? handleReply : undefined,
+    onCancel: () => {
+      setShowReply(false);
+      setShowReplyAll(false);
+      setShowForward(false);
+    }
+  });
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -249,6 +295,8 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <TypingIndicator conversationId={conversation.id} />
+        
         {messages.map((message, index) => (
           <div key={message.id} className="space-y-4">
             {/* Message Header */}
@@ -267,9 +315,16 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
                       <AlertTriangle className="h-3 w-3 text-red-500" />
                     )}
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {formatDateTime(message.created_at)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">
+                      {formatDateTime(message.created_at)}
+                    </span>
+                    <MessageStatusIndicator
+                      messageId={message.id}
+                      senderId={message.sender_id}
+                      currentUserId={user?.id}
+                    />
+                  </div>
                 </div>
                 
                 {message.subject && message.subject !== conversation.title && (
@@ -296,13 +351,7 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
                   </h4>
                   <div className="space-y-1">
                     {message.attachments.map((attachment: any, idx: number) => (
-                      <div key={idx} className="flex items-center gap-2 p-2 border border-border rounded-lg">
-                        <Paperclip className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm flex-1">{attachment.name || `Attachment ${idx + 1}`}</span>
-                        <Button variant="ghost" size="sm">
-                          <Download className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      <AttachmentDownload key={idx} attachment={attachment} />
                     ))}
                   </div>
                 </div>
@@ -321,26 +370,34 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
       {showReply && (
         <div className="border-t border-border bg-card p-6">
           <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
               <Reply className="h-4 w-4" />
               <span>Reply to: {conversation.sender_name || 'Unknown User'}</span>
+              {!isOnline && (
+                <Badge variant="destructive" className="text-xs">Offline</Badge>
+              )}
             </div>
             
-            <RichTextEditor
+            <MentionAutocomplete
+              conversationId={conversation.id}
               value={replyContent}
-              onChange={setReplyContent}
-              onSend={handleReply}
-              placeholder="Type your reply..."
-              showFormatting={true}
-              allowAttachments={true}
+              onChange={(val) => {
+                setReplyContent(val);
+                handleTyping();
+              }}
+              className="min-h-24 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
             
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mt-3">
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  <Paperclip className="h-4 w-4 mr-2" />
-                  Attach
-                </Button>
+                <AttachmentUpload
+                  onAttachmentsChange={setAttachments}
+                  maxFiles={10}
+                  maxSizeMB={20}
+                />
+                <ImprovedEmojiPicker
+                  onEmojiSelect={(emoji) => setReplyContent(prev => prev + emoji)}
+                />
               </div>
               
               <div className="flex items-center gap-2">
