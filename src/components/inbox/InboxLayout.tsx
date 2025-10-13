@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
-import { Search, Menu, Users, Settings, SplitSquareHorizontal, CheckSquare } from 'lucide-react';
+import { Search, Menu, Users, Settings, SplitSquareHorizontal, CheckSquare, BarChart3, FileText, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { InboxSidebar } from './InboxSidebar';
 import { MessageList } from './MessageList';
 import { MessageView } from './MessageView';
 import { ComposeDialog } from './ComposeDialog';
 import { BulkActionsToolbar } from '@/components/messaging/BulkActionsToolbar';
-import { useInboxConversations } from '@/hooks/queries/useInbox';
+import { AdvancedSearchDialog } from '@/components/messaging/AdvancedSearchDialog';
+import { ThreadManagementDialog } from '@/components/messaging/ThreadManagementDialog';
+import { MessageTemplatesDialog } from '@/components/messaging/MessageTemplatesDialog';
+import { ConversationInsights } from '@/components/messaging/ConversationInsights';
+import { NotificationSettingsDialog } from '@/components/messaging/NotificationSettingsDialog';
+import { useInboxConversations, useInboxMessages } from '@/hooks/queries/useInbox';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   ResizableHandle,
@@ -34,6 +40,13 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedConversationIds, setSelectedConversationIds] = useState<string[]>([]);
   
+  // Phase 3 dialogs
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [showThreadManagement, setShowThreadManagement] = useState(false);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [activeTab, setActiveTab] = useState('messages');
+  
   const { data: conversations = [], isLoading } = useInboxConversations({
     filter: selectedFilter,
     searchQuery
@@ -41,6 +54,31 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
   const unreadCount = conversations.filter(c => c.unread_count > 0).length;
+  
+  const { data: messages = [] } = useInboxMessages(selectedConversationId || '', selectedFilter);
+
+  // Phase 3 handlers
+  const handleAdvancedSearch = (filters: any) => {
+    console.log('Advanced search:', filters);
+    setShowAdvancedSearch(false);
+  };
+
+  const handleThreadSplit = (conversationId: string, messageIds: string[]) => {
+    console.log('Split thread:', conversationId, messageIds);
+  };
+
+  const handleThreadMerge = (conversationIds: string[], targetId: string) => {
+    console.log('Merge threads:', conversationIds, 'into', targetId);
+  };
+
+  const handleAutoCategorize = (conversationId: string) => {
+    console.log('Auto-categorize:', conversationId);
+  };
+
+  const handleInsertTemplate = (template: any, variables: any) => {
+    console.log('Insert template:', template, variables);
+    setShowTemplates(false);
+  };
 
   return (
     <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300 h-full overflow-hidden">
@@ -67,12 +105,49 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
           </div>
         </div>
 
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mr-4">
+          <TabsList className="h-8">
+            <TabsTrigger value="messages" className="h-7 text-xs">Messages</TabsTrigger>
+            <TabsTrigger value="insights" className="h-7 text-xs">Insights</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
         <div className="flex items-center gap-2">
           {unreadCount > 0 && (
             <Badge variant="default" className="bg-primary/90">
               {unreadCount} unread
             </Badge>
           )}
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8"
+            onClick={() => setShowAdvancedSearch(true)}
+            title="Advanced search"
+          >
+            <Search className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8"
+            onClick={() => setShowTemplates(true)}
+            title="Message templates"
+          >
+            <FileText className="h-4 w-4" />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8"
+            onClick={() => setShowNotificationSettings(true)}
+            title="Notification settings"
+          >
+            <Bell className="h-4 w-4" />
+          </Button>
           
           <Button
             variant={bulkMode ? "default" : "ghost"}
@@ -87,34 +162,24 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
             <CheckSquare className="h-4 w-4 mr-2" />
             {bulkMode ? 'Cancel' : 'Select'}
           </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => setLayoutDensity(layoutDensity === 'comfortable' ? 'compact' : 'comfortable')}
-            title={`Switch to ${layoutDensity === 'comfortable' ? 'compact' : 'comfortable'} layout`}
-          >
-            <SplitSquareHorizontal className="h-4 w-4" />
-          </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0"
-            onClick={() => {
-              // Toggle sidebar or open settings - for now let's make it toggle sidebar
-              setSidebarCollapsed(!sidebarCollapsed);
-            }}
-            title="Toggle sidebar"
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
+          {selectedConversationIds.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => setShowThreadManagement(true)}
+              title="Thread management"
+            >
+              Thread Actions
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Resizable Main Content */}
-      <div className="flex-1 h-[calc(100%-56px)]">
+      <TabsContent value="messages" className="flex-1 h-[calc(100%-56px)] m-0">
+        <div className="h-full">
         <ResizablePanelGroup
           direction="horizontal"
           className="h-full"
@@ -209,12 +274,48 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
-      </div>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="insights" className="flex-1 h-[calc(100%-56px)] m-0 overflow-auto">
+        <ConversationInsights
+          conversations={conversations}
+          messages={messages}
+        />
+      </TabsContent>
 
       {/* Compose Dialog */}
       <ComposeDialog
         open={showCompose}
         onOpenChange={setShowCompose}
+      />
+
+      {/* Phase 3 Dialogs */}
+      <AdvancedSearchDialog
+        open={showAdvancedSearch}
+        onOpenChange={setShowAdvancedSearch}
+        onSearch={handleAdvancedSearch}
+      />
+
+      <ThreadManagementDialog
+        open={showThreadManagement}
+        onOpenChange={setShowThreadManagement}
+        conversations={conversations}
+        selectedConversations={selectedConversationIds}
+        onSplit={handleThreadSplit}
+        onMerge={handleThreadMerge}
+        onAutoCategorize={handleAutoCategorize}
+      />
+
+      <MessageTemplatesDialog
+        open={showTemplates}
+        onOpenChange={setShowTemplates}
+        onInsertTemplate={handleInsertTemplate}
+      />
+
+      <NotificationSettingsDialog
+        open={showNotificationSettings}
+        onOpenChange={setShowNotificationSettings}
       />
     </Card>
   );
