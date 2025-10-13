@@ -3517,6 +3517,14 @@ export type Database = {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
+      user_is_manager_for_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_is_owner_for_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
       user_is_tenant_for_property: {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
