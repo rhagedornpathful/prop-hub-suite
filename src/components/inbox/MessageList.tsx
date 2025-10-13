@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { Star, Paperclip, Users, Building, Wrench, AlertTriangle, Clock, CheckSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { InboxConversation } from '@/hooks/queries/useInbox';
 import { useKeyboardNavigation } from '@/hooks/useKeyboardNavigation';
 import { SwipeableConversationItem } from '@/components/messaging/SwipeableConversationItem';
+import { MessageListSkeleton } from '@/components/ui/skeleton-loaders';
+import { EnhancedEmptyState } from '@/components/ui/enhanced-empty-state';
+import { ColorfulAvatar } from '@/components/ui/colorful-avatar';
+import { ParticipantCount } from '@/components/messaging/ParticipantCount';
+import { formatMessageListTime } from '@/lib/dateFormatter';
+import { truncateMessagePreview } from '@/lib/textUtils';
 
 interface MessageListProps {
   conversations: InboxConversation[];
@@ -73,21 +78,6 @@ export const MessageList: React.FC<MessageListProps> = ({
     return null;
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      return 'Now';
-    } else if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInHours < 168) { // 7 days
-      return date.toLocaleDateString([], { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-  };
 
   const getFilterTitle = () => {
     switch (filter) {
@@ -115,28 +105,7 @@ export const MessageList: React.FC<MessageListProps> = ({
   };
 
   if (isLoading) {
-    return (
-      <div className="h-full flex flex-col">
-        <div className="p-4 border-b border-border">
-          <h2 className="font-semibold text-foreground">Loading...</h2>
-        </div>
-        <div className="flex-1 p-4">
-          <div className="space-y-3">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="p-3 border border-border rounded-lg animate-pulse">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-muted rounded-full" />
-                  <div className="flex-1 space-y-2">
-                    <div className="h-4 bg-muted rounded w-3/4" />
-                    <div className="h-3 bg-muted rounded w-1/2" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <MessageListSkeleton count={8} />;
   }
 
   return (
@@ -157,13 +126,9 @@ export const MessageList: React.FC<MessageListProps> = ({
         aria-label="Conversations"
       >
         {conversations.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-              <Users className="h-6 w-6" />
-            </div>
-            <h3 className="font-medium mb-2">No conversations</h3>
-            <p className="text-sm">No messages found for this filter</p>
-          </div>
+          <EnhancedEmptyState 
+            type={filter === 'all' ? 'inbox' : filter as any}
+          />
         ) : (
           <div className="space-y-1 p-2">
             {conversations.map((conversation, index) => {
@@ -207,11 +172,11 @@ export const MessageList: React.FC<MessageListProps> = ({
                     )}
                     
                     {/* Avatar */}
-                    <Avatar className="h-8 w-8 flex-shrink-0">
-                    <AvatarFallback className="text-xs font-medium">
-                      {conversation.sender_name?.[0]?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                    <ColorfulAvatar 
+                      fallback={conversation.sender_name || 'Unknown'}
+                      size="sm"
+                      className="flex-shrink-0"
+                    />
 
                   <div className="flex-1 min-w-0">
                     {/* Header */}
@@ -230,7 +195,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                       {getPriorityIcon(conversation.priority)}
                       
                       <span className="text-xs text-muted-foreground flex-shrink-0 ml-auto">
-                        {formatTime(conversation.last_message_at || conversation.created_at)}
+                        {formatMessageListTime(conversation.last_message_at || conversation.created_at)}
                       </span>
                     </div>
 
@@ -253,7 +218,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                     {/* Preview */}
                     {conversation.last_message && (
                       <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                        {conversation.last_message.content}
+                        {truncateMessagePreview(conversation.last_message.content, 100)}
                       </p>
                     )}
 

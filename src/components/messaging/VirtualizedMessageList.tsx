@@ -1,11 +1,14 @@
 import React, { useRef, useEffect } from 'react';
 import { Star, Paperclip, Users, Building, Wrench, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { InboxConversation } from '@/hooks/queries/useInbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ColorfulAvatar } from '@/components/ui/colorful-avatar';
+import { ParticipantCount } from '@/components/messaging/ParticipantCount';
+import { formatMessageListTime } from '@/lib/dateFormatter';
+import { truncateMessagePreview } from '@/lib/textUtils';
 
 interface VirtualizedMessageListProps {
   conversations: InboxConversation[];
@@ -59,21 +62,6 @@ export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = ({
     return null;
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffInHours = (now.getTime() - date.getTime()) / (1000 * 60 * 60);
-    
-    if (diffInHours < 1) {
-      return 'Now';
-    } else if (diffInHours < 24) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    } else if (diffInHours < 168) {
-      return date.toLocaleDateString([], { weekday: 'short' });
-    } else {
-      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    }
-  };
 
   const renderConversation = (conversation: InboxConversation) => {
     const isSelected = bulkMode ? selectedIds.includes(conversation.id) : selectedId === conversation.id;
@@ -100,11 +88,11 @@ export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = ({
               />
             )}
             
-            <Avatar className="h-8 w-8 flex-shrink-0">
-              <AvatarFallback className="text-xs font-medium">
-                {conversation.sender_name?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
+            <ColorfulAvatar 
+              fallback={conversation.sender_name || 'Unknown'}
+              size="sm"
+              className="flex-shrink-0"
+            />
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
@@ -122,7 +110,7 @@ export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = ({
                 {getPriorityIcon(conversation.priority)}
                 
                 <span className="text-xs text-muted-foreground flex-shrink-0 ml-auto">
-                  {formatTime(conversation.last_message_at || conversation.created_at)}
+                  {formatMessageListTime(conversation.last_message_at || conversation.created_at)}
                 </span>
               </div>
 
@@ -143,7 +131,7 @@ export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = ({
 
               {conversation.last_message && (
                 <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                  {conversation.last_message.content}
+                  {truncateMessagePreview(conversation.last_message.content, 100)}
                 </p>
               )}
 
