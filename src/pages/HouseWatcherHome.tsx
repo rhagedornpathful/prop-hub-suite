@@ -196,12 +196,22 @@ const HouseWatcherHome = () => {
         <CardHeader>
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
-        <CardContent className="flex gap-4">
+        <CardContent className="flex gap-4 flex-wrap">
+          <Button 
+            onClick={() => navigate('/house-watcher/new-check')} 
+            className="bg-primary hover:bg-primary/90"
+          >
+            <Camera className="h-4 w-4 mr-2" />
+            Start Property Check
+          </Button>
           <Button onClick={() => navigate('/house-watcher-properties')} variant="outline">
             <Home className="h-4 w-4 mr-2" />
             View My Properties
           </Button>
-          {/* Removed admin-only links from house watcher portal */}
+          <Button onClick={() => navigate('/house-watcher/checks')} variant="outline">
+            <Eye className="h-4 w-4 mr-2" />
+            View Check History
+          </Button>
         </CardContent>
       </Card>
 
