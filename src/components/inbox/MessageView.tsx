@@ -43,6 +43,7 @@ import { MessageStatusIndicator } from '@/components/messaging/MessageStatusIndi
 import { useMessagingShortcuts } from '@/hooks/useKeyboardShortcuts.tsx';
 import { useDraftAutoSave } from '@/hooks/useDraftAutoSave';
 import { useOfflineDetection } from '@/hooks/useOfflineDetection';
+import { useToggleStarConversation, useArchiveConversation, useConversationLabels, useEditMessage, useDeleteMessage } from '@/hooks/queries/useInbox';
 
 interface MessageViewProps {
   conversation: InboxConversation;

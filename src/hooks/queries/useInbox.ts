@@ -123,6 +123,22 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
 
       if (error) throw error;
 
+      // Fetch all labels for these conversations for current user in one query
+      const convIds = (conversations || []).map(c => c.id);
+      let labelsByConv: Record<string, string[]> = {};
+      if (convIds.length > 0) {
+        const { data: labels } = await supabase
+          .from('conversation_labels')
+          .select('conversation_id,label')
+          .eq('user_id', user.id)
+          .in('conversation_id', convIds);
+        labelsByConv = (labels || []).reduce((acc: Record<string, string[]>, row: any) => {
+          acc[row.conversation_id] = acc[row.conversation_id] || [];
+          acc[row.conversation_id].push(row.label);
+          return acc;
+        }, {});
+      }
+
       // Get last message and unread count for each conversation
       const conversationsWithMessages = await Promise.all(
         (conversations || []).map(async (conv) => {
@@ -169,6 +185,7 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
 
           return {
             ...conv,
+            labels: labelsByConv[conv.id] || [],
             last_message: lastMessage ? {
               id: lastMessage.id,
               content: lastMessage.content,
@@ -179,10 +196,11 @@ export const useInboxConversations = ({ filter, searchQuery }: { filter: string;
               attachments: lastMessage.attachments
             } : undefined,
             unread_count: unreadCount
-          };
+          } as InboxConversation;
         })
       );
 
+      // Sort pinned/starred (is_starred) and then by time
       return conversationsWithMessages;
     },
     enabled: !!user,
@@ -226,7 +244,7 @@ export const useInboxMessages = (conversationId: string, filter?: string) => {
             ...msg,
             sender_name: senderName,
             deliveries: []
-          };
+          } as InboxMessage;
         })
       );
 
@@ -295,15 +313,15 @@ export const useSendInboxMessage = () => {
       queryClient.invalidateQueries({ queryKey: ['inbox-conversations'] });
       queryClient.invalidateQueries({ queryKey: ['inbox-messages', data.conversation_id] });
       toast({
-        title: "Message Sent",
-        description: "Your message has been sent successfully"
+        title: 'Message Sent',
+        description: 'Your message has been sent successfully'
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to send message. Please try again.",
-        variant: "destructive"
+        title: 'Error',
+        description: error.message || 'Failed to send message. Please try again.',
+        variant: 'destructive'
       });
     }
   });
@@ -407,16 +425,132 @@ export const useCreateInboxConversation = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['inbox-conversations'] });
       toast({
-        title: "Message Sent",
-        description: "Your message has been sent successfully"
+        title: 'Message Sent',
+        description: 'Your message has been sent successfully'
       });
     },
     onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to send message. Please try again.",
-        variant: "destructive"
+        title: 'Error',
+        description: error.message || 'Failed to send message. Please try again.',
+        variant: 'destructive'
       });
+    }
+  });
+};
+
+// New: toggle star (pin)
+export const useToggleStarConversation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId, isStarred }: { conversationId: string; isStarred: boolean }) => {
+      const { error } = await supabase
+        .from('conversations')
+        .update({ is_starred: isStarred, updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inbox-conversations'] });
+    }
+  });
+};
+
+// New: archive/unarchive
+export const useArchiveConversation = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ conversationId, isArchived }: { conversationId: string; isArchived: boolean }) => {
+      const { error } = await supabase
+        .from('conversations')
+        .update({ is_archived: isArchived, updated_at: new Date().toISOString() })
+        .eq('id', conversationId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['inbox-conversations'] });
+    }
+  });
+};
+
+// New: labels management (also used to mute via label 'muted')
+export const useConversationLabels = (conversationId?: string) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const fetch = async (): Promise<string[]> => {
+    if (!conversationId || !user) return [];
+    const { data, error } = await supabase
+      .from('conversation_labels')
+      .select('label')
+      .eq('user_id', user.id)
+      .eq('conversation_id', conversationId);
+    if (error) throw error;
+    return (data || []).map(r => r.label);
+  };
+
+  const add = async (label: string, color?: string) => {
+    if (!conversationId || !user) return;
+    const { error } = await supabase
+      .from('conversation_labels')
+      .insert({ user_id: user.id, conversation_id: conversationId, label, color });
+    if (error) throw error;
+  };
+
+  const remove = async (label: string) => {
+    if (!conversationId || !user) return;
+    const { error } = await supabase
+      .from('conversation_labels')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('conversation_id', conversationId)
+      .eq('label', label);
+    if (error) throw error;
+  };
+
+  const toggleMute = async (mute: boolean) => {
+    const labels = await fetch();
+    const isMuted = labels.includes('muted');
+    if (mute && !isMuted) await add('muted', '#999999');
+    if (!mute && isMuted) await remove('muted');
+  };
+
+  return { fetch, add, remove, toggleMute };
+};
+
+// New: edit message content
+export const useEditMessage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ messageId, conversationId, newContent }: { messageId: string; conversationId: string; newContent: string }) => {
+      const { error } = await supabase
+        .from('messages')
+        .update({ content: newContent, edited_at: new Date().toISOString() })
+        .eq('id', messageId);
+      if (error) throw error;
+      return { conversationId };
+    },
+    onSuccess: ({ conversationId }) => {
+      queryClient.invalidateQueries({ queryKey: ['inbox-messages', conversationId] });
+    }
+  });
+};
+
+// New: delete (soft-delete)
+export const useDeleteMessage = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ messageId, conversationId }: { messageId: string; conversationId: string }) => {
+      const { error } = await supabase
+        .from('messages')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', messageId);
+      if (error) throw error;
+      return { conversationId };
+    },
+    onSuccess: ({ conversationId }) => {
+      queryClient.invalidateQueries({ queryKey: ['inbox-messages', conversationId] });
+      toast({ title: 'Message deleted' });
     }
   });
 };
