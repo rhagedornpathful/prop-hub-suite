@@ -82,103 +82,102 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
 
   return (
     <Card className="border-primary/20 bg-gradient-glass backdrop-blur-sm shadow-colored hover:shadow-glow transition-all duration-300 h-full overflow-hidden">
-      {/* Enhanced Header */}
-      <div className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-sm px-4 flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0"
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
-        
-        <div className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search messages, contacts, or content..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-9 bg-background/50 border-border/50 focus:bg-background"
-            />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+        {/* Enhanced Header */}
+        <div className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-sm px-4 flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0"
+            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+          
+          <div className="flex-1 max-w-md">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                placeholder="Search messages, contacts, or content..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 h-9 bg-background/50 border-border/50 focus:bg-background"
+              />
+            </div>
           </div>
-        </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mr-4">
-          <TabsList className="h-8">
+          <TabsList className="h-8 mr-4">
             <TabsTrigger value="messages" className="h-7 text-xs">Messages</TabsTrigger>
             <TabsTrigger value="insights" className="h-7 text-xs">Insights</TabsTrigger>
           </TabsList>
-        </Tabs>
 
-        <div className="flex items-center gap-2">
-          {unreadCount > 0 && (
-            <Badge variant="default" className="bg-primary/90">
-              {unreadCount} unread
-            </Badge>
-          )}
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8"
-            onClick={() => setShowAdvancedSearch(true)}
-            title="Advanced search"
-          >
-            <Search className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8"
-            onClick={() => setShowTemplates(true)}
-            title="Message templates"
-          >
-            <FileText className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8"
-            onClick={() => setShowNotificationSettings(true)}
-            title="Notification settings"
-          >
-            <Bell className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant={bulkMode ? "default" : "ghost"}
-            size="sm"
-            className="h-8"
-            onClick={() => {
-              setBulkMode(!bulkMode);
-              if (bulkMode) setSelectedConversationIds([]);
-            }}
-            title="Bulk actions"
-          >
-            <CheckSquare className="h-4 w-4 mr-2" />
-            {bulkMode ? 'Cancel' : 'Select'}
-          </Button>
-
-          {selectedConversationIds.length > 0 && (
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <Badge variant="default" className="bg-primary/90">
+                {unreadCount} unread
+              </Badge>
+            )}
+            
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               className="h-8"
-              onClick={() => setShowThreadManagement(true)}
-              title="Thread management"
+              onClick={() => setShowAdvancedSearch(true)}
+              title="Advanced search"
             >
-              Thread Actions
+              <Search className="h-4 w-4" />
             </Button>
-          )}
-        </div>
-      </div>
 
-      {/* Resizable Main Content */}
-      <TabsContent value="messages" className="flex-1 h-[calc(100%-56px)] m-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8"
+              onClick={() => setShowTemplates(true)}
+              title="Message templates"
+            >
+              <FileText className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8"
+              onClick={() => setShowNotificationSettings(true)}
+              title="Notification settings"
+            >
+              <Bell className="h-4 w-4" />
+            </Button>
+            
+            <Button
+              variant={bulkMode ? "default" : "ghost"}
+              size="sm"
+              className="h-8"
+              onClick={() => {
+                setBulkMode(!bulkMode);
+                if (bulkMode) setSelectedConversationIds([]);
+              }}
+              title="Bulk actions"
+            >
+              <CheckSquare className="h-4 w-4 mr-2" />
+              {bulkMode ? 'Cancel' : 'Select'}
+            </Button>
+
+            {selectedConversationIds.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8"
+                onClick={() => setShowThreadManagement(true)}
+                title="Thread management"
+              >
+                Thread Actions
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Resizable Main Content */}
+        <TabsContent value="messages" className="flex-1 h-[calc(100%-56px)] m-0">
         <div className="h-full">
         <ResizablePanelGroup
           direction="horizontal"
@@ -277,12 +276,13 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
         </div>
       </TabsContent>
 
-      <TabsContent value="insights" className="flex-1 h-[calc(100%-56px)] m-0 overflow-auto">
-        <ConversationInsights
-          conversations={conversations}
-          messages={messages}
-        />
-      </TabsContent>
+        <TabsContent value="insights" className="flex-1 h-[calc(100%-56px)] m-0 overflow-auto">
+          <ConversationInsights
+            conversations={conversations}
+            messages={messages}
+          />
+        </TabsContent>
+      </Tabs>
 
       {/* Compose Dialog */}
       <ComposeDialog
