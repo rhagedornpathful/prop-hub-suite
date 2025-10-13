@@ -275,6 +275,39 @@ export const useSendInboxMessage = () => {
     }) => {
       if (!user) throw new Error('User not authenticated');
 
+      // Get sender name for optimistic update
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      const senderName = senderProfile 
+        ? `${senderProfile.first_name || ''} ${senderProfile.last_name || ''}`.trim()
+        : 'Unknown User';
+
+      const optimisticMessage: InboxMessage = {
+        id: `temp-${Date.now()}`,
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content,
+        subject,
+        importance,
+        message_type: 'text',
+        attachments,
+        is_draft: false,
+        reply_to_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        edited_at: null,
+        deleted_at: null,
+        is_edited: false,
+        cc_recipients: null,
+        bcc_recipients: null,
+        sender_name: senderName,
+        deliveries: []
+      };
+
       const { data, error } = await supabase
         .from('messages')
         .insert({
@@ -308,7 +341,69 @@ export const useSendInboxMessage = () => {
         })
         .eq('id', conversationId);
 
-      return data;
+      return { ...data, sender_name: senderName, deliveries: [] };
+    },
+    onMutate: async ({ conversationId, content, subject, importance, attachments }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['inbox-messages', conversationId] });
+      
+      // Snapshot previous value
+      const previousMessages = queryClient.getQueryData<InboxMessage[]>(['inbox-messages', conversationId, user?.id]);
+      
+      // Get sender name
+      const { data: senderProfile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('user_id', user!.id)
+        .maybeSingle();
+
+      const senderName = senderProfile 
+        ? `${senderProfile.first_name || ''} ${senderProfile.last_name || ''}`.trim()
+        : 'Unknown User';
+
+      // Optimistically update to the new value
+      const optimisticMessage: InboxMessage = {
+        id: `temp-${Date.now()}`,
+        conversation_id: conversationId,
+        sender_id: user!.id,
+        content,
+        subject,
+        importance: importance || 'normal',
+        message_type: 'text',
+        attachments,
+        is_draft: false,
+        reply_to_id: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        edited_at: null,
+        deleted_at: null,
+        is_edited: false,
+        cc_recipients: null,
+        bcc_recipients: null,
+        sender_name: senderName,
+        deliveries: []
+      };
+
+      queryClient.setQueryData<InboxMessage[]>(
+        ['inbox-messages', conversationId, user?.id],
+        (old) => [...(old || []), optimisticMessage]
+      );
+
+      return { previousMessages };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousMessages) {
+        queryClient.setQueryData(
+          ['inbox-messages', variables.conversationId, user?.id],
+          context.previousMessages
+        );
+      }
+      toast({
+        title: 'Error',
+        description: 'Failed to send message. Please try again.',
+        variant: 'destructive'
+      });
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['inbox-conversations'] });
@@ -318,13 +413,6 @@ export const useSendInboxMessage = () => {
         description: 'Your message has been sent successfully'
       });
     },
-    onError: (error: any) => {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to send message. Please try again.',
-        variant: 'destructive'
-      });
-    }
   });
 };
 

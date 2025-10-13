@@ -28,10 +28,17 @@ export const queryClient = new QueryClient({
       
       // Network mode
       networkMode: 'online',
+      
+      // Enable deduplication for identical concurrent queries
+      structuralSharing: true,
     },
     mutations: {
       retry: 1,
       networkMode: 'online',
+      // Optimistic updates by default
+      onMutate: async () => {
+        // Can be overridden per mutation
+      },
     },
   },
 });

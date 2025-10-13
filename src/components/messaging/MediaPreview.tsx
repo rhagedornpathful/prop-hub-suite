@@ -29,6 +29,7 @@ export const MediaPreview: React.FC<MediaPreviewProps> = ({
               src={url} 
               alt={fileName || 'Image preview'} 
               className="w-full h-auto max-h-96 object-contain rounded-lg"
+              loading="lazy"
             />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <Button
