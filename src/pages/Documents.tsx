@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Upload, Search, Filter, Download, Trash2, Eye, FileText, Image, Video, Archive, Home, User, Users } from "lucide-react";
+import { Plus, Upload, Search, Filter, Download, Trash2, Eye, FileText, Image, Video, Archive, Home, User, Users, Grid3x3, List, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,21 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tables } from "@/integrations/supabase/types";
+import { DocumentPreviewDialog } from "@/components/documents/DocumentPreviewDialog";
+import { DragDropZone } from "@/components/documents/DragDropZone";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface Document {
   id: string;
@@ -84,6 +99,15 @@ export default function Documents() {
   const [selectedPropertyOwnerId, setSelectedPropertyOwnerId] = useState<string>("none");
   const [selectedTenantId, setSelectedTenantId] = useState<string>("none");
   const [isUploading, setIsUploading] = useState(false);
+  
+  // Phase 1 enhancements
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12);
+  const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
+  const [previewDocument, setPreviewDocument] = useState<Document | null>(null);
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  
   const { toast } = useToast();
 
   const categories = [
@@ -303,21 +327,94 @@ export default function Documents() {
       default:
         matchesAssociation = true;
     }
+
+    // Date range filter
+    let matchesDateRange = true;
+    if (dateRange.from || dateRange.to) {
+      const uploadDate = new Date(doc.uploaded_at);
+      if (dateRange.from && uploadDate < dateRange.from) matchesDateRange = false;
+      if (dateRange.to) {
+        const endOfDay = new Date(dateRange.to);
+        endOfDay.setHours(23, 59, 59, 999);
+        if (uploadDate > endOfDay) matchesDateRange = false;
+      }
+    }
     
-    return matchesSearch && matchesCategory && matchesAssociation;
+    return matchesSearch && matchesCategory && matchesAssociation && matchesDateRange;
   });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedDocuments = filteredDocuments.slice(startIndex, startIndex + itemsPerPage);
+
+  // Bulk operations
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedDocuments(new Set(paginatedDocuments.map(doc => doc.id)));
+    } else {
+      setSelectedDocuments(new Set());
+    }
+  };
+
+  const handleSelectDocument = (docId: string, checked: boolean) => {
+    const newSelected = new Set(selectedDocuments);
+    if (checked) {
+      newSelected.add(docId);
+    } else {
+      newSelected.delete(docId);
+    }
+    setSelectedDocuments(newSelected);
+  };
+
+  const handleBulkDownload = async () => {
+    if (selectedDocuments.size === 0) return;
+
+    toast({
+      title: "Preparing download",
+      description: `Downloading ${selectedDocuments.size} document(s)...`,
+    });
+
+    for (const docId of selectedDocuments) {
+      const doc = documents.find(d => d.id === docId);
+      if (doc) {
+        await handleDownload(doc);
+      }
+    }
+
+    setSelectedDocuments(new Set());
+  };
+
+  const handleFilesSelected = (files: File[]) => {
+    if (files.length > 0) {
+      setUploadFile(files[0]);
+    }
+  };
 
   return (
     <div className="flex-1 space-y-6 p-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
-        <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Upload Document
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">Documents</h2>
+          <p className="text-muted-foreground mt-1">
+            {filteredDocuments.length} document{filteredDocuments.length !== 1 ? 's' : ''}
+            {selectedDocuments.size > 0 && ` • ${selectedDocuments.size} selected`}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {selectedDocuments.size > 0 && (
+            <Button variant="outline" onClick={handleBulkDownload}>
+              <Download className="w-4 h-4 mr-2" />
+              Download ({selectedDocuments.size})
             </Button>
-          </DialogTrigger>
+          )}
+          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Upload Document
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Upload Document</DialogTitle>
@@ -327,13 +424,24 @@ export default function Documents() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="file">Select File</Label>
-                <Input
-                  id="file"
-                  type="file"
-                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                  className="mt-1"
-                />
+                <Label>Upload File</Label>
+                <div className="mt-2">
+                  {!uploadFile ? (
+                    <DragDropZone onFilesSelected={handleFilesSelected} maxSize={50} />
+                  ) : (
+                    <div className="flex items-center gap-2 p-4 border rounded-lg">
+                      <FileText className="w-5 h-5" />
+                      <span className="flex-1 truncate">{uploadFile.name}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setUploadFile(null)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <Label htmlFor="category">Category</Label>
@@ -445,66 +553,136 @@ export default function Documents() {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
-      <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search documents..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
+      <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search documents..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map(category => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={associationFilter} onValueChange={setAssociationFilter}>
+            <SelectTrigger className="w-[180px]">
+              <Users className="w-4 h-4 mr-2" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Documents</SelectItem>
+              <SelectItem value="with-property">With Property</SelectItem>
+              <SelectItem value="with-owner">With Owner</SelectItem>
+              <SelectItem value="with-tenant">With Tenant</SelectItem>
+              <SelectItem value="unassociated">Unassociated</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Date Range Filter */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="w-[240px] justify-start text-left font-normal">
+                <Calendar className="w-4 h-4 mr-2" />
+                {dateRange.from ? (
+                  dateRange.to ? (
+                    <>
+                      {format(dateRange.from, "MMM d")} - {format(dateRange.to, "MMM d, yyyy")}
+                    </>
+                  ) : (
+                    format(dateRange.from, "MMM d, yyyy")
+                  )
+                ) : (
+                  <span>Pick a date</span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <CalendarComponent
+                mode="range"
+                selected={{ from: dateRange.from, to: dateRange.to }}
+                onSelect={(range: any) => setDateRange(range || {})}
+                numberOfMonths={2}
+                className={cn("p-3 pointer-events-auto")}
+              />
+              {(dateRange.from || dateRange.to) && (
+                <div className="p-3 border-t">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDateRange({})}
+                    className="w-full"
+                  >
+                    Clear dates
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+
+          {/* View Toggle */}
+          <div className="flex border rounded-lg">
+            <Button
+              variant={viewMode === "grid" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className="rounded-r-none"
+            >
+              <Grid3x3 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-l-none"
+            >
+              <List className="w-4 h-4" />
+            </Button>
           </div>
         </div>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px]">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map(category => (
-              <SelectItem key={category.value} value={category.value}>
-                {category.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={associationFilter} onValueChange={setAssociationFilter}>
-          <SelectTrigger className="w-[180px]">
-            <Users className="w-4 h-4 mr-2" />
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Documents</SelectItem>
-            <SelectItem value="with-property">With Property</SelectItem>
-            <SelectItem value="with-owner">With Owner</SelectItem>
-            <SelectItem value="with-tenant">With Tenant</SelectItem>
-            <SelectItem value="unassociated">Unassociated</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredDocuments.map((document) => (
-          <Card key={document.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-2">
-                  {getFileIcon(document.file_type)}
-                  <CardTitle className="text-sm font-medium truncate">
-                    {document.file_name}
-                  </CardTitle>
+      {/* Grid View */}
+      {viewMode === "grid" && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {paginatedDocuments.map((document) => (
+            <Card key={document.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <Checkbox
+                    checked={selectedDocuments.has(document.id)}
+                    onCheckedChange={(checked) => handleSelectDocument(document.id, checked as boolean)}
+                  />
+                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    {getFileIcon(document.file_type)}
+                    <CardTitle className="text-sm font-medium truncate">
+                      {document.file_name}
+                    </CardTitle>
+                  </div>
+                  <Badge variant="secondary" className="text-xs shrink-0">
+                    {categories.find(c => c.value === document.category)?.label || document.category}
+                  </Badge>
                 </div>
-                <Badge variant="secondary" className="text-xs">
-                  {categories.find(c => c.value === document.category)?.label || document.category}
-                </Badge>
-              </div>
-            </CardHeader>
+              </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-2">
                 {document.description && (
@@ -557,11 +735,17 @@ export default function Documents() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDownload(document)}
-                    className="flex-1"
+                    onClick={() => setPreviewDocument(document)}
                   >
-                    <Download className="w-3 h-3 mr-1" />
-                    Download
+                    <Eye className="w-3 h-3 mr-1" />
+                    Preview
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDownload(document)}
+                  >
+                    <Download className="w-3 h-3" />
                   </Button>
                   <Button
                     size="sm"
@@ -573,21 +757,173 @@ export default function Documents() {
                 </div>
               </div>
             </CardContent>
-          </Card>
-        ))}
-      </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
+      {/* List/Table View */}
+      {viewMode === "list" && (
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={paginatedDocuments.length > 0 && paginatedDocuments.every(doc => selectedDocuments.has(doc.id))}
+                    onCheckedChange={handleSelectAll}
+                  />
+                </TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Size</TableHead>
+                <TableHead>Uploaded</TableHead>
+                <TableHead>Associated With</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedDocuments.map((document) => (
+                <TableRow key={document.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedDocuments.has(document.id)}
+                      onCheckedChange={(checked) => handleSelectDocument(document.id, checked as boolean)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      {getFileIcon(document.file_type)}
+                      <span className="font-medium">{document.file_name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="text-xs">
+                      {categories.find(c => c.value === document.category)?.label || document.category}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatFileSize(document.file_size)}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {new Date(document.uploaded_at).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {document.property && (
+                        <Badge variant="outline" className="text-xs">
+                          <Home className="w-3 h-3 mr-1" />
+                          {document.property.address}
+                        </Badge>
+                      )}
+                      {document.property_owner && (
+                        <Badge variant="outline" className="text-xs">
+                          <User className="w-3 h-3 mr-1" />
+                          {document.property_owner.first_name}
+                        </Badge>
+                      )}
+                      {document.tenant && (
+                        <Badge variant="outline" className="text-xs">
+                          <Users className="w-3 h-3 mr-1" />
+                          {document.tenant.first_name}
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setPreviewDocument(document)}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDownload(document)}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(document)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {filteredDocuments.length > itemsPerPage && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredDocuments.length)} of {filteredDocuments.length} documents
+          </p>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(page)}
+                  className="w-8 h-8 p-0"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State */}
       {filteredDocuments.length === 0 && (
         <div className="text-center py-12">
           <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
           <p className="text-lg font-medium text-muted-foreground">No documents found</p>
           <p className="text-sm text-muted-foreground">
-            {searchQuery || categoryFilter !== "all" 
+            {searchQuery || categoryFilter !== "all" || dateRange.from || dateRange.to
               ? "Try adjusting your search or filter criteria" 
               : "Upload your first document to get started"}
           </p>
         </div>
       )}
+
+      {/* Document Preview Dialog */}
+      <DocumentPreviewDialog
+        open={!!previewDocument}
+        onOpenChange={(open) => !open && setPreviewDocument(null)}
+        document={previewDocument}
+        onDownload={() => previewDocument && handleDownload(previewDocument)}
+      />
     </div>
   );
 }
