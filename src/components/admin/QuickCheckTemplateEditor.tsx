@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,9 +23,18 @@ export const QuickCheckTemplateEditor = ({ template, onUpdate }: QuickCheckTempl
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [newItem, setNewItem] = useState({
     question: '',
-    options: ['Yes', 'No', 'N/A'],
+    options: ['Yes', 'No', 'N/A'], // Predefined options
     is_required: true,
   });
+
+  // Set default min photos to 2
+  useEffect(() => {
+    if (initialConfig.min_photos_required === undefined) {
+      const defaultConfig = { ...initialConfig, min_photos_required: 2 };
+      setConfig(defaultConfig);
+      onUpdate(defaultConfig);
+    }
+  }, []);
 
   const handleAddItem = () => {
     if (!newItem.question.trim()) return;
@@ -91,28 +100,6 @@ export const QuickCheckTemplateEditor = ({ template, onUpdate }: QuickCheckTempl
     onUpdate(updatedConfig);
   };
 
-  const updateOption = (index: number, value: string) => {
-    const newOptions = [...newItem.options];
-    newOptions[index] = value;
-    setNewItem({ ...newItem, options: newOptions });
-  };
-
-  const addOption = () => {
-    if (newItem.options.length >= 5) {
-      alert('Maximum 5 options allowed');
-      return;
-    }
-    setNewItem({ ...newItem, options: [...newItem.options, ''] });
-  };
-
-  const removeOption = (index: number) => {
-    if (newItem.options.length <= 2) {
-      alert('Minimum 2 options required');
-      return;
-    }
-    setNewItem({ ...newItem, options: newItem.options.filter((_, i) => i !== index) });
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -163,32 +150,17 @@ export const QuickCheckTemplateEditor = ({ template, onUpdate }: QuickCheckTempl
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label>Answer Options</Label>
-              <Button type="button" variant="ghost" size="sm" onClick={addOption}>
-                <Plus className="h-3 w-3 mr-1" />
-                Add Option
-              </Button>
-            </div>
-            {newItem.options.map((option, index) => (
-              <div key={index} className="flex gap-2">
-                <Input
-                  value={option}
-                  onChange={(e) => updateOption(index, e.target.value)}
-                  placeholder={`Option ${index + 1}`}
-                />
-                {newItem.options.length > 2 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeOption(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
+            <Label>Answer Options (Predefined)</Label>
+            <div className="p-3 bg-muted/50 rounded-md">
+              <div className="flex flex-wrap gap-2">
+                {['Yes', 'No', 'N/A'].map((option) => (
+                  <Badge key={option} variant="secondary">{option}</Badge>
+                ))}
               </div>
-            ))}
+              <p className="text-xs text-muted-foreground mt-2">
+                All quick check questions use these predefined options
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">

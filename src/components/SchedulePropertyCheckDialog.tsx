@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon, Clock, Zap, ClipboardList } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -25,6 +25,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface SchedulePropertyCheckDialogProps {
@@ -42,6 +45,7 @@ export function SchedulePropertyCheckDialog({
 }: SchedulePropertyCheckDialogProps) {
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [selectedTime, setSelectedTime] = useState<string>();
+  const [checkType, setCheckType] = useState<'quick' | 'full'>('quick');
   const [isScheduling, setIsScheduling] = useState(false);
   const { toast } = useToast();
 
@@ -97,18 +101,20 @@ export function SchedulePropertyCheckDialog({
           scheduled_time: selectedTime,
           scheduled_by: user.id,
           status: 'scheduled',
+          check_type: checkType,
         });
 
       if (error) throw error;
 
       toast({
         title: "Check Scheduled",
-        description: `Property check scheduled for ${format(selectedDate, 'PPP')} at ${timeOptions.find(t => t.value === selectedTime)?.label}`,
+        description: `${checkType === 'quick' ? 'Quick' : 'Full'} property check scheduled for ${format(selectedDate, 'PPP')} at ${timeOptions.find(t => t.value === selectedTime)?.label}`,
       });
 
       onOpenChange(false);
       setSelectedDate(undefined);
       setSelectedTime(undefined);
+      setCheckType('quick');
     } catch (error) {
       console.error('Error scheduling check:', error);
       toast({
@@ -132,6 +138,48 @@ export function SchedulePropertyCheckDialog({
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          {/* Check Type Selection */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium">Check Type</label>
+            <RadioGroup value={checkType} onValueChange={(value) => setCheckType(value as 'quick' | 'full')}>
+              <div className="space-y-2">
+                <Card className={`cursor-pointer transition-all ${checkType === 'quick' ? 'ring-2 ring-primary' : ''}`}>
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-2">
+                      <RadioGroupItem value="quick" id="quick-sched" className="mt-0.5" />
+                      <Label htmlFor="quick-sched" className="flex-1 cursor-pointer">
+                        <div className="flex items-start gap-2">
+                          <Zap className="h-4 w-4 text-primary mt-0.5" />
+                          <div>
+                            <div className="font-medium text-sm">Quick Check</div>
+                            <div className="text-xs text-muted-foreground">5-10 questions, ~5 minutes</div>
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className={`cursor-pointer transition-all ${checkType === 'full' ? 'ring-2 ring-primary' : ''}`}>
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-2">
+                      <RadioGroupItem value="full" id="full-sched" className="mt-0.5" />
+                      <Label htmlFor="full-sched" className="flex-1 cursor-pointer">
+                        <div className="flex items-start gap-2">
+                          <ClipboardList className="h-4 w-4 text-secondary mt-0.5" />
+                          <div>
+                            <div className="font-medium text-sm">Full Check</div>
+                            <div className="text-xs text-muted-foreground">Detailed inspection with sections</div>
+                          </div>
+                        </div>
+                      </Label>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </RadioGroup>
+          </div>
+
           {/* Date Selection */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Select Date</label>
