@@ -45,9 +45,9 @@ export const usePayments = () => {
         .from("payments")
         .select("*");
 
-      // Filter by role - property owners only see payments for their properties
+      // Filter by role
       if (effectiveRole === 'owner_investor') {
-        // Get properties where user is associated as owner
+        // Property owners only see payments for their properties
         const { data: ownerData } = await supabase
           .from('property_owners')
           .select('id')
@@ -70,7 +70,37 @@ export const usePayments = () => {
         } else {
           return [];
         }
+      } else if (effectiveRole === 'tenant') {
+        // Tenants only see their own payments
+        const { data: tenantData } = await supabase
+          .from('tenants')
+          .select('id, property_id')
+          .eq('user_account_id', user.id)
+          .single();
+
+        if (tenantData) {
+          // See payments linked to their tenant_id OR property OR user_id
+          query = query.or(`tenant_id.eq.${tenantData.id},property_id.eq.${tenantData.property_id},user_id.eq.${user.id}`);
+        } else {
+          // Only see payments directly linked to their user_id
+          query = query.eq('user_id', user.id);
+        }
+      } else if (effectiveRole === 'property_manager') {
+        // Property managers see payments for their assigned properties
+        const { data: assignments } = await supabase
+          .from('property_manager_assignments')
+          .select('property_id')
+          .eq('manager_user_id', user.id);
+
+        const propertyIds = assignments?.map(a => a.property_id) || [];
+        
+        if (propertyIds.length === 0) {
+          return [];
+        }
+
+        query = query.in('property_id', propertyIds);
       }
+      // Admin sees all payments (no filter needed)
 
       const { data: payments, error } = await query.order("created_at", { ascending: false });
 
@@ -103,9 +133,9 @@ export const useSubscriptions = () => {
         .from("subscriptions")
         .select("*");
 
-      // Filter by role - property owners only see subscriptions for their properties
+      // Filter by role
       if (effectiveRole === 'owner_investor') {
-        // Get properties where user is associated as owner
+        // Property owners only see subscriptions for their properties
         const { data: ownerData } = await supabase
           .from('property_owners')
           .select('id')
@@ -128,7 +158,37 @@ export const useSubscriptions = () => {
         } else {
           return [];
         }
+      } else if (effectiveRole === 'tenant') {
+        // Tenants only see their own subscriptions
+        const { data: tenantData } = await supabase
+          .from('tenants')
+          .select('id, property_id')
+          .eq('user_account_id', user.id)
+          .single();
+
+        if (tenantData) {
+          // See subscriptions linked to their tenant_id OR property OR user_id
+          query = query.or(`tenant_id.eq.${tenantData.id},property_id.eq.${tenantData.property_id},user_id.eq.${user.id}`);
+        } else {
+          // Only see subscriptions directly linked to their user_id
+          query = query.eq('user_id', user.id);
+        }
+      } else if (effectiveRole === 'property_manager') {
+        // Property managers see subscriptions for their assigned properties
+        const { data: assignments } = await supabase
+          .from('property_manager_assignments')
+          .select('property_id')
+          .eq('manager_user_id', user.id);
+
+        const propertyIds = assignments?.map(a => a.property_id) || [];
+        
+        if (propertyIds.length === 0) {
+          return [];
+        }
+
+        query = query.in('property_id', propertyIds);
       }
+      // Admin sees all subscriptions (no filter needed)
 
       const { data: subscriptions, error } = await query.order("created_at", { ascending: false });
 

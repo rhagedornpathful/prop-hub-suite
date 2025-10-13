@@ -92,9 +92,9 @@ export const useMaintenanceRequests = () => {
           )
         `);
 
-      // Filter by role - property owners only see maintenance for their properties
+      // Filter by role
       if (effectiveRole === 'owner_investor') {
-        // Get properties where user is associated as owner
+        // Property owners only see maintenance for their properties
         const { data: ownerData } = await supabase
           .from('property_owners')
           .select('id')
@@ -117,7 +117,37 @@ export const useMaintenanceRequests = () => {
         } else {
           return [];
         }
+      } else if (effectiveRole === 'tenant') {
+        // Tenants only see maintenance requests for their property OR created by them
+        const { data: tenantData } = await supabase
+          .from('tenants')
+          .select('property_id')
+          .eq('user_account_id', user.id)
+          .single();
+
+        if (tenantData) {
+          // Can see requests for their property OR requests they created
+          query = query.or(`property_id.eq.${tenantData.property_id},user_id.eq.${user.id}`);
+        } else {
+          // If not a tenant in the system, only show requests they created
+          query = query.eq('user_id', user.id);
+        }
+      } else if (effectiveRole === 'property_manager') {
+        // Property managers see requests for their assigned properties
+        const { data: assignments } = await supabase
+          .from('property_manager_assignments')
+          .select('property_id')
+          .eq('manager_user_id', user.id);
+
+        const propertyIds = assignments?.map(a => a.property_id) || [];
+        
+        if (propertyIds.length === 0) {
+          return [];
+        }
+
+        query = query.in('property_id', propertyIds);
       }
+      // Admin sees all requests (no filter needed)
 
       const { data, error } = await query.order('created_at', { ascending: false });
 

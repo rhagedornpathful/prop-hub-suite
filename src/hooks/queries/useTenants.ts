@@ -53,9 +53,9 @@ export const useTenants = () => {
           )
         `);
 
-      // Filter by role - property owners only see tenants in their properties
+      // Filter by role
       if (effectiveRole === 'owner_investor') {
-        // Get properties where user is associated as owner
+        // Property owners only see tenants in their properties
         const { data: ownerData } = await supabase
           .from('property_owners')
           .select('id')
@@ -78,7 +78,25 @@ export const useTenants = () => {
         } else {
           return [];
         }
+      } else if (effectiveRole === 'tenant') {
+        // Tenants can ONLY see their own record
+        query = query.eq('user_account_id', user.id);
+      } else if (effectiveRole === 'property_manager') {
+        // Property managers see tenants on their assigned properties
+        const { data: assignments } = await supabase
+          .from('property_manager_assignments')
+          .select('property_id')
+          .eq('manager_user_id', user.id);
+
+        const propertyIds = assignments?.map(a => a.property_id) || [];
+        
+        if (propertyIds.length === 0) {
+          return [];
+        }
+
+        query = query.in('property_id', propertyIds);
       }
+      // Admin sees all tenants (no filter needed)
 
       const { data: tenants, error } = await query.order("created_at", { ascending: false });
 

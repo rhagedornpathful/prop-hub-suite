@@ -3422,6 +3422,10 @@ export type Database = {
           zip_code: string
         }[]
       }
+      get_tenant_property_id: {
+        Args: { _user_id: string }
+        Returns: string
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -3501,6 +3505,10 @@ export type Database = {
         Returns: boolean
       }
       user_is_house_watcher_for_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
+      user_is_tenant_for_property: {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
