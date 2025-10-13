@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Menu, Users, Settings, SplitSquareHorizontal } from 'lucide-react';
+import { Search, Menu, Users, Settings, SplitSquareHorizontal, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,7 @@ import { InboxSidebar } from './InboxSidebar';
 import { MessageList } from './MessageList';
 import { MessageView } from './MessageView';
 import { ComposeDialog } from './ComposeDialog';
+import { BulkActionsToolbar } from '@/components/messaging/BulkActionsToolbar';
 import { useInboxConversations } from '@/hooks/queries/useInbox';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -28,6 +29,10 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
   const [selectedFilter, setSelectedFilter] = useState('inbox');
   const [showCompose, setShowCompose] = useState(false);
   const [layoutDensity, setLayoutDensity] = useState<'comfortable' | 'compact'>('comfortable');
+  
+  // Bulk actions
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedConversationIds, setSelectedConversationIds] = useState<string[]>([]);
   
   const { data: conversations = [], isLoading } = useInboxConversations({
     filter: selectedFilter,
@@ -68,6 +73,20 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
               {unreadCount} unread
             </Badge>
           )}
+          
+          <Button
+            variant={bulkMode ? "default" : "ghost"}
+            size="sm"
+            className="h-8"
+            onClick={() => {
+              setBulkMode(!bulkMode);
+              if (bulkMode) setSelectedConversationIds([]);
+            }}
+            title="Bulk actions"
+          >
+            <CheckSquare className="h-4 w-4 mr-2" />
+            {bulkMode ? 'Cancel' : 'Select'}
+          </Button>
           
           <Button
             variant="ghost"
@@ -126,14 +145,30 @@ export const InboxLayout: React.FC<InboxLayoutProps> = ({ className }) => {
             maxSize={50}
             className="min-w-0"
           >
-            <div className="h-full border-r border-border/50 bg-card/30">
-              <MessageList
-                conversations={conversations}
-                selectedId={selectedConversationId}
-                onSelect={setSelectedConversationId}
-                isLoading={isLoading}
-                filter={selectedFilter}
-              />
+            <div className="h-full border-r border-border/50 bg-card/30 flex flex-col">
+              {bulkMode && (
+                <BulkActionsToolbar
+                  selectedIds={selectedConversationIds}
+                  onClearSelection={() => setSelectedConversationIds([])}
+                  onComplete={() => setBulkMode(false)}
+                />
+              )}
+              <div className="flex-1 overflow-hidden">
+                <MessageList
+                  conversations={conversations}
+                  selectedId={selectedConversationId}
+                  onSelect={setSelectedConversationId}
+                  isLoading={isLoading}
+                  filter={selectedFilter}
+                  bulkMode={bulkMode}
+                  selectedIds={selectedConversationIds}
+                  onToggleSelect={(id) => {
+                    setSelectedConversationIds(prev =>
+                      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+                    );
+                  }}
+                />
+              </div>
             </div>
           </ResizablePanel>
 

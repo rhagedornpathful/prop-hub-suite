@@ -12,7 +12,13 @@ import {
   Building,
   User,
   Clock,
-  AlertTriangle
+  AlertTriangle,
+  Edit3,
+  Pin,
+  Volume2,
+  VolumeX,
+  Tag,
+  CalendarClock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +50,10 @@ import { useMessagingShortcuts } from '@/hooks/useKeyboardShortcuts.tsx';
 import { useDraftAutoSave } from '@/hooks/useDraftAutoSave';
 import { useOfflineDetection } from '@/hooks/useOfflineDetection';
 import { useToggleStarConversation, useArchiveConversation, useConversationLabels, useEditMessage, useDeleteMessage } from '@/hooks/queries/useInbox';
+import { MessageEditDialog } from '@/components/messaging/MessageEditDialog';
+import { ScheduleMessageDialog } from '@/components/messaging/ScheduleMessageDialog';
+import { LabelsManager } from '@/components/messaging/LabelsManager';
+import { SmartComposeButton } from '@/components/messaging/SmartComposeButton';
 
 interface MessageViewProps {
   conversation: InboxConversation;
@@ -62,10 +72,23 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
   const [forwardRecipients, setForwardRecipients] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   
+  // Phase 2 states
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingMessage, setEditingMessage] = useState<{ id: string; content: string } | null>(null);
+  const [showScheduleDialog, setShowScheduleDialog] = useState(false);
+  const [showLabelsManager, setShowLabelsManager] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  
   const { data: messages = [], isLoading } = useInboxMessages(conversation.id, filter);
   const sendMessage = useSendInboxMessage();
   const createConversation = useCreateInboxConversation();
   const { isOnline } = useOfflineDetection();
+  
+  // Phase 2 hooks
+  const toggleStar = useToggleStarConversation();
+  const archiveConv = useArchiveConversation();
+  const labelsHook = useConversationLabels(conversation.id);
+  const deleteMessage = useDeleteMessage();
   
   // Typing indicator
   const { handleTyping, stopTyping } = useTypingIndicator(conversation.id);
@@ -217,14 +240,19 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
           
           {/* Actions */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="sm">
-              <Star className="h-4 w-4" />
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => toggleStar.mutate({ conversationId: conversation.id, isStarred: !conversation.is_starred })}
+            >
+              <Star className={`h-4 w-4 ${conversation.is_starred ? 'fill-yellow-500 text-yellow-500' : ''}`} />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => archiveConv.mutate({ conversationId: conversation.id, isArchived: !conversation.is_archived })}
+            >
               <Archive className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Trash2 className="h-4 w-4" />
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -233,8 +261,18 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Mark as unread</DropdownMenuItem>
-                <DropdownMenuItem>Add label</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowLabelsManager(true)}>
+                  <Tag className="h-4 w-4 mr-2" />
+                  Manage labels
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={async () => {
+                  const muted = !isMuted;
+                  await labelsHook.toggleMute(muted);
+                  setIsMuted(muted);
+                }}>
+                  {isMuted ? <Volume2 className="h-4 w-4 mr-2" /> : <VolumeX className="h-4 w-4 mr-2" />}
+                  {isMuted ? 'Unmute' : 'Mute'} conversation
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Print</DropdownMenuItem>
                 <DropdownMenuItem>Export</DropdownMenuItem>
@@ -245,6 +283,10 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
 
         {/* Quick Actions */}
         <div className="flex items-center gap-2 flex-wrap">
+          <SmartComposeButton 
+            conversationId={conversation.id}
+            onSuggestionSelect={(suggestion) => setReplyContent(suggestion)}
+          />
           <MessageTemplates onTemplateSelect={(content) => setReplyContent(content)} />
           <AdvancedMessageSearch 
             onResultSelect={(result) => console.log('Selected message:', result)} 
@@ -309,24 +351,52 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
               </Avatar>
               
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{message.sender_name || 'Unknown User'}</span>
-                    {message.importance === 'high' && (
-                      <AlertTriangle className="h-3 w-3 text-red-500" />
-                    )}
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{message.sender_name || 'Unknown User'}</span>
+                      {message.importance === 'high' && (
+                        <AlertTriangle className="h-3 w-3 text-red-500" />
+                      )}
+                      {message.is_edited && (
+                        <span className="text-xs text-muted-foreground">(edited)</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {formatDateTime(message.created_at)}
+                      </span>
+                      <MessageStatusIndicator
+                        messageId={message.id}
+                        senderId={message.sender_id}
+                        currentUserId={user?.id}
+                      />
+                      {message.sender_id === user?.id && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              <MoreHorizontal className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => {
+                              setEditingMessage({ id: message.id, content: message.content });
+                              setShowEditDialog(true);
+                            }}>
+                              <Edit3 className="h-4 w-4 mr-2" />
+                              Edit message
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => deleteMessage.mutate({ messageId: message.id, conversationId: conversation.id })}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete message
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {formatDateTime(message.created_at)}
-                    </span>
-                    <MessageStatusIndicator
-                      messageId={message.id}
-                      senderId={message.sender_id}
-                      currentUserId={user?.id}
-                    />
-                  </div>
-                </div>
                 
                 {message.subject && message.subject !== conversation.title && (
                   <p className="text-sm text-muted-foreground mb-2">
@@ -407,6 +477,13 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
                   onClick={() => setShowReply(false)}
                 >
                   Cancel
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setShowScheduleDialog(true)}
+                >
+                  <CalendarClock className="h-4 w-4 mr-2" />
+                  Schedule
                 </Button>
                 <Button 
                   onClick={handleReply}
@@ -524,6 +601,32 @@ export const MessageView: React.FC<MessageViewProps> = ({ conversation, onClose,
 
       {/* Original Reply Area - now only shows when showReply is true */}
       {/* Original reply area removed - replaced with the conditional ones above */}
+      
+      {/* Phase 2 Dialogs */}
+      {editingMessage && (
+        <MessageEditDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          messageId={editingMessage.id}
+          conversationId={conversation.id}
+          currentContent={editingMessage.content}
+        />
+      )}
+      
+      <ScheduleMessageDialog
+        open={showScheduleDialog}
+        onOpenChange={setShowScheduleDialog}
+        conversationId={conversation.id}
+        content={replyContent}
+        subject={conversation.title || ''}
+        recipientIds={conversation.participants?.map(p => p.user_id) || []}
+      />
+      
+      <LabelsManager
+        open={showLabelsManager}
+        onOpenChange={setShowLabelsManager}
+        conversationId={conversation.id}
+      />
     </div>
   );
 };

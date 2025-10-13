@@ -1,7 +1,8 @@
-import React from 'react';
-import { Star, Paperclip, Users, Building, Wrench, AlertTriangle, Clock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, Paperclip, Users, Building, Wrench, AlertTriangle, Clock, CheckSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { InboxConversation } from '@/hooks/queries/useInbox';
 
@@ -11,6 +12,9 @@ interface MessageListProps {
   onSelect: (id: string) => void;
   isLoading: boolean;
   filter: string;
+  selectedIds?: string[];
+  onToggleSelect?: (id: string) => void;
+  bulkMode?: boolean;
 }
 
 export const MessageList: React.FC<MessageListProps> = ({
@@ -18,7 +22,10 @@ export const MessageList: React.FC<MessageListProps> = ({
   selectedId,
   onSelect,
   isLoading,
-  filter
+  filter,
+  selectedIds = [],
+  onToggleSelect,
+  bulkMode = false
 }) => {
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -141,21 +148,34 @@ export const MessageList: React.FC<MessageListProps> = ({
           </div>
         ) : (
           <div className="space-y-1 p-2">
-            {conversations.map((conversation) => (
-              <div
-                key={conversation.id}
-                className={cn(
-                  "p-3 rounded-lg cursor-pointer transition-colors border",
-                  selectedId === conversation.id
-                    ? 'bg-primary/10 border-primary/20'
-                    : 'hover:bg-muted/50 border-transparent',
-                  conversation.unread_count > 0 && 'bg-blue-50/50'
-                )}
-                onClick={() => onSelect(conversation.id)}
-              >
-                <div className="flex items-start gap-3">
-                  {/* Avatar */}
-                  <Avatar className="h-8 w-8 flex-shrink-0">
+            {conversations.map((conversation) => {
+              const isSelected = bulkMode ? selectedIds.includes(conversation.id) : selectedId === conversation.id;
+              
+              return (
+                <div
+                  key={conversation.id}
+                  className={cn(
+                    "p-3 rounded-lg cursor-pointer transition-colors border",
+                    isSelected
+                      ? 'bg-primary/10 border-primary/20'
+                      : 'hover:bg-muted/50 border-transparent',
+                    conversation.unread_count > 0 && 'bg-blue-50/50'
+                  )}
+                  onClick={() => bulkMode && onToggleSelect ? onToggleSelect(conversation.id) : onSelect(conversation.id)}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Bulk Select Checkbox */}
+                    {bulkMode && onToggleSelect && (
+                      <Checkbox
+                        checked={selectedIds.includes(conversation.id)}
+                        onCheckedChange={() => onToggleSelect(conversation.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-1"
+                      />
+                    )}
+                    
+                    {/* Avatar */}
+                    <Avatar className="h-8 w-8 flex-shrink-0">
                     <AvatarFallback className="text-xs font-medium">
                       {conversation.sender_name?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
@@ -228,7 +248,7 @@ export const MessageList: React.FC<MessageListProps> = ({
                   </div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

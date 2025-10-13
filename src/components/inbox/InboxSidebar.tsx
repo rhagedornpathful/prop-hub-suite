@@ -68,7 +68,8 @@ export const InboxSidebar: React.FC<InboxSidebarProps> = ({
       id: 'drafts', 
       label: 'Drafts', 
       icon: Tag,
-      color: 'text-muted-foreground'
+      color: 'text-muted-foreground',
+      badge: 'Draft'
     },
     { 
       id: 'archived', 

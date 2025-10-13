@@ -238,6 +238,50 @@ export type Database = {
           },
         ]
       }
+      conversation_settings: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          id: string
+          is_muted: boolean | null
+          is_pinned: boolean | null
+          muted_at: string | null
+          pinned_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_muted?: boolean | null
+          is_pinned?: boolean | null
+          muted_at?: string | null
+          pinned_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_muted?: boolean | null
+          is_pinned?: boolean | null
+          muted_at?: string | null
+          pinned_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_settings_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           auto_delete_after_days: number | null
@@ -1349,6 +1393,41 @@ export type Database = {
           },
         ]
       }
+      message_edits: {
+        Row: {
+          edited_at: string
+          edited_by: string
+          id: string
+          message_id: string
+          new_content: string
+          old_content: string
+        }
+        Insert: {
+          edited_at?: string
+          edited_by: string
+          id?: string
+          message_id: string
+          new_content: string
+          old_content: string
+        }
+        Update: {
+          edited_at?: string
+          edited_by?: string
+          id?: string
+          message_id?: string
+          new_content?: string
+          old_content?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_edits_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_encryption_keys: {
         Row: {
           created_at: string | null
@@ -1520,6 +1599,7 @@ export type Database = {
           id: string
           importance: string | null
           is_draft: boolean | null
+          is_edited: boolean | null
           message_type: string
           reply_to_id: string | null
           scheduled_at: string | null
@@ -1544,6 +1624,7 @@ export type Database = {
           id?: string
           importance?: string | null
           is_draft?: boolean | null
+          is_edited?: boolean | null
           message_type?: string
           reply_to_id?: string | null
           scheduled_at?: string | null
@@ -1568,6 +1649,7 @@ export type Database = {
           id?: string
           importance?: string | null
           is_draft?: boolean | null
+          is_edited?: boolean | null
           message_type?: string
           reply_to_id?: string | null
           scheduled_at?: string | null
@@ -2977,6 +3059,62 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduled_messages: {
+        Row: {
+          cancelled_at: string | null
+          content: string
+          conversation_id: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          recipient_ids: string[]
+          scheduled_for: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          recipient_ids: string[]
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          recipient_ids?: string[]
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
         ]

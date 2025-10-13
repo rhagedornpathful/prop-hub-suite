@@ -49,6 +49,7 @@ export interface InboxMessage {
   edited_at: string | null;
   deleted_at: string | null;
   is_draft: boolean;
+  is_edited: boolean;
   cc_recipients: string[] | null;
   bcc_recipients: string[] | null;
   sender_name: string;
