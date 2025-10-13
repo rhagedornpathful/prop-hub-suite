@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { Clock, MessageSquare, TrendingUp, Users } from 'lucide-react';
 import { InboxConversation, InboxMessage } from '@/hooks/queries/useInbox';
+import { ExportConversation } from './ExportConversation';
+import { PrintConversation } from './PrintConversation';
 
 interface ConversationInsightsProps {
   conversations: InboxConversation[];
@@ -57,7 +59,21 @@ export const ConversationInsights = ({ conversations, messages }: ConversationIn
 
   return (
     <div className="space-y-4 p-4">
-      <h2 className="text-2xl font-bold">Conversation Insights</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Conversation Insights</h2>
+        {conversations.length > 0 && (
+          <div className="flex gap-2">
+            <ExportConversation 
+              conversationId={conversations[0].id}
+              conversationTitle={conversations[0].title || 'Conversation'}
+            />
+            <PrintConversation 
+              conversationId={conversations[0].id}
+              conversationTitle={conversations[0].title || 'Conversation'}
+            />
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>

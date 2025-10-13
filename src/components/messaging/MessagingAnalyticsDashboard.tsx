@@ -11,10 +11,11 @@ import {
   AtSign,
   FileText
 } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { format, subDays } from 'date-fns';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useMessageAnalytics } from '@/hooks/useMessageAnalytics';
+import { ResponseTimeMetrics } from './ResponseTimeMetrics';
+import { ConversationActivityChart } from './ConversationActivityChart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface AnalyticsMetric {
   title: string;
@@ -25,66 +26,7 @@ interface AnalyticsMetric {
 }
 
 export const MessagingAnalyticsDashboard: React.FC = () => {
-  const { data: analytics, isLoading } = useQuery({
-    queryKey: ['messaging-analytics'],
-    queryFn: async () => {
-      const thirtyDaysAgo = format(subDays(new Date(), 30), 'yyyy-MM-dd');
-      
-      // Get message volume
-      const { count: totalMessages } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo);
-
-      // Get conversation count
-      const { count: totalConversations } = await supabase
-        .from('conversations')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo);
-
-      // Get reaction stats
-      const { count: totalReactions } = await supabase
-        .from('message_reactions')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo);
-
-      // Get mention stats
-      const { count: totalMentions } = await supabase
-        .from('message_mentions')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo);
-
-      // Get search queries
-      const { data: searchQueries } = await supabase
-        .from('message_analytics')
-        .select('*')
-        .eq('event_type', 'search')
-        .gte('created_at', thirtyDaysAgo);
-
-      // Get template usage
-      const { count: templateUsage } = await supabase
-        .from('message_templates')
-        .select('*', { count: 'exact', head: true });
-
-      // Calculate active users
-      const { data: activeUsers } = await supabase
-        .from('messages')
-        .select('sender_id')
-        .gte('created_at', thirtyDaysAgo);
-
-      const uniqueActiveUsers = new Set(activeUsers?.map(m => m.sender_id)).size;
-
-      return {
-        totalMessages: totalMessages || 0,
-        totalConversations: totalConversations || 0,
-        totalReactions: totalReactions || 0,
-        totalMentions: totalMentions || 0,
-        searchQueries: searchQueries?.length || 0,
-        templateUsage: templateUsage || 0,
-        activeUsers: uniqueActiveUsers
-      };
-    }
-  });
+  const { data: analytics, isLoading } = useMessageAnalytics(30);
 
   if (isLoading) {
     return (
@@ -139,7 +81,7 @@ export const MessagingAnalyticsDashboard: React.FC = () => {
     },
     {
       title: 'Avg Response Time',
-      value: 'N/A',
+      value: analytics?.avgResponseTime ? `${analytics.avgResponseTime} min` : 'N/A',
       icon: <Clock className="h-4 w-4" />,
       description: 'Average response time'
     }
@@ -185,27 +127,55 @@ export const MessagingAnalyticsDashboard: React.FC = () => {
         ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Most active conversation</span>
-              <Badge variant="outline">No data</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Most used template</span>
-              <Badge variant="outline">No data</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Peak messaging hours</span>
-              <Badge variant="outline">No data</Badge>
-            </div>
+      {analytics && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Message Volume (Last 30 Days)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={analytics.messageVolumeByDay}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis 
+                    dataKey="date" 
+                    className="text-xs"
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <YAxis 
+                    className="text-xs"
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="count" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--primary))' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <ResponseTimeMetrics 
+              data={analytics.responseTimeDistribution}
+              avgResponseTime={analytics.avgResponseTime}
+            />
+            <ConversationActivityChart 
+              data={analytics.conversationActivity}
+            />
           </div>
-        </CardContent>
-      </Card>
+        </>
+      )}
     </div>
   );
 };
