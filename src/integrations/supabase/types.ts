@@ -3500,6 +3500,10 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      user_is_house_watcher_for_property: {
+        Args: { _property_id: string; _user_id: string }
+        Returns: boolean
+      }
       validate_conversation_participants: {
         Args: {
           conversation_id_param: string

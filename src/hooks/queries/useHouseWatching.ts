@@ -30,17 +30,23 @@ export const useHouseWatching = () => {
 };
 
 export const useHouseWatchingLimited = (limit: number = 6) => {
+  const { user } = useAuth();
+  
   return useQuery({
-    queryKey: ['house-watching', 'limited', limit],
+    queryKey: ['house-watching', 'limited', limit, user?.id],
     queryFn: async () => {
+      if (!user) return [];
+      
       const { data, error } = await supabase
         .from('house_watching')
         .select('*')
+        .eq('user_id', user.id)
         .limit(limit);
 
       if (error) throw error;
       return data || [];
     },
+    enabled: !!user,
   });
 };
 
