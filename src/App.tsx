@@ -21,6 +21,7 @@ import { KeyboardShortcutsHelp } from "@/components/KeyboardShortcutsHelp";
 
 import { useMobileDetection } from "@/hooks/useMobileDetection";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { RoleBasedRedirect } from "@/components/RoleBasedRedirect";
 
 import { logger } from "@/lib/logger";
@@ -106,11 +107,12 @@ const AppContent = () => {
   logger.info("App initialized");
 
   return (
-    <ErrorBoundary>
-      <PreloadCriticalResources />
-      <AuthProvider>
-        <DevAdminProvider>
-          <ViewAsProvider>
+    <GlobalErrorBoundary>
+      <ErrorBoundary>
+        <PreloadCriticalResources />
+        <AuthProvider>
+          <DevAdminProvider>
+            <ViewAsProvider>
             
             <TooltipProvider>
               <Toaster />
@@ -522,10 +524,11 @@ const AppContent = () => {
         </BrowserRouter>
       </TooltipProvider>
     
-  </ViewAsProvider>
-</DevAdminProvider>
-</AuthProvider>
-    </ErrorBoundary>
+      </ViewAsProvider>
+    </DevAdminProvider>
+  </AuthProvider>
+      </ErrorBoundary>
+    </GlobalErrorBoundary>
   );
 };
 

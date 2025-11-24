@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Clock } from 'lucide-react';
@@ -7,7 +8,7 @@ interface ResponseTimeMetricsProps {
   avgResponseTime: number;
 }
 
-export const ResponseTimeMetrics = ({ data, avgResponseTime }: ResponseTimeMetricsProps) => {
+const ResponseTimeMetricsComponent = ({ data, avgResponseTime }: ResponseTimeMetricsProps) => {
   return (
     <Card>
       <CardHeader>
@@ -51,3 +52,5 @@ export const ResponseTimeMetrics = ({ data, avgResponseTime }: ResponseTimeMetri
     </Card>
   );
 };
+
+export const ResponseTimeMetrics = React.memo(ResponseTimeMetricsComponent);

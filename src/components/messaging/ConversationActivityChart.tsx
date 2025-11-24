@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from 'lucide-react';
@@ -6,7 +7,7 @@ interface ConversationActivityChartProps {
   data: Array<{ title: string; messageCount: number }>;
 }
 
-export const ConversationActivityChart = ({ data }: ConversationActivityChartProps) => {
+const ConversationActivityChartComponent = ({ data }: ConversationActivityChartProps) => {
   return (
     <Card>
       <CardHeader>
@@ -49,3 +50,5 @@ export const ConversationActivityChart = ({ data }: ConversationActivityChartPro
     </Card>
   );
 };
+
+export const ConversationActivityChart = React.memo(ConversationActivityChartComponent);

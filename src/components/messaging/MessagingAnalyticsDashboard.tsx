@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -25,18 +25,11 @@ interface AnalyticsMetric {
   description?: string;
 }
 
-export const MessagingAnalyticsDashboard: React.FC = () => {
+const MessagingAnalyticsDashboardComponent: React.FC = () => {
   const { data: analytics, isLoading } = useMessageAnalytics(30);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <LoadingSpinner />
-      </div>
-    );
-  }
-
-  const metrics: AnalyticsMetric[] = [
+  // Memoize metrics to prevent recalculation on every render
+  const metrics: AnalyticsMetric[] = useMemo(() => [
     {
       title: 'Total Messages',
       value: analytics?.totalMessages || 0,
@@ -85,7 +78,15 @@ export const MessagingAnalyticsDashboard: React.FC = () => {
       icon: <Clock className="h-4 w-4" />,
       description: 'Average response time'
     }
-  ];
+  ], [analytics]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -179,3 +180,6 @@ export const MessagingAnalyticsDashboard: React.FC = () => {
     </div>
   );
 };
+
+// Memoize the entire component to prevent unnecessary re-renders
+export const MessagingAnalyticsDashboard = React.memo(MessagingAnalyticsDashboardComponent);

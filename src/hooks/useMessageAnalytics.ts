@@ -179,6 +179,9 @@ export const useMessageAnalytics = (days: number = 30) => {
         conversationActivity: conversationActivityWithTitles
       };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 60 * 1000, // 30 minutes - prevent constant refetching
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnWindowFocus: false, // Don't refetch on tab switch
+    refetchOnMount: false, // Only fetch once per mount
   });
 };
