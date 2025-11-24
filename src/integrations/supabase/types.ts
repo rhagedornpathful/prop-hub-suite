@@ -1949,7 +1949,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "payments_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -3264,7 +3272,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {
@@ -3808,11 +3824,23 @@ export type Database = {
       }
     }
     Functions: {
+      archive_old_audit_logs: {
+        Args: { retention_days?: number }
+        Returns: number
+      }
       calculate_next_check_date: {
         Args: { _frequency: string; _from: string }
         Returns: string
       }
       check_admin_exists: { Args: never; Returns: boolean }
+      cleanup_expired_payment_methods: { Args: never; Returns: undefined }
+      cleanup_orphaned_records: {
+        Args: never
+        Returns: {
+          records_cleaned: number
+          table_name: string
+        }[]
+      }
       ensure_home_watch_schedule_horizon: {
         Args: {
           _force?: boolean
@@ -3984,6 +4012,14 @@ export type Database = {
           sender_id_param: string
         }
         Returns: boolean
+      }
+      validate_data_consistency: {
+        Args: never
+        Returns: {
+          check_name: string
+          details: string
+          status: string
+        }[]
       }
     }
     Enums: {
