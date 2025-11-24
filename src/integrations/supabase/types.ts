@@ -376,6 +376,126 @@ export type Database = {
           },
         ]
       }
+      data_deletion_requests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          rejection_reason: string | null
+          requested_at: string
+          retention_exception_reason: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_at?: string
+          retention_exception_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          rejection_reason?: string | null
+          requested_at?: string
+          retention_exception_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      data_export_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          expires_at: string | null
+          export_url: string | null
+          file_size_bytes: number | null
+          id: string
+          requested_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string | null
+          export_url?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          requested_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          expires_at?: string | null
+          export_url?: string | null
+          file_size_bytes?: number | null
+          id?: string
+          requested_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      data_retention_settings: {
+        Row: {
+          auto_delete_enabled: boolean | null
+          created_at: string
+          id: string
+          retain_audit_logs_days: number | null
+          retain_documents_days: number | null
+          retain_messages_days: number | null
+          retain_payment_records_days: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_delete_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          retain_audit_logs_days?: number | null
+          retain_documents_days?: number | null
+          retain_messages_days?: number | null
+          retain_payment_records_days?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_delete_enabled?: boolean | null
+          created_at?: string
+          id?: string
+          retain_audit_logs_days?: number | null
+          retain_documents_days?: number | null
+          retain_messages_days?: number | null
+          retain_payment_records_days?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       document_activities: {
         Row: {
           activity_type: string
@@ -3382,6 +3502,48 @@ export type Database = {
           },
         ]
       }
+      user_consents: {
+        Row: {
+          consent_type: string
+          consent_version: string
+          consented: boolean
+          consented_at: string | null
+          created_at: string
+          id: string
+          ip_address: unknown
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+          withdrawn_at: string | null
+        }
+        Insert: {
+          consent_type: string
+          consent_version: string
+          consented?: boolean
+          consented_at?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+          withdrawn_at?: string | null
+        }
+        Update: {
+          consent_type?: string
+          consent_version?: string
+          consented?: boolean
+          consented_at?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+          withdrawn_at?: string | null
+        }
+        Relationships: []
+      }
       user_inbox_settings: {
         Row: {
           auto_archive_days: number | null
@@ -3824,6 +3986,7 @@ export type Database = {
       }
     }
     Functions: {
+      anonymize_user_data: { Args: { _user_id: string }; Returns: Json }
       archive_old_audit_logs: {
         Args: { retention_days?: number }
         Returns: number
@@ -3833,6 +3996,13 @@ export type Database = {
         Returns: string
       }
       check_admin_exists: { Args: never; Returns: boolean }
+      cleanup_expired_data: {
+        Args: never
+        Returns: {
+          records_deleted: number
+          table_name: string
+        }[]
+      }
       cleanup_expired_payment_methods: { Args: never; Returns: undefined }
       cleanup_orphaned_records: {
         Args: never
