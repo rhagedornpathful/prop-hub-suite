@@ -19,7 +19,7 @@ export type Database = {
           action: string
           created_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           new_values: Json | null
           old_values: Json | null
           record_id: string | null
@@ -31,7 +31,7 @@ export type Database = {
           action: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -43,7 +43,7 @@ export type Database = {
           action?: string
           created_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           new_values?: Json | null
           old_values?: Json | null
           record_id?: string | null
@@ -383,7 +383,7 @@ export type Database = {
           details: Json | null
           document_id: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           user_agent: string | null
           user_id: string
         }
@@ -393,7 +393,7 @@ export type Database = {
           details?: Json | null
           document_id: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id: string
         }
@@ -403,7 +403,7 @@ export type Database = {
           details?: Json | null
           document_id?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           user_agent?: string | null
           user_id?: string
         }
@@ -463,7 +463,7 @@ export type Database = {
           document_id: string
           expires_at: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           reminder_sent_at: string | null
           requested_at: string
@@ -480,7 +480,7 @@ export type Database = {
           document_id: string
           expires_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           reminder_sent_at?: string | null
           requested_at?: string
@@ -497,7 +497,7 @@ export type Database = {
           document_id?: string
           expires_at?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           reminder_sent_at?: string | null
           requested_at?: string
@@ -3812,10 +3812,7 @@ export type Database = {
         Args: { _frequency: string; _from: string }
         Returns: string
       }
-      check_admin_exists: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      check_admin_exists: { Args: never; Returns: boolean }
       ensure_home_watch_schedule_horizon: {
         Args: {
           _force?: boolean
@@ -3826,10 +3823,7 @@ export type Database = {
         }
         Returns: number
       }
-      force_make_me_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      force_make_me_admin: { Args: never; Returns: Json }
       get_paginated_activities: {
         Args: {
           p_activity_type?: string
@@ -3894,10 +3888,7 @@ export type Database = {
           zip_code: string
         }[]
       }
-      get_tenant_property_id: {
-        Args: { _user_id: string }
-        Returns: string
-      }
+      get_tenant_property_id: { Args: { _user_id: string }; Returns: string }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
@@ -3919,10 +3910,7 @@ export type Database = {
         }
         Returns: undefined
       }
-      make_me_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      make_me_admin: { Args: never; Returns: Json }
       schedule_home_watch_session: {
         Args: {
           _frequency: string
@@ -3948,10 +3936,7 @@ export type Database = {
           sender_id: string
         }[]
       }
-      seed_test_users: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      seed_test_users: { Args: never; Returns: string }
       user_can_access_conversation: {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
