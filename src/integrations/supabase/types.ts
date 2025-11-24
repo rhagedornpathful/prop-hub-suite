@@ -4005,6 +4005,7 @@ export type Database = {
         Args: { _property_id: string; _user_id: string }
         Returns: boolean
       }
+      user_owns_property: { Args: { property_uuid: string }; Returns: boolean }
       validate_conversation_participants: {
         Args: {
           conversation_id_param: string
