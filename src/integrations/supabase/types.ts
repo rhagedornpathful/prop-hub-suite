@@ -3813,6 +3813,7 @@ export type Database = {
         Returns: string
       }
       check_admin_exists: { Args: never; Returns: boolean }
+      cleanup_expired_payment_methods: { Args: never; Returns: undefined }
       ensure_home_watch_schedule_horizon: {
         Args: {
           _force?: boolean
