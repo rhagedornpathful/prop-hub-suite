@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { takePhoto, selectPhoto } from "@/utils/camera";
 
 interface PropertyCheckItem {
   id: number;
@@ -38,49 +39,75 @@ export const PropertyCheckItemCard = ({
   const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload an image file",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload an image smaller than 5MB",
-        variant: "destructive"
-      });
-      return;
-    }
+  const handleCameraCapture = async () => {
+    const result = await takePhoto();
+    
+    if (!result) return;
 
     setIsUploading(true);
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      // Convert data URL to blob
+      const response = await fetch(result.dataUrl);
+      const blob = await response.blob();
+
+      const fileName = `${Date.now()}.${result.format}`;
       const filePath = `property-checks/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('property-images')
-        .upload(filePath, file);
+        .upload(filePath, blob);
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('property-images')
         .getPublicUrl(filePath);
 
-      // Update photos array
+      const updatedPhotos = [...item.photos, publicUrl];
+      onPhotosUpdate(item.id, updatedPhotos);
+
+      toast({
+        title: "Photo captured",
+        description: "Photo has been successfully captured"
+      });
+    } catch (error: any) {
+      console.error('Error uploading photo:', error);
+      toast({
+        title: "Upload failed",
+        description: error.message || "Failed to upload photo",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleGallerySelect = async () => {
+    const result = await selectPhoto();
+    
+    if (!result) return;
+
+    setIsUploading(true);
+
+    try {
+      // Convert data URL to blob
+      const response = await fetch(result.dataUrl);
+      const blob = await response.blob();
+
+      const fileName = `${Date.now()}.${result.format}`;
+      const filePath = `property-checks/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('property-images')
+        .upload(filePath, blob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('property-images')
+        .getPublicUrl(filePath);
+
       const updatedPhotos = [...item.photos, publicUrl];
       onPhotosUpdate(item.id, updatedPhotos);
 
@@ -89,7 +116,7 @@ export const PropertyCheckItemCard = ({
         description: "Photo has been successfully uploaded"
       });
     } catch (error: any) {
-      console.error('Upload error:', error);
+      console.error('Error uploading photo:', error);
       toast({
         title: "Upload failed",
         description: error.message || "Failed to upload photo",
@@ -132,33 +159,31 @@ export const PropertyCheckItemCard = ({
           {/* Phone-Optimized Photo Section */}
           <div className="mt-4 space-y-3">
             <div className="flex items-center gap-3">
-              <input
-                type="file"
-                accept="image/*,video/*"
-                capture="environment"
-                onChange={handleFileUpload}
-                className="hidden"
-                id={`photo-upload-${item.id}`}
+              <Button
+                size="default"
+                variant="outline"
+                onClick={handleCameraCapture}
                 disabled={isUploading}
-              />
-              <label htmlFor={`photo-upload-${item.id}`} className="flex-1">
-                <Button
-                  size="default"
-                  variant="outline"
-                  disabled={isUploading}
-                  className="w-full min-h-[48px] flex items-center gap-2 cursor-pointer rounded-xl"
-                  asChild
-                >
-                  <span>
-                    {isUploading ? (
-                      <Upload className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
-                    {isUploading ? 'Uploading...' : 'Take Photo'}
-                  </span>
-                </Button>
-              </label>
+                className="flex-1 min-h-[48px] flex items-center gap-2 rounded-xl"
+              >
+                {isUploading ? (
+                  <Upload className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Camera className="h-4 w-4" />
+                )}
+                {isUploading ? 'Uploading...' : 'Take Photo'}
+              </Button>
+              
+              <Button
+                size="default"
+                variant="outline"
+                onClick={handleGallerySelect}
+                disabled={isUploading}
+                className="min-h-[48px] rounded-xl"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </Button>
+              
               {item.photos.length > 0 && (
                 <Badge variant="secondary" className="px-3 py-1">
                   {item.photos.length}
