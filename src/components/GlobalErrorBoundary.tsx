@@ -2,6 +2,7 @@ import React, { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { monitoring } from '@/lib/monitoring';
 
 interface Props {
   children: ReactNode;
@@ -25,6 +26,13 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Global Error Boundary caught:', error, errorInfo);
+    
+    // Track error in monitoring service
+    monitoring.captureError(error, {
+      tags: { component: 'GlobalErrorBoundary' },
+      extra: { componentStack: errorInfo.componentStack },
+    });
+    
     this.setState({ errorInfo });
   }
 
