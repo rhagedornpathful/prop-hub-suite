@@ -1,25 +1,21 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Building,
   TrendingUp,
   DollarSign,
-  Calendar,
   AlertTriangle,
-  Eye,
-  Settings,
-  Users,
   MapPin,
   BarChart3,
-  PieChart,
-  Activity
+  Activity,
+  Plus,
+  ChevronRight
 } from 'lucide-react';
 import { useProperties } from '@/hooks/queries/useProperties';
-// Removed PropertyAnalyticsDashboard import as it's replaced with placeholder
+import { cn } from '@/lib/utils';
 
 interface MobilePropertyDashboardProps {
   onPropertyClick?: (property: any) => void;
@@ -30,7 +26,7 @@ export const MobilePropertyDashboard: React.FC<MobilePropertyDashboardProps> = (
   onPropertyClick,
   onAddProperty
 }) => {
-  const { data: propertyData, isLoading } = useProperties(1, 50); // Reduced from 100 to 50 for performance
+  const { data: propertyData, isLoading } = useProperties(1, 50);
   const properties = propertyData?.properties || [];
   
   // Calculate quick stats
@@ -41,241 +37,308 @@ export const MobilePropertyDashboard: React.FC<MobilePropertyDashboardProps> = (
   
   const recentProperties = properties
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 5);
+    .slice(0, 10);
 
   const getStatusColor = (status?: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-red-100 text-red-800';
-      case 'maintenance': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active': return 'bg-success/15 text-success border-success/30';
+      case 'inactive': return 'bg-destructive/15 text-destructive border-destructive/30';
+      case 'maintenance': return 'bg-warning/15 text-warning border-warning/30';
+      default: return 'bg-success/15 text-success border-success/30';
     }
   };
 
+  const getServiceTypeLabel = (type?: string) => {
+    if (type === 'house_watching') return 'House Watch';
+    if (type === 'property_management') return 'Property Mgmt';
+    return 'Property Mgmt';
+  };
+
   return (
-    <div className="space-y-4">
-      {/* Quick Stats Grid */}
+    <div className="space-y-5 pb-20">
+      {/* Stats Grid - 2x2 with better visual design */}
       <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Building className="h-4 w-4 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-green-600">{activeProperties}</p>
-                <p className="text-xs text-muted-foreground">Active</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <DollarSign className="h-4 w-4 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-blue-600">
-                  ${totalRent.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">Monthly Rent</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <TrendingUp className="h-4 w-4 text-purple-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-purple-600">
-                  ${Math.round(totalValue / 1000)}K
-                </p>
-                <p className="text-xs text-muted-foreground">Portfolio Value</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-orange-600">{maintenanceRequests}</p>
-                <p className="text-xs text-muted-foreground">Maintenance</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard 
+          icon={Building}
+          value={activeProperties}
+          label="Active"
+          colorClass="text-success bg-success/10"
+        />
+        <StatCard 
+          icon={DollarSign}
+          value={`$${totalRent.toLocaleString()}`}
+          label="Monthly Rent"
+          colorClass="text-primary bg-primary/10"
+        />
+        <StatCard 
+          icon={TrendingUp}
+          value={`$${Math.round(totalValue / 1000)}K`}
+          label="Portfolio Value"
+          colorClass="text-secondary bg-secondary/10"
+        />
+        <StatCard 
+          icon={AlertTriangle}
+          value={maintenanceRequests}
+          label="Maintenance"
+          colorClass="text-warning bg-warning/10"
+        />
       </div>
 
-      {/* Tabbed Content */}
+      {/* Tabs with better styling */}
       <Tabs defaultValue="properties" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="properties" className="text-xs">
-            <Building className="h-3 w-3 mr-1" />
+        <TabsList className="grid w-full grid-cols-3 h-12 p-1 bg-muted/50">
+          <TabsTrigger 
+            value="properties" 
+            className="text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            <Building className="h-4 w-4 mr-1.5" />
             Properties
           </TabsTrigger>
-          <TabsTrigger value="analytics" className="text-xs">
-            <BarChart3 className="h-3 w-3 mr-1" />
+          <TabsTrigger 
+            value="analytics" 
+            className="text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            <BarChart3 className="h-4 w-4 mr-1.5" />
             Analytics
           </TabsTrigger>
-          <TabsTrigger value="activity" className="text-xs">
-            <Activity className="h-3 w-3 mr-1" />
+          <TabsTrigger 
+            value="activity" 
+            className="text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm"
+          >
+            <Activity className="h-4 w-4 mr-1.5" />
             Activity
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="properties" className="space-y-3 mt-4">
+        <TabsContent value="properties" className="mt-4 space-y-4">
+          {/* Header with Add Button */}
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium">Recent Properties</h3>
-            <Button size="sm" variant="outline" onClick={onAddProperty}>
+            <h3 className="text-base font-semibold text-foreground">Recent Properties</h3>
+            <Button 
+              size="sm" 
+              onClick={onAddProperty}
+              className="h-9 px-4 font-medium"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
               Add Property
             </Button>
           </div>
           
-          <ScrollArea className="h-64">
-            <div className="space-y-2">
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <Card key={i}>
-                    <CardContent className="p-3">
-                      <div className="space-y-2">
-                        <div className="h-4 bg-muted rounded animate-pulse" />
-                        <div className="h-3 bg-muted rounded w-2/3 animate-pulse" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              ) : recentProperties.length === 0 ? (
-                <Card>
-                  <CardContent className="p-6 text-center">
-                    <Building className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No properties yet</p>
-                    <Button size="sm" className="mt-2" onClick={onAddProperty}>
-                      Add Your First Property
-                    </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                recentProperties.map((property) => (
-                  <Card 
-                    key={property.id} 
-                    className="cursor-pointer hover:shadow-sm transition-shadow"
-                    onClick={() => onPropertyClick?.(property)}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start gap-2">
-                            <Building className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-sm font-medium truncate">{property.address}</p>
-                              <div className="flex items-center gap-1 mt-1">
-                                <MapPin className="h-3 w-3 text-muted-foreground" />
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {[property.city, property.state].filter(Boolean).join(', ')}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {property.monthly_rent && (
-                            <div className="flex items-center gap-1 mt-2">
-                              <DollarSign className="h-3 w-3 text-green-600" />
-                              <span className="text-sm font-medium text-green-600">
-                                ${property.monthly_rent.toLocaleString()}/mo
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex flex-col items-end gap-1 ml-2">
-                          <Badge className={`${getStatusColor(property.status)} text-xs`}>
-                            {(property.status || 'active').toUpperCase()}
-                          </Badge>
-                          {property.service_type && (
-                            <Badge variant="outline" className="text-xs">
-                              {property.service_type.replace('_', ' ').toUpperCase()}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
-            </div>
-          </ScrollArea>
+          {/* Property List */}
+          <div className="space-y-3">
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <PropertyCardSkeleton key={i} />
+              ))
+            ) : recentProperties.length === 0 ? (
+              <EmptyState onAddProperty={onAddProperty} />
+            ) : (
+              recentProperties.map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  onClick={() => onPropertyClick?.(property)}
+                  getStatusColor={getStatusColor}
+                  getServiceTypeLabel={getServiceTypeLabel}
+                />
+              ))
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="analytics" className="mt-4">
-          <div className="text-center py-8">
-            <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">Analytics Dashboard</h3>
-            <p className="text-muted-foreground">Property analytics will be available soon.</p>
+          <div className="text-center py-12 px-4">
+            <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+              <BarChart3 className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Analytics Dashboard</h3>
+            <p className="text-muted-foreground text-sm">Property analytics will be available soon.</p>
           </div>
         </TabsContent>
 
         <TabsContent value="activity" className="mt-4">
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium">Recent Activity</h3>
-            <ScrollArea className="h-64">
-              <div className="space-y-2">
-                <Card>
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 bg-green-100 rounded">
-                        <Building className="h-3 w-3 text-green-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs">Property added: 123 Main St</p>
-                        <p className="text-xs text-muted-foreground">2 hours ago</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 bg-blue-100 rounded">
-                        <DollarSign className="h-3 w-3 text-blue-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs">Rent updated: 456 Oak Ave</p>
-                        <p className="text-xs text-muted-foreground">1 day ago</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 bg-orange-100 rounded">
-                        <AlertTriangle className="h-3 w-3 text-orange-600" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs">Maintenance scheduled: 789 Pine St</p>
-                        <p className="text-xs text-muted-foreground">3 days ago</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </ScrollArea>
+          <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Recent Activity</h3>
+            <div className="space-y-3">
+              <ActivityItem 
+                icon={Building}
+                iconBg="bg-success/10"
+                iconColor="text-success"
+                title="Property added: 123 Main St"
+                time="2 hours ago"
+              />
+              <ActivityItem 
+                icon={DollarSign}
+                iconBg="bg-primary/10"
+                iconColor="text-primary"
+                title="Rent updated: 456 Oak Ave"
+                time="1 day ago"
+              />
+              <ActivityItem 
+                icon={AlertTriangle}
+                iconBg="bg-warning/10"
+                iconColor="text-warning"
+                title="Maintenance scheduled: 789 Pine St"
+                time="3 days ago"
+              />
+            </div>
           </div>
         </TabsContent>
       </Tabs>
     </div>
   );
 };
+
+// Stat Card Component
+const StatCard = ({ 
+  icon: Icon, 
+  value, 
+  label, 
+  colorClass 
+}: { 
+  icon: any; 
+  value: string | number; 
+  label: string; 
+  colorClass: string;
+}) => (
+  <Card className="border-border/50 shadow-sm">
+    <CardContent className="p-4">
+      <div className="flex items-center gap-3">
+        <div className={cn("p-2.5 rounded-xl", colorClass)}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <p className={cn("text-lg font-bold", colorClass.split(' ')[0])}>{value}</p>
+          <p className="text-xs text-muted-foreground font-medium">{label}</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Property Card Component
+const PropertyCard = ({ 
+  property, 
+  onClick, 
+  getStatusColor,
+  getServiceTypeLabel
+}: { 
+  property: any; 
+  onClick: () => void; 
+  getStatusColor: (status?: string) => string;
+  getServiceTypeLabel: (type?: string) => string;
+}) => (
+  <Card 
+    className="cursor-pointer border-border/50 shadow-sm active:scale-[0.98] transition-transform"
+    onClick={onClick}
+  >
+    <CardContent className="p-4">
+      <div className="flex items-start gap-3">
+        {/* Icon */}
+        <div className="p-2.5 rounded-xl bg-muted/50 flex-shrink-0">
+          <Building className="h-5 w-5 text-muted-foreground" />
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 min-w-0 space-y-2">
+          {/* Address */}
+          <p className="text-sm font-semibold text-foreground leading-tight">
+            {property.address}
+          </p>
+          
+          {/* Location */}
+          <div className="flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              {[property.city, property.state].filter(Boolean).join(', ') || 'No location'}
+            </p>
+          </div>
+          
+          {/* Badges Row */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge 
+              variant="outline" 
+              className={cn("text-xs font-medium px-2 py-0.5", getStatusColor(property.status))}
+            >
+              {(property.status || 'active').toUpperCase()}
+            </Badge>
+            <Badge 
+              variant="outline" 
+              className="text-xs font-medium px-2 py-0.5 bg-muted/50 text-muted-foreground border-border"
+            >
+              {getServiceTypeLabel(property.service_type)}
+            </Badge>
+          </div>
+        </div>
+        
+        {/* Chevron */}
+        <ChevronRight className="h-5 w-5 text-muted-foreground/50 flex-shrink-0 mt-1" />
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Skeleton Loading
+const PropertyCardSkeleton = () => (
+  <Card className="border-border/50">
+    <CardContent className="p-4">
+      <div className="flex items-start gap-3">
+        <div className="w-11 h-11 rounded-xl bg-muted animate-pulse" />
+        <div className="flex-1 space-y-2">
+          <div className="h-4 bg-muted rounded animate-pulse w-3/4" />
+          <div className="h-3.5 bg-muted rounded animate-pulse w-1/2" />
+          <div className="flex gap-2">
+            <div className="h-5 bg-muted rounded animate-pulse w-16" />
+            <div className="h-5 bg-muted rounded animate-pulse w-20" />
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+// Empty State
+const EmptyState = ({ onAddProperty }: { onAddProperty?: () => void }) => (
+  <Card className="border-dashed border-2 border-border/50">
+    <CardContent className="p-8 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+        <Building className="h-7 w-7 text-muted-foreground" />
+      </div>
+      <h4 className="text-base font-semibold mb-1">No properties yet</h4>
+      <p className="text-sm text-muted-foreground mb-4">Add your first property to get started</p>
+      <Button onClick={onAddProperty} className="h-10 px-5">
+        <Plus className="h-4 w-4 mr-2" />
+        Add Your First Property
+      </Button>
+    </CardContent>
+  </Card>
+);
+
+// Activity Item
+const ActivityItem = ({ 
+  icon: Icon, 
+  iconBg, 
+  iconColor, 
+  title, 
+  time 
+}: { 
+  icon: any; 
+  iconBg: string; 
+  iconColor: string; 
+  title: string; 
+  time: string;
+}) => (
+  <Card className="border-border/50 shadow-sm">
+    <CardContent className="p-4">
+      <div className="flex items-center gap-3">
+        <div className={cn("p-2 rounded-lg", iconBg)}>
+          <Icon className={cn("h-4 w-4", iconColor)} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-xs text-muted-foreground">{time}</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
