@@ -386,58 +386,58 @@ const Properties = () => {
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Card className="min-h-[80px]">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-success/10 rounded-lg shrink-0">
-                    <Home className="h-4 w-4 text-success" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="border-border/50 hover:border-success/30 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-success/10 rounded-xl shrink-0">
+                    <Home className="h-5 w-5 text-success" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xl font-bold text-success">{activeProperties}</p>
-                    <p className="text-xs text-muted-foreground">Active</p>
+                    <p className="text-2xl font-bold text-success">{activeProperties}</p>
+                    <p className="text-xs text-muted-foreground font-medium">Active Properties</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="min-h-[80px]">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-info/10 rounded-lg shrink-0">
-                    <Eye className="h-4 w-4 text-info" />
+            <Card className="border-border/50 hover:border-secondary/30 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-secondary/10 rounded-xl shrink-0">
+                    <Eye className="h-5 w-5 text-secondary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xl font-bold text-info">{houseWatchingProperties}</p>
-                    <p className="text-xs text-muted-foreground">House Watching</p>
+                    <p className="text-2xl font-bold text-secondary">{houseWatchingProperties}</p>
+                    <p className="text-xs text-muted-foreground font-medium">House Watching</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="min-h-[80px]">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-primary/10 rounded-lg shrink-0">
-                    <Settings className="h-4 w-4 text-primary" />
+            <Card className="border-border/50 hover:border-primary/30 transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-primary/10 rounded-xl shrink-0">
+                    <Settings className="h-5 w-5 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xl font-bold text-primary">{propertyManagementProperties}</p>
-                    <p className="text-xs text-muted-foreground">Property Management</p>
+                    <p className="text-2xl font-bold text-primary">{propertyManagementProperties}</p>
+                    <p className="text-xs text-muted-foreground font-medium">Property Mgmt</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="min-h-[80px]">
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 bg-muted rounded-lg shrink-0">
-                    <Building className="h-4 w-4 text-foreground" />
+            <Card className="border-border/50 hover:border-border transition-colors">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 bg-muted/80 rounded-xl shrink-0">
+                    <Building className="h-5 w-5 text-foreground" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xl font-bold">{totalCount}</p>
-                    <p className="text-xs text-muted-foreground">Total Properties</p>
+                    <p className="text-2xl font-bold">{totalCount}</p>
+                    <p className="text-xs text-muted-foreground font-medium">Total Properties</p>
                   </div>
                 </div>
               </CardContent>
