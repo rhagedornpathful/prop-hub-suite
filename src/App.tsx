@@ -2,6 +2,7 @@ import { useState, lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
+import { PropertyAssistant } from "@/components/ai/PropertyAssistant";
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -520,7 +521,7 @@ const AppContent = () => {
               </ProtectedRoute>
             } />
           </Routes>
-          
+          <PropertyAssistant />
         </BrowserRouter>
       </TooltipProvider>
     
