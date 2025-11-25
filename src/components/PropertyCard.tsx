@@ -190,37 +190,34 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
   };
 
   return (
-    <Card className="group hover:shadow-md transition-all duration-300 border-0 shadow-sm overflow-hidden cursor-pointer rounded-lg p-4 min-h-[120px] touch-manipulation active:scale-[0.98] transition-transform">
-      <div className="relative">{/* Main card container with mobile optimizations */}
-        {/* Simple Image Display - No Edit Functionality */}
+    <Card className="group hover:shadow-lg transition-all duration-200 overflow-hidden cursor-pointer border border-border/50 hover:border-primary/20">
+      <div className="relative overflow-hidden bg-muted/30">
         <PropertyImage 
           imageUrl={isPropertyManagement ? propertyManagementData?.images?.[0] : property.images?.[0]}
           address={property.address}
         />
         
-        {/* Status Badge */}
-        <div className="absolute top-3 right-3 flex flex-wrap gap-2">
-          <Badge className={getStatusColor(property.status)}>
+        {/* Status Badge - Top Right */}
+        <div className="absolute top-2 right-2">
+          <Badge className={`${getStatusColor(property.status)} shadow-sm`}>
             {getStatusText(property.status)}
           </Badge>
         </div>
         
-        {/* Remove the cluttered property type badge */}
-        
-        {/* Service Type Badge - Always Show */}
-        <div className="absolute bottom-3 left-3">
+        {/* Service Type Badge - Bottom Left */}
+        <div className="absolute bottom-2 left-2">
           <Badge className={isPropertyManagement 
-            ? "bg-primary text-primary-foreground border-primary" 
-            : "bg-secondary text-secondary-foreground border-secondary"
+            ? "bg-background/90 text-foreground border border-primary/20 shadow-sm backdrop-blur-sm" 
+            : "bg-background/90 text-foreground border border-secondary/20 shadow-sm backdrop-blur-sm"
           }>
             {isPropertyManagement ? (
               <>
-                <Building className="h-3 w-3 mr-1" />
+                <Building className="h-3 w-3 mr-1.5" />
                 Property Management
               </>
             ) : (
               <>
-                <Shield className="h-3 w-3 mr-1" />
+                <Shield className="h-3 w-3 mr-1.5" />
                 House Watching
               </>
             )}
@@ -228,10 +225,10 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
         </div>
       </div>
       
-      <CardHeader className="pb-3 p-0 mt-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1">
+      <CardHeader className="p-4 pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-base font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
               {(() => {
                 // Always clean the address to show only street address
                 let cleanAddress = property.address;
@@ -254,15 +251,13 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
                 return cleanAddress;
               })()}
             </CardTitle>
-            <div className="flex items-center gap-1 mt-1">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-gray-600">
-                {property.displayAddress || ''}
-              </span>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              <span className="truncate">{property.displayAddress || ''}</span>
             </div>
-            <div className="flex items-center gap-1 mt-1 text-muted-foreground hover:text-primary transition-colors">
-              <UserCheck className="h-3 w-3" />
-              <span className="text-base">Owner: {getOwnerInfo()}</span>{/* Increased to 16px */}
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <UserCheck className="h-3.5 w-3.5" />
+              <span className="truncate">{getOwnerInfo()}</span>
             </div>
           </div>
           
@@ -270,14 +265,14 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="h-11 w-11 p-3 -m-2 opacity-0 group-hover:opacity-100 transition-opacity min-h-[44px]"
+                size="icon"
+                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-background border shadow-lg z-50">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={handleViewProperty}>
                 <Eye className="h-4 w-4 mr-2" />
                 View Details
@@ -303,133 +298,83 @@ const PropertyCard = React.memo(({ property }: PropertyCardProps) => {
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0 p-0 mt-4">
-        <div className="space-y-4">
+      <CardContent className="px-4 pb-4 pt-3">
+        <div className="space-y-3">
           {/* Type-specific Content */}
           {isPropertyManagement ? (
             <>
               {/* Property Management Details */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 {propertyManagementData?.bedrooms && propertyManagementData?.bathrooms && (
-                  <div className="flex items-center gap-2">
-                    <Home className="h-4 w-4 text-primary" />
-                    <div>
-                      <div className="text-base font-medium">{propertyManagementData.bedrooms}BR/{propertyManagementData.bathrooms}BA</div>{/* Increased to 16px */}
-                      <div className="text-sm text-muted-foreground">Bedrooms/Baths</div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/40 border border-border/40">
+                    <Home className="h-4 w-4 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold">{propertyManagementData.bedrooms}BR / {propertyManagementData.bathrooms}BA</div>
+                      <div className="text-xs text-muted-foreground">Bed/Bath</div>
                     </div>
                   </div>
                 )}
                 {propertyManagementData?.monthly_rent && (
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-success" />
-                    <div>
-                      <div className="text-base font-medium">${propertyManagementData.monthly_rent}</div>{/* Increased to 16px */}
-                      <div className="text-sm text-muted-foreground">monthly rent</div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-success/5 border border-success/20">
+                    <DollarSign className="h-4 w-4 text-success shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold">${propertyManagementData.monthly_rent.toLocaleString()}</div>
+                      <div className="text-xs text-muted-foreground">Monthly</div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Additional Property Details */}
-              {(propertyManagementData?.square_feet || propertyManagementData?.estimated_value) && (
-                <div className="grid grid-cols-2 gap-4">
-                  {propertyManagementData?.square_feet && (
-                    <div className="flex items-center gap-2">
-                      <Gauge className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="text-sm font-medium">{propertyManagementData.square_feet.toLocaleString()} sq ft</div>
-                        <div className="text-xs text-muted-foreground">Square feet</div>
-                      </div>
-                    </div>
-                  )}
-                  {propertyManagementData?.estimated_value && (
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                      <div>
-                        <div className="text-sm font-medium">${propertyManagementData.estimated_value.toLocaleString()}</div>
-                        <div className="text-xs text-muted-foreground">Estimated value</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Maintenance Summary */}
               {(propertyManagementData?.maintenance_requests?.length || 0) > 0 && (
-                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-                  <Wrench className="h-4 w-4 text-primary" />
-                  <div className="flex-1">
+                <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-muted/40 border border-border/40">
+                  <Wrench className="h-4 w-4 text-primary shrink-0" />
+                  <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium">
-                      {propertyManagementData?.maintenance_requests?.length} maintenance request{(propertyManagementData?.maintenance_requests?.length || 0) !== 1 ? 's' : ''}
+                      {propertyManagementData?.maintenance_requests?.length} Request{(propertyManagementData?.maintenance_requests?.length || 0) !== 1 ? 's' : ''}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {(propertyManagementData?.pending_maintenance || 0) > 0 && `${propertyManagementData?.pending_maintenance} pending`}
                       {(propertyManagementData?.urgent_maintenance || 0) > 0 && (
-                        <span className="text-destructive ml-2 font-medium">
-                          {propertyManagementData?.urgent_maintenance} urgent
+                        <span className="text-destructive ml-1.5 font-medium">
+                          • {propertyManagementData?.urgent_maintenance} urgent
                         </span>
                       )}
                     </div>
                   </div>
                   {(propertyManagementData?.urgent_maintenance || 0) > 0 && (
-                    <AlertTriangle className="h-4 w-4 text-destructive" />
+                    <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
                   )}
                 </div>
               )}
             </>
           ) : (
             <>
-              {/* House Watching Details - Consistent with Property Management Layout */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* House Watching Details */}
+              <div className="grid grid-cols-2 gap-3">
                 {houseWatchingData?.check_frequency && (
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <div>
-                      <div className="text-base font-medium capitalize">{houseWatchingData.check_frequency}</div>
-                      <div className="text-sm text-muted-foreground">Check frequency</div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-muted/40 border border-border/40">
+                    <Clock className="h-4 w-4 text-primary shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold capitalize">{houseWatchingData.check_frequency}</div>
+                      <div className="text-xs text-muted-foreground">Frequency</div>
                     </div>
                   </div>
                 )}
                 {houseWatchingData?.monthly_fee && (
-                  <div className="flex items-center gap-2">
-                    <DollarSign className="h-4 w-4 text-success" />
-                    <div>
-                      <div className="text-base font-medium">${houseWatchingData.monthly_fee}</div>
-                      <div className="text-sm text-muted-foreground">per month</div>
+                  <div className="flex items-center gap-2 p-2.5 rounded-lg bg-success/5 border border-success/20">
+                    <DollarSign className="h-4 w-4 text-success shrink-0" />
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold">${houseWatchingData.monthly_fee}</div>
+                      <div className="text-xs text-muted-foreground">Monthly</div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Check Schedule Information */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm font-medium">
-                      {houseWatchingData?.last_check_date ? new Date(houseWatchingData.last_check_date).toLocaleDateString() : "Not checked"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Last check</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className={`text-sm font-medium ${
-                      houseWatchingData?.next_check_date && new Date(houseWatchingData.next_check_date) < new Date() 
-                        ? 'text-destructive' 
-                        : 'text-foreground'
-                    }`}>
-                      {houseWatchingData?.next_check_date ? new Date(houseWatchingData.next_check_date).toLocaleDateString() : "Not scheduled"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Next check</div>
-                  </div>
-                </div>
-              </div>
-
               {/* Check Status Alert */}
               {houseWatchingData?.next_check_date && new Date(houseWatchingData.next_check_date) < new Date() && (
-                <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-destructive/5 border border-destructive/20">
                   <AlertTriangle className="h-4 w-4 text-destructive" />
                   <div className="flex-1">
                     <div className="text-sm font-medium text-destructive">Check Overdue</div>

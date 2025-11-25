@@ -90,72 +90,76 @@ export function PropertyList({ properties = [], isLoading, onEdit, onDelete, onV
   }));
 
   return (
-    <Card className="shadow-md border-0">
+    <Card className="border border-border/50">
       <CardContent className="p-0">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Property</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Monthly Rent</TableHead>
-              <TableHead>Details</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Service</TableHead>
-              <TableHead className="w-[50px]">Actions</TableHead>
+            <TableRow className="border-b border-border/50">
+              <TableHead className="font-semibold">Property</TableHead>
+              <TableHead className="font-semibold">Type</TableHead>
+              <TableHead className="font-semibold">Rent</TableHead>
+              <TableHead className="font-semibold">Details</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold">Service</TableHead>
+              <TableHead className="w-[60px] font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {transformedProperties.map((property) => (
-              <TableRow key={property.id} className="hover:bg-muted/50">
-                <TableCell className="py-4">
+              <TableRow key={property.id} className="hover:bg-muted/30 transition-colors border-b border-border/30 last:border-0">
+                <TableCell className="py-3">
                   <div>
-                    <div className="font-medium text-foreground">{property.name}</div>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                    <div className="font-semibold text-foreground">{property.name}</div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                       <MapPin className="h-3 w-3" />
-                      {property.address}
+                      <span className="truncate">{property.address}</span>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline" className="capitalize">
+                  <Badge variant="outline" className="capitalize border-border/50">
                     {property.type}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1">
-                    <DollarSign className="h-4 w-4 text-success" />
-                    <span className="font-medium">${property.monthlyRent.toLocaleString()}</span>
+                  <div className="flex items-center gap-1.5">
+                    <DollarSign className="h-3.5 w-3.5 text-success" />
+                    <span className="font-semibold text-sm">${property.monthlyRent.toLocaleString()}</span>
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     {property.bedrooms > 0 && `${property.bedrooms} bed • `}
                     {property.bathrooms > 0 && `${property.bathrooms} bath`}
-                    {property.squareFeet > 0 && ` • ${property.squareFeet} sq ft`}
+                    {property.squareFeet > 0 && ` • ${property.squareFeet.toLocaleString()} sq ft`}
                   </div>
                 </TableCell>
                 <TableCell>
                   <Badge 
                     className={
                       property.status === 'Active' 
-                        ? "bg-success text-success-foreground" 
-                        : "bg-muted text-muted-foreground"
+                        ? "bg-success/10 text-success border border-success/20" 
+                        : "bg-muted text-muted-foreground border border-border/50"
                     }
                   >
                     {property.status}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge className="bg-primary text-primary-foreground">
+                  <Badge className={
+                    property.serviceType === 'property_management'
+                      ? "bg-primary/10 text-primary border border-primary/20"
+                      : "bg-secondary/10 text-secondary border border-secondary/20"
+                  }>
                     {property.serviceType === 'property_management' ? (
                       <>
-                        <Building className="h-3 w-3 mr-1" />
-                        Property Mgmt
+                        <Building className="h-3 w-3 mr-1.5" />
+                        Mgmt
                       </>
                     ) : (
                       <>
-                        <Shield className="h-3 w-3 mr-1" />
-                        House Watching
+                        <Shield className="h-3 w-3 mr-1.5" />
+                        Watching
                       </>
                     )}
                   </Badge>
