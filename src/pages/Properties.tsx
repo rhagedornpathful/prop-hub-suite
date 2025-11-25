@@ -337,7 +337,7 @@ const Properties = () => {
 
   return (
     <div 
-      className="flex-1 p-4 md:p-6 pb-24 md:pb-6 safe-area-inset space-y-6 relative overflow-hidden"
+      className="flex-1 p-4 md:p-6 pb-24 md:pb-6 safe-area-inset space-y-8 relative overflow-hidden bg-gradient-subtle"
       ref={pullToRefresh.bindToContainer}
       style={{ touchAction: 'pan-y' }}
     >
@@ -351,26 +351,24 @@ const Properties = () => {
       />
 
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+      <div className="flex flex-col md:flex-row gap-6 md:items-start md:justify-between mb-2">
         <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-bold">Properties</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your property portfolio
-          </p>
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">Properties</h1>
+          <p className="text-lg text-muted-foreground">Manage your property portfolio</p>
         </div>
         
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <Button 
             variant="outline"
             onClick={() => setActiveTab(activeTab === 'overview' ? 'reports' : 'overview')}
+            className="min-h-[44px] px-6 text-base font-medium border-2 hover:bg-accent/5 hover:border-accent"
             aria-label={`Switch to ${activeTab === 'overview' ? 'reports' : 'overview'} view`}
           >
             {activeTab === 'overview' ? 'View Reports' : 'View Overview'}
           </Button>
           <Button 
             onClick={() => setShowAddProperty(true)}
-            size={isMobile ? "default" : "sm"}
-            className="w-full sm:w-auto"
+            className="min-h-[44px] px-6 text-base font-medium bg-primary hover:bg-primary-dark shadow-md hover:shadow-lg transition-all"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add Property
@@ -386,59 +384,71 @@ const Properties = () => {
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-border/50 hover:border-success/30 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-success/10 rounded-xl shrink-0">
-                    <Home className="h-5 w-5 text-success" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group bg-gradient-to-br from-success/5 to-success/10 hover:from-success/10 hover:to-success/15">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-success/15 text-success group-hover:scale-110 transition-transform">
+                    <Home className="h-6 w-6" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold text-success">{activeProperties}</p>
-                    <p className="text-xs text-muted-foreground font-medium">Active Properties</p>
+                  <div className="text-5xl font-bold text-success opacity-10 group-hover:opacity-20 transition-opacity select-none">
+                    {activeProperties}
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-foreground">{activeProperties}</div>
+                  <p className="text-sm font-medium text-muted-foreground">Active Properties</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border/50 hover:border-secondary/30 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-secondary/10 rounded-xl shrink-0">
-                    <Eye className="h-5 w-5 text-secondary" />
+            <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group bg-gradient-to-br from-secondary/5 to-secondary/10 hover:from-secondary/10 hover:to-secondary/15">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-secondary/15 text-secondary group-hover:scale-110 transition-transform">
+                    <Eye className="h-6 w-6" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold text-secondary">{houseWatchingProperties}</p>
-                    <p className="text-xs text-muted-foreground font-medium">House Watching</p>
+                  <div className="text-5xl font-bold text-secondary opacity-10 group-hover:opacity-20 transition-opacity select-none">
+                    {houseWatchingProperties}
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-foreground">{houseWatchingProperties}</div>
+                  <p className="text-sm font-medium text-muted-foreground">House Watching</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border/50 hover:border-primary/30 transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-primary/10 rounded-xl shrink-0">
-                    <Settings className="h-5 w-5 text-primary" />
+            <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group bg-gradient-to-br from-primary/5 to-primary/10 hover:from-primary/10 hover:to-primary/15">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-primary/15 text-primary group-hover:scale-110 transition-transform">
+                    <Settings className="h-6 w-6" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold text-primary">{propertyManagementProperties}</p>
-                    <p className="text-xs text-muted-foreground font-medium">Property Mgmt</p>
+                  <div className="text-5xl font-bold text-primary opacity-10 group-hover:opacity-20 transition-opacity select-none">
+                    {propertyManagementProperties}
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-foreground">{propertyManagementProperties}</div>
+                  <p className="text-sm font-medium text-muted-foreground">Property Mgmt</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-border/50 hover:border-border transition-colors">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-3 bg-muted/80 rounded-xl shrink-0">
-                    <Building className="h-5 w-5 text-foreground" />
+            <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group bg-gradient-to-br from-foreground/5 to-foreground/10 hover:from-foreground/8 hover:to-foreground/12">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="p-3 rounded-2xl bg-foreground/10 text-foreground group-hover:scale-110 transition-transform">
+                    <Building className="h-6 w-6" />
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-2xl font-bold">{totalCount}</p>
-                    <p className="text-xs text-muted-foreground font-medium">Total Properties</p>
+                  <div className="text-5xl font-bold text-foreground opacity-10 group-hover:opacity-20 transition-opacity select-none">
+                    {totalCount}
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-3xl font-bold text-foreground">{totalCount}</div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Properties</p>
                 </div>
               </CardContent>
             </Card>
