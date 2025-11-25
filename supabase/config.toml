@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-inspection-summary]
 verify_jwt = false
+
+[functions.maintenance-triage]
+verify_jwt = false
