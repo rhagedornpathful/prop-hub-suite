@@ -243,7 +243,7 @@ const Properties = () => {
   if (isMobile) {
     return (
       <div 
-        className="flex-1 p-4 safe-area-inset space-y-4 relative overflow-hidden"
+        className="flex-1 px-5 pt-4 pb-24 safe-area-inset space-y-5 relative overflow-auto"
         ref={pullToRefresh.bindToContainer}
         style={{ touchAction: 'pan-y' }}
       >
@@ -256,18 +256,19 @@ const Properties = () => {
           threshold={80}
         />
 
-        {/* Mobile Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold">Properties</h1>
-            <p className="text-sm text-muted-foreground">{totalCount} properties</p>
+        {/* Mobile Header - Improved spacing and touch targets */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl font-bold text-foreground">Properties</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{totalCount} total properties</p>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <Button
               variant={activeTab === 'overview' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('overview')}
+              className="h-9 px-3 text-sm font-medium"
             >
               Overview
             </Button>
@@ -275,6 +276,7 @@ const Properties = () => {
               variant={activeTab === 'reports' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setActiveTab('reports')}
+              className="h-9 px-3 text-sm font-medium"
             >
               Reports
             </Button>

@@ -132,27 +132,29 @@ export function PropertyAssistant() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - positioned above mobile bottom nav */}
       <Button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50",
+          "fixed bottom-24 md:bottom-6 right-4 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg z-40",
           "bg-gradient-to-br from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70",
           "transition-all duration-300 hover:scale-110",
           isOpen && "hidden"
         )}
       >
-        <Sparkles className="h-6 w-6" />
+        <Sparkles className="h-5 w-5 md:h-6 md:w-6" />
       </Button>
 
       {/* Chat Panel */}
       <div
         className={cn(
-          "fixed bottom-6 right-6 w-[400px] h-[600px] max-h-[80vh] z-50",
-          "bg-background border rounded-2xl shadow-2xl",
+          "fixed z-50",
+          "bottom-0 right-0 left-0 md:bottom-6 md:right-6 md:left-auto",
+          "w-full md:w-[400px] h-[85vh] md:h-[600px] md:max-h-[80vh]",
+          "bg-background border-t md:border rounded-t-2xl md:rounded-2xl shadow-2xl",
           "flex flex-col overflow-hidden",
           "transition-all duration-300 transform",
-          isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
+          isOpen ? "translate-y-0 opacity-100" : "translate-y-full md:translate-y-0 md:scale-95 opacity-0 pointer-events-none"
         )}
       >
         {/* Header */}

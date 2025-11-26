@@ -55,9 +55,9 @@ export const MobilePropertyDashboard: React.FC<MobilePropertyDashboardProps> = (
   };
 
   return (
-    <div className="space-y-5 pb-20">
-      {/* Stats Grid - 2x2 with better visual design */}
-      <div className="grid grid-cols-2 gap-3">
+    <div className="space-y-6 pb-24">
+      {/* Stats Grid - 2x2 with better visual design and proper spacing */}
+      <div className="grid grid-cols-2 gap-4">
         <StatCard 
           icon={Building}
           value={activeProperties}
@@ -204,11 +204,11 @@ const StatCard = ({
   <Card className="border-border/50 shadow-sm">
     <CardContent className="p-4">
       <div className="flex items-center gap-3">
-        <div className={cn("p-2.5 rounded-xl", colorClass)}>
+        <div className={cn("p-3 rounded-xl flex-shrink-0", colorClass)}>
           <Icon className="h-5 w-5" />
         </div>
-        <div className="min-w-0">
-          <p className={cn("text-lg font-bold", colorClass.split(' ')[0])}>{value}</p>
+        <div className="min-w-0 flex-1">
+          <p className={cn("text-xl font-bold truncate", colorClass.split(' ')[0])}>{value}</p>
           <p className="text-xs text-muted-foreground font-medium">{label}</p>
         </div>
       </div>
@@ -233,42 +233,34 @@ const PropertyCard = ({
     onClick={onClick}
   >
     <CardContent className="p-4">
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-4">
         {/* Icon */}
-        <div className="p-2.5 rounded-xl bg-muted/50 flex-shrink-0">
+        <div className="p-3 rounded-xl bg-muted/50 flex-shrink-0">
           <Building className="h-5 w-5 text-muted-foreground" />
         </div>
         
-        {/* Content */}
-        <div className="flex-1 min-w-0 space-y-2">
-          {/* Address */}
-          <p className="text-sm font-semibold text-foreground leading-tight">
+        {/* Content - with proper text wrapping */}
+        <div className="flex-1 min-w-0 space-y-2.5">
+          {/* Address - allow wrapping */}
+          <p className="text-base font-semibold text-foreground leading-snug pr-2">
             {property.address}
           </p>
           
           {/* Location */}
-          <div className="flex items-center gap-1.5">
-            <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-            <p className="text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+            <p className="text-sm text-muted-foreground truncate">
               {[property.city, property.state].filter(Boolean).join(', ') || 'No location'}
             </p>
           </div>
           
-          {/* Badges Row */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge 
-              variant="outline" 
-              className={cn("text-xs font-medium px-2 py-0.5", getStatusColor(property.status))}
-            >
-              {(property.status || 'active').toUpperCase()}
-            </Badge>
-            <Badge 
-              variant="outline" 
-              className="text-xs font-medium px-2 py-0.5 bg-muted/50 text-muted-foreground border-border"
-            >
-              {getServiceTypeLabel(property.service_type)}
-            </Badge>
-          </div>
+          {/* Status Badge - simplified for mobile */}
+          <Badge 
+            variant="outline" 
+            className={cn("text-xs font-medium px-2.5 py-1", getStatusColor(property.status))}
+          >
+            {(property.status || 'active').toUpperCase()}
+          </Badge>
         </div>
         
         {/* Chevron */}
