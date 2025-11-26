@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -7,45 +6,53 @@ export function useSetupCheck() {
   const [needsSetup, setNeedsSetup] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(true);
   const { user, userRole } = useAuth();
-  const navigate = useNavigate();
+  const hasChecked = useRef(false);
 
   useEffect(() => {
-    console.log('🔍 SetupCheck: User state:', { user: !!user, userRole });
+    // Only log in development to reduce console noise
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 SetupCheck: User state:', { user: !!user, userRole });
+    }
+    
+    // Prevent duplicate checks
+    if (hasChecked.current && needsSetup !== null) {
+      return;
+    }
     
     if (user && userRole) {
-      // If user has a role, no setup needed
-      console.log('✅ SetupCheck: User has role, no setup needed');
+      // User has a role - no setup needed
+      hasChecked.current = true;
       setNeedsSetup(false);
       setChecking(false);
     } else if (user && userRole === null) {
-      // User exists but no role - check if admin exists
-      console.log('⚠️ SetupCheck: User exists but no role, checking setup');
-      checkSetupNeeded();
-    } else {
+      // User exists but no role yet - wait briefly for role to load
+      // Don't immediately trigger setup check as role might still be loading
+      const timer = setTimeout(() => {
+        if (!hasChecked.current) {
+          checkSetupNeeded();
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    } else if (!user) {
       // No user - setup not our concern
-      console.log('ℹ️ SetupCheck: No user, setup not needed');
       setChecking(false);
       setNeedsSetup(false);
     }
-  }, [user, userRole]);
+  }, [user, userRole, needsSetup]);
 
   const checkSetupNeeded = async () => {
+    if (hasChecked.current) return;
+    
     try {
-      console.log('🔍 SetupCheck: Checking if setup is needed');
+      hasChecked.current = true;
       setChecking(true);
       
-      // For production, disable setup check to avoid blocking the app
-      // Assume setup is already complete if there are any users in the system
-      const { data: session } = await supabase.auth.getSession();
-      
-      console.log('✅ SetupCheck: Session check complete, assuming setup not needed');
-      // If we can get session info, the database is working
-      // For production apps, we assume setup is not needed
+      // For production, assume setup is complete
+      // Only new deployments would need setup
       setNeedsSetup(false);
       
     } catch (error) {
       console.error('❌ SetupCheck: Setup check failed:', error);
-      // On any error, assume setup is not needed to avoid blocking the app
       setNeedsSetup(false);
     } finally {
       setChecking(false);

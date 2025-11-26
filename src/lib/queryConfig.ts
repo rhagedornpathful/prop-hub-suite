@@ -35,11 +35,11 @@ export const CACHE_TIMES = {
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Default stale time - data considered fresh for 1 minute
-      staleTime: 60 * 1000,
+      // Default stale time - data considered fresh for 2 minutes
+      staleTime: 2 * 60 * 1000,
       
-      // Cache time - keep inactive queries for 5 minutes
-      gcTime: CACHE_TIMES.MEDIUM,
+      // Cache time - keep inactive queries for 10 minutes
+      gcTime: CACHE_TIMES.LONG,
       
       // Retry failed queries with exponential backoff
       retry: (failureCount, error: any) => {
@@ -47,12 +47,12 @@ export const queryClient = new QueryClient({
         if (error?.status >= 400 && error?.status < 500) {
           return false;
         }
-        // Retry up to 2 times for other errors
-        return failureCount < 2;
+        // Retry only once for other errors
+        return failureCount < 1;
       },
       
-      // Exponential backoff: 1s, 2s, 4s
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      // Exponential backoff: 1s, 2s
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
       
       // Don't refetch on window focus for better performance
       refetchOnWindowFocus: false,
@@ -62,13 +62,13 @@ export const queryClient = new QueryClient({
       
       // Don't refetch on mount if data is fresh
       refetchOnMount: false,
+      
+      // Keep previous data while fetching new data
+      placeholderData: (previousData: unknown) => previousData,
     },
     mutations: {
-      // Retry mutations once on failure
-      retry: 1,
-      
-      // Exponential backoff for mutations
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+      // Don't retry mutations by default
+      retry: 0,
     },
   },
 });
