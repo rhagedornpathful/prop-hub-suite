@@ -128,36 +128,41 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     console.log('🚀 AuthContext: Initializing auth listener');
     let isSubscriptionActive = true;
+    let roleFetchedForUser: string | null = null; // Track which user we've fetched role for
 
-    // Listen for auth changes FIRST to avoid missing events
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔄 AuthContext: Auth state change:', event, session?.user?.id);
         
-        // Skip if subscription is no longer active
         if (!isSubscriptionActive) return;
 
-        // Update state synchronously first
+        // Update state synchronously
         setSession(session);
         setUser(session?.user ?? null);
         
-         // Defer role fetching to avoid blocking
-         if (session?.user && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
-           setTimeout(() => {
-             if (isSubscriptionActive) {
-               fetchUserRole(session.user.id);
-             }
-           }, 0);
-         } else if (!session) {
-           console.log('🔄 AuthContext: No session, clearing role');
-           setUserRole(null);
-         }
+        // Only fetch role if we haven't already for this user
+        if (session?.user && roleFetchedForUser !== session.user.id) {
+          // Only fetch on meaningful events
+          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') {
+            roleFetchedForUser = session.user.id;
+            setTimeout(() => {
+              if (isSubscriptionActive) {
+                fetchUserRole(session.user.id);
+              }
+            }, 0);
+          }
+        } else if (!session) {
+          console.log('🔄 AuthContext: No session, clearing role');
+          setUserRole(null);
+          roleFetchedForUser = null;
+        }
         
         setLoading(false);
       }
     );
 
-    // Get initial session AFTER setting up listener
+    // Get initial session
     const getInitialSession = async () => {
       try {
         console.log('🔍 AuthContext: Getting initial session');
@@ -171,20 +176,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           return;
         }
         
-        console.log('📊 AuthContext: Initial session:', session?.user?.id);
-        
-        // Only update if no session is already set (avoid duplicates)
-        if (!session || session.access_token !== user?.id) {
+        // Note: onAuthStateChange will handle session setup and role fetching
+        // This just ensures we have the initial session data
+        if (session && !user) {
           setSession(session);
-          setUser(session?.user ?? null);
-          
-          if (session?.user) {
-            setTimeout(() => {
-              if (isSubscriptionActive) {
-                fetchUserRole(session.user.id);
-              }
-            }, 0);
-          }
+          setUser(session.user);
         }
         
         setLoading(false);

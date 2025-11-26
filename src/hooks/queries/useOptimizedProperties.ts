@@ -169,7 +169,7 @@ export const useOptimizedProperties = ({
     enabled: !!user && enabled,
     staleTime: CACHE_TIMES.STANDARD,
     gcTime: CACHE_TIMES.MODERATE,
-    // Enable background refetch for fresh data
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes in background
+    // Disable automatic background refetch - let user trigger manually
+    refetchInterval: false,
   });
 };
