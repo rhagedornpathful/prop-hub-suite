@@ -72,7 +72,8 @@ export const QuickActions = ({
 
   return (
     <TooltipProvider>
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Hidden on mobile to avoid overlap with bottom nav and AI assistant */}
+      <div className="hidden md:block fixed bottom-6 right-6 z-40">
         <div className={`flex flex-col-reverse items-end gap-3 transition-all duration-300 ${
           isExpanded ? 'mb-4' : 'mb-0'
         }`}>
